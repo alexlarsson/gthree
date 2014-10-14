@@ -33,6 +33,9 @@ GType gthree_object_get_type (void) G_GNUC_CONST;
 
 GthreeObject *gthree_object_new ();
 
+void gthree_object_get_matrix_world (GthreeObject *object,
+                                     graphene_matrix_t *res);
+
 void          gthree_object_set_matrix_auto_update (GthreeObject *object,
                                                     gboolean auto_update);
 void          gthree_object_update_matrix_world   (GthreeObject *object,

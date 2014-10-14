@@ -19,6 +19,7 @@ static gboolean gthree_area_render        (GtkGLArea     *area,
 static void     gthree_area_size_allocate (GtkWidget     *widget,
                                            GtkAllocation *allocation);
 static void     gthree_area_realize       (GtkWidget     *widget);
+static void     gthree_area_unrealize     (GtkWidget     *widget);
 static gboolean gthree_area_tick          (GtkWidget     *widget,
                                                GdkFrameClock *frame_clock,
                                                gpointer       user_data);
@@ -47,8 +48,6 @@ gthree_area_init (GthreeArea *area)
 {
   GthreeAreaPrivate *priv = gthree_area_get_instance_private (area);
 
-  priv->renderer = gthree_renderer_new ();
-
   priv->tick = gtk_widget_add_tick_callback (GTK_WIDGET (area), gthree_area_tick, area, NULL);
 }
 
@@ -61,7 +60,6 @@ gthree_area_finalize (GObject *obj)
   g_clear_object (&priv->scene);
   g_clear_object (&priv->camera);
 
-  g_clear_object (&priv->renderer);
   gtk_widget_remove_tick_callback (GTK_WIDGET (area), priv->tick);
 
   G_OBJECT_CLASS (gthree_area_parent_class)->finalize (obj);
@@ -72,6 +70,7 @@ gthree_area_class_init (GthreeAreaClass *klass)
 {
   GTK_GL_AREA_CLASS (klass)->render = gthree_area_render;
   GTK_WIDGET_CLASS (klass)->realize = gthree_area_realize;
+  GTK_WIDGET_CLASS (klass)->unrealize = gthree_area_unrealize;
   GTK_WIDGET_CLASS (klass)->size_allocate = gthree_area_size_allocate;
   G_OBJECT_CLASS (klass)->finalize = gthree_area_finalize;
 }
@@ -119,15 +118,30 @@ gthree_area_realize (GtkWidget *widget)
 {
   GtkGLArea *glarea = GTK_GL_AREA (widget);
   GthreeArea *area = GTHREE_AREA(widget);
+  GthreeAreaPrivate *priv = gthree_area_get_instance_private (area);
   GtkAllocation allocation;
 
   GTK_WIDGET_CLASS (gthree_area_parent_class)->realize (widget);
 
   gtk_gl_area_make_current (glarea);
 
+  priv->renderer = gthree_renderer_new ();
+
   gtk_widget_get_allocation (widget, &allocation);
   reshape (area, allocation.width, allocation.height);
 }
+
+static void
+gthree_area_unrealize (GtkWidget *widget)
+{
+  GthreeArea *area = GTHREE_AREA(widget);
+  GthreeAreaPrivate *priv = gthree_area_get_instance_private (area);
+
+  g_clear_object (&priv->renderer);
+
+  GTK_WIDGET_CLASS (gthree_area_parent_class)->unrealize (widget);
+}
+
 
 static gboolean
 gthree_area_tick (GtkWidget     *widget,

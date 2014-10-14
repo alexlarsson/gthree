@@ -200,6 +200,15 @@ gthree_object_update_matrix (GthreeObject *object)
 }
 
 void
+gthree_object_get_matrix_world (GthreeObject *object,
+                                graphene_matrix_t *res)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  *res = priv->world_matrix;
+}
+
+void
 gthree_object_update_matrix_world (GthreeObject *object,
                                    gboolean force)
 {

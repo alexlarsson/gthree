@@ -15,6 +15,7 @@ typedef struct {
   float viewport_height;
 } GthreeRendererPrivate;
 
+static void gthree_set_default_gl_state (GthreeRenderer *renderer);
 
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeRenderer, gthree_renderer, G_TYPE_OBJECT);
 
@@ -37,6 +38,8 @@ gthree_renderer_init (GthreeRenderer *renderer)
   priv->auto_clear = TRUE;
   priv->width = 1;
   priv->height = 1;
+
+  gthree_set_default_gl_state (renderer);
 }
 
 static void
@@ -102,7 +105,7 @@ gthree_renderer_set_clear_color (GthreeRenderer *renderer,
   priv->clear_color = *color;
 }
 
-void
+static void
 gthree_set_default_gl_state (GthreeRenderer *renderer)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
@@ -137,13 +140,17 @@ gthree_renderer_render (GthreeRenderer *renderer,
                         GthreeCamera   *camera)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  graphene_matrix_t proj_screen_matrix;
 
   gthree_object_update_matrix_world (GTHREE_OBJECT (scene), FALSE);
+
   if (gthree_object_get_parent (GTHREE_OBJECT (camera)) == NULL)
     gthree_object_update_matrix_world (GTHREE_OBJECT (camera), FALSE);
 
   if (priv->auto_clear)
     glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+  gthree_camera_update_matrix (camera);
 
+  gthree_camera_get_proj_screen_matrix (camera, &proj_screen_matrix);
 }

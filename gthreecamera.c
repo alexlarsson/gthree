@@ -5,6 +5,7 @@
 
 typedef struct {
   graphene_matrix_t projection_matrix;
+  graphene_matrix_t world_matrix_inverse;
 
   float fov;
   float aspect;
@@ -63,4 +64,23 @@ static void
 gthree_camera_class_init (GthreeCameraClass *klass)
 {
   G_OBJECT_CLASS (klass)->finalize = gthree_camera_finalize;
+}
+
+void
+gthree_camera_update_matrix (GthreeCamera *camera)
+{
+  GthreeCameraPrivate *priv = gthree_camera_get_instance_private (camera);
+  graphene_matrix_t m;
+
+  gthree_object_get_matrix_world (GTHREE_OBJECT (camera), &m);
+  graphene_matrix_inverse (&m, &priv->world_matrix_inverse);
+}
+
+void
+gthree_camera_get_proj_screen_matrix (GthreeCamera *camera,
+                                      graphene_matrix_t *res)
+{
+  GthreeCameraPrivate *priv = gthree_camera_get_instance_private (camera);
+
+  graphene_matrix_multiply (&priv->projection_matrix, &priv->world_matrix_inverse, res);
 }
