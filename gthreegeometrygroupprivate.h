@@ -41,7 +41,9 @@ typedef struct {
 
 } GthreeGeometryGroupClass;
 
-GthreeGeometryGroup *gthree_geometry_group_new (int material_index);
+GthreeGeometryGroup *gthree_geometry_group_new (GthreeObject *object,
+                                                GthreeMaterial *material,
+                                                int material_index);
 GType gthree_geometry_group_get_type (void) G_GNUC_CONST;
 
 void gthree_geometry_group_add_face (GthreeGeometryGroup *group,

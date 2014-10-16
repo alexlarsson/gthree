@@ -63,10 +63,12 @@ gthree_mesh_finalize (GObject *obj)
 }
 
 static GPtrArray *
-make_geometry_groups (GthreeGeometry *geometry,
+make_geometry_groups (GthreeMesh *mesh,
+                      GthreeGeometry *geometry,
                       gboolean use_face_material,
                       int max_vertices_in_group)
 {
+  GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
   guint i, counter, material_index, n_faces;
   guint group_hash;
   GthreeFace*face;
@@ -96,7 +98,7 @@ make_geometry_groups (GthreeGeometry *geometry,
         group = ptr;
       else
         {
-          group = gthree_geometry_group_new (material_index);
+          group = gthree_geometry_group_new (GTHREE_OBJECT (mesh), priv->material, material_index);
           g_hash_table_insert (geometry_groups, GINT_TO_POINTER(group_hash), group);
           g_ptr_array_add (groups, group);
         }
@@ -112,7 +114,7 @@ make_geometry_groups (GthreeGeometry *geometry,
             group = ptr;
           else
             {
-              group = gthree_geometry_group_new (material_index);
+              group = gthree_geometry_group_new (GTHREE_OBJECT (mesh), priv->material, material_index);
               g_hash_table_insert (geometry_groups, GINT_TO_POINTER(group_hash), group);
               g_ptr_array_add (groups, group);
             }
@@ -452,7 +454,7 @@ gthree_mesh_realize (GthreeObject *object)
       gthree_object_remove_buffers (object);
 
       priv->groups =
-        make_geometry_groups (priv->geometry,
+        make_geometry_groups (mesh, priv->geometry,
                               FALSE /* TODO material instanceof THREE.MeshFaceMaterial */,
                               65535 /* TODO_glExtensionElementIndexUint ? 4294967296 : 65535 */);
     }

@@ -27,6 +27,9 @@ typedef struct {
 GthreeMaterial *gthree_material_new ();
 GType gthree_material_get_type (void) G_GNUC_CONST;
 
+gboolean gthree_material_get_is_transparent (GthreeMaterial *material);
+
+
 G_END_DECLS
 
 #endif /* __GTHREE_MATERIAL_H__ */

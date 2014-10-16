@@ -7,15 +7,7 @@
 
 G_BEGIN_DECLS
 
-typedef struct {
-  GthreeObject *object;
-  GthreeBuffer *buffer;
-  GthreeMaterial *material;
-  float z;
-} GthreeObjectBuffer;
-
-void   gthree_object_buffer_free        (GthreeObjectBuffer *object_buffer);
-GList *gthree_object_get_object_buffers (GthreeObject       *object);
+GList *gthree_object_get_buffers        (GthreeObject       *object);
 void   gthree_object_add_buffer         (GthreeObject       *object,
                                          GthreeBuffer       *buffer);
 void   gthree_object_remove_buffer      (GthreeObject       *object,

@@ -6,12 +6,17 @@
 G_DEFINE_TYPE (GthreeGeometryGroup, gthree_geometry_group, GTHREE_TYPE_BUFFER);
 
 GthreeGeometryGroup *
-gthree_geometry_group_new (int material_index)
+gthree_geometry_group_new (GthreeObject *object,
+                           GthreeMaterial *material,
+                           int material_index)
 {
   GthreeGeometryGroup *group;
 
   group = g_object_new (gthree_geometry_group_get_type (),
                         NULL);
+
+  group->parent.object = object; /* Weak ref */
+  group->parent.material = g_object_ref (material); /* Weak ref */
 
   group->material_index = material_index;
 

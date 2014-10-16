@@ -3,6 +3,9 @@
 
 #include <gtk/gtk.h>
 
+#include <gthreeobject.h>
+#include <gthreematerial.h>
+
 G_BEGIN_DECLS
 
 #define GTHREE_TYPE_BUFFER      (gthree_buffer_get_type ())
@@ -15,6 +18,10 @@ G_BEGIN_DECLS
 typedef struct {
   GObject parent;
 
+  // TODO: Do we need this backpointer really?
+  GthreeObject *object;
+  GthreeMaterial *material;
+
   guint vertex_buffer;
   guint normal_buffer;
   guint tangent_buffer;
@@ -25,6 +32,10 @@ typedef struct {
 
   guint face_buffer;
   guint line_buffer;
+
+  /* Draw state */
+  float z;
+  GthreeMaterial *resolved_material;
 } GthreeBuffer;
 
 typedef struct {

@@ -248,10 +248,29 @@ set_blending (GthreeRenderer *renderer,
 }
 
 static void
-unroll_buffer_material (GthreeRenderer *renderer,
-                        GthreeObjectBuffer *object_buffer)
+resolve_buffer_material (GthreeRenderer *renderer,
+                         GthreeBuffer *buffer)
 {
-  // TODO
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  GthreeMaterial *material = buffer->material;
+
+#if TODO
+  if ( material instanceof THREE.MeshFaceMaterial )
+    {
+      var materialIndex = geometry instanceof THREE.BufferGeometry ? 0 : buffer.materialIndex;
+
+      material = material.materials[materialIndex];
+    }
+#endif
+
+  if (material)
+    {
+      buffer->resolved_material = material;
+      if (gthree_material_get_is_transparent (material))
+        g_ptr_array_add (priv->transparent_objects, buffer);
+      else
+        g_ptr_array_add (priv->opaque_objects, buffer);
+    }
 }
 
 static void
@@ -261,31 +280,31 @@ project_object (GthreeRenderer *renderer,
                 GthreeCamera   *camera)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
-  GList *l, *object_buffers;
+  GList *l, *buffers;
   GthreeObject *child;
   GthreeObjectIter iter;
 
   if (!gthree_object_get_visible (object))
     return;
 
-  object_buffers = gthree_object_get_object_buffers (object);
+  buffers = gthree_object_get_buffers (object);
 
-  if (object_buffers != NULL  /* && ( !g_three_object_get_frustum_culled (object) || priv->frustum.intersectsObject (object))  */)
+  if (buffers != NULL  /* && ( !g_three_object_get_frustum_culled (object) || priv->frustum.intersectsObject (object))  */)
     {
       gthree_object_update (object);
 
-      for (l = object_buffers; l != NULL; l = l->next)
+      for (l = buffers; l != NULL; l = l->next)
         {
-          GthreeObjectBuffer *object_buffer = l->data;
+          GthreeBuffer *buffer = l->data;
 
-          unroll_buffer_material (renderer, object_buffer);
+          resolve_buffer_material (renderer, buffer);
 
           if (priv->sort_objects)
             {
               /* TODO
               if (object.renderDepth != null)
                 {
-                  object_buffer->z = object.renderDepth;
+                  buffer->z = object.renderDepth;
                 }
                 else */
                 {
@@ -298,7 +317,7 @@ project_object (GthreeRenderer *renderer,
                   graphene_matrix_transform_vec4 (&priv->proj_screen_matrix, &vector, &vector);
                   graphene_vec4_normalize (&vector, &vector);
 
-                  object_buffer->z = graphene_vec4_get_z (&vector);
+                  buffer->z = graphene_vec4_get_z (&vector);
                 }
             }
         }

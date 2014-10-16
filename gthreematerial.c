@@ -4,7 +4,7 @@
 #include "gthreematerial.h"
 
 typedef struct {
-  int dummy;
+  gboolean transparent;
 } GthreeMaterialPrivate;
 
 
@@ -25,8 +25,9 @@ gthree_material_new ()
 static void
 gthree_material_init (GthreeMaterial *material)
 {
-  //GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
 
+  priv->transparent = FALSE;
 }
 
 static void
@@ -42,4 +43,12 @@ static void
 gthree_material_class_init (GthreeMaterialClass *klass)
 {
   G_OBJECT_CLASS (klass)->finalize = gthree_material_finalize;
+}
+
+gboolean
+gthree_material_get_is_transparent (GthreeMaterial *material)
+{
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  return priv->transparent;
 }
