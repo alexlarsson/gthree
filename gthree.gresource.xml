@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/org/gnome/gthree">
+    <file>shader_chunks/alphamap_fragment.glsl</file>
+    <file>shader_chunks/alphamap_pars_fragment.glsl</file>
+    <file>shader_chunks/alphatest_fragment.glsl</file>
+    <file>shader_chunks/bumpmap_pars_fragment.glsl</file>
+    <file>shader_chunks/color_fragment.glsl</file>
+    <file>shader_chunks/color_pars_fragment.glsl</file>
+    <file>shader_chunks/color_pars_vertex.glsl</file>
+    <file>shader_chunks/color_vertex.glsl</file>
+    <file>shader_chunks/defaultnormal_vertex.glsl</file>
+    <file>shader_chunks/default_vertex.glsl</file>
+    <file>shader_chunks/envmap_fragment.glsl</file>
+    <file>shader_chunks/envmap_pars_fragment.glsl</file>
+    <file>shader_chunks/envmap_pars_vertex.glsl</file>
+    <file>shader_chunks/envmap_vertex.glsl</file>
+    <file>shader_chunks/fog_fragment.glsl</file>
+    <file>shader_chunks/fog_pars_fragment.glsl</file>
+    <file>shader_chunks/lightmap_fragment.glsl</file>
+    <file>shader_chunks/lightmap_pars_fragment.glsl</file>
+    <file>shader_chunks/lightmap_pars_vertex.glsl</file>
+    <file>shader_chunks/lightmap_vertex.glsl</file>
+    <file>shader_chunks/lights_lambert_pars_vertex.glsl</file>
+    <file>shader_chunks/lights_lambert_vertex.glsl</file>
+    <file>shader_chunks/lights_phong_fragment.glsl</file>
+    <file>shader_chunks/lights_phong_pars_fragment.glsl</file>
+    <file>shader_chunks/lights_phong_pars_vertex.glsl</file>
+    <file>shader_chunks/lights_phong_vertex.glsl</file>
+    <file>shader_chunks/linear_to_gamma_fragment.glsl</file>
+    <file>shader_chunks/logdepthbuf_fragment.glsl</file>
+    <file>shader_chunks/logdepthbuf_pars_fragment.glsl</file>
+    <file>shader_chunks/logdepthbuf_pars_vertex.glsl</file>
+    <file>shader_chunks/logdepthbuf_vertex.glsl</file>
+    <file>shader_chunks/map_fragment.glsl</file>
+    <file>shader_chunks/map_pars_fragment.glsl</file>
+    <file>shader_chunks/map_pars_vertex.glsl</file>
+    <file>shader_chunks/map_particle_fragment.glsl</file>
+    <file>shader_chunks/map_particle_pars_fragment.glsl</file>
+    <file>shader_chunks/map_vertex.glsl</file>
+    <file>shader_chunks/morphnormal_vertex.glsl</file>
+    <file>shader_chunks/morphtarget_pars_vertex.glsl</file>
+    <file>shader_chunks/morphtarget_vertex.glsl</file>
+    <file>shader_chunks/normalmap_pars_fragment.glsl</file>
+    <file>shader_chunks/shadowmap_fragment.glsl</file>
+    <file>shader_chunks/shadowmap_pars_fragment.glsl</file>
+    <file>shader_chunks/shadowmap_pars_vertex.glsl</file>
+    <file>shader_chunks/shadowmap_vertex.glsl</file>
+    <file>shader_chunks/skinbase_vertex.glsl</file>
+    <file>shader_chunks/skinning_pars_vertex.glsl</file>
+    <file>shader_chunks/skinning_vertex.glsl</file>
+    <file>shader_chunks/skinnormal_vertex.glsl</file>
+    <file>shader_chunks/specularmap_fragment.glsl</file>
+    <file>shader_chunks/specularmap_pars_fragment.glsl</file>
+    <file>shader_chunks/worldpos_vertex.glsl</file>
+ </gresource>
+</gresources>
