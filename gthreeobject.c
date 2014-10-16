@@ -2,7 +2,6 @@
 #include <epoxy/gl.h>
 
 #include "gthreeobjectprivate.h"
-#include "gthreeobjectprivate.h"
 
 #include <graphene.h>
 

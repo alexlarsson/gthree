@@ -1,7 +1,7 @@
 #ifndef __GTHREE_GEOMETRY_GROUP_H__
 #define __GTHREE_GEOMETRY_GROUP_H__
 
-#include "gthreebuffer.h"
+#include "gthreebufferprivate.h"
 #include "gthreeface.h"
 
 G_BEGIN_DECLS

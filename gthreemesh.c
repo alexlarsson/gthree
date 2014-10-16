@@ -2,7 +2,7 @@
 #include <epoxy/gl.h>
 
 #include "gthreemesh.h"
-#include "gthreegeometrygroup.h"
+#include "gthreegeometrygroupprivate.h"
 
 typedef struct {
   GthreeGeometry *geometry;

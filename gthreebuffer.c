@@ -1,7 +1,7 @@
 #include <math.h>
 #include <epoxy/gl.h>
 
-#include "gthreebuffer.h"
+#include "gthreebufferprivate.h"
 
 G_DEFINE_TYPE (GthreeBuffer, gthree_buffer, G_TYPE_OBJECT);
 

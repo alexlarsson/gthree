@@ -2,7 +2,7 @@
 #define __GTHREE_OBJECT_PRIVATE_H__
 
 #include "gthreeobject.h"
-#include "gthreebuffer.h"
+#include "gthreebufferprivate.h"
 
 G_BEGIN_DECLS
 

@@ -1,7 +1,7 @@
 #include <math.h>
 #include <epoxy/gl.h>
 
-#include "gthreegeometrygroup.h"
+#include "gthreegeometrygroupprivate.h"
 
 G_DEFINE_TYPE (GthreeGeometryGroup, gthree_geometry_group, GTHREE_TYPE_BUFFER);
 

@@ -3,7 +3,7 @@
 
 #include "gthreeobject.h"
 #include "gthreeface.h"
-#include "gthreebuffer.h"
+#include "gthreebufferprivate.h"
 
 struct _GthreeFace
 {
