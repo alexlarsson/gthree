@@ -30,10 +30,14 @@ libgthree_la_HEADERS = \
 
 libgthree_la_SOURCES = \
 	gthreearea.c \
+	gthreebuffer.c \
+	gthreebuffer.h \
 	gthreecamera.c \
 	gthreeface.c \
 	gthreegeometry-utils.c \
 	gthreegeometry.c \
+	gthreegeometrygroup.c \
+	gthreegeometrygroup.h \
 	gthreematerial.c \
 	gthreemesh.c \
 	gthreeobject.c \

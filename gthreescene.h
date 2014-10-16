@@ -27,6 +27,8 @@ typedef struct {
 GthreeScene *gthree_scene_new ();
 GType gthree_scene_get_type (void) G_GNUC_CONST;
 
+void gthree_scene_realize_objects (GthreeScene *scene);
+
 G_END_DECLS
 
 #endif /* __GTHREE_SCENE_H__ */

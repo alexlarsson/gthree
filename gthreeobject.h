@@ -8,12 +8,12 @@ G_BEGIN_DECLS
 
 #define GTHREE_PRIVATE_FIELD(x)        x
 
-#define GTHREE_TYPE_OBJECT      (gthree_object_get_type ())
-#define GTHREE_OBJECT(inst)     (G_TYPE_CHECK_INSTANCE_CAST ((inst), \
-                                                             GTHREE_TYPE_OBJECT, \
-                                                             GthreeObject))
-#define GTHREE_IS_OBJECT(inst)  (G_TYPE_CHECK_INSTANCE_TYPE ((inst),    \
-                                                             GTHREE_TYPE_OBJECT))
+#define GTHREE_TYPE_OBJECT            (gthree_object_get_type ())
+#define GTHREE_OBJECT(inst)           (G_TYPE_CHECK_INSTANCE_CAST ((inst), GTHREE_TYPE_OBJECT,  GthreeObject))
+#define GTHREE_OBJECT_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GTHREE_TYPE_OBJECT, GthreeObjectClass))
+#define GTHREE_IS_OBJECT(inst)        (G_TYPE_CHECK_INSTANCE_TYPE ((inst), GTHREE_TYPE_OBJECT))
+#define GTHREE_IS_OBJECT_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GTHREE_TYPE_OBJECT))
+#define GTHREE_OBJECT_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GTHREE_TYPE_OBJECT, GthreeObjectClass))
 
 typedef struct {
   GInitiallyUnowned parent;
@@ -26,6 +26,13 @@ typedef struct {
                                  GthreeObject          *old_parent);
 
   void (* destroy)              (GthreeObject          *object);
+  void (* realize)              (GthreeObject          *object);
+  void (* unrealize)            (GthreeObject          *object);
+
+  void (* added_child)          (GthreeObject          *object,
+                                 GthreeObject          *child);
+  void (* removed_child)        (GthreeObject          *object,
+                                 GthreeObject          *child);
 
 } GthreeObjectClass;
 
@@ -48,6 +55,8 @@ void          gthree_object_add_child            (GthreeObject *object,
                                                   GthreeObject *child);
 void          gthree_object_remove_child         (GthreeObject *object,
                                                   GthreeObject *child);
+void          gthree_object_realize              (GthreeObject *object);
+void          gthree_object_unrealize            (GthreeObject *object);
 void          gthree_object_destroy              (GthreeObject *object);
 GthreeObject *gthree_object_get_parent           (GthreeObject *object);
 GthreeObject *gthree_object_get_first_child      (GthreeObject *object);

@@ -31,10 +31,15 @@ GType gthree_geometry_get_type (void) G_GNUC_CONST;
 
 void gthree_geometry_add_vertex (GthreeGeometry *geometry,
                                  graphene_vec3_t *v);
-int gthree_geometry_get_n_vertices (GthreeGeometry *geometry);
+guint gthree_geometry_get_n_vertices (GthreeGeometry *geometry);
 void gthree_geometry_add_face (GthreeGeometry *geometry,
                                GthreeFace *face);
-int gthree_geometry_get_n_faces (GthreeGeometry *geometry);
+GthreeFace * gthree_geometry_get_face (GthreeGeometry *geometry, int i);
+guint gthree_geometry_get_n_faces (GthreeGeometry *geometry);
+
+gboolean gthree_geometry_make_groups (GthreeGeometry *geometry,
+                                      gboolean use_face_material,
+                                      int max_vertices_in_group);
 
 
 GthreeGeometry *

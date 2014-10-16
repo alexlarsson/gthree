@@ -4,21 +4,17 @@
 #include "gthreeface.h"
 #include "gthreeprivate.h"
 
-struct _GthreeFace {
-  int a, b, c;
-  graphene_vec3_t normal;
-  GdkRGBA color;
-  graphene_vec3_t *vertex_normals;
-  GdkRGBA *vertex_colors;
-  int material_index;
-};
+
+G_DEFINE_TYPE (GthreeFace, gthree_face, G_TYPE_OBJECT);
 
 GthreeFace *
 gthree_face_new (int a, int b, int c)
 {
   GthreeFace *face;
 
-  face = g_slice_new0 (GthreeFace);
+  face = g_object_new (gthree_face_get_type (),
+                         NULL);
+
   face->a = a;
   face->b = b;
   face->c = c;
@@ -47,8 +43,21 @@ gthree_face_set_material_index (GthreeFace *face,
   face->material_index = material_index;
 }
 
-void
-gthree_face_destroy (GthreeFace *face)
+static void
+gthree_face_init (GthreeFace *face)
 {
-  g_slice_free (GthreeFace, face);
+}
+
+static void
+gthree_face_finalize (GObject *obj)
+{
+  //GthreeFace *face = GTHREE_FACE (obj);
+
+  G_OBJECT_CLASS (gthree_face_parent_class)->finalize (obj);
+}
+
+static void
+gthree_face_class_init (GthreeFaceClass *klass)
+{
+  G_OBJECT_CLASS (klass)->finalize = gthree_face_finalize;
 }

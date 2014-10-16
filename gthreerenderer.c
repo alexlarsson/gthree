@@ -13,6 +13,10 @@ typedef struct {
   float viewport_y;
   float viewport_width;
   float viewport_height;
+
+
+  /* Render state */
+  graphene_matrix_t proj_screen_matrix;
 } GthreeRendererPrivate;
 
 static void gthree_set_default_gl_state (GthreeRenderer *renderer);
@@ -140,7 +144,6 @@ gthree_renderer_render (GthreeRenderer *renderer,
                         GthreeCamera   *camera)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
-  graphene_matrix_t proj_screen_matrix;
 
   gthree_object_update_matrix_world (GTHREE_OBJECT (scene), FALSE);
 
@@ -152,5 +155,7 @@ gthree_renderer_render (GthreeRenderer *renderer,
 
   gthree_camera_update_matrix (camera);
 
-  gthree_camera_get_proj_screen_matrix (camera, &proj_screen_matrix);
+  gthree_camera_get_proj_screen_matrix (camera, &priv->proj_screen_matrix);
+
+  gthree_scene_realize_objects (scene);
 }

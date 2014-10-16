@@ -2,6 +2,7 @@
 #include <epoxy/gl.h>
 
 #include "gthreeobjectprivate.h"
+#include "gthreeobjectprivate.h"
 
 #include <graphene.h>
 
@@ -24,6 +25,9 @@ typedef struct {
   graphene_matrix_t matrix;
   graphene_matrix_t world_matrix;
 
+  graphene_matrix_t model_view_matrix;
+  graphene_matrix_t normal_matrix;
+
   gboolean visible;
 
   /* object graph */
@@ -36,9 +40,14 @@ typedef struct {
   gint n_children;
   gint age;
 
+  guint realized : 1;
   guint in_destruction : 1;
   guint world_matrix_need_update : 1;
   guint matrix_auto_update : 1;
+
+  /* Render state */
+
+  GList *buffers;
 
 } GthreeObjectPrivate;
 
@@ -244,7 +253,7 @@ gthree_object_add_child (GthreeObject              *object,
 {
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
   GthreeObjectPrivate *child_priv = gthree_object_get_instance_private (child);
-  GthreeObject *last_child;
+  GthreeObject *last_child, *parent;
   GObject *obj;
 
   g_return_if_fail (GTHREE_IS_OBJECT (object));
@@ -297,6 +306,17 @@ gthree_object_add_child (GthreeObject              *object,
 
   g_signal_emit (child, object_signals[PARENT_SET], 0, NULL);
 
+  for (parent = object; parent != NULL; parent = PRIV(parent)->parent)
+    {
+      GthreeObjectClass *class = GTHREE_OBJECT_GET_CLASS(parent);
+
+      if (class->added_child)
+        {
+          class->added_child (parent, child);
+          break;
+        }
+    }
+
   g_object_thaw_notify (obj);
 }
 
@@ -306,7 +326,7 @@ gthree_object_remove_child (GthreeObject                 *object,
 {
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
   GthreeObjectPrivate *child_priv = gthree_object_get_instance_private (child);
-  GthreeObject *prev_sibling, *next_sibling;
+  GthreeObject *prev_sibling, *next_sibling, *parent;
   GObject *obj;
 
   g_return_if_fail (GTHREE_IS_OBJECT (object));
@@ -344,6 +364,17 @@ gthree_object_remove_child (GthreeObject                 *object,
   g_signal_emit (child, object_signals[PARENT_SET], 0, object);
 
   g_object_thaw_notify (obj);
+
+  for (parent = object; parent != NULL; parent = PRIV(parent)->parent)
+    {
+      GthreeObjectClass *class = GTHREE_OBJECT_GET_CLASS(parent);
+
+      if (class->removed_child)
+        {
+          class->removed_child (parent, child);
+          break;
+        }
+    }
 
   /* remove the reference we acquired in gthree_object_add_child() */
   g_object_unref (child);
@@ -425,7 +456,71 @@ gthree_object_destroy_all_children (GthreeObject *object)
   g_assert (priv->n_children == 0);
 }
 
+void
+gthree_object_realize (GthreeObject *object)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+  GthreeObjectClass *class = GTHREE_OBJECT_GET_CLASS(object);
 
+  g_return_if_fail (!priv->realized);
+
+  if (class->realize)
+    class->realize (object);
+
+  priv->realized = TRUE;
+}
+
+void
+gthree_object_unrealize (GthreeObject *object)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+  GthreeObjectClass *class = GTHREE_OBJECT_GET_CLASS(object);
+
+  g_return_if_fail (priv->realized);
+
+  gthree_object_remove_buffers (object);
+
+  if (class->unrealize)
+    class->unrealize (object);
+
+  priv->realized = FALSE;
+}
+
+void
+gthree_object_add_buffer (GthreeObject *object,
+                          GthreeBuffer *buffer)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  priv->buffers = g_list_prepend (priv->buffers, g_object_ref (buffer));
+}
+
+void
+gthree_object_remove_buffer (GthreeObject *object,
+                             GthreeBuffer *buffer)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+  GList *l;
+
+  l = g_list_find (priv->buffers, buffer);
+  if (l != NULL)
+    {
+      priv->buffers = g_list_remove_link (priv->buffers, l);
+      g_object_unref (buffer);
+    }
+
+  priv->buffers = g_list_prepend (priv->buffers, g_object_ref (buffer));
+
+}
+
+void
+gthree_object_remove_buffers (GthreeObject *object)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  g_list_free_full (priv->buffers, g_object_unref);
+  priv->buffers = NULL;
+}
 
 typedef struct _RealObjectIter
 {
@@ -558,4 +653,3 @@ gthree_object_iter_destroy (GthreeObjectIter *iter)
       ri->age += 1;
     }
 }
-
