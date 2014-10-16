@@ -46,6 +46,7 @@ GType gthree_geometry_group_get_type (void) G_GNUC_CONST;
 
 void gthree_geometry_group_add_face (GthreeGeometryGroup *group,
                                      GthreeFace *face);
+void gthree_geometry_group_dispose (GthreeGeometryGroup *group);
 
 G_END_DECLS
 

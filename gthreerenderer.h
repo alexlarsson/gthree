@@ -5,6 +5,7 @@
 
 #include "gthreescene.h"
 #include "gthreecamera.h"
+#include "gthreematerial.h"
 
 G_BEGIN_DECLS
 
@@ -38,7 +39,8 @@ void gthree_renderer_set_clear_color (GthreeRenderer *renderer,
 void gthree_renderer_clear           (GthreeRenderer *renderer);
 void gthree_renderer_render          (GthreeRenderer *renderer,
                                       GthreeScene    *scene,
-                                      GthreeCamera   *camera);
+                                      GthreeCamera   *camera,
+                                      gboolean        force_clear);
 
 
 G_END_DECLS

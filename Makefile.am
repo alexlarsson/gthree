@@ -19,6 +19,7 @@ libgthree_ladir = $(includedir)/gthree
 libgthree_la_HEADERS = \
 	gthreearea.h \
 	gthreecamera.h \
+	gthreeenums.h \
 	gthreeface.h \
 	gthreegeometry.h \
 	gthreematerial.h \

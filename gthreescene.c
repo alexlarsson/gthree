@@ -100,6 +100,13 @@ gthree_scene_realize_objects (GthreeScene *scene)
   priv->removed_objects = NULL;
 }
 
+GthreeMaterial *
+gthree_scene_get_override_material (GthreeScene *scene)
+{
+  // TODO
+  return NULL;
+}
+
 static void
 gthree_scene_class_init (GthreeSceneClass *klass)
 {

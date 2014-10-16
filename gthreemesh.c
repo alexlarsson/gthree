@@ -4,6 +4,7 @@
 #include "gthreemesh.h"
 #include "gthreegeometrygroupprivate.h"
 #include "gthreeobjectprivate.h"
+#include "gthreeprivate.h"
 
 typedef struct {
   GthreeGeometry *geometry;
@@ -142,16 +143,16 @@ buffer_guess_uv_type (GthreeMaterial *material)
   return FALSE;
 }
 
-static gboolean
+static GthreeShadingType
 buffer_guess_normal_type (GthreeMaterial *material)
 {
-  return FALSE;
+  return GTHREE_SHADING_NONE;
 }
 
-static gboolean
+static GthreeColorType
 buffer_guess_vertex_color_type (GthreeMaterial *material)
 {
-  return FALSE;
+  return GTHREE_COLOR_NONE;
 }
 
 static void
@@ -184,7 +185,7 @@ init_mesh_buffers (GthreeMesh *mesh,
   //GthreeMaterial *material = get_buffer_material (mesh, group);
   //gboolean uv_type = buffer_guess_uv_type (priv->material);
   gboolean normal_type = buffer_guess_normal_type (priv->material);
-  //gboolean vertex_color_type = buffer_guess_vertex_color_type (material);
+  //GthreeColorType vertex_color_type = buffer_guess_vertex_color_type (material);
 
   group->vertex_array = g_new (float, nvertices * 3);
 
@@ -272,6 +273,170 @@ init_mesh_buffers (GthreeMesh *mesh,
 
 };
 
+static void
+set_mesh_buffers (GthreeMesh *mesh,
+                  GthreeGeometryGroup *group,
+                  int hint,
+                  gboolean dispose,
+                  GthreeMaterial *material)
+{
+  GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
+  //gboolean uv_type = buffer_guess_uv_type (priv->material);
+  GthreeShadingType normal_type = buffer_guess_normal_type (priv->material);
+  GthreeColorType vertex_color_type = buffer_guess_vertex_color_type (material);
+  gboolean needsSmoothNormals = normal_type == GTHREE_SHADING_SMOOTH;
+
+  gboolean dirtyVertices = priv->verticesNeedUpdate;
+  gboolean dirtyElements = priv->elementsNeedUpdate;
+  //gboolean dirtyUvs = priv->uvsNeedUpdate;
+  //gboolean dirtyNormals = priv->normalsNeedUpdate;
+  //gboolean dirtyTangents = priv->tangentsNeedUpdate;
+  gboolean dirtyColors = priv->colorsNeedUpdate;
+  //gboolean dirtyMorphTargets = priv->morphTargetsNeedUpdate;
+
+  guint vertexIndex = 0;
+  guint offset = 0;
+  guint offset_face = 0;
+  guint offset_line = 0;
+  int i;
+
+  GPtrArray *faces = group->faces;
+
+  const graphene_vec3_t *vertices = gthree_geometry_get_vertices (priv->geometry);
+
+  g_assert (group->vertex_array);
+
+  if (dirtyVertices)
+    {
+      for (i = 0; i < faces->len; i++)
+        {
+          GthreeFace *face = g_ptr_array_index (faces, i);
+
+          graphene_vec3_to_float (&vertices[face->a], &group->vertex_array[offset]);
+          graphene_vec3_to_float (&vertices[face->b], &group->vertex_array[offset + 4]);
+          graphene_vec3_to_float (&vertices[face->c], &group->vertex_array[offset + 6]);
+
+          offset += 9;
+        }
+
+      glBindBuffer (GL_ARRAY_BUFFER, GTHREE_BUFFER (group)->vertex_buffer);
+      glBufferData (GL_ARRAY_BUFFER, faces->len * 3 * sizeof (float), group->vertex_array, hint);
+    }
+
+  if (dirtyColors && vertex_color_type != GTHREE_COLOR_NONE)
+    {
+      /* TODO
+      for ( f = 0, fl = chunk_faces3.length; f < fl; f ++ )
+        {
+          face = obj_faces[ chunk_faces3[ f ] ];
+          vertexColors = face.vertexColors;
+          faceColor = face.color;
+          if ( vertexColors.length === 3 && vertexColorType === THREE.VertexColors )
+            {
+              c1 = vertexColors[ 0 ];
+              c2 = vertexColors[ 1 ];
+              c3 = vertexColors[ 2 ];
+            }
+          else
+            {
+              c1 = faceColor;
+              c2 = faceColor;
+              c3 = faceColor;
+            }
+
+          colorArray[ offset_color ]     = c1.r;
+          colorArray[ offset_color + 1 ] = c1.g;
+          colorArray[ offset_color + 2 ] = c1.b;
+
+          colorArray[ offset_color + 3 ] = c2.r;
+          colorArray[ offset_color + 4 ] = c2.g;
+          colorArray[ offset_color + 5 ] = c2.b;
+
+          colorArray[ offset_color + 6 ] = c3.r;
+          colorArray[ offset_color + 7 ] = c3.g;
+          colorArray[ offset_color + 8 ] = c3.b;
+
+          offset_color += 9;
+        }
+
+      if ( offset_color > 0 )
+        {
+          _gl.bindBuffer( _gl.ARRAY_BUFFER, geometryGroup.__webglColorBuffer );
+          _gl.bufferData( _gl.ARRAY_BUFFER, colorArray, hint );
+        }
+      */
+    }
+
+  if (dirtyElements)
+    {
+      for (i = 0; i < faces->len; i++)
+        {
+          group->face_array[offset_face]   = vertexIndex;
+          group->face_array[offset_face + 1] = vertexIndex + 1;
+          group->face_array[offset_face + 2] = vertexIndex + 2;
+
+          offset_face += 3;
+
+          group->line_array[offset_line]     = vertexIndex;
+          group->line_array[offset_line + 1] = vertexIndex + 1;
+
+          group->line_array[offset_line + 2] = vertexIndex;
+          group->line_array[offset_line + 3] = vertexIndex + 2;
+
+          group->line_array[offset_line + 4] = vertexIndex + 1;
+          group->line_array[offset_line + 5] = vertexIndex + 2;
+
+          offset_line += 6;
+
+          vertexIndex += 3;
+        }
+
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GTHREE_BUFFER (group)->face_buffer);
+      glBufferData(GL_ELEMENT_ARRAY_BUFFER, offset_face * sizeof (guint16), group->face_array, hint);
+
+      glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, GTHREE_BUFFER (group)->line_buffer);
+      glBufferData(GL_ELEMENT_ARRAY_BUFFER, offset_line * sizeof (guint16), group->line_array, hint);
+    }
+
+
+  if (dispose)
+    gthree_geometry_group_dispose (group);
+}
+
+static void
+gthree_mesh_update (GthreeObject *object)
+{
+  GthreeMesh *mesh = GTHREE_MESH (object);
+  GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
+  GthreeGeometryGroup *group;
+  GthreeMaterial *material;
+  int i;
+
+  //geometryGroup, customAttributesDirty, material;
+
+  for (i = 0; i < priv->groups->len; i++)
+    {
+      group = g_ptr_array_index (priv->groups, i);
+
+      material = get_buffer_material (mesh, group);
+
+      //customAttributesDirty = material.attributes && areCustomAttributesDirty( material );
+      if ( priv->verticesNeedUpdate || priv->morphTargetsNeedUpdate || priv->elementsNeedUpdate ||
+           priv->uvsNeedUpdate || priv->normalsNeedUpdate ||
+           priv->colorsNeedUpdate || priv->tangentsNeedUpdate /* || customAttributesDirty*/ )
+        set_mesh_buffers (mesh, group, GL_DYNAMIC_DRAW, TRUE /*! geometry.dynamic*/, material);
+    }
+
+  priv->verticesNeedUpdate = FALSE;
+  priv->morphTargetsNeedUpdate = FALSE;
+  priv->elementsNeedUpdate = FALSE;
+  priv->uvsNeedUpdate = FALSE;
+  priv->normalsNeedUpdate = FALSE;
+  priv->tangentsNeedUpdate = FALSE;
+  priv->colorsNeedUpdate = FALSE;
+
+  //material.attributes && clearCustomAttributes( material );
+}
 
 static void
 gthree_mesh_realize (GthreeObject *object)
@@ -336,6 +501,7 @@ gthree_mesh_class_init (GthreeMeshClass *klass)
 {
   G_OBJECT_CLASS (klass)->finalize = gthree_mesh_finalize;
 
+  GTHREE_OBJECT_CLASS (klass)->update = gthree_mesh_update;
   GTHREE_OBJECT_CLASS (klass)->realize = gthree_mesh_realize;
   GTHREE_OBJECT_CLASS (klass)->unrealize = gthree_mesh_unrealize;
 }

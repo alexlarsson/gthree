@@ -70,10 +70,9 @@ void
 gthree_camera_update_matrix (GthreeCamera *camera)
 {
   GthreeCameraPrivate *priv = gthree_camera_get_instance_private (camera);
-  graphene_matrix_t m;
 
-  gthree_object_get_matrix_world (GTHREE_OBJECT (camera), &m);
-  graphene_matrix_inverse (&m, &priv->world_matrix_inverse);
+  graphene_matrix_inverse (gthree_object_get_world_matrix (GTHREE_OBJECT (camera)),
+                           &priv->world_matrix_inverse);
 }
 
 void

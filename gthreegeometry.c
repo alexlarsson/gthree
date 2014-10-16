@@ -46,6 +46,14 @@ gthree_geometry_get_n_vertices (GthreeGeometry *geometry)
   return priv->vertices->len;
 }
 
+const graphene_vec3_t *
+gthree_geometry_get_vertices (GthreeGeometry *geometry)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+
+  return (graphene_vec3_t *)priv->vertices->data;
+}
+
 /* Takes ownership */
 void
 gthree_geometry_add_face (GthreeGeometry *geometry,

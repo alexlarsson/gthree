@@ -4,6 +4,8 @@
 #include <gtk/gtk.h>
 #include <graphene.h>
 
+#include "gthreeenums.h"
+
 G_BEGIN_DECLS
 
 #define GTHREE_PRIVATE_FIELD(x)        x
@@ -25,6 +27,8 @@ typedef struct {
   void (* parent_set)           (GthreeObject          *object,
                                  GthreeObject          *old_parent);
 
+  void (* update)               (GthreeObject          *object);
+
   void (* destroy)              (GthreeObject          *object);
   void (* realize)              (GthreeObject          *object);
   void (* unrealize)            (GthreeObject          *object);
@@ -40,8 +44,7 @@ GType gthree_object_get_type (void) G_GNUC_CONST;
 
 GthreeObject *gthree_object_new ();
 
-void gthree_object_get_matrix_world (GthreeObject *object,
-                                     graphene_matrix_t *res);
+const graphene_matrix_t * gthree_object_get_world_matrix (GthreeObject *object);
 
 void          gthree_object_set_matrix_auto_update (GthreeObject *object,
                                                     gboolean auto_update);
@@ -51,12 +54,16 @@ void          gthree_object_update_matrix         (GthreeObject *object);
 void          gthree_object_look_at              (GthreeObject *object,
                                                   graphene_vec3_t *vector);
 
+gboolean      gthree_object_get_visible          (GthreeObject *object);
+
 void          gthree_object_add_child            (GthreeObject *object,
                                                   GthreeObject *child);
 void          gthree_object_remove_child         (GthreeObject *object,
                                                   GthreeObject *child);
+void          gthree_object_update               (GthreeObject *object);
 void          gthree_object_realize              (GthreeObject *object);
 void          gthree_object_unrealize            (GthreeObject *object);
+void          gthree_object_update               (GthreeObject *object);
 void          gthree_object_destroy              (GthreeObject *object);
 GthreeObject *gthree_object_get_parent           (GthreeObject *object);
 GthreeObject *gthree_object_get_first_child      (GthreeObject *object);

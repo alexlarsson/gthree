@@ -46,7 +46,7 @@ typedef struct {
 
   /* Render state */
 
-  GList *buffers;
+  GList *object_buffers;
 
 } GthreeObjectPrivate;
 
@@ -90,6 +90,7 @@ gthree_object_init (GthreeObject *object)
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
 
   priv->matrix_auto_update = TRUE;
+  priv->visible = TRUE;
 
   graphene_matrix_init_identity (&priv->matrix);
   graphene_matrix_init_identity (&priv->world_matrix);
@@ -179,6 +180,14 @@ gthree_object_set_matrix_auto_update (GthreeObject *object,
   priv->matrix_auto_update = !! auto_update;
 }
 
+gboolean
+gthree_object_get_visible (GthreeObject *object)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  return priv->visible;
+}
+
 void
 gthree_object_look_at (GthreeObject *object,
                        graphene_vec3_t *vector)
@@ -207,13 +216,12 @@ gthree_object_update_matrix (GthreeObject *object)
   priv->world_matrix_need_update = TRUE;
 }
 
-void
-gthree_object_get_matrix_world (GthreeObject *object,
-                                graphene_matrix_t *res)
+const graphene_matrix_t *
+gthree_object_get_world_matrix (GthreeObject *object)
 {
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
 
-  *res = priv->world_matrix;
+  return &priv->world_matrix;
 }
 
 void
@@ -456,6 +464,15 @@ gthree_object_destroy_all_children (GthreeObject *object)
 }
 
 void
+gthree_object_update (GthreeObject *object)
+{
+  GthreeObjectClass *class = GTHREE_OBJECT_GET_CLASS(object);
+
+  if (class->update)
+    class->update (object);
+}
+
+void
 gthree_object_realize (GthreeObject *object)
 {
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
@@ -485,13 +502,44 @@ gthree_object_unrealize (GthreeObject *object)
   priv->realized = FALSE;
 }
 
+GList *
+gthree_object_get_object_buffers (GthreeObject *object)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  return priv->object_buffers;
+}
+
+GthreeObjectBuffer *
+gthree_object_buffer_new (GthreeObject *object,
+                          GthreeBuffer *buffer)
+{
+  GthreeObjectBuffer *ob;
+
+  ob = g_slice_new0 (GthreeObjectBuffer);
+  ob->object = object; /* No ref, that would be circular */
+  ob->buffer = g_object_ref (buffer);
+
+  return ob;
+}
+
+void
+gthree_object_buffer_free (GthreeObjectBuffer *object_buffer)
+{
+  g_clear_object (&object_buffer->buffer);
+  g_clear_object (&object_buffer->material);
+  g_slice_free (GthreeObjectBuffer, object_buffer);
+}
+
 void
 gthree_object_add_buffer (GthreeObject *object,
                           GthreeBuffer *buffer)
 {
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+  GthreeObjectBuffer *ob;
 
-  priv->buffers = g_list_prepend (priv->buffers, g_object_ref (buffer));
+  ob = gthree_object_buffer_new (object, buffer);
+  priv->object_buffers = g_list_prepend (priv->object_buffers, ob);
 }
 
 void
@@ -499,17 +547,26 @@ gthree_object_remove_buffer (GthreeObject *object,
                              GthreeBuffer *buffer)
 {
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
-  GList *l;
+  GList *l, *found;
 
-  l = g_list_find (priv->buffers, buffer);
-  if (l != NULL)
+  found = NULL;
+  for (l = priv->object_buffers; l != NULL; l = l->next)
     {
-      priv->buffers = g_list_remove_link (priv->buffers, l);
-      g_object_unref (buffer);
+      GthreeObjectBuffer *ob = l->data;
+
+      if (ob->buffer == buffer)
+        {
+          found = l;
+          break;
+        }
     }
 
-  priv->buffers = g_list_prepend (priv->buffers, g_object_ref (buffer));
-
+  if (found != NULL)
+    {
+      GthreeObjectBuffer *ob = found->data;
+      priv->object_buffers = g_list_remove_link (priv->object_buffers, found);
+      gthree_object_buffer_free (ob);
+    }
 }
 
 void
@@ -517,8 +574,8 @@ gthree_object_remove_buffers (GthreeObject *object)
 {
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
 
-  g_list_free_full (priv->buffers, g_object_unref);
-  priv->buffers = NULL;
+  g_list_free_full (priv->object_buffers, (GDestroyNotify)gthree_object_buffer_free);
+  priv->object_buffers = NULL;
 }
 
 typedef struct _RealObjectIter

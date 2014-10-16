@@ -32,6 +32,7 @@ GType gthree_geometry_get_type (void) G_GNUC_CONST;
 void gthree_geometry_add_vertex (GthreeGeometry *geometry,
                                  graphene_vec3_t *v);
 guint gthree_geometry_get_n_vertices (GthreeGeometry *geometry);
+const graphene_vec3_t *gthree_geometry_get_vertices (GthreeGeometry *geometry);
 void gthree_geometry_add_face (GthreeGeometry *geometry,
                                GthreeFace *face);
 GthreeFace * gthree_geometry_get_face (GthreeGeometry *geometry, int i);

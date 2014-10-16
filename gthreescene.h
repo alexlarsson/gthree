@@ -4,6 +4,7 @@
 #include <gtk/gtk.h>
 
 #include "gthreeobject.h"
+#include "gthreematerial.h"
 
 G_BEGIN_DECLS
 
@@ -28,6 +29,7 @@ GthreeScene *gthree_scene_new ();
 GType gthree_scene_get_type (void) G_GNUC_CONST;
 
 void gthree_scene_realize_objects (GthreeScene *scene);
+GthreeMaterial * gthree_scene_get_override_material (GthreeScene *scene);
 
 G_END_DECLS
 
