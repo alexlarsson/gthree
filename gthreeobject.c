@@ -253,6 +253,17 @@ gthree_object_update_matrix_world (GthreeObject *object,
     gthree_object_update_matrix_world (child, force);
 }
 
+void
+gthree_object_update_matrix_view (GthreeObject *object,
+                                  const graphene_matrix_t *camera_matrix)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  graphene_matrix_multiply (camera_matrix, &priv->world_matrix, &priv->model_view_matrix);
+
+  graphene_matrix_inverse (&priv->model_view_matrix, &priv->normal_matrix);
+  graphene_matrix_transpose (&priv->normal_matrix, &priv->normal_matrix);
+}
 
 void
 gthree_object_add_child (GthreeObject              *object,

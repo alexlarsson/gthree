@@ -18,7 +18,6 @@ G_BEGIN_DECLS
 typedef struct {
   GObject parent;
 
-  // TODO: Do we need this backpointer really?
   GthreeObject *object;
   GthreeMaterial *material;
 
@@ -31,7 +30,9 @@ typedef struct {
   guint line_distance_buffer;
 
   guint face_buffer;
+  guint face_count;
   guint line_buffer;
+  guint line_count;
 
   /* Draw state */
   float z;

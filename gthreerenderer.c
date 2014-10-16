@@ -20,6 +20,14 @@ typedef struct {
   /* Render state */
   graphene_matrix_t proj_screen_matrix;
 
+  gboolean old_flip_sided;
+  gboolean old_double_sided;
+  gboolean old_depth_test;
+  gboolean old_depth_write;
+  float old_line_width;
+  gboolean old_polygon_offset;
+  float old_polygon_offset_factor;
+  float old_polygon_offset_units;
   GthreeBlendMode old_blending;
   GthreeBlendEquation old_blend_equation;
   GthreeBlendSrcFactor old_blend_src;
@@ -27,6 +35,9 @@ typedef struct {
 
   GPtrArray *opaque_objects;
   GPtrArray *transparent_objects;
+
+  guint8 new_attributes[8];
+  guint8 enabled_attributes[8];
 
 } GthreeRendererPrivate;
 
@@ -170,6 +181,103 @@ reverse_painter_sort_stable (gconstpointer  a, gconstpointer  b)
 {
   /* TODO */
   return 0;
+}
+
+static void
+set_material_faces (GthreeRenderer *renderer,
+                    GthreeMaterial *material)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  GthreeSide side = gthree_material_get_side (material);
+  gboolean double_sided = side == GTHREE_SIDE_DOUBLE;
+  gboolean flip_sided = side == GTHREE_SIDE_BACK;
+
+  if (priv->old_double_sided != double_sided )
+    {
+      if (double_sided)
+        glDisable (GL_CULL_FACE);
+      else
+        glEnable (GL_CULL_FACE);
+
+      priv->old_double_sided = double_sided;
+    }
+
+  if (priv->old_flip_sided != flip_sided ) {
+    if (flip_sided)
+      glFrontFace (GL_CW);
+    else
+      glFrontFace (GL_CCW);
+
+    priv->old_flip_sided = flip_sided;
+  }
+}
+
+static void
+set_depth_test (GthreeRenderer *renderer,
+                gboolean depth_test)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  if (priv->old_depth_test != depth_test)
+    {
+      if (depth_test)
+        glEnable (GL_DEPTH_TEST);
+      else
+        glDisable (GL_DEPTH_TEST);
+
+      priv->old_depth_test = depth_test;
+    }
+}
+
+static void
+set_depth_write (GthreeRenderer *renderer,
+                gboolean depth_write)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  if (priv->old_depth_write != depth_write)
+    {
+      glDepthMask (depth_write);
+      priv->old_depth_write = depth_write;
+    }
+}
+
+static void
+set_line_width (GthreeRenderer *renderer,
+                float line_width)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  if (priv->old_line_width != line_width)
+    {
+      glLineWidth (line_width);
+      priv->old_line_width = line_width;
+    }
+}
+
+static void
+set_polygon_offset (GthreeRenderer *renderer,
+                    gboolean polygon_offset,
+                    float factor, float units)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  if (priv->old_polygon_offset != polygon_offset)
+    {
+      if (polygon_offset)
+        glEnable (GL_POLYGON_OFFSET_FILL);
+      else
+        glDisable (GL_POLYGON_OFFSET_FILL);
+
+      priv->old_polygon_offset = polygon_offset;
+    }
+
+  if (polygon_offset && (priv->old_polygon_offset_factor != factor || priv->old_polygon_offset_units != units ))
+    {
+      glPolygonOffset (factor, units);
+      priv->old_polygon_offset_factor = factor;
+      priv->old_polygon_offset_units = units;
+  }
 }
 
 static void
@@ -328,6 +436,178 @@ project_object (GthreeRenderer *renderer,
     project_object (renderer, scene, child, camera);
 }
 
+static gpointer
+set_program (GthreeRenderer *renderer,
+             GthreeCamera *camera,
+             gpointer lights,
+             gpointer fog,
+             GthreeMaterial *material,
+             GthreeObject *object)
+{
+  /* TODO */
+  return NULL;
+}
+
+static void
+init_attributes (GthreeRenderer *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  int i;
+
+  for (i = 0; i < G_N_ELEMENTS(priv->new_attributes); i++)
+    priv->new_attributes[i] = 0;
+}
+
+static void
+enable_attribute (GthreeRenderer *renderer,
+                  guint attribute)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  priv->new_attributes[attribute] = 1;
+  if (priv->enabled_attributes[attribute] == 0)
+    {
+      glEnableVertexAttribArray(attribute);
+      priv->enabled_attributes[attribute] = 1;
+    }
+}
+
+static void
+disable_unused_attributes (GthreeRenderer *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  int i;
+
+  for (i = 0; i < G_N_ELEMENTS(priv->new_attributes); i++)
+    {
+      if (priv->enabled_attributes[i] != priv->new_attributes[i])
+        {
+          glDisableVertexAttribArray(i);
+          priv->enabled_attributes[i] = 0;
+        }
+    }
+}
+
+static void
+render_buffer (GthreeRenderer *renderer,
+               GthreeCamera *camera,
+               gpointer lights,
+               gpointer fog,
+               GthreeMaterial *material,
+               GthreeBuffer *buffer)
+{
+  GthreeObject *object = buffer->object;
+  gpointer program = set_program (renderer, camera, lights, fog, material, object);
+  //var linewidth, a, attribute, i, il;
+  //var attributes = program.attributes;
+  struct {
+    int position;
+  } attributes = { 0 };
+  gboolean updateBuffers = false;
+  guint32 wireframeBit = gthree_material_get_is_wireframe (material) ? 1 : 0;
+  guint32 geometryGroupHash = (guint32)buffer + (guint32)program * 2 + wireframeBit;
+
+  if (!gthree_material_get_is_visible (material))
+    return;
+
+  if (TRUE /* geometryGroupHash !== _currentGeometryGroupHash */)
+    {
+      //_currentGeometryGroupHash = geometryGroupHash;
+      updateBuffers = true;
+    }
+
+  if (updateBuffers)
+    init_attributes (renderer);
+
+  // vertices
+  if (/*!material.morphTargets && attributes.position >= 0 */ TRUE )
+    {
+      if (updateBuffers)
+        {
+          glBindBuffer (GL_ARRAY_BUFFER, buffer->vertex_buffer);
+          enable_attribute (renderer, attributes.position);
+          glVertexAttribPointer (attributes.position, 3, GL_FLOAT, FALSE, 0, NULL);
+        }
+    }
+  else
+    {
+      /*
+      if (object.morphTargetBase)
+        setupMorphTargets( material, geometryGroup, object );
+      */
+    }
+
+  if (updateBuffers)
+    {
+      // custom attributes
+      // Use the per-geometryGroup custom attribute arrays which are setup in initMeshBuffers
+#if TODO
+      if (geometryGroup.__webglCustomAttributesList )
+        {
+          for ( i = 0, il = geometryGroup.__webglCustomAttributesList.length; i < il; i ++ )
+            {
+              attribute = geometryGroup.__webglCustomAttributesList[ i ];
+              if ( attributes[ attribute.buffer.belongsToAttribute ] >= 0 )
+                {
+                  _gl.bindBuffer( _gl.ARRAY_BUFFER, attribute.buffer );
+                  enableAttribute( attributes[ attribute.buffer.belongsToAttribute ] );
+                  _gl.vertexAttribPointer( attributes[ attribute.buffer.belongsToAttribute ], attribute.size, _gl.FLOAT, false, 0, 0 );
+                }
+            }
+        }
+#endif
+
+#if TODO
+      // colors
+      if (attributes.color >= 0)
+        {
+          if ( object.geometry.colors.length > 0 || object.geometry.faces.length > 0 )
+            {
+              _gl.bindBuffer( _gl.ARRAY_BUFFER, geometryGroup.__webglColorBuffer );
+              enableAttribute( attributes.color );
+              _gl.vertexAttribPointer( attributes.color, 3, _gl.FLOAT, false, 0, 0 );
+            }
+          else if ( material.defaultAttributeValues )
+            {
+              _gl.vertexAttrib3fv( attributes.color, material.defaultAttributeValues.color );
+            }
+        }
+#endif
+
+#if TODO
+      // normals
+      if ( attributes.normal >= 0 )
+        {
+          _gl.bindBuffer( _gl.ARRAY_BUFFER, geometryGroup.__webglNormalBuffer );
+          enableAttribute( attributes.normal );
+          _gl.vertexAttribPointer( attributes.normal, 3, _gl.FLOAT, false, 0, 0 );
+        }
+#endif
+
+      disable_unused_attributes (renderer);
+
+      // render mesh
+      if (TRUE /* object instanceof THREE.Mesh */ )
+        {
+          if (gthree_material_get_is_wireframe (material))
+            {
+              // wireframe
+              set_line_width (renderer, gthree_material_get_wireframe_line_width (material));
+              if (updateBuffers)
+                glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, buffer->line_buffer);
+              glDrawElements (GL_LINES, buffer->line_count, GL_UNSIGNED_SHORT, 0 );
+            }
+          else
+            {
+              // triangles
+              if (updateBuffers)
+                glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, buffer->face_buffer);
+              glDrawElements (GL_TRIANGLES, buffer->face_count, GL_UNSIGNED_SHORT, 0 );
+            }
+        }
+    }
+}
+
 static void
 render_objects (GthreeRenderer *renderer,
                 GPtrArray *render_list,
@@ -337,7 +617,49 @@ render_objects (GthreeRenderer *renderer,
                 gboolean use_blending,
                 GthreeMaterial *override_material)
 {
-  /* TODO */
+  GthreeBuffer *buffer;
+  GthreeMaterial *material;
+  int i;
+
+  for (i = 0; i < render_list->len; i++)
+    {
+      buffer = g_ptr_array_index (render_list, i);
+
+      gthree_object_update_matrix_view (buffer->object, gthree_camera_get_world_inverse_matrix (camera));
+
+      if (override_material)
+        material = override_material;
+      else
+        material = buffer->material;
+
+      if (material == NULL)
+        continue;
+
+      if (use_blending)
+        {
+          GthreeBlendEquation equation;
+          GthreeBlendSrcFactor src_factor;
+          GthreeBlendDstFactor dst_factor;
+          GthreeBlendMode mode = gthree_material_get_blend_mode (material, &equation, &src_factor, &dst_factor);
+
+          set_blending (renderer, mode, equation, src_factor, dst_factor);
+        }
+
+      set_depth_test (renderer, gthree_material_get_depth_test (material));
+      set_depth_write (renderer, gthree_material_get_depth_write (material));
+
+
+      {
+        gboolean polygon_offset;
+        float factor, units;
+
+        polygon_offset = gthree_material_get_polygon_offset (material, &factor, &units);
+        set_polygon_offset (renderer, polygon_offset, factor, units);
+      }
+      set_material_faces (renderer, material);
+
+      render_buffer (renderer, camera, lights, fog, material, buffer);
+    }
 }
 
 void

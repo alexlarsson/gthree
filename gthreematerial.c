@@ -46,9 +46,74 @@ gthree_material_class_init (GthreeMaterialClass *klass)
 }
 
 gboolean
+gthree_material_get_is_visible (GthreeMaterial *material)
+{
+  return TRUE;
+}
+
+gboolean
+gthree_material_get_is_wireframe (GthreeMaterial *material)
+{
+  return TRUE;
+}
+
+float
+gthree_material_get_wireframe_line_width (GthreeMaterial *material)
+{
+  return 1.0;
+}
+
+gboolean
 gthree_material_get_is_transparent (GthreeMaterial *material)
 {
   GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
 
   return priv->transparent;
+}
+
+GthreeBlendMode
+gthree_material_get_blend_mode (GthreeMaterial *material,
+                                GthreeBlendEquation *equation,
+                                GthreeBlendSrcFactor *src_factor,
+                                GthreeBlendDstFactor *dst_factor)
+{
+  if (equation)
+    *equation = GTHREE_BLEND_EQUATION_ADD;
+  if (src_factor)
+    *src_factor = GTHREE_BLEND_SRC_FACTOR_SRC_COLOR;
+  if (dst_factor)
+    *dst_factor = GTHREE_BLEND_DST_FACTOR_COLOR;
+
+  return GTHREE_BLEND_NO;
+}
+
+gboolean
+gthree_material_get_polygon_offset (GthreeMaterial *material,
+                                    float *factor, float *units)
+{
+  if (factor)
+    *factor = 1.0;
+
+  if (units)
+    *units = 1.0;
+
+  return FALSE;
+}
+
+gboolean
+gthree_material_get_depth_test (GthreeMaterial *material)
+{
+  return TRUE;
+}
+
+gboolean
+gthree_material_get_depth_write (GthreeMaterial *material)
+{
+  return FALSE;
+}
+
+GthreeSide
+gthree_material_get_side (GthreeMaterial *material)
+{
+  return GTHREE_SIDE_DOUBLE;
 }

@@ -223,9 +223,6 @@ init_mesh_buffers (GthreeMesh *mesh,
   group->face_array = g_new0 (guint16, ntris * 3);
   group->line_array = g_new0 (guint16, nlines * 2);
 
-  group->face_count = ntris * 3;
-  group->line_count = nlines * 2;
-
   /*
   // custom attributes
   if ( material.attributes ) {
@@ -395,9 +392,11 @@ set_mesh_buffers (GthreeMesh *mesh,
 
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GTHREE_BUFFER (group)->face_buffer);
       glBufferData(GL_ELEMENT_ARRAY_BUFFER, offset_face * sizeof (guint16), group->face_array, hint);
+      GTHREE_BUFFER(group)->face_count = offset_face;
 
       glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, GTHREE_BUFFER (group)->line_buffer);
       glBufferData(GL_ELEMENT_ARRAY_BUFFER, offset_line * sizeof (guint16), group->line_array, hint);
+      GTHREE_BUFFER(group)->line_count = offset_line;
     }
 
 

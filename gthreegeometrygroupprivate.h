@@ -30,9 +30,7 @@ typedef struct {
   float *uv2_array;
 
   guint16 *face_array;
-  guint face_count;
   guint16 *line_array;
-  guint line_count;
 
 } GthreeGeometryGroup;
 

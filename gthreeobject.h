@@ -51,6 +51,8 @@ void          gthree_object_set_matrix_auto_update (GthreeObject *object,
 void          gthree_object_update_matrix_world   (GthreeObject *object,
                                                    gboolean force);
 void          gthree_object_update_matrix         (GthreeObject *object);
+void          gthree_object_update_matrix_view    (GthreeObject *object,
+                                                   const graphene_matrix_t *camera_matrix);
 void          gthree_object_look_at              (GthreeObject *object,
                                                   graphene_vec3_t *vector);
 

@@ -83,3 +83,11 @@ gthree_camera_get_proj_screen_matrix (GthreeCamera *camera,
 
   graphene_matrix_multiply (&priv->projection_matrix, &priv->world_matrix_inverse, res);
 }
+
+const graphene_matrix_t *
+gthree_camera_get_world_inverse_matrix (GthreeCamera *camera)
+{
+  GthreeCameraPrivate *priv = gthree_camera_get_instance_private (camera);
+
+  return &priv->world_matrix_inverse;
+}
