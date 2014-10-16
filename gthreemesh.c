@@ -3,6 +3,7 @@
 
 #include "gthreemesh.h"
 #include "gthreegeometrygroupprivate.h"
+#include "gthreeobjectprivate.h"
 
 typedef struct {
   GthreeGeometry *geometry;
@@ -60,24 +61,20 @@ gthree_mesh_finalize (GObject *obj)
   G_OBJECT_CLASS (gthree_mesh_parent_class)->finalize (obj);
 }
 
-static gboolean
-make_geometry_groups (GthreeMesh *mesh,
-                      GthreeGeometry *geometry,
+static GPtrArray *
+make_geometry_groups (GthreeGeometry *geometry,
                       gboolean use_face_material,
                       int max_vertices_in_group)
 {
-  GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
   guint i, counter, material_index, n_faces;
   guint group_hash;
   GthreeFace*face;
   GHashTable *hash_map, *geometry_groups;
   GthreeGeometryGroup *group;
   gpointer ptr;
+  GPtrArray *groups;
 
-  if (priv->groups)
-    return FALSE;
-
-  priv->groups = g_ptr_array_new_with_free_func (g_object_unref);
+  groups = g_ptr_array_new_with_free_func (g_object_unref);
 
   hash_map = g_hash_table_new (g_direct_hash, g_direct_equal);
   geometry_groups = g_hash_table_new (g_direct_hash, g_direct_equal);
@@ -100,6 +97,7 @@ make_geometry_groups (GthreeMesh *mesh,
         {
           group = gthree_geometry_group_new (material_index);
           g_hash_table_insert (geometry_groups, GINT_TO_POINTER(group_hash), group);
+          g_ptr_array_add (groups, group);
         }
 
       if (group->n_vertices + 3 > max_vertices_in_group)
@@ -115,6 +113,7 @@ make_geometry_groups (GthreeMesh *mesh,
             {
               group = gthree_geometry_group_new (material_index);
               g_hash_table_insert (geometry_groups, GINT_TO_POINTER(group_hash), group);
+              g_ptr_array_add (groups, group);
             }
         }
 
@@ -124,7 +123,7 @@ make_geometry_groups (GthreeMesh *mesh,
   g_hash_table_destroy (hash_map);
   g_hash_table_destroy (geometry_groups);
 
-  return TRUE;
+  return groups;
 }
 
 static GthreeMaterial *
@@ -153,6 +152,23 @@ static gboolean
 buffer_guess_vertex_color_type (GthreeMaterial *material)
 {
   return FALSE;
+}
+
+static void
+create_mesh_buffers (GthreeGeometryGroup *group)
+{
+  GthreeBuffer *buffer;
+
+  buffer = GTHREE_BUFFER (group);
+  glGenBuffers (1, &buffer->vertex_buffer);
+  glGenBuffers (1, &buffer->normal_buffer);
+  glGenBuffers (1, &buffer->tangent_buffer);
+  glGenBuffers (1, &buffer->color_buffer);
+  glGenBuffers (1, &buffer->uv_buffer);
+  glGenBuffers (1, &buffer->uv2_buffer);
+
+  glGenBuffers (1, &buffer->face_buffer);
+  glGenBuffers (1, &buffer->line_buffer);
 }
 
 static void
@@ -263,15 +279,17 @@ gthree_mesh_realize (GthreeObject *object)
   GthreeMesh *mesh = GTHREE_MESH (object);
   GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
   GthreeGeometryGroup *group;
-  GthreeBuffer *buffer;
   int i;
   gboolean realized;
 
-  if (make_geometry_groups (mesh, priv->geometry,
-                            FALSE /* TODO material instanceof THREE.MeshFaceMaterial */,
-                            65535 /* TODO_glExtensionElementIndexUint ? 4294967296 : 65535 */))
+  if (!priv->groups)
     {
-      /* TODO: remove old realized buffers, if any */
+      gthree_object_remove_buffers (object);
+
+      priv->groups =
+        make_geometry_groups (priv->geometry,
+                              FALSE /* TODO material instanceof THREE.MeshFaceMaterial */,
+                              65535 /* TODO_glExtensionElementIndexUint ? 4294967296 : 65535 */);
     }
 
   realized = FALSE;
@@ -284,18 +302,10 @@ gthree_mesh_realize (GthreeObject *object)
           group->realized = TRUE;
           realized = TRUE;
 
-          buffer = GTHREE_BUFFER(group);
-          glGenBuffers (1, &buffer->vertex_buffer);
-          glGenBuffers (1, &buffer->normal_buffer);
-          glGenBuffers (1, &buffer->tangent_buffer);
-          glGenBuffers (1, &buffer->color_buffer);
-          glGenBuffers (1, &buffer->uv_buffer);
-          glGenBuffers (1, &buffer->uv2_buffer);
-
-          glGenBuffers (1, &buffer->face_buffer);
-          glGenBuffers (1, &buffer->line_buffer);
-
+          create_mesh_buffers (group);
           init_mesh_buffers (mesh, group);
+
+          gthree_object_add_buffer (object, GTHREE_BUFFER(group));
         }
     }
 
