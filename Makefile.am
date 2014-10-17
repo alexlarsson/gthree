@@ -47,6 +47,8 @@ libgthree_la_SOURCES = \
 	gthreeprivate.h \
 	gthreeprogram.c \
 	gthreeprogram.h \
+	gthreeuniforms.c \
+	gthreeuniforms.h \
 	gthreerenderer.c \
 	gthreescene.c \
 	$(NULL)
