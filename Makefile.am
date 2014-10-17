@@ -30,6 +30,8 @@ libgthree_la_HEADERS = \
 	$(NULL)
 
 libgthree_la_SOURCES = \
+	gthree-resources.c \
+	gthree-resources.h \
 	gthreearea.c \
 	gthreebuffer.c \
 	gthreebuffer.h \
@@ -43,10 +45,10 @@ libgthree_la_SOURCES = \
 	gthreemesh.c \
 	gthreeobject.c \
 	gthreeprivate.h \
+	gthreeprogram.c \
+	gthreeprogram.h \
 	gthreerenderer.c \
 	gthreescene.c \
-	gthree-resources.c \
-	gthree-resources.h \
 	$(NULL)
 
 libgthree_la_CFLAGS = \

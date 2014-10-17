@@ -4,6 +4,7 @@
 #include <gtk/gtk.h>
 
 #include "gthreeobject.h"
+#include "gthreeprogram.h"
 
 G_BEGIN_DECLS
 
@@ -17,6 +18,11 @@ G_BEGIN_DECLS
 
 typedef struct {
   GObject parent;
+
+  // TODO: hide
+  gboolean needs_update;
+
+  GthreeProgram *program;
 } GthreeMaterial;
 
 typedef struct {

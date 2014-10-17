@@ -27,6 +27,7 @@ gthree_material_init (GthreeMaterial *material)
 {
   GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
 
+  material->needs_update = TRUE;
   priv->transparent = FALSE;
 }
 

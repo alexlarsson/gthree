@@ -20,6 +20,8 @@ typedef struct {
   /* Render state */
   graphene_matrix_t proj_screen_matrix;
 
+  int used_texture_units;
+
   gboolean old_flip_sided;
   gboolean old_double_sided;
   gboolean old_depth_test;
@@ -32,6 +34,9 @@ typedef struct {
   GthreeBlendEquation old_blend_equation;
   GthreeBlendSrcFactor old_blend_src;
   GthreeBlendDstFactor old_blend_dst;
+  GthreeProgram *current_program;
+  GthreeMaterial *current_material;
+  GthreeCamera *current_camera;
 
   GPtrArray *opaque_objects;
   GPtrArray *transparent_objects;
@@ -436,7 +441,217 @@ project_object (GthreeRenderer *renderer,
     project_object (renderer, scene, child, camera);
 }
 
-static gpointer
+static void
+deallocate_material (GthreeRenderer *renderer,
+                     GthreeMaterial *material)
+{
+  // TODO
+}
+
+static GthreeProgram *
+init_material (GthreeRenderer *renderer,
+               GthreeMaterial *material,
+               gpointer light,
+               gpointer fog,
+               GthreeObject *object)
+{
+  char *shader_id;
+  //material.addEventListener( 'dispose', onMaterialDispose );
+
+  //var u, a, identifiers, i, parameters, maxLightCount, maxBones, maxShadows, shaderID;
+
+#ifdef TODO
+  if ( material instanceof THREE.MeshDepthMaterial ) {
+    shader_id = 'depth';
+  } else if ( material instanceof THREE.MeshNormalMaterial ) {
+    shader_id = 'normal';
+  } else if ( material instanceof THREE.MeshBasicMaterial ) {
+    shader_id = 'basic';
+  } else if ( material instanceof THREE.MeshLambertMaterial ) {
+    shader_id = 'lambert';
+  } else if ( material instanceof THREE.MeshPhongMaterial ) {
+    shader_id = 'phong';
+  } else if ( material instanceof THREE.LineBasicMaterial ) {
+    shader_id = 'basic';
+  } else if ( material instanceof THREE.LineDashedMaterial ) {
+    shader_id = 'dashed';
+  } else if ( material instanceof THREE.PointCloudMaterial ) {
+    shader_id = 'particle_basic';
+  }
+#else
+  shader_id = "basic";
+#endif
+
+#ifdef TODO
+  if (shader_id)
+    {
+      var shader = THREE.ShaderLib[shader_id];
+
+      material.__webglShader =
+        {
+        uniforms: THREE.UniformsUtils.clone( shader.uniforms ),
+        vertexShader: shader.vertexShader,
+        fragmentShader: shader.fragmentShader
+        }
+    }
+  else
+    {
+      material.__webglShader =
+        {
+        uniforms: material.uniforms,
+        vertexShader: material.vertexShader,
+        fragmentShader: material.fragmentShader
+        }
+    }
+#endif
+
+  // heuristics to create shader parameters according to lights in the scene
+  // (not to blow over maxLights budget)
+
+#ifdef TODO
+  maxLightCount = allocateLights( lights );
+  maxShadows = allocateShadows( lights );
+  maxBones = allocateBones( object );
+
+  parameters =
+    {
+    precision: _precision,
+    supportsVertexTextures: _supportsVertexTextures,
+
+    map: !! material.map,
+    envMap: !! material.envMap,
+    lightMap: !! material.lightMap,
+    bumpMap: !! material.bumpMap,
+    normalMap: !! material.normalMap,
+    specularMap: !! material.specularMap,
+    alphaMap: !! material.alphaMap,
+
+    vertexColors: material.vertexColors,
+
+    fog: fog,
+    useFog: material.fog,
+    fogExp: fog instanceof THREE.FogExp2,
+
+    sizeAttenuation: material.sizeAttenuation,
+    logarithmicDepthBuffer: _logarithmicDepthBuffer,
+
+    skinning: material.skinning,
+    maxBones: maxBones,
+    useVertexTexture: _supportsBoneTextures && object && object.skeleton && object.skeleton.useVertexTexture,
+
+    morphTargets: material.morphTargets,
+    morphNormals: material.morphNormals,
+    maxMorphTargets: this.maxMorphTargets,
+    maxMorphNormals: this.maxMorphNormals,
+
+    maxDirLights: maxLightCount.directional,
+    maxPointLights: maxLightCount.point,
+    maxSpotLights: maxLightCount.spot,
+    maxHemiLights: maxLightCount.hemi,
+
+    maxShadows: maxShadows,
+    shadowMapEnabled: this.shadowMapEnabled && object.receiveShadow && maxShadows > 0,
+    shadowMapType: this.shadowMapType,
+    shadowMapDebug: this.shadowMapDebug,
+    shadowMapCascade: this.shadowMapCascade,
+
+    alphaTest: material.alphaTest,
+    metal: material.metal,
+    wrapAround: material.wrapAround,
+    doubleSided: material.side === THREE.DoubleSide,
+    flipSided: material.side === THREE.BackSide
+    };
+
+  // Generate code
+  var chunks = [];
+
+  if (shader_id)
+    {
+      chunks.push( shader_id );
+    }
+  else
+    {
+      chunks.push( material.fragmentShader );
+      chunks.push( material.vertexShader );
+    }
+
+  for ( var d in material.defines )
+    {
+      chunks.push( d );
+      chunks.push( material.defines[ d ] );
+    }
+
+  for ( var p in parameters )
+    {
+      chunks.push( p );
+      chunks.push( parameters[ p ] );
+    }
+
+  var code = chunks.join();
+
+  var program;
+
+  // Check if code has been already compiled
+  for ( var p = 0, pl = _programs.length; p < pl; p ++ )
+    {
+      var programInfo = _programs[ p ];
+      if (programInfo.code == code)
+        {
+          program = programInfo;
+          program.usedTimes ++;
+          break;
+        }
+    }
+
+  if (program == NULL)
+    {
+      program = new THREE.WebGLProgram( this, code, material, parameters );
+      _programs.push( program );
+    }
+
+  material.program = program;
+  var attributes = material.program.attributes;
+  if (material.morphTargets)
+    {
+      material.numSupportedMorphTargets = 0;
+      var id, base = 'morphTarget';
+      for ( i = 0; i < this.maxMorphTargets; i ++ )
+        {
+          id = base + i;
+          if ( attributes[ id ] >= 0 )
+            {
+              material.numSupportedMorphTargets ++;
+            }
+
+        }
+    }
+
+  if (material.morphNormals )
+    {
+      material.numSupportedMorphNormals = 0;
+      var id, base = 'morphNormal';
+
+      for ( i = 0; i < this.maxMorphNormals; i ++ )
+        {
+          id = base + i;
+          if ( attributes[ id ] >= 0 )
+            material.numSupportedMorphNormals ++;
+        }
+    }
+
+  material.uniformsList = [];
+  for ( u in material.__webglShader.uniforms )
+    {
+      var location = material.program.uniforms[ u ];
+
+      if ( location )
+        material.uniformsList.push( [ material.__webglShader.uniforms[ u ], location ] );
+    }
+#endif
+  return NULL;
+}
+
+static GthreeProgram *
 set_program (GthreeRenderer *renderer,
              GthreeCamera *camera,
              gpointer lights,
@@ -444,8 +659,220 @@ set_program (GthreeRenderer *renderer,
              GthreeMaterial *material,
              GthreeObject *object)
 {
-  /* TODO */
-  return NULL;
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  gboolean refreshProgram = false;
+  gboolean refreshMaterial = false;
+  gboolean refreshLights = false;
+  GthreeProgram *program;
+
+  priv->used_texture_units = 0;
+
+  if (material->needs_update)
+    {
+      if (material->program)
+        deallocate_material (renderer, material);
+      init_material (renderer, material, lights, fog, object);
+      material->needs_update = FALSE;
+    }
+
+  program = material->program;
+  //p_uniforms = program.uniforms;
+  //m_uniforms = material.__webglShader.uniforms;
+
+  if (program != priv->current_program )
+    {
+      glUseProgram (gthree_program_get_program (program));
+      priv->current_program = program;
+
+      refreshProgram = TRUE;
+      refreshMaterial = TRUE;
+      refreshLights = TRUE;
+    }
+
+  if (material != priv->current_material)
+    {
+      if (priv->current_material == NULL)
+        refreshLights = TRUE;
+      priv->current_material = material;
+      refreshMaterial = TRUE;
+    }
+
+  if (refreshProgram || camera != priv->current_camera)
+    {
+#ifdef TODO
+      glUniformMatrix4fv (p_uniforms.projectionMatrix, FALSE, camera.projectionMatrix.elements);
+      if ( _logarithmicDepthBuffer )
+        glUniform1f (p_uniforms.logDepthBufFC, 2.0 / ( Math.log( camera.far + 1.0 ) / Math.LN2 ));
+
+#endif
+      if (camera != priv->current_camera)
+        priv->current_camera = camera;
+
+      // load material specific uniforms
+      // (shader material also gets them for the sake of genericity)
+
+#if TODO
+      if (material instanceof THREE.ShaderMaterial ||
+          material instanceof THREE.MeshPhongMaterial ||
+          material.envMap )
+        {
+          if ( p_uniforms.cameraPosition !== null )
+            {
+              _vector3.setFromMatrixPosition( camera.matrixWorld );
+              _gl.uniform3f( p_uniforms.cameraPosition, _vector3.x, _vector3.y, _vector3.z );
+            }
+        }
+#endif
+
+#if TODO
+      if (material instanceof THREE.MeshPhongMaterial ||
+          material instanceof THREE.MeshLambertMaterial ||
+          material instanceof THREE.ShaderMaterial ||
+          material.skinning)
+        {
+          if ( p_uniforms.viewMatrix !== null )
+            {
+              glUniformMatrix4fv (p_uniforms.viewMatrix, false, camera.matrixWorldInverse.elements);
+            }
+        }
+#endif
+    }
+
+  // skinning uniforms must be set even if material didn't change
+  // auto-setting of texture unit for bone texture must go before other textures
+  // not sure why, but otherwise weird things happen
+
+#if TODO
+  if ( material.skinning )
+    {
+      if ( object.bindMatrix && p_uniforms.bindMatrix !== null )
+        glUniformMatrix4fv( p_uniforms.bindMatrix, false, object.bindMatrix.elements );
+
+      if ( object.bindMatrixInverse && p_uniforms.bindMatrixInverse !== null )
+        glUniformMatrix4fv( p_uniforms.bindMatrixInverse, false, object.bindMatrixInverse.elements );
+
+      if ( _supportsBoneTextures && object.skeleton && object.skeleton.useVertexTexture )
+        {
+          if ( p_uniforms.boneTexture !== null )
+            {
+              var textureUnit = getTextureUnit();
+              glUniform1i( p_uniforms.boneTexture, textureUnit );
+              _this.setTexture( object.skeleton.boneTexture, textureUnit );
+            }
+
+          if ( p_uniforms.boneTextureWidth !== null )
+            glUniform1i( p_uniforms.boneTextureWidth, object.skeleton.boneTextureWidth );
+
+          if ( p_uniforms.boneTextureHeight !== null )
+            glUniform1i( p_uniforms.boneTextureHeight, object.skeleton.boneTextureHeight );
+
+        }
+      else if ( object.skeleton && object.skeleton.boneMatrices )
+        {
+          if ( p_uniforms.boneGlobalMatrices !== null )
+            glUniformMatrix4fv( p_uniforms.boneGlobalMatrices, false, object.skeleton.boneMatrices );
+        }
+    }
+#endif
+
+  if ( refreshMaterial )
+    {
+#if TODO
+    // refresh uniforms common to several materials
+      if ( fog && material.fog )
+        refreshUniformsFog( m_uniforms, fog );
+#endif
+
+#if TODO
+      if ( material instanceof THREE.MeshPhongMaterial ||
+           material instanceof THREE.MeshLambertMaterial ||
+           material.lights )
+        {
+          if ( _lightsNeedUpdate )
+            {
+              refreshLights = true;
+              setupLights( lights );
+              _lightsNeedUpdate = false;
+            }
+
+          if ( refreshLights )
+            {
+              refreshUniformsLights( m_uniforms, _lights );
+              markUniformsLightsNeedsUpdate( m_uniforms, true );
+            }
+          else
+            {
+              markUniformsLightsNeedsUpdate( m_uniforms, false );
+            }
+        }
+#endif
+
+#if TODO
+      if ( material instanceof THREE.MeshBasicMaterial ||
+           material instanceof THREE.MeshLambertMaterial ||
+           material instanceof THREE.MeshPhongMaterial )
+        {
+          refreshUniformsCommon( m_uniforms, material );
+        }
+#endif
+
+      // refresh single material specific uniforms
+
+#if TODO
+      if ( material instanceof THREE.LineBasicMaterial )
+        {
+          refreshUniformsLine( m_uniforms, material );
+        }
+      else if ( material instanceof THREE.LineDashedMaterial )
+        {
+          refreshUniformsLine( m_uniforms, material );
+          refreshUniformsDash( m_uniforms, material );
+        }
+      else if ( material instanceof THREE.PointCloudMaterial )
+        {
+          refreshUniformsParticle( m_uniforms, material );
+        }
+      else if ( material instanceof THREE.MeshPhongMaterial )
+        {
+          refreshUniformsPhong( m_uniforms, material );
+        }
+      else if ( material instanceof THREE.MeshLambertMaterial )
+        {
+          refreshUniformsLambert( m_uniforms, material );
+        }
+      else if ( material instanceof THREE.MeshDepthMaterial )
+        {
+          m_uniforms.mNear.value = camera.near;
+          m_uniforms.mFar.value = camera.far;
+          m_uniforms.opacity.value = material.opacity;
+        }
+      else if ( material instanceof THREE.MeshNormalMaterial )
+        {
+          m_uniforms.opacity.value = material.opacity;
+        }
+
+      if ( object.receiveShadow && ! material._shadowPass )
+        {
+          refreshUniformsShadow( m_uniforms, lights );
+        }
+#endif
+
+      // load common uniforms
+#ifdef TODO
+      loadUniformsGeneric (material.uniformsList);
+#endif
+    }
+
+#ifdef TODO
+  loadUniformsMatrices( p_uniforms, object );
+
+  if (p_uniforms.modelMatrix !== null )
+    {
+      glUniformMatrix4fv( p_uniforms.modelMatrix, false, object.matrixWorld.elements );
+    }
+#endif
+
+  return program;
 }
 
 static void
@@ -497,7 +924,7 @@ render_buffer (GthreeRenderer *renderer,
                GthreeBuffer *buffer)
 {
   GthreeObject *object = buffer->object;
-  gpointer program = set_program (renderer, camera, lights, fog, material, object);
+  GthreeProgram *program = set_program (renderer, camera, lights, fog, material, object);
   //var linewidth, a, attribute, i, il;
   //var attributes = program.attributes;
   struct {
