@@ -3,6 +3,7 @@
 
 #include "gthreerenderer.h"
 #include "gthreeobjectprivate.h"
+#include "gthreeshader.h"
 
 typedef struct {
   int width;
@@ -482,11 +483,11 @@ init_material (GthreeRenderer *renderer,
   shader_id = "basic";
 #endif
 
-#ifdef TODO
   if (shader_id)
     {
-      var shader = THREE.ShaderLib[shader_id];
+      GthreeShader *shader = gthree_get_shader_from_library (shader_id);
 
+#ifdef TODO
       material.__webglShader =
         {
         uniforms: THREE.UniformsUtils.clone( shader.uniforms ),
@@ -502,8 +503,8 @@ init_material (GthreeRenderer *renderer,
         vertexShader: material.vertexShader,
         fragmentShader: material.fragmentShader
         }
-    }
 #endif
+    }
 
   // heuristics to create shader parameters according to lights in the scene
   // (not to blow over maxLights budget)

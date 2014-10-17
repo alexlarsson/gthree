@@ -6,6 +6,7 @@
 #include "gthreescene.h"
 #include "gthreecamera.h"
 #include "gthreematerial.h"
+#include "gthree-resources.h"
 
 G_BEGIN_DECLS
 

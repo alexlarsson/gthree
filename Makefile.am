@@ -51,6 +51,8 @@ libgthree_la_SOURCES = \
 	gthreeuniforms.h \
 	gthreerenderer.c \
 	gthreescene.c \
+	gthreeshader.c \
+	gthreeshader.h \
 	$(NULL)
 
 libgthree_la_CFLAGS = \
@@ -67,6 +69,7 @@ gtkglobe_CFLAGS = \
 
 gtkglobe_SOURCES =						\
 	gtkglobe.c						\
+	gthree-resources.c					\
 	$(NULL)
 
 gtkglobe_LDADD = \
@@ -75,7 +78,9 @@ gtkglobe_LDADD = \
 	$(NULL)
 
 resource_files = $(shell glib-compile-resources --sourcedir=$(srcdir) --generate-dependencies $(srcdir)/gthree.gresource.xml)
+
 gthree-resources.c: gthree.gresource.xml $(resource_files)
 	glib-compile-resources --target=$@ --sourcedir=$(srcdir) --generate-source --c-name gthree $(srcdir)/gthree.gresource.xml
+
 gthree-resources.h: gthree.gresource.xml $(resource_files)
 	glib-compile-resources --target=$@ --sourcedir=$(srcdir) --generate-header --c-name gthree $(srcdir)/gthree.gresource.xml

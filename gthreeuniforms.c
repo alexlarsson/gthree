@@ -505,6 +505,8 @@ gthree_uniforms_init_libs ()
 GthreeUniforms *
 gthree_get_uniforms_from_library (const char *name)
 {
+  gthree_uniforms_init_libs ();
+
   if (strcmp (name, "common") == 0)
     return common;
   if (strcmp (name, "bump") == 0)
