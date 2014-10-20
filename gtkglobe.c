@@ -101,7 +101,7 @@ main (int argc, char *argv[])
   camera = gthree_camera_new (30, 1, 1, 10000);
 
   gthree_object_set_position (GTHREE_OBJECT (camera),
-                              graphene_point3d_init (&pos, 0, 0, 1000));
+                              graphene_point3d_init (&pos, 0, 0, 400));
 
   area = gthree_area_new (scene, camera);
   gtk_widget_set_hexpand (area, TRUE);
