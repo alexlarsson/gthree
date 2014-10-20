@@ -27,13 +27,15 @@ load_model_from_json (char *path, GError **error)
   return NULL;
 }
 
+GthreeScene *scene;
+GthreeGeometry *geometry;
+GthreeMaterial *material;
+GthreeMesh *mesh;
+double rot = 0;
+
 GthreeScene *
 init_scene (void)
 {
-  GthreeScene *scene;
-  GthreeGeometry *geometry;
-  GthreeMaterial *material;
-  GthreeMesh *mesh;
 
   scene = gthree_scene_new ();
 
@@ -45,6 +47,34 @@ init_scene (void)
 
   return scene;
 }
+
+static gboolean
+tick (GtkWidget     *widget,
+      GdkFrameClock *frame_clock,
+      gpointer       user_data)
+{
+  graphene_point3d_t v;
+
+  if (1)
+    return G_SOURCE_CONTINUE;
+
+  if (0)
+    {
+      rot += 0.00001;
+
+      v.x = rot;
+      v.y = 0;
+      v.y = 0;
+
+      gthree_object_set_rotation (GTHREE_OBJECT (mesh), &v);
+      //gthree_object_set_position (GTHREE_OBJECT (mesh), &v);
+    }
+
+  gtk_widget_queue_draw (widget);
+
+  return G_SOURCE_CONTINUE;
+}
+
 
 int
 main (int argc, char *argv[])
@@ -78,6 +108,9 @@ main (int argc, char *argv[])
   gtk_widget_set_vexpand (area, TRUE);
   gtk_container_add (GTK_CONTAINER (box), area);
   gtk_widget_show (area);
+
+  gtk_widget_add_tick_callback (GTK_WIDGET (area), tick, area, NULL);
+
 
   button = gtk_button_new_with_label ("Quit");
   gtk_widget_set_hexpand (button, TRUE);

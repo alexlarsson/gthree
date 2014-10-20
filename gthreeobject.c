@@ -18,6 +18,7 @@ static guint object_signals[LAST_SIGNAL] = { 0, };
 typedef struct {
   graphene_point3d_t position;
   graphene_quaternion_t quaternion;
+  graphene_point3d_t euler;
   graphene_vec3_t scale;
   graphene_vec3_t up;
 
@@ -208,6 +209,67 @@ gthree_object_set_position (GthreeObject *object,
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
 
   priv->position = *pos;
+}
+
+static void
+quaternion_to_angles (const graphene_quaternion_t *q, graphene_point3d_t *rot)
+{
+  graphene_vec4_t v;
+  graphene_vec4_t sq;
+  float qx, qy, qz, qw, sqx, sqy, sqz, sqw;
+
+  graphene_quaternion_to_vec4 (q, &v);
+  graphene_vec4_multiply (&v, &v, &sq);
+
+  qx = graphene_vec4_get_x (&v);
+  qy = graphene_vec4_get_y (&v);
+  qz = graphene_vec4_get_z (&v);
+  qw = graphene_vec4_get_w (&v);
+  sqx = graphene_vec4_get_x (&sq);
+  sqy = graphene_vec4_get_y (&sq);
+  sqz = graphene_vec4_get_z (&sq);
+  sqw = graphene_vec4_get_w (&sq);
+
+
+  rot->x = atan2( 2 * ( qx * qw - qy * qz ), (sqw - sqx - sqy + sqz));
+  rot->y = asin(CLAMP( 2 * ( qx * qz + qy * qw), - 1, 1));
+  rot->z = atan2(2 * (qz * qw - qx * qy), (sqw + sqx - sqy - sqz));
+}
+
+void
+gthree_object_set_quaternion (GthreeObject *object,
+                              const graphene_quaternion_t *q)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  graphene_quaternion_init_from_quaternion (&priv->quaternion, q);
+  quaternion_to_angles (&priv->quaternion, &priv->euler);
+}
+
+const graphene_quaternion_t *
+gthree_object_get_quaternion (GthreeObject *object)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  return &priv->quaternion;
+}
+
+void
+gthree_object_set_rotation (GthreeObject *object,
+                            const graphene_point3d_t *rot)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  graphene_quaternion_init_from_angles (&priv->quaternion, rot->x, rot->y, rot->z);
+  priv->euler = *rot;
+}
+
+const graphene_point3d_t *
+gthree_object_get_rotation (GthreeObject *object)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  return &priv->euler;
 }
 
 void

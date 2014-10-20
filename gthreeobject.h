@@ -46,17 +46,25 @@ GthreeObject *gthree_object_new ();
 
 const graphene_matrix_t * gthree_object_get_world_matrix (GthreeObject *object);
 
-void          gthree_object_set_matrix_auto_update (GthreeObject *object,
-                                                    gboolean auto_update);
-void          gthree_object_update_matrix_world   (GthreeObject *object,
-                                                   gboolean force);
-void          gthree_object_update_matrix         (GthreeObject *object);
-void          gthree_object_update_matrix_view    (GthreeObject *object,
-                                                   const graphene_matrix_t *camera_matrix);
-void          gthree_object_look_at              (GthreeObject *object,
-                                                  graphene_vec3_t *vector);
-void          gthree_object_set_position         (GthreeObject *object,
-                                                  graphene_point3d_t *pos);
+void                         gthree_object_set_matrix_auto_update (GthreeObject                *object,
+                                                                   gboolean                     auto_update);
+void                         gthree_object_update_matrix_world    (GthreeObject                *object,
+                                                                   gboolean                     force);
+void                         gthree_object_update_matrix          (GthreeObject                *object);
+void                         gthree_object_update_matrix_view     (GthreeObject                *object,
+                                                                   const graphene_matrix_t     *camera_matrix);
+void                         gthree_object_look_at                (GthreeObject                *object,
+                                                                   graphene_vec3_t             *vector);
+void                         gthree_object_set_position           (GthreeObject                *object,
+                                                                   graphene_point3d_t          *pos);
+void                         gthree_object_set_quaternion         (GthreeObject                *object,
+                                                                   const graphene_quaternion_t *q);
+const graphene_quaternion_t *gthree_object_get_quaternion         (GthreeObject                *object);
+void                         gthree_object_set_rotation           (GthreeObject                *object,
+                                                                   const graphene_point3d_t    *rot);
+const graphene_point3d_t *   gthree_object_get_rotation           (GthreeObject                *object);
+
+
 
 void gthree_object_get_world_matrix_floats      (GthreeObject *object,
                                                  float        *dest);

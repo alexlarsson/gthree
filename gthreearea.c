@@ -8,7 +8,6 @@ typedef struct {
   GthreeRenderer *renderer;
   GthreeScene *scene;
   GthreeCamera *camera;
-  guint tick;
 } GthreeAreaPrivate;
 
 
@@ -20,9 +19,6 @@ static void     gthree_area_size_allocate (GtkWidget     *widget,
                                            GtkAllocation *allocation);
 static void     gthree_area_realize       (GtkWidget     *widget);
 static void     gthree_area_unrealize     (GtkWidget     *widget);
-static gboolean gthree_area_tick          (GtkWidget     *widget,
-                                               GdkFrameClock *frame_clock,
-                                               gpointer       user_data);
 
 GtkWidget *
 gthree_area_new (GthreeScene *scene,
@@ -48,7 +44,6 @@ gthree_area_init (GthreeArea *area)
 {
   GthreeAreaPrivate *priv = gthree_area_get_instance_private (area);
 
-  priv->tick = gtk_widget_add_tick_callback (GTK_WIDGET (area), gthree_area_tick, area, NULL);
 }
 
 static void
@@ -59,8 +54,6 @@ gthree_area_finalize (GObject *obj)
 
   g_clear_object (&priv->scene);
   g_clear_object (&priv->camera);
-
-  gtk_widget_remove_tick_callback (GTK_WIDGET (area), priv->tick);
 
   G_OBJECT_CLASS (gthree_area_parent_class)->finalize (obj);
 }
@@ -143,18 +136,4 @@ gthree_area_unrealize (GtkWidget *widget)
   g_clear_object (&priv->renderer);
 
   GTK_WIDGET_CLASS (gthree_area_parent_class)->unrealize (widget);
-}
-
-
-static gboolean
-gthree_area_tick (GtkWidget     *widget,
-                      GdkFrameClock *frame_clock,
-                      gpointer       user_data)
-{
-  /*
-  GthreeArea *area = GTHREE_AREA (widget);
-  GthreeAreaPrivate *priv = gthree_area_get_instance_private (area);
-  */
-
-  return G_SOURCE_CONTINUE;
 }
