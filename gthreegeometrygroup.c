@@ -7,8 +7,7 @@ G_DEFINE_TYPE (GthreeGeometryGroup, gthree_geometry_group, GTHREE_TYPE_BUFFER);
 
 GthreeGeometryGroup *
 gthree_geometry_group_new (GthreeObject *object,
-                           GthreeMaterial *material,
-                           int material_index)
+                           GthreeMaterial *material)
 {
   GthreeGeometryGroup *group;
 
@@ -16,9 +15,7 @@ gthree_geometry_group_new (GthreeObject *object,
                         NULL);
 
   group->parent.object = object; /* Weak ref */
-  group->parent.material = g_object_ref (material); /* Weak ref */
-
-  group->material_index = material_index;
+  group->parent.material = g_object_ref (material);
 
   return group;
 }
@@ -68,4 +65,3 @@ gthree_geometry_group_add_face (GthreeGeometryGroup *group,
   g_ptr_array_add (group->faces, g_object_ref (face));
   group->n_vertices += 3;
 }
-

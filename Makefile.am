@@ -23,6 +23,7 @@ libgthree_la_HEADERS = \
 	gthreeface.h \
 	gthreegeometry.h \
 	gthreematerial.h \
+	gthreemultimaterial.h \
 	gthreemesh.h \
 	gthreeobject.h \
 	gthreerenderer.h \
@@ -42,6 +43,7 @@ libgthree_la_SOURCES = \
 	gthreegeometrygroup.c \
 	gthreegeometrygroup.h \
 	gthreematerial.c \
+	gthreemultimaterial.c \
 	gthreemesh.c \
 	gthreeobject.c \
 	gthreeprivate.h \

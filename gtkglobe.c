@@ -6,6 +6,7 @@
 
 #include "gthreearea.h"
 #include "gthreemesh.h"
+#include "gthreemultimaterial.h"
 
 typedef struct {
   int dummy;
@@ -30,6 +31,8 @@ load_model_from_json (char *path, GError **error)
 GthreeScene *scene;
 GthreeGeometry *geometry;
 GthreeMaterial *material;
+GthreeMaterial *wireframe;
+GthreeMultiMaterial *multi_material;
 GthreeMesh *mesh;
 double rot = 0;
 
@@ -37,12 +40,25 @@ GthreeScene *
 init_scene (void)
 {
   static graphene_point3d_t rot = { 0, 0, 0};
+  int i;
 
   scene = gthree_scene_new ();
 
   geometry = gthree_geometry_new_box (100, 100, 100, 1, 1, 1);
+  multi_material = gthree_multi_material_new ();
   material = gthree_material_new ();
-  mesh = gthree_mesh_new (geometry, material);
+  gthree_material_set_side (material, GTHREE_SIDE_DOUBLE);
+  wireframe = gthree_material_new ();
+  gthree_material_set_is_wireframe (wireframe, TRUE);
+  gthree_material_set_side (wireframe, GTHREE_SIDE_DOUBLE);
+
+  for (i = 0; i < 3; i++)
+    gthree_multi_material_set_index (multi_material, i, wireframe);
+
+  for (i = 3; i < 6; i++)
+    gthree_multi_material_set_index (multi_material, i, material);
+
+  mesh = gthree_mesh_new (geometry, GTHREE_MATERIAL (multi_material));
 
   //rot.y = 10;
   gthree_object_set_rotation (GTHREE_OBJECT (mesh), &rot);
@@ -57,7 +73,7 @@ tick (GtkWidget     *widget,
       GdkFrameClock *frame_clock,
       gpointer       user_data)
 {
-  static graphene_point3d_t pos = { 0, 0, 0};
+  //static graphene_point3d_t pos = { 0, 0, 0};
   static graphene_point3d_t rot = { 0, 0, 0};
 
   if (0)
@@ -66,7 +82,8 @@ tick (GtkWidget     *widget,
   if (1)
     {
       //pos.x += 1;
-      rot.z += 0.1;
+      rot.y += 0.04;
+      rot.z += 0.01;
 
       gthree_object_set_rotation (GTHREE_OBJECT (mesh), &rot);
       //gthree_object_set_position (GTHREE_OBJECT (mesh), &pos);

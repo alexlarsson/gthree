@@ -2,6 +2,7 @@
 #include <epoxy/gl.h>
 
 #include "gthreemesh.h"
+#include "gthreemultimaterial.h"
 #include "gthreegeometrygroupprivate.h"
 #include "gthreeobjectprivate.h"
 #include "gthreeprivate.h"
@@ -98,7 +99,7 @@ make_geometry_groups (GthreeMesh *mesh,
         group = ptr;
       else
         {
-          group = gthree_geometry_group_new (GTHREE_OBJECT (mesh), priv->material, material_index);
+          group = gthree_geometry_group_new (GTHREE_OBJECT (mesh), gthree_material_resolve (priv->material, material_index));
           g_hash_table_insert (geometry_groups, GINT_TO_POINTER(group_hash), group);
           g_ptr_array_add (groups, group);
         }
@@ -114,7 +115,7 @@ make_geometry_groups (GthreeMesh *mesh,
             group = ptr;
           else
             {
-              group = gthree_geometry_group_new (GTHREE_OBJECT (mesh), priv->material, material_index);
+              group = gthree_geometry_group_new (GTHREE_OBJECT (mesh), gthree_material_resolve (priv->material, material_index));
               g_hash_table_insert (geometry_groups, GINT_TO_POINTER(group_hash), group);
               g_ptr_array_add (groups, group);
             }
@@ -127,16 +128,6 @@ make_geometry_groups (GthreeMesh *mesh,
   g_hash_table_destroy (geometry_groups);
 
   return groups;
-}
-
-static GthreeMaterial *
-get_buffer_material (GthreeMesh *mesh,
-                     GthreeGeometryGroup *group)
-{
-  GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
-
-  // TODO: handle MeshFaceMaterial
-  return priv->material;
 }
 
 static gboolean
@@ -178,15 +169,15 @@ static void
 init_mesh_buffers (GthreeMesh *mesh,
                    GthreeGeometryGroup *group)
 {
-  GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
+  //GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
   //GthreeGeometry *geometry = priv->geometry;
   GPtrArray *faces = group->faces;
   guint nvertices = faces->len * 3;
   guint ntris     = faces->len * 1;
   guint nlines    = faces->len * 3;
-  //GthreeMaterial *material = get_buffer_material (mesh, group);
-  //gboolean uv_type = buffer_guess_uv_type (priv->material);
-  gboolean normal_type = buffer_guess_normal_type (priv->material);
+  GthreeMaterial *material = GTHREE_BUFFER(group)->material;
+  //gboolean uv_type = buffer_guess_uv_type (material);
+  gboolean normal_type = buffer_guess_normal_type (material);
   //GthreeColorType vertex_color_type = buffer_guess_vertex_color_type (material);
 
   group->vertex_array = g_new (float, nvertices * 3);
@@ -280,8 +271,8 @@ set_mesh_buffers (GthreeMesh *mesh,
                   GthreeMaterial *material)
 {
   GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
-  //gboolean uv_type = buffer_guess_uv_type (priv->material);
-  GthreeShadingType normal_type = buffer_guess_normal_type (priv->material);
+  //gboolean uv_type = buffer_guess_uv_type (material);
+  GthreeShadingType normal_type = buffer_guess_normal_type (material);
   GthreeColorType vertex_color_type = buffer_guess_vertex_color_type (material);
   gboolean needsSmoothNormals = normal_type == GTHREE_SHADING_SMOOTH;
 
@@ -419,7 +410,7 @@ gthree_mesh_update (GthreeObject *object)
     {
       group = g_ptr_array_index (priv->groups, i);
 
-      material = get_buffer_material (mesh, group);
+      material = GTHREE_BUFFER (group)->material;
 
       //customAttributesDirty = material.attributes && areCustomAttributesDirty( material );
       if ( priv->verticesNeedUpdate || priv->morphTargetsNeedUpdate || priv->elementsNeedUpdate ||
@@ -454,7 +445,7 @@ gthree_mesh_realize (GthreeObject *object)
 
       priv->groups =
         make_geometry_groups (mesh, priv->geometry,
-                              FALSE /* TODO material instanceof THREE.MeshFaceMaterial */,
+                              GTHREE_IS_MULTI_MATERIAL(priv->material),
                               65535 /* TODO_glExtensionElementIndexUint ? 4294967296 : 65535 */);
     }
 

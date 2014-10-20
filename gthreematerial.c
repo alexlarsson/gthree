@@ -77,6 +77,18 @@ gthree_material_finalize (GObject *obj)
   G_OBJECT_CLASS (gthree_material_parent_class)->finalize (obj);
 }
 
+GthreeMaterial *
+gthree_material_resolve (GthreeMaterial *material,
+                         int index)
+{
+  GthreeMaterialClass *class = GTHREE_MATERIAL_GET_CLASS(material);
+
+  if (class->resolve)
+    return class->resolve (material, index);
+
+  return material;
+}
+
 static void
 gthree_material_class_init (GthreeMaterialClass *klass)
 {

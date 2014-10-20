@@ -17,7 +17,6 @@ typedef struct {
   GthreeBuffer parent;
 
   GPtrArray *faces; /* GthreeFace* */
-  int material_index;
   int n_vertices;
 
   guint realized : 1;
@@ -40,8 +39,7 @@ typedef struct {
 } GthreeGeometryGroupClass;
 
 GthreeGeometryGroup *gthree_geometry_group_new (GthreeObject *object,
-                                                GthreeMaterial *material,
-                                                int material_index);
+                                                GthreeMaterial *material);
 GType gthree_geometry_group_get_type (void) G_GNUC_CONST;
 
 void gthree_geometry_group_add_face (GthreeGeometryGroup *group,

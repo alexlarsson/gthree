@@ -376,18 +376,8 @@ resolve_buffer_material (GthreeRenderer *renderer,
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
   GthreeMaterial *material = buffer->material;
 
-#if TODO
-  if ( material instanceof THREE.MeshFaceMaterial )
-    {
-      var materialIndex = geometry instanceof THREE.BufferGeometry ? 0 : buffer.materialIndex;
-
-      material = material.materials[materialIndex];
-    }
-#endif
-
   if (material)
     {
-      buffer->resolved_material = material;
       if (gthree_material_get_is_transparent (material))
         g_ptr_array_add (priv->transparent_objects, buffer);
       else
@@ -1060,7 +1050,6 @@ render_buffer (GthreeRenderer *renderer,
         {
           if (gthree_material_get_is_wireframe (material))
             {
-              g_print ("drawing wireframe\n");
               // wireframe
               set_line_width (renderer, gthree_material_get_wireframe_line_width (material));
               if (updateBuffers)
@@ -1069,7 +1058,6 @@ render_buffer (GthreeRenderer *renderer,
             }
           else
             {
-              g_print ("drawing triangles\n");
               // triangles
               if (updateBuffers)
                 glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, buffer->face_buffer);
@@ -1154,8 +1142,6 @@ gthree_renderer_render (GthreeRenderer *renderer,
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
   GthreeMaterial *override_material;
   gpointer lights, fog;
-
-  g_print ("******************gthree_renderer_render\n");
 
   lights = NULL;
   fog = NULL;

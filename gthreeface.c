@@ -43,6 +43,12 @@ gthree_face_set_material_index (GthreeFace *face,
   face->material_index = material_index;
 }
 
+int
+gthree_face_get_material_index (GthreeFace *face)
+{
+  return face->material_index;
+}
+
 static void
 gthree_face_init (GthreeFace *face)
 {

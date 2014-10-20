@@ -2,6 +2,7 @@
 #define __GTHREE_TYPES_H__
 
 typedef struct _GthreeMaterial GthreeMaterial;
+typedef struct _GthreeMultiMaterial GthreeMultiMaterial;
 typedef struct _GthreeProgram GthreeProgram;
 
 

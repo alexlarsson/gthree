@@ -36,7 +36,6 @@ typedef struct {
 
   /* Draw state */
   float z;
-  GthreeMaterial *resolved_material;
 } GthreeBuffer;
 
 typedef struct {

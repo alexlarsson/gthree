@@ -12,11 +12,11 @@ G_BEGIN_DECLS
 
 
 #define GTHREE_TYPE_MATERIAL      (gthree_material_get_type ())
-#define GTHREE_MATERIAL(inst)     (G_TYPE_CHECK_INSTANCE_CAST ((inst), \
-                                                             GTHREE_TYPE_MATERIAL, \
-                                                             GthreeMaterial))
-#define GTHREE_IS_MATERIAL(inst)  (G_TYPE_CHECK_INSTANCE_TYPE ((inst),    \
-                                                             GTHREE_TYPE_MATERIAL))
+#define GTHREE_MATERIAL(inst)     (G_TYPE_CHECK_INSTANCE_CAST ((inst), GTHREE_TYPE_MATERIAL, GthreeMaterial))
+#define GTHREE_MATERIAL_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GTHREE_TYPE_MATERIAL, GthreeMaterialClass))
+#define GTHREE_IS_MATERIAL(inst)  (G_TYPE_CHECK_INSTANCE_TYPE ((inst), GTHREE_TYPE_MATERIAL))
+#define GTHREE_IS_MATERIAL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GTHREE_TYPE_MATERIAL))
+#define GTHREE_MATERIAL_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GTHREE_TYPE_MATERIAL, GthreeMaterialClass))
 
 struct _GthreeMaterial {
   GObject parent;
@@ -31,6 +31,8 @@ struct _GthreeMaterial {
 typedef struct {
   GObjectClass parent_class;
 
+  GthreeMaterial * (*resolve) (GthreeMaterial *material,
+                               int index);
 } GthreeMaterialClass;
 
 GthreeMaterial *gthree_material_new ();
@@ -80,6 +82,8 @@ GthreeSide      gthree_material_get_side                 (GthreeMaterial       *
 void            gthree_material_set_side                 (GthreeMaterial       *material,
                                                           GthreeSide            side);
 GthreeShader *  gthree_material_get_shader               (GthreeMaterial       *material);
+GthreeMaterial *gthree_material_resolve                  (GthreeMaterial       *material,
+                                                          int                   index);
 
 
 
