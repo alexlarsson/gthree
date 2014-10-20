@@ -41,8 +41,10 @@ GthreeScene *
 init_scene (void)
 {
   static graphene_point3d_t rot = { 0, 0, 0};
-  GdkRGBA green = {0,1,0,1};
-  GdkRGBA blue = {0,0,1,1};
+  GdkRGBA red = {1, 0, 0, 1 };
+  GdkRGBA green = {0, 1, 0, 1};
+  GdkRGBA blue = {0, 0, 1, 1};
+  GdkRGBA yellow = {1, 1, 0, 1};
   int i;
 
   scene = gthree_scene_new ();
@@ -52,7 +54,10 @@ init_scene (void)
   for (i = 0; i < gthree_geometry_get_n_faces (geometry); i++)
     {
       GthreeFace *face = gthree_geometry_get_face (geometry, i);
-      if (i % 4 >= 2)
+      int c = (i/2) % 3;
+      if (c == 0)
+        gthree_face_set_color (face, &red);
+      else if (c == 1)
         gthree_face_set_color (face, &green);
       else
         gthree_face_set_color (face, &blue);
@@ -61,13 +66,13 @@ init_scene (void)
   multi_material = gthree_multi_material_new ();
   material = gthree_basic_material_new ();
   gthree_material_set_side (GTHREE_MATERIAL (material), GTHREE_SIDE_DOUBLE);
-  gthree_basic_material_set_color (material, &blue);
+  gthree_basic_material_set_color (material, &yellow);
   gthree_basic_material_set_vertex_colors (material, GTHREE_COLOR_FACE);
   wireframe = gthree_basic_material_new ();
   gthree_material_set_is_wireframe (GTHREE_MATERIAL (wireframe), TRUE);
   gthree_material_set_side (GTHREE_MATERIAL (wireframe), GTHREE_SIDE_DOUBLE);
-  gthree_basic_material_set_color (wireframe, &green);
-  gthree_basic_material_set_vertex_colors (wireframe, GTHREE_COLOR_FACE);
+  gthree_basic_material_set_color (wireframe, &yellow);
+  gthree_basic_material_set_vertex_colors (wireframe, GTHREE_COLOR_NONE);
 
   for (i = 0; i < 3; i++)
     gthree_multi_material_set_index (multi_material, i, GTHREE_MATERIAL (wireframe));

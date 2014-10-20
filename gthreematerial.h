@@ -37,6 +37,9 @@ typedef struct {
   void          (*set_params) (GthreeMaterial *material,
                                GthreeProgramParameters *params);
 
+  void          (*set_uniforms) (GthreeMaterial *material,
+                                 GthreeUniforms *uniforms);
+
 } GthreeMaterialClass;
 
 GthreeMaterial *gthree_material_new ();
@@ -88,6 +91,10 @@ void            gthree_material_set_side                 (GthreeMaterial       *
 GthreeShader *  gthree_material_get_shader               (GthreeMaterial       *material);
 GthreeMaterial *gthree_material_resolve                  (GthreeMaterial       *material,
                                                           int                   index);
+void            gthree_material_set_params               (GthreeMaterial       *material,
+                                                          GthreeProgramParameters *params);
+void            gthree_material_set_uniforms             (GthreeMaterial *material,
+                                                          GthreeUniforms *uniforms);
 
 
 

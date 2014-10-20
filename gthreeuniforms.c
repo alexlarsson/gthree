@@ -305,6 +305,16 @@ gthree_uniform_set_float (GthreeUniform *uniform,
 }
 
 void
+gthree_uniform_set_color (GthreeUniform *uniform,
+                          GdkRGBA *val)
+{
+  g_return_if_fail (uniform->type == GTHREE_UNIFORM_TYPE_COLOR);
+  uniform->value.floats[0] = val->red;
+  uniform->value.floats[1] = val->green;
+  uniform->value.floats[2] = val->blue;
+}
+
+void
 gthree_uniform_load (GthreeUniform *uniform)
 {
   if (uniform->location == -1)

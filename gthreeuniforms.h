@@ -80,6 +80,8 @@ void gthree_uniform_set_location (GthreeUniform *uniform,
                                   int location);
 void gthree_uniform_set_float (GthreeUniform *uniform,
                                double value);
+void gthree_uniform_set_color (GthreeUniform *uniform,
+                               GdkRGBA *color);
 
 const char *gthree_uniform_get_name (GthreeUniform *uniform);
 GQuark gthree_uniform_get_qname (GthreeUniform *uniform);

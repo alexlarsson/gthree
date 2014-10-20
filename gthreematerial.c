@@ -98,6 +98,7 @@ gthree_material_set_params (GthreeMaterial *material,
   return class->set_params (material, params);
 }
 
+
 static void
 gthree_material_real_set_params (GthreeMaterial *material,
                                  GthreeProgramParameters *params)
@@ -108,11 +109,34 @@ gthree_material_real_set_params (GthreeMaterial *material,
   params->flip_sided = priv->side == GTHREE_SIDE_BACK;
 }
 
+void
+gthree_material_set_uniforms (GthreeMaterial *material,
+                              GthreeUniforms *uniforms)
+{
+  GthreeMaterialClass *class = GTHREE_MATERIAL_GET_CLASS(material);
+
+  return class->set_uniforms (material, uniforms);
+}
+
+static void
+gthree_material_real_set_uniforms (GthreeMaterial *material,
+                                   GthreeUniforms *uniforms)
+{
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+  GthreeUniform *uni;
+
+  uni = gthree_uniforms_lookup_from_string (uniforms, "opacity");
+  if (uni != NULL)
+    gthree_uniform_set_float (uni, priv->opacity);
+}
+
+
 static void
 gthree_material_class_init (GthreeMaterialClass *klass)
 {
   G_OBJECT_CLASS (klass)->finalize = gthree_material_finalize;
   GTHREE_MATERIAL_CLASS(klass)->set_params = gthree_material_real_set_params;
+  GTHREE_MATERIAL_CLASS(klass)->set_uniforms = gthree_material_real_set_uniforms;
 }
 
 gboolean

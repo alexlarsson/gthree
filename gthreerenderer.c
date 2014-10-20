@@ -812,6 +812,8 @@ set_program (GthreeRenderer *renderer,
 
   if ( refreshMaterial )
     {
+      gthree_material_set_uniforms (material, m_uniforms);
+
 #if TODO
     // refresh uniforms common to several materials
       if ( fog && material.fog )
@@ -843,9 +845,11 @@ set_program (GthreeRenderer *renderer,
 #endif
 
 #if TODO
-      if ( material instanceof THREE.MeshBasicMaterial ||
-           material instanceof THREE.MeshLambertMaterial ||
-           material instanceof THREE.MeshPhongMaterial )
+      if (
+          GTHREE_IS_BASIC_MATERIAL (material) ||
+           || material instanceof THREE.MeshLambertMaterial ||
+           material instanceof THREE.MeshPhongMaterial
+          )
         {
           refreshUniformsCommon( m_uniforms, material );
         }
@@ -1024,7 +1028,7 @@ render_buffer (GthreeRenderer *renderer,
           if ( TRUE /* object.geometry.colors.length > 0 || object.geometry.faces.length > 0 */ )
             {
               glBindBuffer (GL_ARRAY_BUFFER, buffer->color_buffer);
-              enable_attribute (renderer, color_location );
+              enable_attribute (renderer, color_location);
               glVertexAttribPointer (color_location, 3, GL_FLOAT, FALSE, 0, NULL);
             }
 #if TODO

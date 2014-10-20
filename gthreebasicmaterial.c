@@ -71,10 +71,26 @@ gthree_basic_material_real_set_params (GthreeMaterial *material,
 }
 
 static void
+gthree_basic_material_real_set_uniforms (GthreeMaterial *material,
+                                         GthreeUniforms *uniforms)
+{
+  GthreeBasicMaterial *basic = GTHREE_BASIC_MATERIAL (material);
+  GthreeBasicMaterialPrivate *priv = gthree_basic_material_get_instance_private (basic);
+  GthreeUniform *uni;
+
+  GTHREE_MATERIAL_CLASS (gthree_basic_material_parent_class)->set_uniforms (material, uniforms);
+
+  uni = gthree_uniforms_lookup_from_string (uniforms, "diffuse");
+  if (uni != NULL)
+    gthree_uniform_set_color (uni, &priv->color);
+}
+
+static void
 gthree_basic_material_class_init (GthreeBasicMaterialClass *klass)
 {
   G_OBJECT_CLASS (klass)->finalize = gthree_basic_material_finalize;
   GTHREE_MATERIAL_CLASS(klass)->set_params = gthree_basic_material_real_set_params;
+  GTHREE_MATERIAL_CLASS(klass)->set_uniforms = gthree_basic_material_real_set_uniforms;
 }
 
 const GdkRGBA *
