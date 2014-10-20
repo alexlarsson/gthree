@@ -230,7 +230,6 @@ quaternion_to_angles (const graphene_quaternion_t *q, graphene_point3d_t *rot)
   sqz = graphene_vec4_get_z (&sq);
   sqw = graphene_vec4_get_w (&sq);
 
-
   rot->x = atan2( 2 * ( qx * qw - qy * qz ), (sqw - sqx - sqy + sqz));
   rot->y = asin(CLAMP( 2 * ( qx * qz + qy * qw), - 1, 1));
   rot->z = atan2(2 * (qz * qw - qx * qy), (sqw + sqx - sqy - sqz));
@@ -260,8 +259,12 @@ gthree_object_set_rotation (GthreeObject *object,
 {
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
 
-  graphene_quaternion_init_from_angles (&priv->quaternion, rot->x, rot->y, rot->z);
   priv->euler = *rot;
+  priv->euler.x *= 180.0 / G_PI;
+  priv->euler.y *= 180.0 / G_PI;
+  priv->euler.z *= 180.0 / G_PI;
+
+  graphene_quaternion_init_from_angles (&priv->quaternion, priv->euler.x, priv->euler.y, priv->euler.z);
 }
 
 const graphene_point3d_t *
@@ -333,13 +336,7 @@ gthree_object_update_matrix_view (GthreeObject *object,
 {
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
 
-  g_print ("gthree_object_update_matrix_view for %p\n", object);
-  g_print ("camera_matrix: ");
-  graphene_matrix_print (camera_matrix);
-  g_print ("world_matrix: ");
-  graphene_matrix_print (&priv->world_matrix);
-
-  graphene_matrix_multiply (camera_matrix, &priv->world_matrix, &priv->model_view_matrix);
+  graphene_matrix_multiply (&priv->world_matrix, camera_matrix, &priv->model_view_matrix);
 
   g_print ("new model_view_matrix: ");
   graphene_matrix_print (&priv->model_view_matrix);

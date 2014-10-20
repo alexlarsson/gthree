@@ -85,7 +85,7 @@ gthree_camera_get_proj_screen_matrix (GthreeCamera *camera,
 {
   GthreeCameraPrivate *priv = gthree_camera_get_instance_private (camera);
 
-  graphene_matrix_multiply (&priv->projection_matrix, &priv->world_matrix_inverse, res);
+  graphene_matrix_multiply (&priv->world_matrix_inverse, &priv->projection_matrix, res);
 }
 
 const graphene_matrix_t *
