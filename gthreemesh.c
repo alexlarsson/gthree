@@ -312,14 +312,14 @@ set_mesh_buffers (GthreeMesh *mesh,
           GthreeFace *face = g_ptr_array_index (faces, i);
 
           graphene_vec3_to_float (&vertices[face->a], &group->vertex_array[offset]);
-          graphene_vec3_to_float (&vertices[face->b], &group->vertex_array[offset + 4]);
+          graphene_vec3_to_float (&vertices[face->b], &group->vertex_array[offset + 3]);
           graphene_vec3_to_float (&vertices[face->c], &group->vertex_array[offset + 6]);
 
           offset += 9;
         }
 
       glBindBuffer (GL_ARRAY_BUFFER, GTHREE_BUFFER (group)->vertex_buffer);
-      glBufferData (GL_ARRAY_BUFFER, faces->len * 3 * sizeof (float), group->vertex_array, hint);
+      glBufferData (GL_ARRAY_BUFFER, faces->len * 3 * 3 * sizeof (float), group->vertex_array, hint);
     }
 
   if (dirtyColors && vertex_color_type != GTHREE_COLOR_NONE)
