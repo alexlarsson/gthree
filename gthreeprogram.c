@@ -193,12 +193,13 @@ gthree_program_new (gpointer code, GthreeMaterial *material, GthreeProgramParame
         g_string_append (vertex, "#define USE_LIGHTMAP\n");
       if (parameters->bump_map)
         g_string_append (vertex, "#define USE_BUMPMAP\n");
+      if (parameters->vertex_colors != GTHREE_COLOR_NONE)
+        g_string_append (vertex, "#define USE_COLOR\n");
 
 #if TODO
       parameters.normalMap ? "#define USE_NORMALMAP" : "",
         parameters.specularMap ? "#define USE_SPECULARMAP" : "",
         parameters.alphaMap ? "#define USE_ALPHAMAP" : "",
-        parameters.vertexColors ? "#define USE_COLOR" : "",
 
         parameters.skinning ? "#define USE_SKINNING" : "",
         parameters.useVertexTexture ? "#define BONE_TEXTURE" : "",
@@ -307,12 +308,13 @@ gthree_program_new (gpointer code, GthreeMaterial *material, GthreeProgramParame
         g_string_append (fragment, "#define USE_LIGHTMAP\n");
       if (parameters->bump_map)
         g_string_append (fragment, "#define USE_BUMPMAP\n");
+      if (parameters->vertex_colors != GTHREE_COLOR_NONE)
+        g_string_append (fragment, "#define USE_COLOR\n");
 
 #if TODO
       parameters.normalMap ? "#define USE_NORMALMAP" : "",
         parameters.specularMap ? "#define USE_SPECULARMAP" : "",
         parameters.alphaMap ? "#define USE_ALPHAMAP" : "",
-        parameters.vertexColors ? "#define USE_COLOR" : "",
 
         parameters.metal ? "#define METAL" : "",
         parameters.wrapAround ? "#define WRAP_AROUND" : "",

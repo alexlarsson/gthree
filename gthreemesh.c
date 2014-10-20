@@ -3,6 +3,7 @@
 
 #include "gthreemesh.h"
 #include "gthreemultimaterial.h"
+#include "gthreebasicmaterial.h"
 #include "gthreegeometrygroupprivate.h"
 #include "gthreeobjectprivate.h"
 #include "gthreeprivate.h"
@@ -145,6 +146,10 @@ buffer_guess_normal_type (GthreeMaterial *material)
 static GthreeColorType
 buffer_guess_vertex_color_type (GthreeMaterial *material)
 {
+  // TODO: vfuncify
+  if (GTHREE_IS_BASIC_MATERIAL (material))
+    return gthree_basic_material_get_vertex_colors (GTHREE_BASIC_MATERIAL (material));
+
   return GTHREE_COLOR_NONE;
 }
 
@@ -178,7 +183,7 @@ init_mesh_buffers (GthreeMesh *mesh,
   GthreeMaterial *material = GTHREE_BUFFER(group)->material;
   //gboolean uv_type = buffer_guess_uv_type (material);
   gboolean normal_type = buffer_guess_normal_type (material);
-  //GthreeColorType vertex_color_type = buffer_guess_vertex_color_type (material);
+  GthreeColorType vertex_color_type = buffer_guess_vertex_color_type (material);
 
   group->vertex_array = g_new (float, nvertices * 3);
 
@@ -189,10 +194,12 @@ init_mesh_buffers (GthreeMesh *mesh,
   if (geometry.hasTangents) {
     group->tangentArray = g_new (float,  nvertices * 4 );
   }
+  */
 
-  if ( vertex_color_type ) {
-    group->colorArray = g_new (float,  nvertices * 3 );
-  }
+  if (vertex_color_type != GTHREE_COLOR_NONE)
+    group->color_array = g_new (float,  nvertices * 3);
+
+  /*
   if ( uv_type ) {
     if ( geometry.faceVertexUvs.length > 0 ) {
       group->uvArray = g_new (float,  nvertices * 2 );
@@ -288,6 +295,7 @@ set_mesh_buffers (GthreeMesh *mesh,
   guint offset = 0;
   guint offset_face = 0;
   guint offset_line = 0;
+  guint offset_color = 0;
   int i;
 
   GPtrArray *faces = group->faces;
@@ -315,46 +323,44 @@ set_mesh_buffers (GthreeMesh *mesh,
 
   if (dirtyColors && vertex_color_type != GTHREE_COLOR_NONE)
     {
-      /* TODO
-      for ( f = 0, fl = chunk_faces3.length; f < fl; f ++ )
+      for (i = 0; i < faces->len; i++)
         {
-          face = obj_faces[ chunk_faces3[ f ] ];
-          vertexColors = face.vertexColors;
-          faceColor = face.color;
-          if ( vertexColors.length === 3 && vertexColorType === THREE.VertexColors )
+          GthreeFace *face = g_ptr_array_index (faces, i);
+          GdkRGBA *c1, *c2, *c3;
+
+          if (face->vertex_colors && vertex_color_type == GTHREE_COLOR_VERTEX)
             {
-              c1 = vertexColors[ 0 ];
-              c2 = vertexColors[ 1 ];
-              c3 = vertexColors[ 2 ];
+              c1 = &face->vertex_colors[0];
+              c2 = &face->vertex_colors[1];
+              c3 = &face->vertex_colors[2];
             }
           else
             {
-              c1 = faceColor;
-              c2 = faceColor;
-              c3 = faceColor;
+              c1 = &face->color;
+              c2 = &face->color;
+              c3 = &face->color;
             }
 
-          colorArray[ offset_color ]     = c1.r;
-          colorArray[ offset_color + 1 ] = c1.g;
-          colorArray[ offset_color + 2 ] = c1.b;
+          group->color_array[offset_color]     = c1->red;
+          group->color_array[offset_color + 1] = c1->green;
+          group->color_array[offset_color + 2] = c1->blue;
 
-          colorArray[ offset_color + 3 ] = c2.r;
-          colorArray[ offset_color + 4 ] = c2.g;
-          colorArray[ offset_color + 5 ] = c2.b;
+          group->color_array[offset_color + 3] = c2->red;
+          group->color_array[offset_color + 4] = c2->green;
+          group->color_array[offset_color + 5] = c2->blue;
 
-          colorArray[ offset_color + 6 ] = c3.r;
-          colorArray[ offset_color + 7 ] = c3.g;
-          colorArray[ offset_color + 8 ] = c3.b;
+          group->color_array[offset_color + 6] = c3->red;
+          group->color_array[offset_color + 7] = c3->green;
+          group->color_array[offset_color + 8] = c3->blue;
 
           offset_color += 9;
         }
 
-      if ( offset_color > 0 )
+      if (offset_color > 0)
         {
-          _gl.bindBuffer( _gl.ARRAY_BUFFER, geometryGroup.__webglColorBuffer );
-          _gl.bufferData( _gl.ARRAY_BUFFER, colorArray, hint );
+          glBindBuffer (GL_ARRAY_BUFFER, GTHREE_BUFFER (group)->color_buffer);
+          glBufferData (GL_ARRAY_BUFFER, offset_color * sizeof (float), group->color_array, hint);
         }
-      */
     }
 
   if (dirtyElements)

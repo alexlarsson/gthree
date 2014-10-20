@@ -48,6 +48,12 @@ typedef enum {
   GTHREE_PRECISION_HIGH,
 } GthreePrecision;
 
+typedef enum {
+  GTHREE_OPERATION_MULTIPLY,
+  GTHREE_OPERATION_MIX,
+  GTHREE_OPERATION_ADD,
+} GthreeOperation;
+
 G_END_DECLS
 
 #endif /* __GTHREE_ENUM_H__ */

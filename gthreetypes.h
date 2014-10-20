@@ -3,6 +3,7 @@
 
 typedef struct _GthreeMaterial GthreeMaterial;
 typedef struct _GthreeMultiMaterial GthreeMultiMaterial;
+typedef struct _GthreeBasicMaterial GthreeBasicMaterial;
 typedef struct _GthreeProgram GthreeProgram;
 
 

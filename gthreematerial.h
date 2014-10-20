@@ -33,6 +33,10 @@ typedef struct {
 
   GthreeMaterial * (*resolve) (GthreeMaterial *material,
                                int index);
+
+  void          (*set_params) (GthreeMaterial *material,
+                               GthreeProgramParameters *params);
+
 } GthreeMaterialClass;
 
 GthreeMaterial *gthree_material_new ();

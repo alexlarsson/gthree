@@ -7,6 +7,7 @@
 #include "gthreearea.h"
 #include "gthreemesh.h"
 #include "gthreemultimaterial.h"
+#include "gthreebasicmaterial.h"
 
 typedef struct {
   int dummy;
@@ -30,8 +31,8 @@ load_model_from_json (char *path, GError **error)
 
 GthreeScene *scene;
 GthreeGeometry *geometry;
-GthreeMaterial *material;
-GthreeMaterial *wireframe;
+GthreeBasicMaterial *material;
+GthreeBasicMaterial *wireframe;
 GthreeMultiMaterial *multi_material;
 GthreeMesh *mesh;
 double rot = 0;
@@ -40,23 +41,39 @@ GthreeScene *
 init_scene (void)
 {
   static graphene_point3d_t rot = { 0, 0, 0};
+  GdkRGBA green = {0,1,0,1};
+  GdkRGBA blue = {0,0,1,1};
   int i;
 
   scene = gthree_scene_new ();
 
   geometry = gthree_geometry_new_box (100, 100, 100, 1, 1, 1);
+
+  for (i = 0; i < gthree_geometry_get_n_faces (geometry); i++)
+    {
+      GthreeFace *face = gthree_geometry_get_face (geometry, i);
+      if (i % 4 >= 2)
+        gthree_face_set_color (face, &green);
+      else
+        gthree_face_set_color (face, &blue);
+    }
+
   multi_material = gthree_multi_material_new ();
-  material = gthree_material_new ();
-  gthree_material_set_side (material, GTHREE_SIDE_DOUBLE);
-  wireframe = gthree_material_new ();
-  gthree_material_set_is_wireframe (wireframe, TRUE);
-  gthree_material_set_side (wireframe, GTHREE_SIDE_DOUBLE);
+  material = gthree_basic_material_new ();
+  gthree_material_set_side (GTHREE_MATERIAL (material), GTHREE_SIDE_DOUBLE);
+  gthree_basic_material_set_color (material, &blue);
+  gthree_basic_material_set_vertex_colors (material, GTHREE_COLOR_FACE);
+  wireframe = gthree_basic_material_new ();
+  gthree_material_set_is_wireframe (GTHREE_MATERIAL (wireframe), TRUE);
+  gthree_material_set_side (GTHREE_MATERIAL (wireframe), GTHREE_SIDE_DOUBLE);
+  gthree_basic_material_set_color (wireframe, &green);
+  gthree_basic_material_set_vertex_colors (wireframe, GTHREE_COLOR_FACE);
 
   for (i = 0; i < 3; i++)
-    gthree_multi_material_set_index (multi_material, i, wireframe);
+    gthree_multi_material_set_index (multi_material, i, GTHREE_MATERIAL (wireframe));
 
   for (i = 3; i < 6; i++)
-    gthree_multi_material_set_index (multi_material, i, material);
+    gthree_multi_material_set_index (multi_material, i, GTHREE_MATERIAL (material));
 
   mesh = gthree_mesh_new (geometry, GTHREE_MATERIAL (multi_material));
 

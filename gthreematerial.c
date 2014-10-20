@@ -89,10 +89,30 @@ gthree_material_resolve (GthreeMaterial *material,
   return material;
 }
 
+void
+gthree_material_set_params (GthreeMaterial *material,
+                            GthreeProgramParameters *params)
+{
+  GthreeMaterialClass *class = GTHREE_MATERIAL_GET_CLASS(material);
+
+  return class->set_params (material, params);
+}
+
+static void
+gthree_material_real_set_params (GthreeMaterial *material,
+                                 GthreeProgramParameters *params)
+{
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  params->double_sided = priv->side == GTHREE_SIDE_DOUBLE;
+  params->flip_sided = priv->side == GTHREE_SIDE_BACK;
+}
+
 static void
 gthree_material_class_init (GthreeMaterialClass *klass)
 {
   G_OBJECT_CLASS (klass)->finalize = gthree_material_finalize;
+  GTHREE_MATERIAL_CLASS(klass)->set_params = gthree_material_real_set_params;
 }
 
 gboolean

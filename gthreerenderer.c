@@ -4,6 +4,7 @@
 #include "gthreerenderer.h"
 #include "gthreeobjectprivate.h"
 #include "gthreeshader.h"
+#include "gthreematerial.h"
 
 typedef struct {
   int width;
@@ -477,7 +478,9 @@ init_material (GthreeRenderer *renderer,
 
   parameters.precision = GTHREE_PRECISION_HIGH;
   parameters.supports_vertex_textures = TRUE; //_supportsVertexTextures,
-  parameters.double_sided = TRUE;
+
+  gthree_material_set_params (material, &parameters);
+
 
 #ifdef TODO
   parameters =
@@ -525,8 +528,6 @@ init_material (GthreeRenderer *renderer,
     alphaTest: material.alphaTest,
     metal: material.metal,
     wrapAround: material.wrapAround,
-    doubleSided: material.side === THREE.DoubleSide,
-    flipSided: material.side === THREE.BackSide
     };
 #endif
 
@@ -961,7 +962,7 @@ render_buffer (GthreeRenderer *renderer,
   //var linewidth, a, attribute, i, il;
   //var attributes = program.attributes;
   gboolean updateBuffers = false;
-  gint position_location;
+  gint position_location, color_location;
   guint32 wireframeBit = gthree_material_get_is_wireframe (material) ? 1 : 0;
   guint32 geometryGroupHash = (guint32)buffer + (guint32)program * 2 + wireframeBit;
 
@@ -1016,22 +1017,23 @@ render_buffer (GthreeRenderer *renderer,
         }
 #endif
 
-#if TODO
       // colors
-      if (attributes.color >= 0)
+      color_location = gthree_program_lookup_attribute_location (program, "color");
+      if (color_location >= 0)
         {
-          if ( object.geometry.colors.length > 0 || object.geometry.faces.length > 0 )
+          if ( TRUE /* object.geometry.colors.length > 0 || object.geometry.faces.length > 0 */ )
             {
-              _gl.bindBuffer( _gl.ARRAY_BUFFER, geometryGroup.__webglColorBuffer );
-              enableAttribute( attributes.color );
-              _gl.vertexAttribPointer( attributes.color, 3, _gl.FLOAT, false, 0, 0 );
+              glBindBuffer (GL_ARRAY_BUFFER, buffer->color_buffer);
+              enable_attribute (renderer, color_location );
+              glVertexAttribPointer (color_location, 3, GL_FLOAT, FALSE, 0, NULL);
             }
+#if TODO
           else if ( material.defaultAttributeValues )
             {
               _gl.vertexAttrib3fv( attributes.color, material.defaultAttributeValues.color );
             }
-        }
 #endif
+        }
 
 #if TODO
       // normals
