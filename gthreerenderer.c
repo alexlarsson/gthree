@@ -635,8 +635,6 @@ init_material (GthreeRenderer *renderer,
       gint location;
 
       location = gthree_program_lookup_uniform_location (program, gthree_uniform_get_name (uni));
-      g_print ("seeting shader uniform %s location to %d\n",
-               gthree_uniform_get_name (uni), location);
       gthree_uniform_set_location (uni, location);
     }
   g_list_free (unis);
@@ -644,6 +642,7 @@ init_material (GthreeRenderer *renderer,
   return NULL;
 }
 
+#if 0
 static void
 print_matrix4 (float *s)
 {
@@ -666,6 +665,7 @@ print_matrix4 (float *s)
         g_print("\n");
     }
 }
+#endif
 
 static void
 load_uniforms_matrices (GthreeRenderer *renderer,
@@ -676,8 +676,6 @@ load_uniforms_matrices (GthreeRenderer *renderer,
   int mvm_location = gthree_program_lookup_uniform_location (program, "modelViewMatrix");
 
   gthree_object_get_model_view_matrix_floats (object, matrix);
-  g_print ("loading model view matrix (loc %d) for object %p\n", mvm_location, object);
-  print_matrix4 (matrix);
   glUniformMatrix4fv (mvm_location, 1, FALSE, matrix);
 
 #ifdef TODO
@@ -721,7 +719,6 @@ set_program (GthreeRenderer *renderer,
 
   if (program != priv->current_program )
     {
-      g_print ("using program %d\n", gthree_program_get_program (program));
       glUseProgram (gthree_program_get_program (program));
       priv->current_program = program;
 
@@ -745,8 +742,6 @@ set_program (GthreeRenderer *renderer,
       gint proction_matrix_location = gthree_program_lookup_uniform_location (program, "projectionMatrix");
 
       graphene_matrix_to_float (projection_matrix, projection_matrixv);
-      g_print ("loading projection_matrix (loc %d)\n", proction_matrix_location);
-      print_matrix4 (projection_matrixv);
       glUniformMatrix4fv (proction_matrix_location, 1, FALSE, projection_matrixv);
 
 #ifdef TODO
@@ -917,8 +912,6 @@ set_program (GthreeRenderer *renderer,
     {
       float matrix[16];
       gthree_object_get_world_matrix_floats (object, matrix);
-      g_print ("loading model matrix (loc %d)\n", location);
-      print_matrix4 (matrix);
       glUniformMatrix4fv (location, 1, FALSE, matrix);
     }
 

@@ -310,8 +310,6 @@ gthree_uniform_load (GthreeUniform *uniform)
   if (uniform->location == -1)
     return;
 
-  g_print ("loadind uniform %s\n", gthree_uniform_get_name (uniform));
-
   // TODO: Handle needsUpdate for some types?
   switch (uniform->type)
     {

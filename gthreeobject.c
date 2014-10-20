@@ -287,9 +287,6 @@ gthree_object_update_matrix (GthreeObject *object)
                          graphene_vec3_get_z (&priv->scale));
   graphene_matrix_translate  (&priv->matrix, &priv->position);
 
-  g_print ("updating object %p (%s), new matrix\n", object, g_type_name_from_instance ((GTypeInstance *)object));
-  graphene_matrix_print (&priv->matrix);
-
   priv->world_matrix_need_update = TRUE;
 }
 
@@ -337,9 +334,6 @@ gthree_object_update_matrix_view (GthreeObject *object,
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
 
   graphene_matrix_multiply (&priv->world_matrix, camera_matrix, &priv->model_view_matrix);
-
-  g_print ("new model_view_matrix: ");
-  graphene_matrix_print (&priv->model_view_matrix);
 
   graphene_matrix_inverse (&priv->model_view_matrix, &priv->normal_matrix);
   graphene_matrix_transpose (&priv->normal_matrix, &priv->normal_matrix);

@@ -225,7 +225,6 @@ gthree_shader_init_libs ()
 
   if (initialized)
     return;
-  g_print ("gthree_shader_init_libs ()\n");
   basic = gthree_shader_new_from_definitions (basic_uniform_libs, NULL, 0, basic_vertex_shader, basic_fragment_shader);
 
   initialized = TRUE;
@@ -234,7 +233,6 @@ gthree_shader_init_libs ()
 GthreeShader *
 gthree_get_shader_from_library (const char *name)
 {
-  g_print ("gthree_get_shader_from_library (%s)\n", name);
   gthree_shader_init_libs ();
 
   if (strcmp (name, "basic") == 0)
