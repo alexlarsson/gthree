@@ -35,9 +35,9 @@ typedef struct {
   float old_polygon_offset_factor;
   float old_polygon_offset_units;
   GthreeBlendMode old_blending;
-  GthreeBlendEquation old_blend_equation;
-  GthreeBlendSrcFactor old_blend_src;
-  GthreeBlendDstFactor old_blend_dst;
+  guint old_blend_equation;
+  guint old_blend_src;
+  guint old_blend_dst;
   GthreeProgram *current_program;
   GthreeMaterial *current_material;
   GthreeCamera *current_camera;
@@ -297,9 +297,9 @@ set_polygon_offset (GthreeRenderer *renderer,
 static void
 set_blending (GthreeRenderer *renderer,
               GthreeBlendMode blending,
-              GthreeBlendEquation blend_equation,
-              GthreeBlendSrcFactor blend_src,
-              GthreeBlendDstFactor blend_dst)
+              guint blend_equation,
+              guint blend_src,
+              guint blend_dst)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
 
@@ -1108,9 +1108,7 @@ render_objects (GthreeRenderer *renderer,
 
       if (use_blending)
         {
-          GthreeBlendEquation equation;
-          GthreeBlendSrcFactor src_factor;
-          GthreeBlendDstFactor dst_factor;
+          guint equation, src_factor, dst_factor;
           GthreeBlendMode mode = gthree_material_get_blend_mode (material, &equation, &src_factor, &dst_factor);
 
           set_blending (renderer, mode, equation, src_factor, dst_factor);
@@ -1206,9 +1204,7 @@ gthree_renderer_render (GthreeRenderer *renderer,
     {
       gboolean polygon_offset;
       float factor, units;
-      GthreeBlendEquation equation;
-      GthreeBlendSrcFactor src_factor;
-      GthreeBlendDstFactor dst_factor;
+      guint equation, src_factor, dst_factor;
       GthreeBlendMode mode = gthree_material_get_blend_mode (override_material, &equation, &src_factor, &dst_factor);
 
       set_blending (renderer, mode, equation, src_factor, dst_factor);

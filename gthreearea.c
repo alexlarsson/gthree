@@ -42,8 +42,6 @@ gthree_area_new (GthreeScene *scene,
 static void
 gthree_area_init (GthreeArea *area)
 {
-  GthreeAreaPrivate *priv = gthree_area_get_instance_private (area);
-
 }
 
 static void

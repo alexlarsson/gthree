@@ -5,6 +5,21 @@
 
 typedef struct {
   gboolean transparent;
+  float opacity;
+  gboolean visible;
+  gboolean wireframe;
+  float wireframe_line_width;
+  GthreeBlendMode blend_mode;
+  guint blend_equation;
+  guint blend_src_factor;
+  guint blend_dst_factor;
+  gboolean polygon_offset;
+  float polygon_offset_factor;
+  float polygon_offset_units;
+  gboolean depth_test;
+  gboolean depth_write;
+  float alpha_test;
+  GthreeSide side;
 } GthreeMaterialPrivate;
 
 
@@ -28,8 +43,27 @@ gthree_material_init (GthreeMaterial *material)
   GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
 
   material->needs_update = TRUE;
+
+  priv->visible = TRUE;
   priv->transparent = FALSE;
+  priv->opacity = 1.0;
+  priv->blend_mode = GTHREE_BLEND_NORMAL;
+  priv->blend_equation = GL_FUNC_ADD;
+  priv->blend_src_factor = GL_SRC_ALPHA;
+  priv->blend_dst_factor = GL_ONE_MINUS_SRC_ALPHA;
+  priv->depth_test = TRUE;
+  priv->depth_write = TRUE;
+
+  priv->polygon_offset = FALSE;
+  priv->polygon_offset_factor = 0;
+  priv->polygon_offset_units = 0;
+  priv->alpha_test = 0;
+  priv->side = GTHREE_SIDE_FRONT;
+
+  priv->wireframe = FALSE;
+  priv->wireframe_line_width = 1;
 }
+
 
 static void
 gthree_material_finalize (GObject *obj)
@@ -52,19 +86,92 @@ gthree_material_class_init (GthreeMaterialClass *klass)
 gboolean
 gthree_material_get_is_visible (GthreeMaterial *material)
 {
-  return TRUE;
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  return priv->visible;
+}
+
+void
+gthree_material_set_is_visible (GthreeMaterial *material,
+                                gboolean visible)
+{
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  priv->visible = !!visible;
+
+  material->needs_update = TRUE;
 }
 
 gboolean
 gthree_material_get_is_wireframe (GthreeMaterial *material)
 {
-  return FALSE;
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  return priv->wireframe;
+}
+
+void
+gthree_material_set_is_wireframe (GthreeMaterial *material,
+                                  gboolean wireframe)
+{
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  priv->wireframe = wireframe;
+  material->needs_update = TRUE;
 }
 
 float
 gthree_material_get_wireframe_line_width (GthreeMaterial *material)
 {
-  return 1.0;
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  return priv->wireframe_line_width;
+}
+
+void
+gthree_material_set_wireframe_line_width (GthreeMaterial *material,
+                                          float line_width)
+{
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  priv->wireframe_line_width = line_width;
+  material->needs_update = TRUE;
+}
+
+float
+gthree_material_get_opacity (GthreeMaterial *material)
+{
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  return priv->opacity;
+}
+
+void
+gthree_material_set_opacity (GthreeMaterial *material,
+                             float opacity)
+{
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  priv->opacity = opacity;
+  material->needs_update = TRUE;
+}
+
+float
+gthree_material_get_alpha_test (GthreeMaterial *material)
+{
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  return priv->alpha_test;
+}
+
+void
+gthree_material_set_alpha_test (GthreeMaterial *material,
+                                float alpha_test)
+{
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  priv->alpha_test = alpha_test;
+  material->needs_update = TRUE;
 }
 
 gboolean
@@ -75,51 +182,139 @@ gthree_material_get_is_transparent (GthreeMaterial *material)
   return priv->transparent;
 }
 
+void
+gthree_material_set_is_transparent (GthreeMaterial *material,
+                                    gboolean transparent)
+{
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  priv->transparent = !!transparent;
+
+  material->needs_update = TRUE;
+}
+
 GthreeBlendMode
 gthree_material_get_blend_mode (GthreeMaterial *material,
-                                GthreeBlendEquation *equation,
-                                GthreeBlendSrcFactor *src_factor,
-                                GthreeBlendDstFactor *dst_factor)
+                                guint *equation,
+                                guint *src_factor,
+                                guint *dst_factor)
 {
-  if (equation)
-    *equation = GTHREE_BLEND_EQUATION_ADD;
-  if (src_factor)
-    *src_factor = GTHREE_BLEND_SRC_FACTOR_SRC_COLOR;
-  if (dst_factor)
-    *dst_factor = GTHREE_BLEND_DST_FACTOR_COLOR;
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
 
-  return GTHREE_BLEND_NO;
+  if (equation)
+    *equation = priv->blend_equation;
+  if (src_factor)
+    *src_factor = priv->blend_src_factor;
+  if (dst_factor)
+    *dst_factor = priv->blend_dst_factor;
+
+  return priv->blend_mode;
 }
+
+void
+gthree_material_set_blend_mode (GthreeMaterial       *material,
+                                GthreeBlendMode       mode,
+                                guint                 equation,
+                                guint                 src_factor,
+                                guint                 dst_factor)
+{
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  priv->blend_mode = mode;
+  priv->blend_equation = equation;
+  priv->blend_src_factor = src_factor;
+  priv->blend_dst_factor = dst_factor;
+
+  material->needs_update = TRUE;
+}
+
 
 gboolean
 gthree_material_get_polygon_offset (GthreeMaterial *material,
                                     float *factor, float *units)
 {
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
   if (factor)
-    *factor = 1.0;
+    *factor = priv->polygon_offset_factor;
 
   if (units)
-    *units = 1.0;
+    *units = priv->polygon_offset_units;
 
-  return FALSE;
+  return priv->polygon_offset;
+}
+
+void
+gthree_material_set_polygon_offset (GthreeMaterial       *material,
+                                    gboolean              polygon_offset,
+                                    float                 factor,
+                                    float                 units)
+{
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  priv->polygon_offset = polygon_offset;
+  priv->polygon_offset_factor = factor;
+  priv->polygon_offset_units = units;
+
+  material->needs_update = TRUE;
 }
 
 gboolean
 gthree_material_get_depth_test (GthreeMaterial *material)
 {
-  return TRUE;
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  return priv->depth_test;
+}
+
+void
+gthree_material_set_depth_test (GthreeMaterial       *material,
+                                gboolean              depth_test)
+{
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  priv->depth_test = depth_test;
+
+  material->needs_update = TRUE;
 }
 
 gboolean
 gthree_material_get_depth_write (GthreeMaterial *material)
 {
-  return FALSE;
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  return priv->depth_write;
 }
+
+void
+gthree_material_set_depth_write (GthreeMaterial       *material,
+                                 gboolean              depth_write)
+{
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  priv->depth_write = depth_write;
+
+  material->needs_update = TRUE;
+}
+
 
 GthreeSide
 gthree_material_get_side (GthreeMaterial *material)
 {
-  return GTHREE_SIDE_DOUBLE;
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  return priv->side;
+}
+
+void
+gthree_material_set_side (GthreeMaterial *material,
+                          GthreeSide side)
+{
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  priv->side = side;
+
+  material->needs_update = TRUE;
 }
 
 GthreeShader *
