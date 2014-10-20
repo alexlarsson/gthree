@@ -65,6 +65,12 @@ typedef enum {
   GTHREE_COLOR_VERTEX,
 } GthreeColorType;
 
+typedef enum {
+  GTHREE_PRECISION_LOW,
+  GTHREE_PRECISION_MEDIUM,
+  GTHREE_PRECISION_HIGH,
+} GthreePrecision;
+
 G_END_DECLS
 
 #endif /* __GTHREE_ENUM_H__ */

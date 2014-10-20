@@ -34,8 +34,11 @@ gthree_material_init (GthreeMaterial *material)
 static void
 gthree_material_finalize (GObject *obj)
 {
-  //GthreeMaterial *material = GTHREE_MATERIAL (obj);
+  GthreeMaterial *material = GTHREE_MATERIAL (obj);
   //GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  g_clear_object (&material->program);
+  g_clear_object (&material->shader);
 
   G_OBJECT_CLASS (gthree_material_parent_class)->finalize (obj);
 }
@@ -55,7 +58,7 @@ gthree_material_get_is_visible (GthreeMaterial *material)
 gboolean
 gthree_material_get_is_wireframe (GthreeMaterial *material)
 {
-  return TRUE;
+  return FALSE;
 }
 
 float
@@ -117,4 +120,13 @@ GthreeSide
 gthree_material_get_side (GthreeMaterial *material)
 {
   return GTHREE_SIDE_DOUBLE;
+}
+
+GthreeShader *
+gthree_material_get_shader (GthreeMaterial *material)
+{
+  if (material->shader == NULL)
+    material->shader = gthree_get_shader_from_library ("basic");
+
+  return material->shader;
 }

@@ -55,6 +55,13 @@ void          gthree_object_update_matrix_view    (GthreeObject *object,
                                                    const graphene_matrix_t *camera_matrix);
 void          gthree_object_look_at              (GthreeObject *object,
                                                   graphene_vec3_t *vector);
+void          gthree_object_set_position         (GthreeObject *object,
+                                                  graphene_point3d_t *pos);
+
+void gthree_object_get_world_matrix_floats      (GthreeObject *object,
+                                                 float        *dest);
+void gthree_object_get_model_view_matrix_floats (GthreeObject *object,
+                                                 float        *dest);
 
 gboolean      gthree_object_get_visible          (GthreeObject *object);
 

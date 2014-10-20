@@ -9,6 +9,9 @@ typedef struct {
   int width;
   int height;
   gboolean auto_clear;
+  gboolean auto_clear_color;
+  gboolean auto_clear_depth;
+  gboolean auto_clear_stencil;
   GdkRGBA clear_color;
   gboolean sort_objects;
   GthreeMaterial *override_material;
@@ -68,6 +71,9 @@ gthree_renderer_init (GthreeRenderer *renderer)
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
 
   priv->auto_clear = TRUE;
+  priv->auto_clear_color = TRUE;
+  priv->auto_clear_depth = TRUE;
+  priv->auto_clear_stencil = TRUE;
   priv->sort_objects = TRUE;
   priv->width = 1;
   priv->height = 1;
@@ -144,6 +150,8 @@ gthree_renderer_set_clear_color (GthreeRenderer *renderer,
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
 
   priv->clear_color = *color;
+
+  glClearColor (priv->clear_color.red, priv->clear_color.green, priv->clear_color.blue, priv->clear_color.alpha );
 }
 
 static void
@@ -457,54 +465,16 @@ init_material (GthreeRenderer *renderer,
                GthreeObject *object)
 {
   char *shader_id;
+  GthreeProgram *program;
+  GthreeShader *shader;
+  GthreeProgramParameters parameters = {0};
+  GList  *unis, *l;
+  gpointer code;
+
+  shader = gthree_material_get_shader (material);
+
   //material.addEventListener( 'dispose', onMaterialDispose );
-
   //var u, a, identifiers, i, parameters, maxLightCount, maxBones, maxShadows, shaderID;
-
-#ifdef TODO
-  if ( material instanceof THREE.MeshDepthMaterial ) {
-    shader_id = 'depth';
-  } else if ( material instanceof THREE.MeshNormalMaterial ) {
-    shader_id = 'normal';
-  } else if ( material instanceof THREE.MeshBasicMaterial ) {
-    shader_id = 'basic';
-  } else if ( material instanceof THREE.MeshLambertMaterial ) {
-    shader_id = 'lambert';
-  } else if ( material instanceof THREE.MeshPhongMaterial ) {
-    shader_id = 'phong';
-  } else if ( material instanceof THREE.LineBasicMaterial ) {
-    shader_id = 'basic';
-  } else if ( material instanceof THREE.LineDashedMaterial ) {
-    shader_id = 'dashed';
-  } else if ( material instanceof THREE.PointCloudMaterial ) {
-    shader_id = 'particle_basic';
-  }
-#else
-  shader_id = "basic";
-#endif
-
-  if (shader_id)
-    {
-      GthreeShader *shader = gthree_get_shader_from_library (shader_id);
-
-#ifdef TODO
-      material.__webglShader =
-        {
-        uniforms: THREE.UniformsUtils.clone( shader.uniforms ),
-        vertexShader: shader.vertexShader,
-        fragmentShader: shader.fragmentShader
-        }
-    }
-  else
-    {
-      material.__webglShader =
-        {
-        uniforms: material.uniforms,
-        vertexShader: material.vertexShader,
-        fragmentShader: material.fragmentShader
-        }
-#endif
-    }
 
   // heuristics to create shader parameters according to lights in the scene
   // (not to blow over maxLights budget)
@@ -513,7 +483,13 @@ init_material (GthreeRenderer *renderer,
   maxLightCount = allocateLights( lights );
   maxShadows = allocateShadows( lights );
   maxBones = allocateBones( object );
+#endif
 
+  parameters.precision = GTHREE_PRECISION_HIGH;
+  parameters.supports_vertex_textures = TRUE; //_supportsVertexTextures,
+  parameters.double_sided = TRUE;
+
+#ifdef TODO
   parameters =
     {
     precision: _precision,
@@ -562,6 +538,11 @@ init_material (GthreeRenderer *renderer,
     doubleSided: material.side === THREE.DoubleSide,
     flipSided: material.side === THREE.BackSide
     };
+#endif
+
+  code = NULL;
+
+#ifdef TODO
 
   // Generate code
   var chunks = [];
@@ -589,9 +570,11 @@ init_material (GthreeRenderer *renderer,
     }
 
   var code = chunks.join();
+#endif
 
-  var program;
+  program = NULL;
 
+#ifdef TODO
   // Check if code has been already compiled
   for ( var p = 0, pl = _programs.length; p < pl; p ++ )
     {
@@ -603,14 +586,17 @@ init_material (GthreeRenderer *renderer,
           break;
         }
     }
+#endif
 
   if (program == NULL)
     {
-      program = new THREE.WebGLProgram( this, code, material, parameters );
-      _programs.push( program );
+      program = gthree_program_new (code, material, &parameters);
+      //_programs.push( program );
     }
 
-  material.program = program;
+  material->program = program;
+  
+#ifdef TODO
   var attributes = material.program.attributes;
   if (material.morphTargets)
     {
@@ -639,18 +625,68 @@ init_material (GthreeRenderer *renderer,
             material.numSupportedMorphNormals ++;
         }
     }
-
-  material.uniformsList = [];
-  for ( u in material.__webglShader.uniforms )
-    {
-      var location = material.program.uniforms[ u ];
-
-      if ( location )
-        material.uniformsList.push( [ material.__webglShader.uniforms[ u ], location ] );
-    }
 #endif
+
+  /* TODO: Move into shader */
+  unis = gthree_uniforms_get_all (shader->uniforms);
+  for (l = unis; l != NULL; l = l->next)
+    {
+      GthreeUniform *uni = l->data;
+      gint location;
+
+      location = gthree_program_lookup_uniform_location (program, gthree_uniform_get_name (uni));
+      g_print ("seeting shader uniform %s location to %d\n",
+               gthree_uniform_get_name (uni), location);
+      gthree_uniform_set_location (uni, location);
+    }
+  g_list_free (unis);
+
   return NULL;
 }
+
+static void
+print_matrix4 (float *s)
+{
+  int i,j;
+  for (i = 0; i < 4; i++)
+    {
+      if (i == 0)
+        g_print("[ ");
+      else
+        g_print("  ");
+      for (j = 0; j < 4; j++)
+        {
+          if (j != 0)
+            g_print (", ");
+          g_print ("%f", *s++);
+        }
+      if (i == 3)
+        g_print("]\n");
+      else
+        g_print("\n");
+    }
+}
+
+static void
+load_uniforms_matrices (GthreeRenderer *renderer,
+                        GthreeProgram *program,
+                        GthreeObject *object)
+{
+  float matrix[16];
+  int mvm_location = gthree_program_lookup_uniform_location (program, "modelViewMatrix");
+
+  gthree_object_get_model_view_matrix_floats (object, matrix);
+  g_print ("loading model view matrix (loc %d) for object %p\n", mvm_location, object);
+  print_matrix4 (matrix);
+  glUniformMatrix4fv (mvm_location, 1, FALSE, matrix);
+
+#ifdef TODO
+  if (uniforms.normalMatrix) {
+    glUniformMatrix3fv (uniforms.normalMatrix, false, object._normalMatrix.elements);
+  }
+#endif
+}
+
 
 static GthreeProgram *
 set_program (GthreeRenderer *renderer,
@@ -665,6 +701,9 @@ set_program (GthreeRenderer *renderer,
   gboolean refreshMaterial = false;
   gboolean refreshLights = false;
   GthreeProgram *program;
+  GthreeShader *shader;
+  GthreeUniforms *m_uniforms;
+  int location;
 
   priv->used_texture_units = 0;
 
@@ -677,11 +716,12 @@ set_program (GthreeRenderer *renderer,
     }
 
   program = material->program;
-  //p_uniforms = program.uniforms;
-  //m_uniforms = material.__webglShader.uniforms;
+  shader = gthree_material_get_shader (material);
+  m_uniforms = shader->uniforms;
 
   if (program != priv->current_program )
     {
+      g_print ("using program %d\n", gthree_program_get_program (program));
       glUseProgram (gthree_program_get_program (program));
       priv->current_program = program;
 
@@ -700,10 +740,18 @@ set_program (GthreeRenderer *renderer,
 
   if (refreshProgram || camera != priv->current_camera)
     {
+      const graphene_matrix_t *projection_matrix = gthree_camera_get_projection_matrix (camera);
+      float projection_matrixv[16];
+      gint proction_matrix_location = gthree_program_lookup_uniform_location (program, "projectionMatrix");
+
+      graphene_matrix_to_float (projection_matrix, projection_matrixv);
+      g_print ("loading projection_matrix (loc %d)\n", proction_matrix_location);
+      print_matrix4 (projection_matrixv);
+      glUniformMatrix4fv (proction_matrix_location, 1, FALSE, projection_matrixv);
+
 #ifdef TODO
-      glUniformMatrix4fv (p_uniforms.projectionMatrix, FALSE, camera.projectionMatrix.elements);
       if ( _logarithmicDepthBuffer )
-        glUniform1f (p_uniforms.logDepthBufFC, 2.0 / ( Math.log( camera.far + 1.0 ) / Math.LN2 ));
+        glUniform1f (uniform_locations.logDepthBufFC, 2.0 / ( Math.log( camera.far + 1.0 ) / Math.LN2 ));
 
 #endif
       if (camera != priv->current_camera)
@@ -717,10 +765,10 @@ set_program (GthreeRenderer *renderer,
           material instanceof THREE.MeshPhongMaterial ||
           material.envMap )
         {
-          if ( p_uniforms.cameraPosition !== null )
+          if ( uniform_locations.cameraPosition !== null )
             {
               _vector3.setFromMatrixPosition( camera.matrixWorld );
-              _gl.uniform3f( p_uniforms.cameraPosition, _vector3.x, _vector3.y, _vector3.z );
+              _gl.uniform3f( uniform_locations.cameraPosition, _vector3.x, _vector3.y, _vector3.z );
             }
         }
 #endif
@@ -731,9 +779,9 @@ set_program (GthreeRenderer *renderer,
           material instanceof THREE.ShaderMaterial ||
           material.skinning)
         {
-          if ( p_uniforms.viewMatrix !== null )
+          if ( uniform_locations.viewMatrix !== null )
             {
-              glUniformMatrix4fv (p_uniforms.viewMatrix, false, camera.matrixWorldInverse.elements);
+              glUniformMatrix4fv (uniform_locations.viewMatrix, false, camera.matrixWorldInverse.elements);
             }
         }
 #endif
@@ -746,32 +794,32 @@ set_program (GthreeRenderer *renderer,
 #if TODO
   if ( material.skinning )
     {
-      if ( object.bindMatrix && p_uniforms.bindMatrix !== null )
-        glUniformMatrix4fv( p_uniforms.bindMatrix, false, object.bindMatrix.elements );
+      if ( object.bindMatrix && uniform_locations.bindMatrix !== null )
+        glUniformMatrix4fv( uniform_locations.bindMatrix, false, object.bindMatrix.elements );
 
-      if ( object.bindMatrixInverse && p_uniforms.bindMatrixInverse !== null )
-        glUniformMatrix4fv( p_uniforms.bindMatrixInverse, false, object.bindMatrixInverse.elements );
+      if ( object.bindMatrixInverse && uniform_locations.bindMatrixInverse !== null )
+        glUniformMatrix4fv( uniform_locations.bindMatrixInverse, false, object.bindMatrixInverse.elements );
 
       if ( _supportsBoneTextures && object.skeleton && object.skeleton.useVertexTexture )
         {
-          if ( p_uniforms.boneTexture !== null )
+          if ( uniform_locations.boneTexture !== null )
             {
               var textureUnit = getTextureUnit();
-              glUniform1i( p_uniforms.boneTexture, textureUnit );
+              glUniform1i( uniform_locations.boneTexture, textureUnit );
               _this.setTexture( object.skeleton.boneTexture, textureUnit );
             }
 
-          if ( p_uniforms.boneTextureWidth !== null )
-            glUniform1i( p_uniforms.boneTextureWidth, object.skeleton.boneTextureWidth );
+          if ( uniform_locations.boneTextureWidth !== null )
+            glUniform1i( uniform_locations.boneTextureWidth, object.skeleton.boneTextureWidth );
 
-          if ( p_uniforms.boneTextureHeight !== null )
-            glUniform1i( p_uniforms.boneTextureHeight, object.skeleton.boneTextureHeight );
+          if ( uniform_locations.boneTextureHeight !== null )
+            glUniform1i( uniform_locations.boneTextureHeight, object.skeleton.boneTextureHeight );
 
         }
       else if ( object.skeleton && object.skeleton.boneMatrices )
         {
-          if ( p_uniforms.boneGlobalMatrices !== null )
-            glUniformMatrix4fv( p_uniforms.boneGlobalMatrices, false, object.skeleton.boneMatrices );
+          if ( uniform_locations.boneGlobalMatrices !== null )
+            glUniformMatrix4fv( uniform_locations.boneGlobalMatrices, false, object.skeleton.boneMatrices );
         }
     }
 #endif
@@ -859,19 +907,20 @@ set_program (GthreeRenderer *renderer,
 #endif
 
       // load common uniforms
-#ifdef TODO
-      loadUniformsGeneric (material.uniformsList);
-#endif
+      gthree_uniforms_load (m_uniforms);
     }
 
-#ifdef TODO
-  loadUniformsMatrices( p_uniforms, object );
+  load_uniforms_matrices (renderer, program, object);
 
-  if (p_uniforms.modelMatrix !== null )
+  location = gthree_program_lookup_uniform_location (program, "modelMatrix");
+  if (location >= 0)
     {
-      glUniformMatrix4fv( p_uniforms.modelMatrix, false, object.matrixWorld.elements );
+      float matrix[16];
+      gthree_object_get_world_matrix_floats (object, matrix);
+      g_print ("loading model matrix (loc %d)\n", location);
+      print_matrix4 (matrix);
+      glUniformMatrix4fv (location, 1, FALSE, matrix);
     }
-#endif
 
   return program;
 }
@@ -928,10 +977,8 @@ render_buffer (GthreeRenderer *renderer,
   GthreeProgram *program = set_program (renderer, camera, lights, fog, material, object);
   //var linewidth, a, attribute, i, il;
   //var attributes = program.attributes;
-  struct {
-    int position;
-  } attributes = { 0 };
   gboolean updateBuffers = false;
+  gint position_location;
   guint32 wireframeBit = gthree_material_get_is_wireframe (material) ? 1 : 0;
   guint32 geometryGroupHash = (guint32)buffer + (guint32)program * 2 + wireframeBit;
 
@@ -948,13 +995,14 @@ render_buffer (GthreeRenderer *renderer,
     init_attributes (renderer);
 
   // vertices
-  if (/*!material.morphTargets && attributes.position >= 0 */ TRUE )
+  position_location = gthree_program_lookup_attribute_location (program, "position");
+  if (/*!material.morphTargets && */ position_location >= 0)
     {
       if (updateBuffers)
         {
           glBindBuffer (GL_ARRAY_BUFFER, buffer->vertex_buffer);
-          enable_attribute (renderer, attributes.position);
-          glVertexAttribPointer (attributes.position, 3, GL_FLOAT, FALSE, 0, NULL);
+          enable_attribute (renderer, position_location);
+          glVertexAttribPointer (position_location, 3, GL_FLOAT, FALSE, 0, NULL);
         }
     }
   else
@@ -1019,6 +1067,7 @@ render_buffer (GthreeRenderer *renderer,
         {
           if (gthree_material_get_is_wireframe (material))
             {
+              g_print ("drawing wireframe\n");
               // wireframe
               set_line_width (renderer, gthree_material_get_wireframe_line_width (material));
               if (updateBuffers)
@@ -1027,6 +1076,7 @@ render_buffer (GthreeRenderer *renderer,
             }
           else
             {
+              g_print ("drawing triangles\n");
               // triangles
               if (updateBuffers)
                 glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, buffer->face_buffer);
@@ -1090,6 +1140,20 @@ render_objects (GthreeRenderer *renderer,
     }
 }
 
+static void
+clear (gboolean color, gboolean depth, gboolean stencil)
+{
+  guint bits = 0;
+  if (color)
+    bits |= GL_COLOR_BUFFER_BIT;
+  if (depth)
+    bits |= GL_DEPTH_BUFFER_BIT;
+  if (stencil)
+    bits |= GL_STENCIL_BUFFER_BIT;
+
+  glClear (bits);
+}
+
 void
 gthree_renderer_render (GthreeRenderer *renderer,
                         GthreeScene    *scene,
@@ -1099,6 +1163,8 @@ gthree_renderer_render (GthreeRenderer *renderer,
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
   GthreeMaterial *override_material;
   gpointer lights, fog;
+
+  g_print ("******************gthree_renderer_render\n");
 
   lights = NULL;
   fog = NULL;
@@ -1136,7 +1202,7 @@ gthree_renderer_render (GthreeRenderer *renderer,
 
   if (priv->auto_clear || force_clear )
     {
-      //this.clear( this.autoClearColor, this.autoClearDepth, this.autoClearStencil );
+      clear (priv->auto_clear_color, priv->auto_clear_depth, priv->auto_clear_stencil);
     }
 
   /* set matrices for regular objects (frustum culled) */
@@ -1145,15 +1211,22 @@ gthree_renderer_render (GthreeRenderer *renderer,
   override_material = gthree_scene_get_override_material (scene);
   if (override_material)
     {
-      /* TODO 
-      set_blending (renderer, override_material.blending, override_material.blend_equation, override_material.blendSrc, override_material.blendDst );
-      this.setDepthTest( override_material.depthTest );
-      this.setDepthWrite( override_material.depthWrite );
-      setPolygonOffset( override_material.polygonOffset, override_material.polygonOffsetFactor, override_material.polygonOffsetUnits );
+      gboolean polygon_offset;
+      float factor, units;
+      GthreeBlendEquation equation;
+      GthreeBlendSrcFactor src_factor;
+      GthreeBlendDstFactor dst_factor;
+      GthreeBlendMode mode = gthree_material_get_blend_mode (override_material, &equation, &src_factor, &dst_factor);
 
-      render_objects (renderer, renderer->opaque_objects, camera, lights, fog, true, override_material );
-      render_objects (renderer, renderer->transparent_objects, camera, lights, fog, true, override_material );
-      */
+      set_blending (renderer, mode, equation, src_factor, dst_factor);
+
+      set_depth_test (renderer, gthree_material_get_depth_test (override_material));
+      set_depth_write (renderer, gthree_material_get_depth_write (override_material));
+      polygon_offset = gthree_material_get_polygon_offset (override_material, &factor, &units);
+      set_polygon_offset (renderer, polygon_offset, factor, units);
+
+      render_objects (renderer, priv->opaque_objects, camera, lights, fog, TRUE, override_material );
+      render_objects (renderer, priv->transparent_objects, camera, lights, fog, TRUE, override_material );
     }
   else
     {

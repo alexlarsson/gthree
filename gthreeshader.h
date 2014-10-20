@@ -33,6 +33,7 @@ GType gthree_shader_get_type (void) G_GNUC_CONST;
 
 GthreeShader *gthree_shader_new   ();
 GthreeShader *gthree_get_shader_from_library (const char *name);
+GthreeShader *gthree_clone_shader_from_library (const char *name);
 
 G_END_DECLS
 

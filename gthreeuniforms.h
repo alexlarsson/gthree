@@ -72,6 +72,7 @@ void            gthree_uniforms_add   (GthreeUniforms *uniforms,
 void           gthree_uniforms_load   (GthreeUniforms *uniforms);
 GthreeUniform *gthree_uniforms_lookup (GthreeUniforms *uniforms,
                                        GQuark name);
+GList  *gthree_uniforms_get_all (GthreeUniforms *uniforms);
 GthreeUniform *gthree_uniforms_lookup_from_string (GthreeUniforms *uniforms,
                                                    const char *name);
 
@@ -80,6 +81,8 @@ void gthree_uniform_set_location (GthreeUniform *uniform,
 void gthree_uniform_set_float (GthreeUniform *uniform,
                                double value);
 
+const char *gthree_uniform_get_name (GthreeUniform *uniform);
+GQuark gthree_uniform_get_qname (GthreeUniform *uniform);
 void gthree_uniform_load (GthreeUniform *uniform);
 
 

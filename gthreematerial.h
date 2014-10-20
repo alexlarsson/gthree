@@ -4,7 +4,9 @@
 #include <gtk/gtk.h>
 
 #include "gthreeobject.h"
+#include "gthreetypes.h"
 #include "gthreeprogram.h"
+#include "gthreeshader.h"
 
 G_BEGIN_DECLS
 
@@ -16,14 +18,15 @@ G_BEGIN_DECLS
 #define GTHREE_IS_MATERIAL(inst)  (G_TYPE_CHECK_INSTANCE_TYPE ((inst),    \
                                                              GTHREE_TYPE_MATERIAL))
 
-typedef struct {
+struct _GthreeMaterial {
   GObject parent;
 
   // TODO: hide
   gboolean needs_update;
 
   GthreeProgram *program;
-} GthreeMaterial;
+  GthreeShader *shader;
+};
 
 typedef struct {
   GObjectClass parent_class;
@@ -50,6 +53,9 @@ gboolean gthree_material_get_depth_test (GthreeMaterial *material);
 gboolean gthree_material_get_depth_write (GthreeMaterial *material);
 
 GthreeSide gthree_material_get_side (GthreeMaterial *material);
+
+GthreeShader *gthree_material_get_shader (GthreeMaterial *material);
+
 
 G_END_DECLS
 

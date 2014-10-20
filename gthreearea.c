@@ -121,12 +121,14 @@ gthree_area_realize (GtkWidget *widget)
   GthreeArea *area = GTHREE_AREA(widget);
   GthreeAreaPrivate *priv = gthree_area_get_instance_private (area);
   GtkAllocation allocation;
+  GdkRGBA red = { 1, 0, 0, 1 };
 
   GTK_WIDGET_CLASS (gthree_area_parent_class)->realize (widget);
 
   gtk_gl_area_make_current (glarea);
 
   priv->renderer = gthree_renderer_new ();
+  gthree_renderer_set_clear_color (priv->renderer, &red);
 
   gtk_widget_get_allocation (widget, &allocation);
   reshape (area, allocation.width, allocation.height);

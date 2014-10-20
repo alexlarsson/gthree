@@ -28,11 +28,11 @@ GType gthree_camera_get_type (void) G_GNUC_CONST;
 
 GthreeCamera *gthree_camera_new (float fov, float aspect, float near, float far);
 
-void gthree_camera_update_matrix (GthreeCamera *camera);
-void gthree_camera_get_proj_screen_matrix (GthreeCamera *camera,
-                                           graphene_matrix_t *res);
-const graphene_matrix_t *gthree_camera_get_world_inverse_matrix (GthreeCamera *camera);
-
+void                     gthree_camera_update_matrix            (GthreeCamera      *camera);
+void                     gthree_camera_get_proj_screen_matrix   (GthreeCamera      *camera,
+                                                                 graphene_matrix_t *res);
+const graphene_matrix_t *gthree_camera_get_world_inverse_matrix (GthreeCamera      *camera);
+const graphene_matrix_t *gthree_camera_get_projection_matrix    (GthreeCamera      *camera);
 
 G_END_DECLS
 

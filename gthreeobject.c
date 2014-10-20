@@ -202,6 +202,15 @@ gthree_object_look_at (GthreeObject *object,
 }
 
 void
+gthree_object_set_position (GthreeObject *object,
+                            graphene_point3d_t *pos)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  priv->position = *pos;
+}
+
+void
 gthree_object_update_matrix (GthreeObject *object)
 {
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
@@ -212,6 +221,9 @@ gthree_object_update_matrix (GthreeObject *object)
                          graphene_vec3_get_y (&priv->scale),
                          graphene_vec3_get_z (&priv->scale));
   graphene_matrix_translate  (&priv->matrix, &priv->position);
+
+  g_print ("updating object %p (%s), new matrix\n", object, g_type_name_from_instance ((GTypeInstance *)object));
+  graphene_matrix_print (&priv->matrix);
 
   priv->world_matrix_need_update = TRUE;
 }
@@ -259,11 +271,39 @@ gthree_object_update_matrix_view (GthreeObject *object,
 {
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
 
+  g_print ("gthree_object_update_matrix_view for %p\n", object);
+  g_print ("camera_matrix: ");
+  graphene_matrix_print (camera_matrix);
+  g_print ("world_matrix: ");
+  graphene_matrix_print (&priv->world_matrix);
+
   graphene_matrix_multiply (camera_matrix, &priv->world_matrix, &priv->model_view_matrix);
+
+  g_print ("new model_view_matrix: ");
+  graphene_matrix_print (&priv->model_view_matrix);
 
   graphene_matrix_inverse (&priv->model_view_matrix, &priv->normal_matrix);
   graphene_matrix_transpose (&priv->normal_matrix, &priv->normal_matrix);
 }
+
+void
+gthree_object_get_model_view_matrix_floats (GthreeObject *object,
+                                            float *dest)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  graphene_matrix_to_float (&priv->model_view_matrix, dest);
+}
+
+void
+gthree_object_get_world_matrix_floats (GthreeObject *object,
+                                       float *dest)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  graphene_matrix_to_float (&priv->world_matrix, dest);
+}
+
 
 void
 gthree_object_add_child (GthreeObject              *object,

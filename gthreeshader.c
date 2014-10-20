@@ -5,7 +5,7 @@
 
 
 typedef struct {
-  int dummy;
+  int free_shaders;
 } GthreeShaderPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeShader, gthree_shader, G_TYPE_OBJECT);
@@ -26,18 +26,23 @@ gthree_shader_new ()
 static void
 gthree_shader_init (GthreeShader *shader)
 {
-  //GthreeShaderPrivate *priv = gthree_shader_get_instance_private (shader);
+  GthreeShaderPrivate *priv = gthree_shader_get_instance_private (shader);
 
+  priv->free_shaders = TRUE;
 }
 
 static void
 gthree_shader_finalize (GObject *obj)
 {
   GthreeShader *shader = GTHREE_SHADER (obj);
+  GthreeShaderPrivate *priv = gthree_shader_get_instance_private (shader);
 
   g_clear_object (&shader->uniforms);
-  g_clear_pointer (&shader->vertex_shader, g_free);
-  g_clear_pointer (&shader->fragment_shader, g_free);
+  if (priv->free_shaders)
+    {
+      g_clear_pointer (&shader->vertex_shader, g_free);
+      g_clear_pointer (&shader->fragment_shader, g_free);
+    }
 
   G_OBJECT_CLASS (gthree_shader_parent_class)->finalize (obj);
 }
@@ -88,10 +93,11 @@ parse_include (char *file,
       return;
     }
 
-  g_string_prepend_len (s,
+  g_string_append_printf (s, "// Include: %s\n", file);
+  g_string_append_len (s,
                         g_bytes_get_data (bytes, NULL),
                         g_bytes_get_size (bytes));
-  g_string_prepend_c (s, '\n');
+  g_string_append_c (s, '\n');
   g_bytes_unref (bytes);
 }
 
@@ -111,8 +117,8 @@ parse_text_with_includes (const char *text)
         parse_include (lines[i] + strlen ("#include"), s);
       else
         {
-          g_string_prepend (s, lines[i]);
-          g_string_prepend_c (s, '\n');
+          g_string_append (s, lines[i]);
+          g_string_append_c (s, '\n');
         }
     }
 
@@ -236,4 +242,27 @@ gthree_get_shader_from_library (const char *name)
 
   g_warning ("can't find shader library %s\n", name);
   return NULL;
+}
+
+GthreeShader *
+gthree_clone_shader_from_library (const char *name)
+{
+  GthreeShader *shader = gthree_get_shader_from_library (name);
+  GthreeShader *clone;
+  GthreeShaderPrivate *priv;
+
+  if (shader == NULL)
+    return NULL;
+
+  clone = gthree_get_shader_from_library (name);
+
+  clone->uniforms = gthree_uniforms_clone (shader->uniforms);
+  clone->vertex_shader = shader->vertex_shader;
+  clone->fragment_shader = shader->fragment_shader;
+
+  /* Don't free these, as they point to the library ones */
+  priv = gthree_shader_get_instance_private (clone);
+  priv->free_shaders = FALSE;
+
+  return clone;
 }

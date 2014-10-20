@@ -83,6 +83,25 @@ gthree_uniforms_lookup (GthreeUniforms *uniforms,
   return g_hash_table_lookup (priv->hash, GINT_TO_POINTER (name));
 }
 
+GList  *
+gthree_uniforms_get_all (GthreeUniforms *uniforms)
+{
+  GthreeUniformsPrivate *priv = gthree_uniforms_get_instance_private (uniforms);
+  GList *all;
+  GHashTableIter iter;
+  gpointer value;
+
+  all = NULL;
+  g_hash_table_iter_init (&iter, priv->hash);
+  while (g_hash_table_iter_next (&iter, NULL, &value))
+    {
+      GthreeUniform *uniform = value;
+      all = g_list_prepend (all, uniform);
+    }
+
+  return all;
+}
+
 GthreeUniform *
 gthree_uniforms_lookup_from_string (GthreeUniforms *uniforms,
                                     const char *name)
@@ -138,6 +157,19 @@ gthree_uniform_newq (GQuark name, GthreeUniformType type)
 
   return uniform;
 }
+
+const char *
+gthree_uniform_get_name (GthreeUniform *uniform)
+{
+  return g_quark_to_string (uniform->name);
+}
+
+GQuark
+gthree_uniform_get_qname (GthreeUniform *uniform)
+{
+  return uniform->name;
+}
+
 
 GthreeUniform *
 gthree_uniform_new (const char *name, GthreeUniformType type)
@@ -275,6 +307,12 @@ gthree_uniform_set_float (GthreeUniform *uniform,
 void
 gthree_uniform_load (GthreeUniform *uniform)
 {
+  if (uniform->location == -1)
+    return;
+
+  g_print ("loadind uniform %s\n", gthree_uniform_get_name (uniform));
+
+  // TODO: Handle needsUpdate for some types?
   switch (uniform->type)
     {
     case GTHREE_UNIFORM_TYPE_INT:
