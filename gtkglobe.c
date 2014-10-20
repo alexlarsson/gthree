@@ -36,12 +36,16 @@ double rot = 0;
 GthreeScene *
 init_scene (void)
 {
+  static graphene_point3d_t rot = { 0, 0, 0};
 
   scene = gthree_scene_new ();
 
   geometry = gthree_geometry_new_box (100, 100, 100, 1, 1, 1);
   material = gthree_material_new ();
   mesh = gthree_mesh_new (geometry, material);
+
+  //rot.y = 10;
+  gthree_object_set_rotation (GTHREE_OBJECT (mesh), &rot);
 
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (mesh));
 
@@ -53,21 +57,19 @@ tick (GtkWidget     *widget,
       GdkFrameClock *frame_clock,
       gpointer       user_data)
 {
-  graphene_point3d_t v;
-
-  if (1)
-    return G_SOURCE_CONTINUE;
+  static graphene_point3d_t pos = { 0, 0, 0};
+  static graphene_point3d_t rot = { 0, 0, 0};
 
   if (0)
+    return G_SOURCE_CONTINUE;
+
+  if (1)
     {
-      rot += 0.00001;
+      //pos.x += 1;
+      rot.z += 0.1;
 
-      v.x = rot;
-      v.y = 0;
-      v.y = 0;
-
-      gthree_object_set_rotation (GTHREE_OBJECT (mesh), &v);
-      //gthree_object_set_position (GTHREE_OBJECT (mesh), &v);
+      gthree_object_set_rotation (GTHREE_OBJECT (mesh), &rot);
+      //gthree_object_set_position (GTHREE_OBJECT (mesh), &pos);
     }
 
   gtk_widget_queue_draw (widget);
@@ -99,6 +101,7 @@ main (int argc, char *argv[])
 
   scene = init_scene ();
   camera = gthree_camera_new (30, 1, 1, 10000);
+  gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
 
   gthree_object_set_position (GTHREE_OBJECT (camera),
                               graphene_point3d_init (&pos, 0, 0, 400));
