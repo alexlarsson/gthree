@@ -1,6 +1,10 @@
 #ifndef __GTHREE_BASIC_MATERIAL_H__
 #define __GTHREE_BASIC_MATERIAL_H__
 
+#if !defined (__GTHREE_H_INSIDE__) && !defined (GTHREE_COMPILATION)
+#error "Only <gthree/gthree.h> can be included directly."
+#endif
+
 #include "gthreematerial.h"
 #include "gthreetexture.h"
 

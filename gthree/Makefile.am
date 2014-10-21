@@ -6,6 +6,7 @@ AM_CPPFLAGS =					\
 	-DLIBEXECDIR=\"$(libexecdir)\"		\
 	-DBINDIR=\"$(bindir)\"			\
 	-DLIBDIR=\"$(libdir)\"			\
+	-DGTHREE_COMPILATION			\
 	$(NULL)
 
 lib_LTLIBRARIES = libgthree-1.la
@@ -13,6 +14,7 @@ lib_LTLIBRARIES = libgthree-1.la
 libgthree_1_ladir = $(includedir)/gthree
 
 gthree_public_h_sources = \
+	gthree.h \
 	gthreearea.h \
 	gthreebasicmaterial.h \
 	gthreecamera.h \

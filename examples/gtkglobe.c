@@ -4,10 +4,7 @@
 
 #include <epoxy/gl.h>
 
-#include <gthree/gthreearea.h>
-#include <gthree/gthreemesh.h>
-#include <gthree/gthreemultimaterial.h>
-#include <gthree/gthreebasicmaterial.h>
+#include <gthree/gthree.h>
 
 typedef struct {
   int dummy;
@@ -53,6 +50,8 @@ init_scene (void)
   GthreeTexture *texture;
 
   crate_pixbuf = gdk_pixbuf_new_from_file ("crate.gif", NULL);
+  if (crate_pixbuf == NULL)
+    crate_pixbuf = gdk_pixbuf_new_from_file ("examples/crate.gif", NULL);
 
   if (crate_pixbuf == NULL)
     g_error ("could not load crate.gif");
