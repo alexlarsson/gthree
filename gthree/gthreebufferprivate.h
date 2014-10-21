@@ -20,6 +20,7 @@ typedef struct {
 
   GthreeObject *object;
   GthreeMaterial *material;
+  gint material_index;
 
   guint vertex_buffer;
   guint normal_buffer;
@@ -45,6 +46,8 @@ typedef struct {
 
 GthreeBuffer *gthree_buffer_new ();
 GType gthree_buffer_get_type (void) G_GNUC_CONST;
+
+GthreeMaterial *gthree_buffer_resolve_material (GthreeBuffer *buffer);
 
 G_END_DECLS
 

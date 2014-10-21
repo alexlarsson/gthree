@@ -336,8 +336,8 @@ gthree_object_update_matrix_world (GthreeObject *object,
       if (priv->parent == NULL)
         priv->world_matrix = priv->matrix;
       else
-        graphene_matrix_multiply (&PRIV (priv->parent)->world_matrix,
-                                  &priv->matrix,
+        graphene_matrix_multiply (&priv->matrix,
+                                  &PRIV (priv->parent)->world_matrix,
                                   &priv->world_matrix);
 
       priv->world_matrix_need_update = FALSE;

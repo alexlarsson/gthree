@@ -404,7 +404,8 @@ gthree_uniform_load (GthreeUniform *uniform,
       glUniform3iv (uniform->location, uniform->value.array->len, &g_array_index (uniform->value.array, int, 0));
       break;
     case GTHREE_UNIFORM_TYPE_TEXTURE:
-      gthree_texture_load (uniform->value.texture, gthree_renderer_allocate_texture_unit (renderer));
+      if (uniform->value.texture)
+        gthree_texture_load (uniform->value.texture, gthree_renderer_allocate_texture_unit (renderer));
       break;
     case GTHREE_UNIFORM_TYPE_VEC2_ARRAY:
     case GTHREE_UNIFORM_TYPE_VEC3_ARRAY:

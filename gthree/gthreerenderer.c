@@ -404,7 +404,7 @@ resolve_buffer_material (GthreeRenderer *renderer,
                          GthreeBuffer *buffer)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
-  GthreeMaterial *material = buffer->material;
+  GthreeMaterial *material = gthree_buffer_resolve_material (buffer);
 
   if (material)
     {
@@ -1146,7 +1146,7 @@ render_objects (GthreeRenderer *renderer,
       if (override_material)
         material = override_material;
       else
-        material = buffer->material;
+        material = gthree_buffer_resolve_material (buffer);
 
       if (material == NULL)
         continue;

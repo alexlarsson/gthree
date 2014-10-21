@@ -100,7 +100,7 @@ make_geometry_groups (GthreeMesh *mesh,
         group = ptr;
       else
         {
-          group = gthree_geometry_group_new (GTHREE_OBJECT (mesh), gthree_material_resolve (priv->material, material_index));
+          group = gthree_geometry_group_new (GTHREE_OBJECT (mesh), priv->material, material_index);
           g_hash_table_insert (geometry_groups, GINT_TO_POINTER(group_hash), group);
           g_ptr_array_add (groups, group);
         }
@@ -116,7 +116,7 @@ make_geometry_groups (GthreeMesh *mesh,
             group = ptr;
           else
             {
-              group = gthree_geometry_group_new (GTHREE_OBJECT (mesh), gthree_material_resolve (priv->material, material_index));
+              group = gthree_geometry_group_new (GTHREE_OBJECT (mesh), priv->material, material_index);
               g_hash_table_insert (geometry_groups, GINT_TO_POINTER(group_hash), group);
               g_ptr_array_add (groups, group);
             }
@@ -184,7 +184,7 @@ init_mesh_buffers (GthreeMesh *mesh,
   guint nvertices = face_indexes->len * 3;
   guint ntris     = face_indexes->len * 1;
   guint nlines    = face_indexes->len * 3;
-  GthreeMaterial *material = GTHREE_BUFFER(group)->material;
+  GthreeMaterial *material = gthree_buffer_resolve_material (GTHREE_BUFFER(group));
   gboolean uv_type = buffer_guess_uv_type (material);
   gboolean normal_type = buffer_guess_normal_type (material);
   GthreeColorType vertex_color_type = buffer_guess_vertex_color_type (material);
@@ -491,7 +491,7 @@ gthree_mesh_update (GthreeObject *object)
     {
       group = g_ptr_array_index (priv->groups, i);
 
-      material = GTHREE_BUFFER (group)->material;
+      material = gthree_buffer_resolve_material (GTHREE_BUFFER(group));
 
       //customAttributesDirty = material.attributes && areCustomAttributesDirty( material );
       if ( priv->verticesNeedUpdate || priv->morphTargetsNeedUpdate || priv->elementsNeedUpdate ||
@@ -578,13 +578,6 @@ gthree_mesh_in_frustum (GthreeObject *object,
   GthreeSphere sphere;
 
   sphere = *gthree_geometry_get_bounding_sphere (priv->geometry);
-
-  g_print ("bounding sphere: [%f %f %f] r=%f\nmatrix:\n",
-           graphene_vec3_get_x (&sphere.center),
-           graphene_vec3_get_y (&sphere.center),
-           graphene_vec3_get_z (&sphere.center),
-           sphere.radius);
-  graphene_matrix_print (gthree_object_get_world_matrix (object));
 
   gthree_sphere_transform (&sphere, gthree_object_get_world_matrix (object));
 
