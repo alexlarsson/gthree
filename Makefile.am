@@ -26,9 +26,11 @@ libgthree_la_HEADERS = \
 	gthreebasicmaterial.h \
 	gthreemultimaterial.h \
 	gthreemesh.h \
+	gthreetexture.h \
 	gthreeobject.h \
 	gthreerenderer.h \
 	gthreescene.h \
+	gthreetypes.h \
 	$(NULL)
 
 libgthree_la_SOURCES = \
@@ -57,6 +59,7 @@ libgthree_la_SOURCES = \
 	gthreescene.c \
 	gthreeshader.c \
 	gthreeshader.h \
+	gthreetexture.c \
 	$(NULL)
 
 libgthree_la_CFLAGS = \
