@@ -29,16 +29,17 @@ gthree_public_h_sources = \
 	gthreescene.h \
 	gthreetexture.h \
 	gthreetypes.h \
+	gthreeprogram.h			\
+	gthreeshader.h \
+	gthreeuniforms.h \
 	$(NULL)
 
 gthree_private_h_sources =		\
-	gthree-resources.h			\
-	gthreebuffer.h \
-	gthreegeometrygroup.h \
-	gthreeprivate.h \
-	gthreeprogram.h \
-	gthreeshader.h \
-	gthreeuniforms.h \
+	gthree-resources.h		\
+	gthreebufferprivate.h		\
+	gthreegeometrygroupprivate.h	\
+	gthreeobjectprivate.h		\
+	gthreeprivate.h			\
 	$(NULL)
 
 gthree_built_private_headers =			\
