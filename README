@@ -1,0 +1,5 @@
+Gthree is a port of three.js to GObject and Gtk3.
+The code is a partial copy of three.js, and the API
+is very similar, although it only supports OpenGL.
+
+For information about three.js, see: http://threejs.org
