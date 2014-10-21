@@ -32,6 +32,7 @@ gthree_public_h_sources = \
 	gthreeprogram.h			\
 	gthreeshader.h \
 	gthreeuniforms.h \
+	gthreeutils.h			\
 	$(NULL)
 
 gthree_private_h_sources =		\
@@ -72,6 +73,7 @@ gthree_c_sources = \
 	gthreeprogram.h \
 	gthreeuniforms.c \
 	gthreeuniforms.h \
+	gthreeutils.c			\
 	gthreerenderer.c \
 	gthreescene.c \
 	gthreeshader.c \
