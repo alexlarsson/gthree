@@ -10,18 +10,18 @@ AM_CPPFLAGS =					\
 	$(NULL)
 
 noinst_PROGRAMS =				\
-	gtkglobe				\
+	gtkcube				\
 	$(NULL)
 
-gtkglobe_CFLAGS = \
+gtkcube_CFLAGS = \
 	$(GTHREE_CFLAGS)					\
 	$(NULL)
 
-gtkglobe_SOURCES =						\
-	gtkglobe.c						\
+gtkcube_SOURCES =						\
+	gtkcube.c						\
 	$(NULL)
 
-gtkglobe_LDADD = \
+gtkcube_LDADD = \
 	$(GTHREE_LIBS)						\
 	$(top_builddir)/gthree/libgthree-1.la			\
 	$(NULL)
