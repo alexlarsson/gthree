@@ -1,0 +1,12 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: Gthree
+Description: Gthree 3d rendering library
+Version: 1.0
+Requires: @GTHREE_PACKAGES@
+Requires.private: @GTHREE_PRIVATE_PACKAGES@
+Libs: -L${libdir} -lgthree
+Cflags: -I${includedir}/gthree-1.0

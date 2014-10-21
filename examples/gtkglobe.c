@@ -4,10 +4,10 @@
 
 #include <epoxy/gl.h>
 
-#include "gthreearea.h"
-#include "gthreemesh.h"
-#include "gthreemultimaterial.h"
-#include "gthreebasicmaterial.h"
+#include <gthree/gthreearea.h>
+#include <gthree/gthreemesh.h>
+#include <gthree/gthreemultimaterial.h>
+#include <gthree/gthreebasicmaterial.h>
 
 typedef struct {
   int dummy;
