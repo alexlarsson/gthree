@@ -1,30 +1,9 @@
 #include <stdlib.h>
 #include <gtk/gtk.h>
-#include <json-glib/json-glib.h>
 
 #include <epoxy/gl.h>
 
 #include <gthree/gthree.h>
-
-typedef struct {
-  int dummy;
-} Model;
-
-Model *
-load_model_from_json (char *path, GError **error)
-{
-  JsonParser *parser;
-
-  parser = json_parser_new ();
-
-  if (!json_parser_load_from_file (parser, path, error))
-    {
-      g_object_unref (parser);
-      return NULL;
-    }
-
-  return NULL;
-}
 
 GthreeScene *scene;
 GthreeBasicMaterial *material_simple;
