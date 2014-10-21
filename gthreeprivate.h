@@ -17,4 +17,7 @@ struct _GthreeFace
   int material_index;
 };
 
+guint gthree_renderer_allocate_texture_unit (GthreeRenderer *renderer);
+void gthree_texture_load (GthreeTexture *texture, int slot);
+
 #endif /* __GTHREE_PRIVATE_H__ */

@@ -11,6 +11,9 @@ typedef struct {
 
   GPtrArray *faces; /* GthreeFace* */
 
+  GArray *uv; /* graphene_vec2_t */
+  GArray *uv2; /* graphene_vec2_t */
+
   graphene_point3d_t bounding_box_min;
   graphene_point3d_t bounding_box_max;
 
@@ -81,6 +84,57 @@ gthree_geometry_get_n_faces (GthreeGeometry *geometry)
   return priv->faces->len;
 }
 
+const graphene_vec2_t *
+gthree_geometry_get_uvs (GthreeGeometry *geometry)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+
+  return (graphene_vec2_t *)priv->uv->data;
+}
+
+guint
+gthree_geometry_get_n_uv (GthreeGeometry *geometry)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+
+  return priv->uv->len;
+}
+
+void
+gthree_geometry_add_uv (GthreeGeometry *geometry,
+                        graphene_vec2_t *v)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+
+  g_array_append_val (priv->uv, *v);
+}
+
+const graphene_vec2_t *
+gthree_geometry_get_uv2s (GthreeGeometry *geometry)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+
+  return (graphene_vec2_t *)priv->uv2->data;
+}
+
+guint
+gthree_geometry_get_n_uv2 (GthreeGeometry *geometry)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+
+  return priv->uv2->len;
+}
+
+void
+gthree_geometry_add_uv2 (GthreeGeometry *geometry,
+                         graphene_vec2_t *v)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+
+  g_array_append_val (priv->uv2, *v);
+}
+
+
 static void
 gthree_geometry_init (GthreeGeometry *geometry)
 {
@@ -89,6 +143,8 @@ gthree_geometry_init (GthreeGeometry *geometry)
   priv->vertices = g_array_new (FALSE, FALSE, sizeof (graphene_vec3_t));
   priv->colors = g_array_new (FALSE, FALSE, sizeof (GdkRGBA));
   priv->faces = g_ptr_array_new_with_free_func ((GDestroyNotify)g_object_unref);
+  priv->uv = g_array_new (FALSE, FALSE, sizeof (graphene_vec2_t));
+  priv->uv2 = g_array_new (FALSE, FALSE, sizeof (graphene_vec2_t));
 }
 
 static void
@@ -100,6 +156,8 @@ gthree_geometry_finalize (GObject *obj)
   g_array_free (priv->vertices, TRUE);
   g_array_free (priv->colors, TRUE);
   g_ptr_array_free (priv->faces, TRUE);
+  g_array_free (priv->uv, TRUE);
+  g_array_free (priv->uv2, TRUE);
 
   G_OBJECT_CLASS (gthree_geometry_parent_class)->finalize (obj);
 }

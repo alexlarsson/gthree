@@ -4,8 +4,6 @@
 #include <gtk/gtk.h>
 #include <graphene.h>
 
-#include "gthreeuniforms.h"
-
 G_BEGIN_DECLS
 
 #define GTHREE_TYPE_TEXTURE      (gthree_texture_get_type ())
@@ -23,13 +21,14 @@ typedef struct {
 typedef struct {
   GObjectClass parent_class;
 
-  void (* update)          (GthreeTexture  *texture);
-
 } GthreeTextureClass;
 
 GType gthree_texture_get_type (void) G_GNUC_CONST;
 
-GthreeTexture *gthree_texture_new   ();
+GthreeTexture *gthree_texture_new (GdkPixbuf *pixbuf);
+
+const graphene_vec2_t *gthree_texture_get_repeat (GthreeTexture *texture);
+const graphene_vec2_t *gthree_texture_get_offset (GthreeTexture *texture);
 
 G_END_DECLS
 

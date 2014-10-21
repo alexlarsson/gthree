@@ -25,7 +25,7 @@ typedef struct {
   /* Render state */
   graphene_matrix_t proj_screen_matrix;
 
-  int used_texture_units;
+  guint used_texture_units;
 
   gboolean old_flip_sided;
   gboolean old_double_sided;
@@ -48,6 +48,15 @@ typedef struct {
 
   guint8 new_attributes[8];
   guint8 enabled_attributes[8];
+
+  int max_textures;
+  int max_vertex_textures;
+  int max_texture_size;
+  int max_cubemap_size;
+  float max_anisotropy;
+
+  gboolean supports_vertex_textures;
+  gboolean supports_bone_textures;
 
 } GthreeRendererPrivate;
 
@@ -88,6 +97,24 @@ gthree_renderer_init (GthreeRenderer *renderer)
   priv->old_blend_dst = -1;
 
   gthree_set_default_gl_state (renderer);
+
+  // GPU capabilities
+  glGetIntegerv (GL_MAX_TEXTURE_IMAGE_UNITS, &priv->max_textures);
+  glGetIntegerv (GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, &priv->max_vertex_textures);
+  glGetIntegerv (GL_MAX_TEXTURE_SIZE, &priv->max_texture_size);
+  glGetIntegerv (GL_MAX_CUBE_MAP_TEXTURE_SIZE, &priv->max_cubemap_size);
+
+  priv->max_anisotropy = 0.0f;
+  if (epoxy_has_gl_extension("GL_EXT_texture_filter_anisotropic"))
+    glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &priv->max_anisotropy);
+
+  priv->supports_vertex_textures = priv->max_vertex_textures > 0;
+  priv->supports_bone_textures =
+    priv->supports_vertex_textures &&
+    epoxy_has_gl_extension("GL_ARB_texture_float");
+
+  //priv->compressed_texture_formats = _glExtensionCompressedTextureS3TC ? glGetParameter( _gl.COMPRESSED_TEXTURE_FORMATS ) : [];
+
 }
 
 static void
@@ -455,6 +482,7 @@ init_material (GthreeRenderer *renderer,
                gpointer fog,
                GthreeObject *object)
 {
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
   char *shader_id;
   GthreeProgram *program;
   GthreeShader *shader;
@@ -477,7 +505,7 @@ init_material (GthreeRenderer *renderer,
 #endif
 
   parameters.precision = GTHREE_PRECISION_HIGH;
-  parameters.supports_vertex_textures = TRUE; //_supportsVertexTextures,
+  parameters.supports_vertex_textures = priv->supports_vertex_textures;
 
   gthree_material_set_params (material, &parameters);
 
@@ -486,7 +514,6 @@ init_material (GthreeRenderer *renderer,
   parameters =
     {
     precision: _precision,
-    supportsVertexTextures: _supportsVertexTextures,
 
     map: !! material.map,
     envMap: !! material.envMap,
@@ -897,7 +924,7 @@ set_program (GthreeRenderer *renderer,
 #endif
 
       // load common uniforms
-      gthree_uniforms_load (m_uniforms);
+      gthree_uniforms_load (m_uniforms, renderer);
     }
 
   load_uniforms_matrices (renderer, program, object);
@@ -966,7 +993,7 @@ render_buffer (GthreeRenderer *renderer,
   //var linewidth, a, attribute, i, il;
   //var attributes = program.attributes;
   gboolean updateBuffers = false;
-  gint position_location, color_location;
+  gint position_location, color_location, uv_location;
   guint32 wireframeBit = gthree_material_get_is_wireframe (material) ? 1 : 0;
   guint32 geometryGroupHash = (guint32)buffer + (guint32)program * 2 + wireframeBit;
 
@@ -1032,9 +1059,27 @@ render_buffer (GthreeRenderer *renderer,
               glVertexAttribPointer (color_location, 3, GL_FLOAT, FALSE, 0, NULL);
             }
 #if TODO
-          else if ( material.defaultAttributeValues )
+          else if (material.defaultAttributeValues)
             {
-              _gl.vertexAttrib3fv( attributes.color, material.defaultAttributeValues.color );
+              glVertexAttrib3fv (attributes.color, material.defaultAttributeValues.color);
+            }
+#endif
+        }
+
+      // uvs
+      uv_location = gthree_program_lookup_attribute_location (program, "uv");
+      if (uv_location >= 0)
+        {
+          if ( TRUE /* object.geometry.faceVertexUvs[ 0 ] */ )
+            {
+              glBindBuffer (GL_ARRAY_BUFFER, buffer->uv_buffer);
+              enable_attribute (renderer, uv_location);
+              glVertexAttribPointer (uv_location, 2, GL_FLOAT, FALSE, 0, NULL);
+            }
+#if TODO
+          else if (material.defaultAttributeValues)
+            {
+              glVertexAttrib2fv (attributes.uv, material.defaultAttributeValues.uv);
             }
 #endif
         }
@@ -1047,6 +1092,10 @@ render_buffer (GthreeRenderer *renderer,
           enableAttribute( attributes.normal );
           _gl.vertexAttribPointer( attributes.normal, 3, _gl.FLOAT, false, 0, 0 );
         }
+
+      // skinning
+
+      // line distances
 #endif
 
       disable_unused_attributes (renderer);
@@ -1219,4 +1268,18 @@ gthree_renderer_render (GthreeRenderer *renderer,
       // transparent pass (back-to-front order)
       render_objects (renderer, priv->transparent_objects, camera, lights, fog, TRUE, NULL);
     }
+}
+
+guint
+gthree_renderer_allocate_texture_unit (GthreeRenderer *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  guint texture_unit = priv->used_texture_units;
+
+  if (texture_unit >= priv->max_textures )
+    g_warning ("Trying to use %dtexture units while this GPU supports only %d",  texture_unit,priv->max_textures);
+
+  priv->used_texture_units += 1;
+
+  return texture_unit;
 }

@@ -196,17 +196,22 @@ gthree_program_new (gpointer code, GthreeMaterial *material, GthreeProgramParame
       if (parameters->vertex_colors != GTHREE_COLOR_NONE)
         g_string_append (vertex, "#define USE_COLOR\n");
 
-#if TODO
-      parameters.normalMap ? "#define USE_NORMALMAP" : "",
-        parameters.specularMap ? "#define USE_SPECULARMAP" : "",
-        parameters.alphaMap ? "#define USE_ALPHAMAP" : "",
+      if (parameters->normal_map)
+        g_string_append (vertex, "#define USE_NORMALMAP\n");
+      if (parameters->specular_map)
+        g_string_append (vertex, "#define USE_SPECULARMAP\n");
+      if (parameters->alpha_map)
+        g_string_append (vertex, "#define USE_ALPHAMAP\n");
 
+      if (parameters->wrap_around)
+        g_string_append (vertex, "#define WRAP_AROUND\n");
+
+#if TODO
         parameters.skinning ? "#define USE_SKINNING" : "",
         parameters.useVertexTexture ? "#define BONE_TEXTURE" : "",
 
         parameters.morphTargets ? "#define USE_MORPHTARGETS" : "",
         parameters.morphNormals ? "#define USE_MORPHNORMALS" : "",
-        parameters.wrapAround ? "#define WRAP_AROUND" : "",
 #endif
 
       if (parameters->double_sided)
@@ -308,17 +313,20 @@ gthree_program_new (gpointer code, GthreeMaterial *material, GthreeProgramParame
         g_string_append (fragment, "#define USE_LIGHTMAP\n");
       if (parameters->bump_map)
         g_string_append (fragment, "#define USE_BUMPMAP\n");
+      if (parameters->normal_map)
+        g_string_append (fragment, "#define USE_NORMALMAP\n");
+      if (parameters->specular_map)
+        g_string_append (fragment, "#define USE_SPECULARMAP\n");
+      if (parameters->alpha_map)
+        g_string_append (fragment, "#define USE_ALPHAMAP\n");
+
       if (parameters->vertex_colors != GTHREE_COLOR_NONE)
         g_string_append (fragment, "#define USE_COLOR\n");
 
-#if TODO
-      parameters.normalMap ? "#define USE_NORMALMAP" : "",
-        parameters.specularMap ? "#define USE_SPECULARMAP" : "",
-        parameters.alphaMap ? "#define USE_ALPHAMAP" : "",
-
-        parameters.metal ? "#define METAL" : "",
-        parameters.wrapAround ? "#define WRAP_AROUND" : "",
-#endif
+      if (parameters->metal)
+        g_string_append (fragment, "#define METAL\n");
+      if (parameters->wrap_around)
+        g_string_append (fragment, "#define WRAP_AROUND\n");
       if (parameters->double_sided)
         g_string_append (fragment, "#define DOUBLE_SIDED\n");
       if (parameters->flip_sided)
@@ -367,7 +375,6 @@ gthree_program_new (gpointer code, GthreeMaterial *material, GthreeProgramParame
     glBindAttribLocation (gl_program, 0, index0AttributeName);
   }
 
-  g_print ("LINKING program %p %d\n", program, gl_program);
   glLinkProgram (gl_program);
 
   glGetProgramiv (gl_program, GL_LINK_STATUS, &status);

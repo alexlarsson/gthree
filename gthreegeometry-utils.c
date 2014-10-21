@@ -96,8 +96,9 @@ build_plane (GthreeGeometry *geometry,
           /* Take ownership */
           gthree_geometry_add_face (geometry, face);
 
-          // TODO
-          //scope.faceVertexUvs[ 0 ].push( [ uva, uvb, uvd ] );
+          gthree_geometry_add_uv (geometry, &uva);
+          gthree_geometry_add_uv (geometry, &uvb);
+          gthree_geometry_add_uv (geometry, &uvd);
 
           face = gthree_face_new (b + offset, c + offset, d + offset);
           gthree_face_set_normal (face, &normalv);
@@ -107,8 +108,9 @@ build_plane (GthreeGeometry *geometry,
 
           gthree_geometry_add_face (geometry, face);
 
-          // TODO
-          //scope.faceVertexUvs[ 0 ].push( [ uvb.clone(), uvc, uvd.clone() ] );
+          gthree_geometry_add_uv (geometry, &uvb);
+          gthree_geometry_add_uv (geometry, &uvc);
+          gthree_geometry_add_uv (geometry, &uvd);
         }
     }
 }

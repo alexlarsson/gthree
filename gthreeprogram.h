@@ -47,7 +47,8 @@ typedef struct {
   guint fog : 1;
   guint use_fog : 1;
   guint fog_exp : 1;
-
+  guint metal : 1;
+  guint wrap_around : 1;
 
   guint16 max_dir_lights;
   guint16 max_point_lights;

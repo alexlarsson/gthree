@@ -4,6 +4,9 @@
 #include <gtk/gtk.h>
 #include <graphene.h>
 
+#include "gthreetypes.h"
+#include "gthreetexture.h"
+
 G_BEGIN_DECLS
 
 #define GTHREE_TYPE_UNIFORMS      (gthree_uniforms_get_type ())
@@ -69,7 +72,8 @@ void            gthree_uniforms_merge (GthreeUniforms *uniforms,
                                        GthreeUniforms *source);
 void            gthree_uniforms_add   (GthreeUniforms *uniforms,
                                        GthreeUniform  *uniform);
-void           gthree_uniforms_load   (GthreeUniforms *uniforms);
+void           gthree_uniforms_load   (GthreeUniforms *uniforms,
+                                       GthreeRenderer *renderer);
 GthreeUniform *gthree_uniforms_lookup (GthreeUniforms *uniforms,
                                        GQuark name);
 GList  *gthree_uniforms_get_all (GthreeUniforms *uniforms);
@@ -80,12 +84,19 @@ void gthree_uniform_set_location (GthreeUniform *uniform,
                                   int location);
 void gthree_uniform_set_float (GthreeUniform *uniform,
                                double value);
+void gthree_uniform_set_int (GthreeUniform *uniform,
+                             int value);
+void gthree_uniform_set_vec4 (GthreeUniform *uniform,
+                              graphene_vec4_t *value);
+void gthree_uniform_set_texture (GthreeUniform *uniform,
+                                 GthreeTexture *value);
 void gthree_uniform_set_color (GthreeUniform *uniform,
                                GdkRGBA *color);
 
 const char *gthree_uniform_get_name (GthreeUniform *uniform);
 GQuark gthree_uniform_get_qname (GthreeUniform *uniform);
-void gthree_uniform_load (GthreeUniform *uniform);
+void gthree_uniform_load (GthreeUniform *uniform,
+                          GthreeRenderer *renderer);
 
 
 G_END_DECLS

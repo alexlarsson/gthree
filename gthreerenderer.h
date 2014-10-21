@@ -18,9 +18,9 @@ G_BEGIN_DECLS
 #define GTHREE_IS_RENDERER(inst)  (G_TYPE_CHECK_INSTANCE_TYPE ((inst), \
                                                             GTHREE_TYPE_RENDERER))
 
-typedef struct {
+struct _GthreeRenderer {
   GObject parent;
-} GthreeRenderer;
+};
 
 typedef struct {
   GObjectClass parent_class;

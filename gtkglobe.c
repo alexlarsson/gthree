@@ -49,6 +49,16 @@ init_scene (void)
   GdkRGBA white =  {1, 1, 1, 1};
   int i;
 
+  GdkPixbuf *crate_pixbuf;
+  GthreeTexture *texture;
+
+  crate_pixbuf = gdk_pixbuf_new_from_file ("crate.gif", NULL);
+
+  if (crate_pixbuf == NULL)
+    g_error ("could not load crate.gif");
+
+  texture = gthree_texture_new (crate_pixbuf);
+
   scene = gthree_scene_new ();
 
   geometry = gthree_geometry_new_box (100, 100, 100, 1, 1, 1);
@@ -66,11 +76,12 @@ init_scene (void)
     }
 
   multi_material = gthree_multi_material_new ();
-  material = gthree_basic_material_new ();
 
+  material = gthree_basic_material_new ();
   gthree_material_set_side (GTHREE_MATERIAL (material), GTHREE_SIDE_DOUBLE);
   gthree_basic_material_set_color (material, &white);
-  gthree_basic_material_set_vertex_colors (material, GTHREE_COLOR_FACE);
+  gthree_basic_material_set_map (material, texture);
+  gthree_basic_material_set_vertex_colors (material, GTHREE_COLOR_NONE);
 
   wireframe = gthree_basic_material_new ();
   gthree_material_set_is_wireframe (GTHREE_MATERIAL (wireframe), TRUE);

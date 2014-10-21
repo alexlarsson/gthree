@@ -2,6 +2,7 @@
 #define __GTHREE_BASIC_MATERIAL_H__
 
 #include "gthreematerial.h"
+#include "gthreetexture.h"
 
 G_BEGIN_DECLS
 
@@ -25,13 +26,15 @@ typedef struct {
 GthreeBasicMaterial *gthree_basic_material_new ();
 GType gthree_basic_material_get_type (void) G_GNUC_CONST;
 
-const GdkRGBA * gthree_basic_material_get_color (GthreeBasicMaterial *basic);
-void gthree_basic_material_set_color (GthreeBasicMaterial *basic,
-                                      const GdkRGBA *color);
-void gthree_basic_material_set_vertex_colors (GthreeBasicMaterial *basic,
-                                              GthreeColorType color_type);
+const GdkRGBA * gthree_basic_material_get_color         (GthreeBasicMaterial *basic);
+void            gthree_basic_material_set_color         (GthreeBasicMaterial *basic,
+                                                         const GdkRGBA       *color);
+void            gthree_basic_material_set_vertex_colors (GthreeBasicMaterial *basic,
+                                                         GthreeColorType      color_type);
 GthreeColorType gthree_basic_material_get_vertex_colors (GthreeBasicMaterial *basic);
-
+void            gthree_basic_material_set_map           (GthreeBasicMaterial *basic,
+                                                         GthreeTexture       *texture);
+GthreeTexture  *gthree_basic_material_get_map           (GthreeBasicMaterial *basic);
 
 G_END_DECLS
 

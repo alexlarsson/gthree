@@ -29,14 +29,24 @@ typedef struct {
 GthreeGeometry *gthree_geometry_new ();
 GType gthree_geometry_get_type (void) G_GNUC_CONST;
 
-void gthree_geometry_add_vertex (GthreeGeometry *geometry,
-                                 graphene_vec3_t *v);
-guint gthree_geometry_get_n_vertices (GthreeGeometry *geometry);
-const graphene_vec3_t *gthree_geometry_get_vertices (GthreeGeometry *geometry);
-void gthree_geometry_add_face (GthreeGeometry *geometry,
-                               GthreeFace *face);
-GthreeFace * gthree_geometry_get_face (GthreeGeometry *geometry, int i);
-guint gthree_geometry_get_n_faces (GthreeGeometry *geometry);
+void                   gthree_geometry_add_vertex     (GthreeGeometry  *geometry,
+                                                       graphene_vec3_t *v);
+guint                  gthree_geometry_get_n_vertices (GthreeGeometry  *geometry);
+const graphene_vec3_t *gthree_geometry_get_vertices   (GthreeGeometry  *geometry);
+void                   gthree_geometry_add_face       (GthreeGeometry  *geometry,
+                                                       GthreeFace      *face);
+GthreeFace *           gthree_geometry_get_face       (GthreeGeometry  *geometry,
+                                                       int              i);
+guint                  gthree_geometry_get_n_faces    (GthreeGeometry  *geometry);
+const graphene_vec2_t *gthree_geometry_get_uvs        (GthreeGeometry  *geometry);
+guint                  gthree_geometry_get_n_uv       (GthreeGeometry  *geometry);
+void                   gthree_geometry_add_uv         (GthreeGeometry  *geometry,
+                                                       graphene_vec2_t *v);
+const graphene_vec2_t *gthree_geometry_get_uv2s       (GthreeGeometry  *geometry);
+guint                  gthree_geometry_get_n_uv2      (GthreeGeometry  *geometry);
+void                   gthree_geometry_add_uv2        (GthreeGeometry  *geometry,
+                                                       graphene_vec2_t *v);
+
 
 gboolean gthree_geometry_make_groups (GthreeGeometry *geometry,
                                       gboolean use_face_material,

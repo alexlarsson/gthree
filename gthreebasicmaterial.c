@@ -10,6 +10,8 @@ typedef struct {
   float reflectivity;
   float refraction_ratio;
 
+  GthreeTexture *map;
+
   GthreeShadingType shading_type;
   GthreeColorType vertex_colors;
   GthreeOperation combine;
@@ -49,12 +51,16 @@ gthree_basic_material_init (GthreeBasicMaterial *basic)
 
   priv->reflectivity = 1;
   priv->refraction_ratio = 0.98;
-
 }
 
 static void
 gthree_basic_material_finalize (GObject *obj)
 {
+  GthreeBasicMaterial *basic = GTHREE_BASIC_MATERIAL (obj);
+  GthreeBasicMaterialPrivate *priv = gthree_basic_material_get_instance_private (basic);
+
+  g_clear_object (&priv->map);
+
   G_OBJECT_CLASS (gthree_basic_material_parent_class)->finalize (obj);
 }
 
@@ -68,6 +74,8 @@ gthree_basic_material_real_set_params (GthreeMaterial *material,
   GTHREE_MATERIAL_CLASS (gthree_basic_material_parent_class)->set_params (material, params);
 
   params->vertex_colors = priv->vertex_colors;
+
+  params->map = priv->map != NULL;
 }
 
 static void
@@ -76,6 +84,7 @@ gthree_basic_material_real_set_uniforms (GthreeMaterial *material,
 {
   GthreeBasicMaterial *basic = GTHREE_BASIC_MATERIAL (material);
   GthreeBasicMaterialPrivate *priv = gthree_basic_material_get_instance_private (basic);
+  GthreeTexture *scale_map;
   GthreeUniform *uni;
 
   GTHREE_MATERIAL_CLASS (gthree_basic_material_parent_class)->set_uniforms (material, uniforms);
@@ -83,6 +92,36 @@ gthree_basic_material_real_set_uniforms (GthreeMaterial *material,
   uni = gthree_uniforms_lookup_from_string (uniforms, "diffuse");
   if (uni != NULL)
     gthree_uniform_set_color (uni, &priv->color);
+
+  uni = gthree_uniforms_lookup_from_string (uniforms, "map");
+  if (uni != NULL)
+    gthree_uniform_set_texture (uni, priv->map);
+
+  scale_map = NULL;
+  if (priv->map != NULL)
+    scale_map = priv->map;
+  // ... other maps
+
+  if (scale_map != NULL)
+    {
+      const graphene_vec2_t *repeat = gthree_texture_get_repeat (scale_map);
+      const graphene_vec2_t *offset = gthree_texture_get_offset (scale_map);
+      graphene_vec4_t offset_repeat;
+
+      graphene_vec4_init (&offset_repeat,
+                          graphene_vec2_get_x (offset),
+                          graphene_vec2_get_y (offset),
+                          graphene_vec2_get_x (repeat),
+                          graphene_vec2_get_y (repeat));
+
+      uni = gthree_uniforms_lookup_from_string (uniforms, "offsetRepeat");
+      if (uni != NULL)
+        gthree_uniform_set_vec4 (uni, &offset_repeat);
+    }
+
+  uni = gthree_uniforms_lookup_from_string (uniforms, "combine");
+  if (uni != NULL)
+    gthree_uniform_set_int (uni, priv->combine);
 }
 
 static void
@@ -121,6 +160,30 @@ gthree_basic_material_set_vertex_colors (GthreeBasicMaterial *basic,
   priv->vertex_colors = color_type;
 
   basic->parent.needs_update = TRUE;
+}
+
+void
+gthree_basic_material_set_map (GthreeBasicMaterial *basic,
+                               GthreeTexture *texture)
+{
+  GthreeBasicMaterialPrivate *priv = gthree_basic_material_get_instance_private (basic);
+
+  if (texture)
+    g_object_ref (texture);
+  if (priv->map)
+    g_object_unref (priv->map);
+
+  priv->map = texture;
+
+  basic->parent.needs_update = TRUE;
+}
+
+GthreeTexture *
+gthree_basic_material_get_map (GthreeBasicMaterial *basic)
+{
+  GthreeBasicMaterialPrivate *priv = gthree_basic_material_get_instance_private (basic);
+
+  return priv->map;
 }
 
 GthreeColorType

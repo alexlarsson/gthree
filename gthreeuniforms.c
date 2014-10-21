@@ -2,6 +2,7 @@
 #include <epoxy/gl.h>
 
 #include "gthreeuniforms.h"
+#include "gthreeprivate.h"
 
 struct _GthreeUniform {
   GQuark name;
@@ -12,7 +13,7 @@ struct _GthreeUniform {
     int ints[4];
     float *more_floats; /* Used for matrix types w/ 9/16 floats */
     GArray *array;
-    gpointer texture;
+    GthreeTexture *texture;
     GPtrArray *ptr_array;
   } value;
 };
@@ -135,7 +136,8 @@ gthree_uniforms_merge (GthreeUniforms *uniforms,
 }
 
 void
-gthree_uniforms_load (GthreeUniforms *uniforms)
+gthree_uniforms_load (GthreeUniforms *uniforms,
+                     GthreeRenderer *renderer)
 {
   GthreeUniformsPrivate *priv = gthree_uniforms_get_instance_private (uniforms);
   GHashTableIter iter;
@@ -143,7 +145,7 @@ gthree_uniforms_load (GthreeUniforms *uniforms)
 
   g_hash_table_iter_init (&iter, priv->hash);
   while (g_hash_table_iter_next (&iter, NULL, (gpointer *)&uniform))
-    gthree_uniform_load (uniform);
+    gthree_uniform_load (uniform, renderer);
 }
 
 GthreeUniform *
@@ -202,7 +204,7 @@ gthree_uniform_free (GthreeUniform *uniform)
         g_array_free (uniform->value.array, TRUE);
       break;
     case GTHREE_UNIFORM_TYPE_TEXTURE:
-      // TODO: unref?
+      g_object_unref (uniform->value.texture);
       break;
     case GTHREE_UNIFORM_TYPE_TEXTURE_ARRAY:
       if (uniform->value.ptr_array)
@@ -262,7 +264,8 @@ gthree_uniform_clone (GthreeUniform *uniform)
         }
       break;
     case GTHREE_UNIFORM_TYPE_TEXTURE:
-      // TODO: ref? clone?
+      if (clone->value.texture)
+        g_object_ref (clone->value.texture);
       break;
     case GTHREE_UNIFORM_TYPE_TEXTURE_ARRAY:
       if (uniform->value.ptr_array)
@@ -305,6 +308,14 @@ gthree_uniform_set_float (GthreeUniform *uniform,
 }
 
 void
+gthree_uniform_set_int (GthreeUniform *uniform,
+                        int val)
+{
+  g_return_if_fail (uniform->type == GTHREE_UNIFORM_TYPE_INT);
+  uniform->value.ints[0] = val;
+}
+
+void
 gthree_uniform_set_color (GthreeUniform *uniform,
                           GdkRGBA *val)
 {
@@ -315,7 +326,33 @@ gthree_uniform_set_color (GthreeUniform *uniform,
 }
 
 void
-gthree_uniform_load (GthreeUniform *uniform)
+gthree_uniform_set_vec4 (GthreeUniform *uniform,
+                         graphene_vec4_t *value)
+{
+  g_return_if_fail (uniform->type == GTHREE_UNIFORM_TYPE_VECTOR4);
+  uniform->value.floats[0] = graphene_vec4_get_x (value);
+  uniform->value.floats[1] = graphene_vec4_get_y (value);
+  uniform->value.floats[2] = graphene_vec4_get_z (value);
+  uniform->value.floats[3] = graphene_vec4_get_w (value);
+}
+
+void
+gthree_uniform_set_texture (GthreeUniform *uniform,
+                            GthreeTexture *value)
+{
+  g_return_if_fail (uniform->type == GTHREE_UNIFORM_TYPE_TEXTURE);
+
+  if (value)
+    g_object_ref (value);
+  if (uniform->value.texture)
+    g_object_unref (uniform->value.texture);
+
+  uniform->value.texture = value;
+}
+
+void
+gthree_uniform_load (GthreeUniform *uniform,
+                     GthreeRenderer *renderer)
 {
   if (uniform->location == -1)
     return;
@@ -366,12 +403,14 @@ gthree_uniform_load (GthreeUniform *uniform)
     case GTHREE_UNIFORM_TYPE_INT3_ARRAY:
       glUniform3iv (uniform->location, uniform->value.array->len, &g_array_index (uniform->value.array, int, 0));
       break;
+    case GTHREE_UNIFORM_TYPE_TEXTURE:
+      gthree_texture_load (uniform->value.texture, gthree_renderer_allocate_texture_unit (renderer));
+      break;
     case GTHREE_UNIFORM_TYPE_VEC2_ARRAY:
     case GTHREE_UNIFORM_TYPE_VEC3_ARRAY:
     case GTHREE_UNIFORM_TYPE_VEC4_ARRAY:
     case GTHREE_UNIFORM_TYPE_MATRIX3_ARRAY:
     case GTHREE_UNIFORM_TYPE_MATRIX4_ARRAY:
-    case GTHREE_UNIFORM_TYPE_TEXTURE:
     case GTHREE_UNIFORM_TYPE_TEXTURE_ARRAY:
       g_warning ("gthree_uniform_load() - unsupported uniform type %d\n", uniform->type);
     }
@@ -385,7 +424,7 @@ static float fp98 = 0.98;
 static float fp00025 = 0.00025;
 static GdkRGBA grey = { 0.9333333333333333, 0.9333333333333333, 0.9333333333333333, 1.0 };
 static GdkRGBA white = { 1, 1, 1, 1.0 };
-static float zdir4[4] = { 0, 0, 1, 1 };
+static float default_offset_repeat[4] = { 0, 0, 1, 1 };
 static float onev2[2] = { 1, 1 };
 
 static GthreeUniforms *common;
@@ -394,7 +433,7 @@ static GthreeUniformsDefinition common_lib[] = {
   {"opacity", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
 
   {"map", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
-  {"offsetRepeat", GTHREE_UNIFORM_TYPE_VECTOR4, &zdir4},
+  {"offsetRepeat", GTHREE_UNIFORM_TYPE_VECTOR4, &default_offset_repeat},
 
   {"lightMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
   {"specularMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },

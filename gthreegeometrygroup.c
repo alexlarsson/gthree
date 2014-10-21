@@ -23,7 +23,7 @@ gthree_geometry_group_new (GthreeObject *object,
 static void
 gthree_geometry_group_init (GthreeGeometryGroup *group)
 {
-  group->faces = g_ptr_array_new_with_free_func ((GDestroyNotify)g_object_unref);
+  group->face_indexes = g_array_new (FALSE, FALSE, sizeof (int));
 }
 
 void
@@ -44,7 +44,7 @@ gthree_geometry_group_finalize (GObject *obj)
 {
   GthreeGeometryGroup *group = GTHREE_GEOMETRY_GROUP (obj);
 
-  g_ptr_array_free (group->faces, TRUE);
+  g_array_free (group->face_indexes, TRUE);
 
   gthree_geometry_group_dispose (group);
 
@@ -60,8 +60,8 @@ gthree_geometry_group_class_init (GthreeGeometryGroupClass *klass)
 
 void
 gthree_geometry_group_add_face (GthreeGeometryGroup *group,
-                                GthreeFace *face)
+                                int face_index)
 {
-  g_ptr_array_add (group->faces, g_object_ref (face));
+  g_array_append_val (group->face_indexes, face_index);
   group->n_vertices += 3;
 }

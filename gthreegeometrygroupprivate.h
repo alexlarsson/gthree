@@ -16,7 +16,7 @@ G_BEGIN_DECLS
 typedef struct {
   GthreeBuffer parent;
 
-  GPtrArray *faces; /* GthreeFace* */
+  GArray *face_indexes; /* int */
   int n_vertices;
 
   guint realized : 1;
@@ -43,7 +43,7 @@ GthreeGeometryGroup *gthree_geometry_group_new (GthreeObject *object,
 GType gthree_geometry_group_get_type (void) G_GNUC_CONST;
 
 void gthree_geometry_group_add_face (GthreeGeometryGroup *group,
-                                     GthreeFace *face);
+                                     int face_index);
 void gthree_geometry_group_dispose (GthreeGeometryGroup *group);
 
 G_END_DECLS
