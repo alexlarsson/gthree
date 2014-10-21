@@ -14,8 +14,11 @@ typedef struct {
   GArray *uv; /* graphene_vec2_t */
   GArray *uv2; /* graphene_vec2_t */
 
-  graphene_point3d_t bounding_box_min;
-  graphene_point3d_t bounding_box_max;
+  GthreeBox3 bounding_box;
+  GthreeSphere bounding_sphere;
+
+  guint bounding_box_set;
+  guint bounding_sphere_set;
 
 } GthreeGeometryPrivate;
 
@@ -134,6 +137,22 @@ gthree_geometry_add_uv2 (GthreeGeometry *geometry,
   g_array_append_val (priv->uv2, *v);
 }
 
+const GthreeSphere *
+gthree_geometry_get_bounding_sphere (GthreeGeometry *geometry)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+
+  if (!priv->bounding_sphere_set)
+    {
+      gthree_sphere_init_from_points (&priv->bounding_sphere,
+                                      (graphene_vec3_t *)(priv->vertices->data),
+                                      priv->vertices->len,
+                                      NULL);
+      priv->bounding_sphere_set = TRUE;
+    }
+
+  return &priv->bounding_sphere;
+}
 
 static void
 gthree_geometry_init (GthreeGeometry *geometry)

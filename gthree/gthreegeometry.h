@@ -51,6 +51,8 @@ guint                  gthree_geometry_get_n_uv2      (GthreeGeometry  *geometry
 void                   gthree_geometry_add_uv2        (GthreeGeometry  *geometry,
                                                        graphene_vec2_t *v);
 
+const GthreeSphere *   gthree_geometry_get_bounding_sphere (GthreeGeometry *geometry);
+
 
 gboolean gthree_geometry_make_groups (GthreeGeometry *geometry,
                                       gboolean use_face_material,

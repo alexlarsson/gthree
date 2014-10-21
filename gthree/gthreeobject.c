@@ -45,6 +45,8 @@ typedef struct {
   guint world_matrix_need_update : 1;
   guint matrix_auto_update : 1;
 
+  guint frustum_culled : 1;
+
   /* Render state */
 
   GList *buffers;
@@ -92,6 +94,7 @@ gthree_object_init (GthreeObject *object)
 
   priv->matrix_auto_update = TRUE;
   priv->visible = TRUE;
+  priv->frustum_culled = TRUE;
 
   graphene_matrix_init_identity (&priv->matrix);
   graphene_matrix_init_identity (&priv->world_matrix);
@@ -187,6 +190,26 @@ gthree_object_get_visible (GthreeObject *object)
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
 
   return priv->visible;
+}
+
+gboolean
+gthree_object_get_is_frustum_culled (GthreeObject *object)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  return priv->frustum_culled;
+}
+
+gboolean
+gthree_object_is_in_frustum (GthreeObject *object,
+                             GthreeFrustum *frustum)
+{
+  GthreeObjectClass *class = GTHREE_OBJECT_GET_CLASS(object);
+
+  if (class->in_frustum)
+    return class->in_frustum (object, frustum);
+
+  return TRUE;
 }
 
 void

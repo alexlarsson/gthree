@@ -8,7 +8,8 @@
 #include <gtk/gtk.h>
 #include <graphene.h>
 
-#include "gthreeenums.h"
+#include <gthree/gthreeenums.h>
+#include <gthree/gthreeutils.h>
 
 G_BEGIN_DECLS
 
@@ -28,11 +29,13 @@ typedef struct {
 typedef struct {
   GInitiallyUnownedClass parent_class;
 
+  gboolean (* in_frustum)       (GthreeObject          *object,
+                                 GthreeFrustum         *frustum);
+
   void (* parent_set)           (GthreeObject          *object,
                                  GthreeObject          *old_parent);
 
   void (* update)               (GthreeObject          *object);
-
   void (* destroy)              (GthreeObject          *object);
   void (* realize)              (GthreeObject          *object);
   void (* unrealize)            (GthreeObject          *object);
@@ -76,6 +79,9 @@ void gthree_object_get_model_view_matrix_floats (GthreeObject *object,
                                                  float        *dest);
 
 gboolean      gthree_object_get_visible          (GthreeObject *object);
+gboolean      gthree_object_get_is_frustum_culled(GthreeObject *object);
+gboolean      gthree_object_is_in_frustum        (GthreeObject *object,
+                                                  GthreeFrustum *frustum);
 
 void          gthree_object_add_child            (GthreeObject *object,
                                                   GthreeObject *child);

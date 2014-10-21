@@ -569,11 +569,34 @@ gthree_mesh_unrealize (GthreeObject *object)
     g_ptr_array_free (priv->groups, TRUE);
 }
 
+static gboolean
+gthree_mesh_in_frustum (GthreeObject *object,
+                        GthreeFrustum *frustum)
+{
+  GthreeMesh *mesh = GTHREE_MESH (object);
+  GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
+  GthreeSphere sphere;
+
+  sphere = *gthree_geometry_get_bounding_sphere (priv->geometry);
+
+  g_print ("bounding sphere: [%f %f %f] r=%f\nmatrix:\n",
+           graphene_vec3_get_x (&sphere.center),
+           graphene_vec3_get_y (&sphere.center),
+           graphene_vec3_get_z (&sphere.center),
+           sphere.radius);
+  graphene_matrix_print (gthree_object_get_world_matrix (object));
+
+  gthree_sphere_transform (&sphere, gthree_object_get_world_matrix (object));
+
+  return gthree_frustum_intersects_sphere (frustum, &sphere);
+}
+
 static void
 gthree_mesh_class_init (GthreeMeshClass *klass)
 {
   G_OBJECT_CLASS (klass)->finalize = gthree_mesh_finalize;
 
+  GTHREE_OBJECT_CLASS (klass)->in_frustum = gthree_mesh_in_frustum;
   GTHREE_OBJECT_CLASS (klass)->update = gthree_mesh_update;
   GTHREE_OBJECT_CLASS (klass)->realize = gthree_mesh_realize;
   GTHREE_OBJECT_CLASS (klass)->unrealize = gthree_mesh_unrealize;

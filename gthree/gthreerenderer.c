@@ -5,6 +5,7 @@
 #include "gthreeobjectprivate.h"
 #include "gthreeshader.h"
 #include "gthreematerial.h"
+#include "gthreeutils.h"
 
 typedef struct {
   int width;
@@ -23,6 +24,7 @@ typedef struct {
   float viewport_height;
 
   /* Render state */
+  GthreeFrustum frustum;
   graphene_matrix_t proj_screen_matrix;
 
   guint used_texture_units;
@@ -429,7 +431,7 @@ project_object (GthreeRenderer *renderer,
 
   buffers = gthree_object_get_buffers (object);
 
-  if (buffers != NULL  /* && ( !g_three_object_get_frustum_culled (object) || priv->frustum.intersectsObject (object))  */)
+  if (buffers != NULL && (!gthree_object_get_is_frustum_culled (object) || gthree_object_is_in_frustum (object, &priv->frustum)))
     {
       gthree_object_update (object);
 
@@ -1216,6 +1218,7 @@ gthree_renderer_render (GthreeRenderer *renderer,
   gthree_camera_update_matrix (camera);
 
   gthree_camera_get_proj_screen_matrix (camera, &priv->proj_screen_matrix);
+  gthree_frustum_init_from_matrix (&priv->frustum, &priv->proj_screen_matrix);
 
   gthree_scene_realize_objects (scene);
 
