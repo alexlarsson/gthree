@@ -377,7 +377,7 @@ GthreeShader *
 gthree_material_get_shader (GthreeMaterial *material)
 {
   if (material->shader == NULL)
-    material->shader = gthree_get_shader_from_library ("basic");
+    material->shader = gthree_clone_shader_from_library ("basic");
 
   return material->shader;
 }
