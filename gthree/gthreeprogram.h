@@ -24,7 +24,7 @@ struct _GthreeProgram {
 
   int usedTimes;
   gpointer code;
-  GLuint gl_program, glVertexShader, glFragmentShader;
+  GLuint gl_program;
 };
 
 typedef struct {

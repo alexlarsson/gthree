@@ -481,8 +481,6 @@ gthree_program_new (gpointer code, GthreeMaterial *material, GthreeProgramParame
   program->code = code;
   program->usedTimes = 1;
   program->gl_program = gl_program;
-  program->glVertexShader = glVertexShader;
-  program->glFragmentShader = glFragmentShader;
 
   return program;
 }
@@ -497,8 +495,14 @@ gthree_program_init (GthreeProgram *program)
 static void
 gthree_program_finalize (GObject *obj)
 {
-  //GthreeProgram *program = GTHREE_PROGRAM (obj);
+  GthreeProgram *program = GTHREE_PROGRAM (obj);
   //GthreeProgramPrivate *priv = gthree_program_get_instance_private (program);
+
+  if (program->gl_program)
+    {
+      glDeleteProgram (program->gl_program);
+      program->gl_program = 0;
+    }
 
   G_OBJECT_CLASS (gthree_program_parent_class)->finalize (obj);
 }

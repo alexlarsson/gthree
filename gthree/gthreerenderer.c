@@ -470,13 +470,6 @@ project_object (GthreeRenderer *renderer,
     project_object (renderer, scene, child, camera);
 }
 
-static void
-deallocate_material (GthreeRenderer *renderer,
-                     GthreeMaterial *material)
-{
-  // TODO
-}
-
 static GthreeProgram *
 init_material (GthreeRenderer *renderer,
                GthreeMaterial *material,
@@ -727,8 +720,7 @@ set_program (GthreeRenderer *renderer,
 
   if (material->needs_update)
     {
-      if (material->program)
-        deallocate_material (renderer, material);
+      g_clear_object (&material->program);
       init_material (renderer, material, lights, fog, object);
       material->needs_update = FALSE;
     }
