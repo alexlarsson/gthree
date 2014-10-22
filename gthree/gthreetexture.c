@@ -52,7 +52,7 @@ gthree_texture_new (GdkPixbuf *pixbuf)
                           NULL);
 
   priv = gthree_texture_get_instance_private (texture);
-  priv->pixbuf = g_object_ref (pixbuf);
+  priv->pixbuf = gdk_pixbuf_flip (pixbuf, FALSE);
 
   return texture;
 }
@@ -233,7 +233,7 @@ gthree_texture_load (GthreeTexture *texture, int slot)
       //glPixelStorei( GL_UNPACK_PREMULTIPLY_ALPHA_WEBGL, texture.premultiplyAlpha );
       glPixelStorei (GL_UNPACK_ALIGNMENT, priv->unpack_alignment);
 
-      gl_format = priv->format;
+      gl_format = gdk_pixbuf_get_has_alpha (priv->pixbuf) ? GL_RGBA : GL_RGB;
       gl_type = priv->type;
 
       set_texture_parameters (GL_TEXTURE_2D, texture, is_image_power_of_two);
