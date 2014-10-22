@@ -50,6 +50,10 @@ const graphene_vec2_t *gthree_geometry_get_uv2s       (GthreeGeometry  *geometry
 guint                  gthree_geometry_get_n_uv2      (GthreeGeometry  *geometry);
 void                   gthree_geometry_add_uv2        (GthreeGeometry  *geometry,
                                                        graphene_vec2_t *v);
+void                   gthree_geometry_set_uv_n       (GthreeGeometry  *geometry,
+                                                       int              layer,
+                                                       int              index,
+                                                       graphene_vec2_t *v);
 
 const GthreeSphere *   gthree_geometry_get_bounding_sphere (GthreeGeometry *geometry);
 

@@ -137,6 +137,31 @@ gthree_geometry_add_uv2 (GthreeGeometry *geometry,
   g_array_append_val (priv->uv2, *v);
 }
 
+void
+gthree_geometry_set_uv_n (GthreeGeometry  *geometry,
+                          int              layer,
+                          int              index,
+                          graphene_vec2_t *v)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+
+  if (layer == 0)
+    {
+      if (priv->uv->len <= index)
+        g_array_set_size (priv->uv, index + 1);
+      g_array_index (priv->uv, graphene_vec2_t, index) = *v;
+    }
+  else if (layer == 1)
+    {
+      if (priv->uv2->len <= index)
+        g_array_set_size (priv->uv2, index + 1);
+      g_array_index (priv->uv2, graphene_vec2_t, index) = *v;
+    }
+  else
+    g_warning ("only 2 uv layers supported");
+}
+
+
 const GthreeSphere *
 gthree_geometry_get_bounding_sphere (GthreeGeometry *geometry)
 {
@@ -162,8 +187,8 @@ gthree_geometry_init (GthreeGeometry *geometry)
   priv->vertices = g_array_new (FALSE, FALSE, sizeof (graphene_vec3_t));
   priv->colors = g_array_new (FALSE, FALSE, sizeof (GdkRGBA));
   priv->faces = g_ptr_array_new_with_free_func ((GDestroyNotify)g_object_unref);
-  priv->uv = g_array_new (FALSE, FALSE, sizeof (graphene_vec2_t));
-  priv->uv2 = g_array_new (FALSE, FALSE, sizeof (graphene_vec2_t));
+  priv->uv = g_array_new (FALSE, TRUE, sizeof (graphene_vec2_t));
+  priv->uv2 = g_array_new (FALSE, TRUE, sizeof (graphene_vec2_t));
 }
 
 static void
