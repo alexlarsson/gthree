@@ -731,7 +731,7 @@ set_program (GthreeRenderer *renderer,
 
   if (program != priv->current_program )
     {
-      glUseProgram (gthree_program_get_program (program));
+      gthree_program_use (program);
       priv->current_program = program;
 
       refreshProgram = TRUE;

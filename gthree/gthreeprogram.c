@@ -7,7 +7,14 @@
 #include "gthreematerial.h"
 
 typedef struct {
-  int dummy;
+  // TODO: Switch these from string to quarks
+  GHashTable *uniform_locations;
+  GHashTable *attribute_locations;
+
+  GLuint gl_program;
+
+  int usedTimes;
+  gpointer code;
 } GthreeProgramPrivate;
 
 
@@ -67,9 +74,9 @@ create_shader (int type, const char const *code)
   return shader;
 }
 
-static GHashTable *
-cache_uniform_locations (GLuint program, char **identifiers) {
-  GHashTable *uniforms = g_hash_table_new (g_str_hash, g_str_equal);
+static void
+cache_uniform_locations (GHashTable *uniforms, GLuint program, char **identifiers)
+{
   int i;
 
   for (i = 0; identifiers[i] != NULL; i++)
@@ -77,13 +84,11 @@ cache_uniform_locations (GLuint program, char **identifiers) {
       int location = glGetUniformLocation (program, identifiers[i]);
       g_hash_table_insert (uniforms, identifiers[i], GINT_TO_POINTER (location));
     }
-
-  return uniforms;
 }
 
-static GHashTable *
-cache_attribute_locations (GLuint program, char **identifiers) {
-  GHashTable *attributes = g_hash_table_new (g_str_hash, g_str_equal);
+static void
+cache_attribute_locations (GHashTable *attributes, GLuint program, char **identifiers)
+{
   int i;
 
   for (i = 0; identifiers[i] != NULL; i++)
@@ -91,14 +96,13 @@ cache_attribute_locations (GLuint program, char **identifiers) {
       int location = glGetAttribLocation (program, identifiers[i]);
       g_hash_table_insert (attributes, identifiers[i], GINT_TO_POINTER (location));
     }
-
-  return attributes;
 }
 
 GthreeProgram *
 gthree_program_new (gpointer code, GthreeMaterial *material, GthreeProgramParameters *parameters)
 {
   GthreeProgram *program;
+  GthreeProgramPrivate *priv;
   char **defines;
   GthreeUniforms *uniforms;
   const char *vertex_shader, *fragment_shader;
@@ -113,6 +117,7 @@ gthree_program_new (gpointer code, GthreeMaterial *material, GthreeProgramParame
 
   program = g_object_new (gthree_program_get_type (),
                           NULL);
+  priv = gthree_program_get_instance_private (program);
 
   defines = NULL;
   //var defines = material.defines;
@@ -437,7 +442,7 @@ gthree_program_new (gpointer code, GthreeMaterial *material, GthreeProgramParame
   g_list_free (uniform_list);
   g_ptr_array_add (identifiers, NULL);
 
-  program->uniform_locations = cache_uniform_locations (gl_program, (char **)identifiers->pdata);
+  cache_uniform_locations (priv->uniform_locations, gl_program, (char **)identifiers->pdata);
 
   g_ptr_array_free (identifiers, FALSE);
 
@@ -474,13 +479,13 @@ gthree_program_new (gpointer code, GthreeMaterial *material, GthreeProgramParame
 
   g_ptr_array_add (identifiers, NULL);
 
-  program->attribute_locations = cache_attribute_locations (gl_program, (char **)identifiers->pdata);
+  cache_attribute_locations (priv->attribute_locations, gl_program, (char **)identifiers->pdata);
 
   g_ptr_array_free (identifiers, FALSE);
 
-  program->code = code;
-  program->usedTimes = 1;
-  program->gl_program = gl_program;
+  priv->code = code;
+  priv->usedTimes = 1;
+  priv->gl_program = gl_program;
 
   return program;
 }
@@ -488,21 +493,26 @@ gthree_program_new (gpointer code, GthreeMaterial *material, GthreeProgramParame
 static void
 gthree_program_init (GthreeProgram *program)
 {
-  //GthreeProgramPrivate *priv = gthree_program_get_instance_private (program);
+  GthreeProgramPrivate *priv = gthree_program_get_instance_private (program);
 
+  priv->uniform_locations = g_hash_table_new (g_str_hash, g_str_equal);
+  priv->attribute_locations = g_hash_table_new (g_str_hash, g_str_equal);
 }
 
 static void
 gthree_program_finalize (GObject *obj)
 {
   GthreeProgram *program = GTHREE_PROGRAM (obj);
-  //GthreeProgramPrivate *priv = gthree_program_get_instance_private (program);
+  GthreeProgramPrivate *priv = gthree_program_get_instance_private (program);
 
-  if (program->gl_program)
+  if (priv->gl_program)
     {
-      glDeleteProgram (program->gl_program);
-      program->gl_program = 0;
+      glDeleteProgram (priv->gl_program);
+      priv->gl_program = 0;
     }
+
+  g_hash_table_destroy (priv->uniform_locations);
+  g_hash_table_destroy (priv->attribute_locations);
 
   G_OBJECT_CLASS (gthree_program_parent_class)->finalize (obj);
 }
@@ -513,19 +523,22 @@ gthree_program_class_init (GthreeProgramClass *klass)
   G_OBJECT_CLASS (klass)->finalize = gthree_program_finalize;
 }
 
-guint
-gthree_program_get_program (GthreeProgram *program)
+void
+gthree_program_use (GthreeProgram *program)
 {
-  return program->gl_program;
+  GthreeProgramPrivate *priv = gthree_program_get_instance_private (program);
+
+  glUseProgram (priv->gl_program);
 }
 
 gint
 gthree_program_lookup_uniform_location (GthreeProgram *program,
                                         const char *uniform)
 {
+  GthreeProgramPrivate *priv = gthree_program_get_instance_private (program);
   gpointer location;
 
-  if (g_hash_table_lookup_extended (program->uniform_locations,
+  if (g_hash_table_lookup_extended (priv->uniform_locations,
                                     uniform, NULL, &location))
     return GPOINTER_TO_INT (location);
   return -1;
@@ -535,9 +548,10 @@ gint
 gthree_program_lookup_attribute_location (GthreeProgram *program,
                                              const char *attribute)
 {
+  GthreeProgramPrivate *priv = gthree_program_get_instance_private (program);
   gpointer location;
 
-  if (g_hash_table_lookup_extended (program->attribute_locations,
+  if (g_hash_table_lookup_extended (priv->attribute_locations,
                                     attribute, NULL, &location))
     return GPOINTER_TO_INT (location);
   return -1;

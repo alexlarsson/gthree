@@ -17,14 +17,6 @@ G_BEGIN_DECLS
 
 struct _GthreeProgram {
   GObject parent;
-
-  // TODO: Switch these from string to quarks
-  GHashTable *uniform_locations;
-  GHashTable *attribute_locations;
-
-  int usedTimes;
-  gpointer code;
-  GLuint gl_program;
 };
 
 typedef struct {
@@ -65,7 +57,7 @@ GType gthree_program_get_type (void) G_GNUC_CONST;
 
 GthreeProgram *gthree_program_new (gpointer code, GthreeMaterial *material, GthreeProgramParameters *parameters);
 
-guint gthree_program_get_program (GthreeProgram *program);
+void gthree_program_use (GthreeProgram *program);
 
 // TODO: Convert to quark
 gint gthree_program_lookup_uniform_location (GthreeProgram *program,
