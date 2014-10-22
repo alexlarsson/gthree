@@ -137,9 +137,9 @@ init_scene (void)
   GthreeObject *cube;
   graphene_point3d_t pos = { 0, 0, 0};
 
-  crate_pixbuf = gdk_pixbuf_new_from_file ("crate.gif", NULL);
+  crate_pixbuf = gdk_pixbuf_new_from_file ("textures/crate.gif", NULL);
   if (crate_pixbuf == NULL)
-    crate_pixbuf = gdk_pixbuf_new_from_file ("examples/crate.gif", NULL);
+    crate_pixbuf = gdk_pixbuf_new_from_file ("examples/textures/crate.gif", NULL);
 
   if (crate_pixbuf == NULL)
     g_error ("could not load crate.gif");

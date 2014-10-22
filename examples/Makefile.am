@@ -11,6 +11,7 @@ AM_CPPFLAGS =					\
 
 noinst_PROGRAMS =				\
 	gtkcube				\
+	model				\
 	$(NULL)
 
 gtkcube_CFLAGS = \
@@ -22,6 +23,19 @@ gtkcube_SOURCES =						\
 	$(NULL)
 
 gtkcube_LDADD = \
+	$(GTHREE_LIBS)						\
+	$(top_builddir)/gthree/libgthree-1.la			\
+	$(NULL)
+
+model_CFLAGS = \
+	$(GTHREE_CFLAGS)					\
+	$(NULL)
+
+model_SOURCES =						\
+	model.c						\
+	$(NULL)
+
+model_LDADD = \
 	$(GTHREE_LIBS)						\
 	$(top_builddir)/gthree/libgthree-1.la			\
 	$(NULL)
