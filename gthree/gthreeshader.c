@@ -2,9 +2,13 @@
 #include <epoxy/gl.h>
 
 #include "gthreeshader.h"
+#include "gthreeprogram.h"
 
 
 typedef struct {
+  GthreeUniforms *uniforms;
+  char *vertex_shader_text;
+  char *fragment_shader_text;
   GthreeShader *owner_of_shader_text;
 } GthreeShaderPrivate;
 
@@ -37,14 +41,14 @@ gthree_shader_finalize (GObject *obj)
   GthreeShader *shader = GTHREE_SHADER (obj);
   GthreeShaderPrivate *priv = gthree_shader_get_instance_private (shader);
 
-  g_clear_object (&shader->uniforms);
+  g_clear_object (&priv->uniforms);
 
   if (priv->owner_of_shader_text)
     g_object_unref (priv->owner_of_shader_text);
   else
     {
-      g_clear_pointer (&shader->vertex_shader, g_free);
-      g_clear_pointer (&shader->fragment_shader, g_free);
+      g_clear_pointer (&priv->vertex_shader_text, g_free);
+      g_clear_pointer (&priv->fragment_shader_text, g_free);
     }
 
   G_OBJECT_CLASS (gthree_shader_parent_class)->finalize (obj);
@@ -58,6 +62,49 @@ gthree_shader_class_init (GthreeShaderClass *klass)
   gthree_shader_init_libs ();
 }
 
+void
+gthree_shader_update_uniform_locations_for_program (GthreeShader *shader,
+                                                    GthreeProgram *program)
+{
+  GthreeShaderPrivate *priv = gthree_shader_get_instance_private (shader);
+  GList *unis, *l;
+
+  unis = gthree_uniforms_get_all (priv->uniforms);
+  for (l = unis; l != NULL; l = l->next)
+    {
+      GthreeUniform *uni = l->data;
+      gint location;
+
+      location = gthree_program_lookup_uniform_location (program, gthree_uniform_get_name (uni));
+      gthree_uniform_set_location (uni, location);
+    }
+  g_list_free (unis);
+}
+
+GthreeUniforms *
+gthree_shader_get_uniforms (GthreeShader  *shader)
+{
+  GthreeShaderPrivate *priv = gthree_shader_get_instance_private (shader);
+
+  return priv->uniforms;
+}
+
+const char *
+gthree_shader_get_vertex_shader_text (GthreeShader  *shader)
+{
+  GthreeShaderPrivate *priv = gthree_shader_get_instance_private (shader);
+
+  return priv->vertex_shader_text;
+}
+
+const char *
+gthree_shader_get_fragment_shader_text (GthreeShader  *shader)
+{
+  GthreeShaderPrivate *priv = gthree_shader_get_instance_private (shader);
+
+  return priv->fragment_shader_text;
+}
+
 GthreeShader *
 gthree_shader_clone (GthreeShader *orig)
 {
@@ -69,9 +116,9 @@ gthree_shader_clone (GthreeShader *orig)
   clone = gthree_shader_new ();
   clone_priv = gthree_shader_get_instance_private (clone);
 
-  clone->uniforms = gthree_uniforms_clone (orig->uniforms);
-  clone->vertex_shader = orig->vertex_shader;
-  clone->fragment_shader = orig->fragment_shader;
+  clone_priv->uniforms = gthree_uniforms_clone (orig_priv->uniforms);
+  clone_priv->vertex_shader_text = orig_priv->vertex_shader_text;
+  clone_priv->fragment_shader_text = orig_priv->fragment_shader_text;
 
   if (orig_priv->owner_of_shader_text)
     clone_priv->owner_of_shader_text = g_object_ref (orig_priv->owner_of_shader_text);
@@ -160,26 +207,26 @@ gthree_shader_new_from_definitions (const char **lib_uniforms,
                                     const char *fragment_shader)
 {
   GthreeShader *shader = gthree_shader_new ();
+  GthreeShaderPrivate *priv = gthree_shader_get_instance_private (shader);
   GthreeUniforms *uniforms;
   int i;
 
-  shader->uniforms = gthree_uniforms_new ();
+  priv->uniforms = gthree_uniforms_new ();
   for (i = 0; lib_uniforms[i] != NULL; i++)
     {
       uniforms = gthree_get_uniforms_from_library (lib_uniforms[i]);
-      gthree_uniforms_merge (shader->uniforms, uniforms);
+      gthree_uniforms_merge (priv->uniforms, uniforms);
     }
 
   if (uniform_defs)
     {
       uniforms = gthree_uniforms_new_from_definitions (uniform_defs, defs_len);
-      gthree_uniforms_merge (shader->uniforms, uniforms);
+      gthree_uniforms_merge (priv->uniforms, uniforms);
       g_object_unref (uniforms);
     }
 
-  shader->vertex_shader = parse_text_with_includes (vertex_shader);
-
-  shader->fragment_shader = parse_text_with_includes (fragment_shader);
+  priv->vertex_shader_text = parse_text_with_includes (vertex_shader);
+  priv->fragment_shader_text = parse_text_with_includes (fragment_shader);
 
   return shader;
 }

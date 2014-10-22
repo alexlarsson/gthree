@@ -122,9 +122,9 @@ gthree_program_new (gpointer code, GthreeMaterial *material, GthreeProgramParame
   defines = NULL;
   //var defines = material.defines;
   //var attributes = material.attributes;
-  uniforms = material->shader->uniforms;
-  vertex_shader = material->shader->vertex_shader;
-  fragment_shader = material->shader->fragment_shader;
+  uniforms = gthree_shader_get_uniforms (material->shader);
+  vertex_shader = gthree_shader_get_vertex_shader_text (material->shader);
+  fragment_shader = gthree_shader_get_fragment_shader_text (material->shader);
 
   index0AttributeName = NULL;
   //index0AttributeName = material.index0AttributeName;

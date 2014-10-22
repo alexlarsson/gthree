@@ -478,11 +478,10 @@ init_material (GthreeRenderer *renderer,
                GthreeObject *object)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
-  char *shader_id;
+  //char *shader_id;
   GthreeProgram *program;
   GthreeShader *shader;
   GthreeProgramParameters parameters = {0};
-  GList  *unis, *l;
   gpointer code;
 
   shader = gthree_material_get_shader (material);
@@ -640,17 +639,7 @@ init_material (GthreeRenderer *renderer,
     }
 #endif
 
-  /* TODO: Move into shader */
-  unis = gthree_uniforms_get_all (shader->uniforms);
-  for (l = unis; l != NULL; l = l->next)
-    {
-      GthreeUniform *uni = l->data;
-      gint location;
-
-      location = gthree_program_lookup_uniform_location (program, gthree_uniform_get_name (uni));
-      gthree_uniform_set_location (uni, location);
-    }
-  g_list_free (unis);
+  gthree_shader_update_uniform_locations_for_program (shader, program);
 
   return NULL;
 }
@@ -727,7 +716,7 @@ set_program (GthreeRenderer *renderer,
 
   program = material->program;
   shader = gthree_material_get_shader (material);
-  m_uniforms = shader->uniforms;
+  m_uniforms = gthree_shader_get_uniforms (shader);
 
   if (program != priv->current_program )
     {

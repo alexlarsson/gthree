@@ -18,10 +18,6 @@ G_BEGIN_DECLS
 
 typedef struct {
   GObject parent;
-
-  GthreeUniforms *uniforms;
-  char *vertex_shader;
-  char *fragment_shader;
 } GthreeShader;
 
 typedef struct {
@@ -31,9 +27,19 @@ typedef struct {
 
 GType gthree_shader_get_type (void) G_GNUC_CONST;
 
-GthreeShader *gthree_shader_new   ();
-GthreeShader *gthree_get_shader_from_library (const char *name);
+GthreeShader *  gthree_shader_new   ();
+
+GthreeShader *  gthree_shader_clone                                (GthreeShader  *shader);
+GthreeUniforms *gthree_shader_get_uniforms                         (GthreeShader  *shader);
+const char *    gthree_shader_get_vertex_shader_text               (GthreeShader  *shader);
+const char *    gthree_shader_get_fragment_shader_text             (GthreeShader  *shader);
+void            gthree_shader_update_uniform_locations_for_program (GthreeShader  *shader,
+                                                                    GthreeProgram *program);
+
+
+GthreeShader *gthree_get_shader_from_library   (const char *name);
 GthreeShader *gthree_clone_shader_from_library (const char *name);
+
 
 G_END_DECLS
 
