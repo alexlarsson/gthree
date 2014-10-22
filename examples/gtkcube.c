@@ -24,15 +24,11 @@ GdkRGBA white =  {1, 1, 1, 1};
 
 GList *cubes;
 
-static GthreeObject *
-new_cube (GthreeMaterial *material)
-{
-  GthreeGeometry *geometry, *sub_geometry;
-  GthreeMesh *mesh, *sub_mesh;
-  graphene_point3d_t pos = { 0, 0, 0};
-  int i;
 
-  geometry = gthree_geometry_new_box (40, 40, 40, 1, 1, 1);
+static void
+colorise_faces (GthreeGeometry *geometry)
+{
+  int i;
 
   for (i = 0; i < gthree_geometry_get_n_faces (geometry); i++)
     {
@@ -60,39 +56,30 @@ new_cube (GthreeMaterial *material)
           break;
         }
     }
+}
+
+static GthreeObject *
+new_cube (GthreeMaterial *material)
+{
+  static GthreeGeometry *geometry = NULL, *sub_geometry = NULL;;
+  GthreeMesh *mesh, *sub_mesh;
+  graphene_point3d_t pos = { 0, 0, 0};
+
+  if (geometry == NULL)
+    {
+      geometry = gthree_geometry_new_box (40, 40, 40, 1, 1, 1);
+      colorise_faces (geometry);
+    }
 
   mesh = gthree_mesh_new (geometry, material);
 
-  sub_geometry = gthree_geometry_new_box (10, 10, 10, 1, 1, 1);
-  sub_mesh = gthree_mesh_new (sub_geometry, material);
-
-  for (i = 0; i < gthree_geometry_get_n_faces (sub_geometry); i++)
+  if (sub_geometry == NULL)
     {
-      GthreeFace *face = gthree_geometry_get_face (sub_geometry, i);
-      int c = (i/2) % 6;
-      switch (c)
-        {
-        case 0:
-          gthree_face_set_color (face, &red);
-          break;
-        case 1:
-          gthree_face_set_color (face, &green);
-          break;
-        case 2:
-          gthree_face_set_color (face, &blue);
-          break;
-        case 3:
-          gthree_face_set_color (face, &cyan);
-          break;
-        case 4:
-          gthree_face_set_color (face, &magenta);
-          break;
-        case 5:
-          gthree_face_set_color (face, &yellow);
-          break;
-        }
+      sub_geometry = gthree_geometry_new_box (10, 10, 10, 1, 1, 1);
+      colorise_faces (sub_geometry);
     }
 
+  sub_mesh = gthree_mesh_new (sub_geometry, material);
 
   pos.y = 25;
   gthree_object_add_child (GTHREE_OBJECT (mesh), GTHREE_OBJECT (sub_mesh));
