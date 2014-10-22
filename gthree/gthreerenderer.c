@@ -214,16 +214,50 @@ gthree_renderer_clear (GthreeRenderer *renderer)
 }
 
 static gint
-painter_sort_stable (gconstpointer  a, gconstpointer  b)
+painter_sort_stable (gconstpointer  _a, gconstpointer  _b)
 {
-  /* TODO */
+  const GthreeBuffer *a = _a;
+  const GthreeBuffer *b = _b;
+
+  if (a->z != b->z)
+    {
+      if (b->z > a->z)
+        return 1;
+      else
+        return -1;
+    }
+  else if (a->object != b->object)
+    {
+      if ((gsize)a->object > (gsize)b->object)
+        return 1;
+      else
+        return -1;
+    }
+
   return 0;
 }
 
 static gint
-reverse_painter_sort_stable (gconstpointer  a, gconstpointer  b)
+reverse_painter_sort_stable (gconstpointer _a, gconstpointer _b)
 {
-  /* TODO */
+  const GthreeBuffer *a = _a;
+  const GthreeBuffer *b = _b;
+
+  if (a->z != b->z)
+    {
+      if (a->z > b->z)
+        return 1;
+      else
+        return -1;
+    }
+  else if (a->object != b->object)
+    {
+      if ((gsize)a->object > (gsize)b->object)
+        return 1;
+      else
+        return -1;
+    }
+
   return 0;
 }
 
