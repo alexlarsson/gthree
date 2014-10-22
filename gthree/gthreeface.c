@@ -31,9 +31,23 @@ gthree_face_set_normal (GthreeFace *face,
 
 void
 gthree_face_set_color (GthreeFace *face,
-                       GdkRGBA *color)
+                       const GdkRGBA *color)
 {
   face->color = *color;
+}
+
+void
+gthree_face_set_vertex_colors  (GthreeFace      *face,
+                                const GdkRGBA *a,
+                                const GdkRGBA *b,
+                                const GdkRGBA *c)
+{
+  if (face->vertex_colors == NULL)
+    face->vertex_colors = g_new (GdkRGBA, 3);
+
+  face->vertex_colors[0] = *a;
+  face->vertex_colors[1] = *b;
+  face->vertex_colors[2] = *c;
 }
 
 void
@@ -57,7 +71,9 @@ gthree_face_init (GthreeFace *face)
 static void
 gthree_face_finalize (GObject *obj)
 {
-  //GthreeFace *face = GTHREE_FACE (obj);
+  GthreeFace *face = GTHREE_FACE (obj);
+
+  g_clear_pointer (&face->vertex_colors, g_free);
 
   G_OBJECT_CLASS (gthree_face_parent_class)->finalize (obj);
 }

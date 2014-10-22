@@ -34,7 +34,11 @@ GthreeFace *gthree_face_new                (int              a,
 void        gthree_face_set_normal         (GthreeFace      *face,
                                             graphene_vec3_t *normal);
 void        gthree_face_set_color          (GthreeFace      *face,
-                                            GdkRGBA         *color);
+                                            const GdkRGBA   *color);
+void        gthree_face_set_vertex_colors  (GthreeFace      *face,
+                                            const GdkRGBA   *a,
+                                            const GdkRGBA   *b,
+                                            const GdkRGBA   *c);
 void        gthree_face_set_material_index (GthreeFace      *face,
                                             int              material_index);
 int         gthree_face_get_material_index (GthreeFace      *face);
