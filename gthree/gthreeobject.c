@@ -234,6 +234,15 @@ gthree_object_set_position (GthreeObject *object,
   priv->position = *pos;
 }
 
+void
+gthree_object_set_scale (GthreeObject                *object,
+                         graphene_point3d_t          *scale)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  graphene_point3d_to_vec3 (scale, &priv->scale);
+}
+
 static void
 quaternion_to_angles (const graphene_quaternion_t *q, graphene_point3d_t *rot)
 {

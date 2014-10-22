@@ -64,6 +64,8 @@ void                         gthree_object_look_at                (GthreeObject 
                                                                    graphene_vec3_t             *vector);
 void                         gthree_object_set_position           (GthreeObject                *object,
                                                                    graphene_point3d_t          *pos);
+void                         gthree_object_set_scale              (GthreeObject                *object,
+                                                                   graphene_point3d_t          *scale);
 void                         gthree_object_set_quaternion         (GthreeObject                *object,
                                                                    const graphene_quaternion_t *q);
 const graphene_quaternion_t *gthree_object_get_quaternion         (GthreeObject                *object);

@@ -33,6 +33,7 @@ gthree_public_h_sources = \
 	gthreeshader.h \
 	gthreeuniforms.h \
 	gthreeutils.h			\
+	gthreeloader.h			\
 	$(NULL)
 
 gthree_private_h_sources =		\
@@ -79,6 +80,7 @@ gthree_c_sources = \
 	gthreeshader.c \
 	gthreeshader.h \
 	gthreetexture.c \
+	gthreeloader.c			\
 	$(NULL)
 
 MAINTAINERCLEANFILES = \

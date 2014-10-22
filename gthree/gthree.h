@@ -17,6 +17,7 @@
 #include <gthree/gthreerenderer.h>
 #include <gthree/gthreescene.h>
 #include <gthree/gthreetexture.h>
+#include <gthree/gthreeloader.h>
 
 #undef __GTHREE_H_INSIDE__
 
