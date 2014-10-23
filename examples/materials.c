@@ -76,17 +76,22 @@ tick (GtkWidget     *widget,
   graphene_point3d_t rot;
   GList *l;
   gint64 frame_time;
+  float angle;
 
   frame_time = gdk_frame_clock_get_frame_time (frame_clock);
 
+  angle = frame_time / 2000000.0;
   gthree_object_set_position (GTHREE_OBJECT (camera),
                               graphene_point3d_init (&pos,
-                                                     cos (frame_time / 2000000.0) * 500,
+                                                     cos (angle) * 1000,
                                                      0,
-                                                     sin (frame_time / 2000000.0) * 500));
-  if (0)
-  gthree_object_look_at (GTHREE_OBJECT (camera),
-                         graphene_point3d_init (&pos, 0, 0, 0));
+                                                     sin (angle) * 1000));
+  if (1)
+    gthree_object_set_rotation (GTHREE_OBJECT (camera),
+                                graphene_point3d_init (&pos, 0, G_PI/2 - angle, 0));
+  else
+    gthree_object_look_at (GTHREE_OBJECT (camera),
+                           graphene_point3d_init (&pos, 0, 0, 0));
 
   for (l = objects; l != NULL; l = l->next)
     {
