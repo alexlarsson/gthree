@@ -283,13 +283,13 @@ set_mesh_buffers (GthreeMesh *mesh,
   GthreeGeometry *geometry = priv->geometry;
   gboolean uv_type = buffer_guess_uv_type (material);
   GthreeShadingType normal_type = buffer_guess_normal_type (material);
+  gboolean needs_smooth_normals = normal_type == GTHREE_SHADING_SMOOTH;
   GthreeColorType vertex_color_type = buffer_guess_vertex_color_type (material);
-  gboolean needsSmoothNormals = normal_type == GTHREE_SHADING_SMOOTH;
 
   gboolean dirtyVertices = priv->verticesNeedUpdate;
   gboolean dirtyElements = priv->elementsNeedUpdate;
   gboolean dirtyUvs = priv->uvsNeedUpdate;
-  //gboolean dirtyNormals = priv->normalsNeedUpdate;
+  gboolean dirtyNormals = priv->normalsNeedUpdate;
   //gboolean dirtyTangents = priv->tangentsNeedUpdate;
   gboolean dirtyColors = priv->colorsNeedUpdate;
   //gboolean dirtyMorphTargets = priv->morphTargetsNeedUpdate;
@@ -301,6 +301,7 @@ set_mesh_buffers (GthreeMesh *mesh,
   guint offset_color = 0;
   guint offset_uv = 0;
   guint offset_uv2 = 0;
+  guint offset_normal = 0;
   int i;
 
   GArray *face_indexes = group->face_indexes;
@@ -370,6 +371,48 @@ set_mesh_buffers (GthreeMesh *mesh,
         }
     }
 
+  if (dirtyNormals && normal_type != GTHREE_SHADING_NONE)
+    {
+      for (i = 0; i < face_indexes->len; i++)
+        {
+          int face_index = g_array_index (face_indexes, int, i);
+          GthreeFace *face = gthree_geometry_get_face (geometry, face_index);
+
+          if (face->vertex_normals != NULL && needs_smooth_normals)
+            {
+              for ( i = 0; i < 3; i ++ )
+                {
+                  graphene_vec3_t *vn = &face->vertex_normals[i];
+
+                  group->normal_array[offset_normal    ] = graphene_vec3_get_x (vn);
+                  group->normal_array[offset_normal + 1] = graphene_vec3_get_y (vn);
+                  group->normal_array[offset_normal + 2] = graphene_vec3_get_z (vn);
+
+                  offset_normal += 3;
+                }
+            }
+          else
+            {
+              for ( i = 0; i < 3; i ++ )
+                {
+                  graphene_vec3_t *vn = &face->normal;
+
+                  group->normal_array[offset_normal    ] = graphene_vec3_get_x (vn);
+                  group->normal_array[offset_normal + 1] = graphene_vec3_get_y (vn);
+                  group->normal_array[offset_normal + 2] = graphene_vec3_get_z (vn);
+
+                  offset_normal += 3;
+                }
+            }
+        }
+
+      if (offset_normal > 0)
+        {
+          glBindBuffer (GL_ARRAY_BUFFER, GTHREE_BUFFER (group)->normal_buffer);
+          glBufferData (GL_ARRAY_BUFFER, offset_normal * sizeof (float), group->normal_array, hint);
+        }
+    }
+
   if (dirtyUvs && gthree_geometry_get_n_uv (geometry) > 0 && uv_type)
     {
       int n_uv = gthree_geometry_get_n_uv (geometry);
@@ -436,6 +479,13 @@ set_mesh_buffers (GthreeMesh *mesh,
         }
     }
 
+#ifdef TODO
+  // dirtyTangents
+  // dirtyMorphTargets
+  // obj_skinWeights.length
+  // custom attributes
+#endif
+
   if (dirtyElements)
     {
       for (i = 0; i < face_indexes->len; i++)
@@ -469,9 +519,6 @@ set_mesh_buffers (GthreeMesh *mesh,
       GTHREE_BUFFER(group)->line_count = offset_line;
     }
 
-
-
-  
   if (dispose)
     gthree_geometry_group_dispose (group);
 }

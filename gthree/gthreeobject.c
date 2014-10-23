@@ -381,6 +381,20 @@ gthree_object_get_model_view_matrix_floats (GthreeObject *object,
 }
 
 void
+gthree_object_get_normal_matrix3_floats (GthreeObject *object,
+                                         float *dest)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+  float dest4[16];
+
+  graphene_matrix_to_float (&priv->normal_matrix, dest4);
+
+  dest[0] = dest4[0];  dest[1] = dest4[1]; dest[2] = dest4[2];
+  dest[3] = dest4[4];  dest[4] = dest4[5]; dest[5] = dest4[6];
+  dest[6] = dest4[8];  dest[7] = dest4[9]; dest[8] = dest4[10];
+}
+
+void
 gthree_object_get_world_matrix_floats (GthreeObject *object,
                                        float *dest)
 {

@@ -79,6 +79,8 @@ void gthree_object_get_world_matrix_floats      (GthreeObject *object,
                                                  float        *dest);
 void gthree_object_get_model_view_matrix_floats (GthreeObject *object,
                                                  float        *dest);
+void gthree_object_get_normal_matrix3_floats    (GthreeObject *object,
+                                                 float        *dest);
 
 gboolean      gthree_object_get_visible          (GthreeObject *object);
 gboolean      gthree_object_get_is_frustum_culled(GthreeObject *object);

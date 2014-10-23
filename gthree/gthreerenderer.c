@@ -710,15 +710,16 @@ load_uniforms_matrices (GthreeRenderer *renderer,
 {
   float matrix[16];
   int mvm_location = gthree_program_lookup_uniform_location (program, "modelViewMatrix");
+  int nm_location = gthree_program_lookup_uniform_location (program, "normalMatrix");
 
   gthree_object_get_model_view_matrix_floats (object, matrix);
   glUniformMatrix4fv (mvm_location, 1, FALSE, matrix);
 
-#ifdef TODO
-  if (uniforms.normalMatrix) {
-    glUniformMatrix3fv (uniforms.normalMatrix, false, object._normalMatrix.elements);
-  }
-#endif
+  if (nm_location >= 0)
+    {
+      gthree_object_get_normal_matrix3_floats (object, matrix);
+      glUniformMatrix3fv (nm_location, 1, FALSE, matrix);
+    }
 }
 
 
@@ -1010,7 +1011,7 @@ render_buffer (GthreeRenderer *renderer,
   //var linewidth, a, attribute, i, il;
   //var attributes = program.attributes;
   gboolean updateBuffers = false;
-  gint position_location, color_location, uv_location;
+  gint position_location, color_location, uv_location, normal_location;
   guint32 wireframeBit = gthree_material_get_is_wireframe (material) ? 1 : 0;
   guint32 geometryGroupHash = (guint32)buffer + (guint32)program * 2 + wireframeBit;
 
@@ -1101,15 +1102,16 @@ render_buffer (GthreeRenderer *renderer,
 #endif
         }
 
-#if TODO
       // normals
-      if ( attributes.normal >= 0 )
+      normal_location = gthree_program_lookup_attribute_location (program, "normal");
+      if (normal_location >= 0 )
         {
-          _gl.bindBuffer( _gl.ARRAY_BUFFER, geometryGroup.__webglNormalBuffer );
-          enableAttribute( attributes.normal );
-          _gl.vertexAttribPointer( attributes.normal, 3, _gl.FLOAT, false, 0, 0 );
+          glBindBuffer (GL_ARRAY_BUFFER, buffer->normal_buffer);
+          enable_attribute (renderer, normal_location);
+          glVertexAttribPointer (normal_location, 3, GL_FLOAT, FALSE, 0, NULL);
         }
 
+#ifdef TODO
       // skinning
 
       // line distances
