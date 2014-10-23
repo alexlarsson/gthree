@@ -56,8 +56,14 @@ init_scene (void)
 {
   GthreeGeometry *marine_geometry, *knight_geometry;
   GthreeBasicMaterial *material_wireframe, *material_texture;
+  GthreePhongMaterial *material_phong;
   GthreeTexture *texture;
   GdkPixbuf *pixbuf;
+  GthreeAmbientLight *ambient_light;
+  GthreeDirectionalLight *directional_light;
+  graphene_point3d_t pos;
+  GdkRGBA gray = {0.5, 0.5, 0.5, 1.0};
+  GdkRGBA dark_grey = {0.1, 0.1, 0.1, 1.0};
   graphene_point3d_t scale = {15,15,15};
 
   pixbuf = gdk_pixbuf_new_from_file ("textures/MarineCv2_color.jpg", NULL);
@@ -74,6 +80,11 @@ init_scene (void)
   gthree_basic_material_set_color (material_wireframe, &yellow);
   gthree_basic_material_set_vertex_colors (material_wireframe, GTHREE_COLOR_NONE);
 
+  material_phong = gthree_phong_material_new ();
+  gthree_phong_material_set_ambient_color (material_phong, &red);
+  gthree_phong_material_set_emissive_color (material_phong, &gray);
+  gthree_phong_material_set_specular_color (material_phong, &white);
+
   material_texture = gthree_basic_material_new ();
   gthree_basic_material_set_vertex_colors (material_texture, GTHREE_COLOR_NONE);
   gthree_basic_material_set_map (material_texture, texture);
@@ -88,11 +99,22 @@ init_scene (void)
 
   knight_geometry = load_model ("knight.js");
 
-  knight = gthree_mesh_new (knight_geometry, GTHREE_MATERIAL (material_wireframe));
+  knight = gthree_mesh_new (knight_geometry, GTHREE_MATERIAL (material_phong));
 
   gthree_object_set_scale (GTHREE_OBJECT (knight), &scale);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (knight));
 
+  ambient_light = gthree_ambient_light_new (&dark_grey);
+  gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));
+  
+  directional_light = gthree_directional_light_new (&white, 0.125);
+  gthree_object_set_position (GTHREE_OBJECT (directional_light),
+			      graphene_point3d_init (&pos,
+						     0,
+						     1,
+						     1));
+  gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (directional_light));
+  
   return scene;
 }
 
