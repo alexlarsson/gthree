@@ -61,7 +61,7 @@ void                         gthree_object_update_matrix          (GthreeObject 
 void                         gthree_object_update_matrix_view     (GthreeObject                *object,
                                                                    const graphene_matrix_t     *camera_matrix);
 void                         gthree_object_look_at                (GthreeObject                *object,
-                                                                   graphene_vec3_t             *vector);
+                                                                   graphene_point3d_t          *pos);
 void                         gthree_object_set_position           (GthreeObject                *object,
                                                                    graphene_point3d_t          *pos);
 void                         gthree_object_set_scale              (GthreeObject                *object,

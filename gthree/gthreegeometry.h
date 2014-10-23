@@ -65,14 +65,22 @@ gboolean gthree_geometry_make_groups (GthreeGeometry *geometry,
                                       int max_vertices_in_group);
 
 
-GthreeGeometry *
-gthree_geometry_new_box (float width, float height, float depth,
-                         int width_segments, int height_segments, int depth_segments);
-GthreeGeometry *
-gthree_geometry_new_sphere (float radius,
-                            int widthSegments, int heightSegments,
-                            float phiStart, float phiLength,
-                            float thetaStart, float thetaLength);
+GthreeGeometry *gthree_geometry_new_box         (float width,
+                                                 float height,
+                                                 float depth,
+                                                 int   width_segments,
+                                                 int   height_segments,
+                                                 int   depth_segments);
+GthreeGeometry *gthree_geometry_new_sphere      (float radius,
+                                                 int   widthSegments,
+                                                 int   heightSegments);
+GthreeGeometry *gthree_geometry_new_sphere_full (float radius,
+                                                 int   widthSegments,
+                                                 int   heightSegments,
+                                                 float phiStart,
+                                                 float phiLength,
+                                                 float thetaStart,
+                                                 float thetaLength);
 
 G_END_DECLS
 

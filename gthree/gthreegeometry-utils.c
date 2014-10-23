@@ -141,10 +141,10 @@ gthree_geometry_new_box (float width, float height, float depth,
 
 
 GthreeGeometry *
-gthree_geometry_new_sphere (float radius,
-                            int widthSegments, int heightSegments,
-                            float phiStart, float phiLength,
-                            float thetaStart, float thetaLength)
+gthree_geometry_new_sphere_full (float radius,
+                                 int widthSegments, int heightSegments,
+                                 float phiStart, float phiLength,
+                                 float thetaStart, float thetaLength)
 {
   GthreeGeometry *geometry;
   int x, y, vertex_count, vertices_w, vertices_h;
@@ -281,4 +281,13 @@ gthree_geometry_new_sphere (float radius,
   gthree_geometry_set_bounding_sphere  (geometry, &bound);
 
   return geometry;
+}
+
+GthreeGeometry *
+gthree_geometry_new_sphere (float radius,
+                            int   widthSegments,
+                            int   heightSegments)
+{
+  return gthree_geometry_new_sphere_full (radius, widthSegments, heightSegments,
+                                          0, 2 * G_PI, 0, 2 * G_PI);
 }
