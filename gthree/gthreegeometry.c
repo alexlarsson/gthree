@@ -60,14 +60,13 @@ gthree_geometry_get_vertices (GthreeGeometry *geometry)
   return (graphene_vec3_t *)priv->vertices->data;
 }
 
-/* Takes ownership */
 void
 gthree_geometry_add_face (GthreeGeometry *geometry,
                           GthreeFace *face)
 {
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
 
-  g_ptr_array_add (priv->faces, face);
+  g_ptr_array_add (priv->faces, g_object_ref (face));
 }
 
 GthreeFace *
@@ -159,6 +158,17 @@ gthree_geometry_set_uv_n (GthreeGeometry  *geometry,
     }
   else
     g_warning ("only 2 uv layers supported");
+}
+
+
+void
+gthree_geometry_set_bounding_sphere (GthreeGeometry *geometry,
+                                     const GthreeSphere *sphere)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+
+  priv->bounding_sphere_set = TRUE;
+  priv->bounding_sphere = *sphere;
 }
 
 

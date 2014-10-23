@@ -286,10 +286,12 @@ gthree_loader_new_from_variant (GVariant *value, GFile *texture_path, GError **e
               face1 = gthree_face_new (a, b, d);
               face1_index = face_index++;
               gthree_geometry_add_face (geometry, face1);
+              g_object_unref (face1);
 
               face2 = gthree_face_new (b, c, d);
               face2_index = face_index++;
               gthree_geometry_add_face (geometry, face2);
+              g_object_unref (face2);
             }
           else
             {
@@ -298,6 +300,7 @@ gthree_loader_new_from_variant (GVariant *value, GFile *texture_path, GError **e
               face1_index = face_index++;
               face2_index = -1;
               gthree_geometry_add_face (geometry, face1);
+              g_object_unref (face1);
             }
 
           if (face_type & FACE_MATERIAL_MASK)

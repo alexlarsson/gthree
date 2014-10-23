@@ -55,8 +55,10 @@ void                   gthree_geometry_set_uv_n       (GthreeGeometry  *geometry
                                                        int              index,
                                                        graphene_vec2_t *v);
 
-const GthreeSphere *gthree_geometry_get_bounding_sphere  (GthreeGeometry *geometry);
-void                gthree_geometry_compute_face_normals (GthreeGeometry *geometry);
+const GthreeSphere *gthree_geometry_get_bounding_sphere  (GthreeGeometry     *geometry);
+void                gthree_geometry_set_bounding_sphere  (GthreeGeometry     *geometry,
+                                                          const GthreeSphere *sphere);
+void                gthree_geometry_compute_face_normals (GthreeGeometry     *geometry);
 
 gboolean gthree_geometry_make_groups (GthreeGeometry *geometry,
                                       gboolean use_face_material,
@@ -66,6 +68,11 @@ gboolean gthree_geometry_make_groups (GthreeGeometry *geometry,
 GthreeGeometry *
 gthree_geometry_new_box (float width, float height, float depth,
                          int width_segments, int height_segments, int depth_segments);
+GthreeGeometry *
+gthree_geometry_new_sphere (float radius,
+                            int widthSegments, int heightSegments,
+                            float phiStart, float phiLength,
+                            float thetaStart, float thetaLength);
 
 G_END_DECLS
 
