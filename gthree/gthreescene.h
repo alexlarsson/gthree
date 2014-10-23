@@ -34,6 +34,7 @@ GType gthree_scene_get_type (void) G_GNUC_CONST;
 
 void gthree_scene_realize_objects (GthreeScene *scene);
 GthreeMaterial * gthree_scene_get_override_material (GthreeScene *scene);
+GList * gthree_scene_get_lights (GthreeScene *scene);
 
 G_END_DECLS
 
