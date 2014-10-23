@@ -1100,18 +1100,21 @@ set_program (GthreeRenderer *renderer,
         }
 #endif
 
+      if (gthree_material_needs_view_matrix (material)
 #if TODO
-      if (material instanceof THREE.MeshPhongMaterial ||
-          material instanceof THREE.MeshLambertMaterial ||
-          material instanceof THREE.ShaderMaterial ||
-          material.skinning)
+	  || material.skinning
+#endif
+	  )
         {
-          if ( uniform_locations.viewMatrix !== null )
+	  gint view_matrix_location = gthree_program_lookup_uniform_location (program, "viewMatrix");
+          if (view_matrix_location >= 0)
             {
-              glUniformMatrix4fv (uniform_locations.viewMatrix, false, camera.matrixWorldInverse.elements);
+	      const graphene_matrix_t *m = gthree_camera_get_world_inverse_matrix (camera);
+	      float floats[16];
+	      graphene_matrix_to_float (m, floats);
+              glUniformMatrix4fv (view_matrix_location, 1, FALSE, floats);
             }
         }
-#endif
     }
 
   // skinning uniforms must be set even if material didn't change

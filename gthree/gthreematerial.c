@@ -131,6 +131,17 @@ gthree_material_real_set_uniforms (GthreeMaterial *material,
 }
 
 gboolean
+gthree_material_needs_view_matrix (GthreeMaterial *material)
+{
+  GthreeMaterialClass *class = GTHREE_MATERIAL_GET_CLASS(material);
+
+  if (class->needs_view_matrix)
+    return class->needs_view_matrix (material);
+
+  return FALSE;
+}
+
+gboolean
 gthree_material_needs_uv (GthreeMaterial *material)
 {
   GthreeMaterialClass *class = GTHREE_MATERIAL_GET_CLASS(material);
@@ -419,8 +430,15 @@ gthree_material_set_side (GthreeMaterial *material,
 GthreeShader *
 gthree_material_get_shader (GthreeMaterial *material)
 {
+  GthreeMaterialClass *class = GTHREE_MATERIAL_GET_CLASS(material);
+
   if (material->shader == NULL)
-    material->shader = gthree_clone_shader_from_library ("basic");
+    {
+      if (class->get_shader)
+	material->shader = class->get_shader (material);
+      else
+	material->shader = gthree_clone_shader_from_library ("basic");
+    }
 
   return material->shader;
 }

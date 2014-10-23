@@ -20,6 +20,7 @@
 #include <gthree/gthreeloader.h>
 #include <gthree/gthreelight.h>
 #include <gthree/gthreeambientlight.h>
+#include <gthree/gthreelambertmaterial.h>
 
 #undef __GTHREE_H_INSIDE__
 
