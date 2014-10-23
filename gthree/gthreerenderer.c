@@ -1292,7 +1292,7 @@ render_buffer (GthreeRenderer *renderer,
   gboolean updateBuffers = false;
   gint position_location, color_location, uv_location, normal_location;
   guint32 wireframeBit = gthree_material_get_is_wireframe (material) ? 1 : 0;
-  guint32 geometryGroupHash = (guint32)buffer + (guint32)program * 2 + wireframeBit;
+  //guint32 geometryGroupHash = (guint32)buffer + (guint32)program * 2 + wireframeBit;
 
   if (!gthree_material_get_is_visible (material))
     return;

@@ -43,9 +43,6 @@ gthree_point_light_init (GthreePointLight *point)
 static void
 gthree_point_light_finalize (GObject *obj)
 {
-  GthreePointLight *point = GTHREE_POINT_LIGHT (obj);
-  GthreePointLightPrivate *priv = gthree_point_light_get_instance_private (point);
-
   G_OBJECT_CLASS (gthree_point_light_parent_class)->finalize (obj);
 }
 
@@ -53,9 +50,6 @@ static void
 gthree_point_light_real_set_params (GthreeLight *light,
 				      GthreeProgramParameters *params)
 {
-  GthreePointLight *point = GTHREE_POINT_LIGHT (light);
-  GthreePointLightPrivate *priv = gthree_point_light_get_instance_private (point);
-
   params->max_point_lights++;
   
   GTHREE_LIGHT_CLASS (gthree_point_light_parent_class)->set_params (light, params);

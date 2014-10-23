@@ -27,16 +27,11 @@ gthree_ambient_light_new (const GdkRGBA *color)
 static void
 gthree_ambient_light_init (GthreeAmbientLight *ambient)
 {
-  GthreeAmbientLightPrivate *priv = gthree_ambient_light_get_instance_private (ambient);
-
 }
 
 static void
 gthree_ambient_light_finalize (GObject *obj)
 {
-  GthreeAmbientLight *ambient = GTHREE_AMBIENT_LIGHT (obj);
-  GthreeAmbientLightPrivate *priv = gthree_ambient_light_get_instance_private (ambient);
-
   G_OBJECT_CLASS (gthree_ambient_light_parent_class)->finalize (obj);
 }
 
@@ -44,9 +39,6 @@ static void
 gthree_ambient_light_real_set_params (GthreeLight *light,
 				      GthreeProgramParameters *params)
 {
-  GthreeAmbientLight *ambient = GTHREE_AMBIENT_LIGHT (light);
-  GthreeAmbientLightPrivate *priv = gthree_ambient_light_get_instance_private (ambient);
-
   GTHREE_LIGHT_CLASS (gthree_ambient_light_parent_class)->set_params (light, params);
 }
 
@@ -54,8 +46,6 @@ static void
 gthree_ambient_light_real_setup (GthreeLight *light,
 				 GthreeLightSetup *setup)
 {
-  GthreeAmbientLight *ambient = GTHREE_AMBIENT_LIGHT (light);
-  GthreeAmbientLightPrivate *priv = gthree_ambient_light_get_instance_private (ambient);
   const GdkRGBA *color = gthree_light_get_color (light);
   
   if (gthree_light_get_is_visible (light))

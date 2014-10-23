@@ -103,11 +103,11 @@ gthree_program_new (gpointer code, GthreeMaterial *material, GthreeProgramParame
 {
   GthreeProgram *program;
   GthreeProgramPrivate *priv;
-  char **defines;
+  //char **defines;
   GthreeUniforms *uniforms;
   const char *vertex_shader, *fragment_shader;
   char *index0AttributeName;
-  char *shadowMapTypeDefine;
+  //char *shadowMapTypeDefine;
   GLuint gl_program;
   GString *vertex, *fragment;
   GLuint glVertexShader, glFragmentShader;
@@ -119,7 +119,7 @@ gthree_program_new (gpointer code, GthreeMaterial *material, GthreeProgramParame
                           NULL);
   priv = gthree_program_get_instance_private (program);
 
-  defines = NULL;
+  //defines = NULL;
   //var defines = material.defines;
   //var attributes = material.attributes;
   uniforms = gthree_shader_get_uniforms (material->shader);
@@ -136,7 +136,7 @@ gthree_program_new (gpointer code, GthreeMaterial *material, GthreeProgramParame
   }
 #endif
 
-  shadowMapTypeDefine = "SHADOWMAP_TYPE_BASIC";
+  //shadowMapTypeDefine = "SHADOWMAP_TYPE_BASIC";
 
 #if TODO
   if (parameters.shadowMapType === THREE.PCFShadowMap) {
