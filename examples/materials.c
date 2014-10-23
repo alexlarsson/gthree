@@ -84,7 +84,7 @@ tick (GtkWidget     *widget,
   gthree_object_set_position (GTHREE_OBJECT (camera),
                               graphene_point3d_init (&pos,
                                                      cos (angle) * 1000,
-                                                     0,
+                                                     200,
                                                      sin (angle) * 1000));
   if (1)
     gthree_object_set_rotation (GTHREE_OBJECT (camera),
