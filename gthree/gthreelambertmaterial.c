@@ -4,7 +4,6 @@
 #include "gthreelambertmaterial.h"
 
 typedef struct {
-  int dummy;
   GdkRGBA color;
   GdkRGBA ambient;
   GdkRGBA emissive;

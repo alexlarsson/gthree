@@ -23,6 +23,7 @@
 #include <gthree/gthreepointlight.h>
 #include <gthree/gthreedirectionallight.h>
 #include <gthree/gthreelambertmaterial.h>
+#include <gthree/gthreephongmaterial.h>
 
 #undef __GTHREE_H_INSIDE__
 

@@ -1176,14 +1176,6 @@ set_program (GthreeRenderer *renderer,
         {
           refreshUniformsParticle( m_uniforms, material );
         }
-      else if ( material instanceof THREE.MeshPhongMaterial )
-        {
-          refreshUniformsPhong( m_uniforms, material );
-        }
-      else if ( material instanceof THREE.MeshLambertMaterial )
-        {
-          refreshUniformsLambert( m_uniforms, material );
-        }
       else if ( material instanceof THREE.MeshDepthMaterial )
         {
           m_uniforms.mNear.value = camera.near;

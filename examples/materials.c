@@ -14,9 +14,10 @@ GList *objects;
 GthreeScene *
 init_scene (void)
 {
-  GthreeGeometry *floor_geometry, *geometry_smooth, *geometry_flat, *geometry_pieces, *geometry_light;
+  GthreeGeometry *floor_geometry, *geometry_smooth, *geometry_light;// *geometry_flat, *geometry_pieces;
   GthreeBasicMaterial *material_wireframe, *material_light;
   GthreeLambertMaterial *material_lambert;
+  GthreePhongMaterial *material_phong;
   GthreeAmbientLight *ambient_light;
   GthreePointLight *point_light;
   GthreeDirectionalLight *directional_light;
@@ -45,15 +46,27 @@ init_scene (void)
   
   material_lambert = gthree_lambert_material_new ();
   gthree_lambert_material_set_color (material_lambert, &white);
-  gthree_lambert_material_set_shading_type  (material_lambert,
-					     GTHREE_SHADING_FLAT);
+  gthree_lambert_material_set_shading_type (material_lambert,
+					    GTHREE_SHADING_FLAT);
   materials[n_materials++] = GTHREE_MATERIAL (material_lambert);
 
   material_lambert = gthree_lambert_material_new ();
   gthree_lambert_material_set_color (material_lambert, &white);
-  gthree_lambert_material_set_shading_type  (material_lambert,
-					     GTHREE_SHADING_SMOOTH);
+  gthree_lambert_material_set_shading_type (material_lambert,
+					    GTHREE_SHADING_SMOOTH);
   materials[n_materials++] = GTHREE_MATERIAL (material_lambert);
+
+  material_phong = gthree_phong_material_new ();
+  gthree_phong_material_set_color (material_phong, &white);
+  gthree_phong_material_set_shading_type (material_phong,
+					  GTHREE_SHADING_FLAT);
+  materials[n_materials++] = GTHREE_MATERIAL (material_phong);
+
+  material_phong = gthree_phong_material_new ();
+  gthree_phong_material_set_color (material_phong, &white);
+  gthree_phong_material_set_shading_type (material_phong,
+					  GTHREE_SHADING_SMOOTH);
+  materials[n_materials++] = GTHREE_MATERIAL (material_phong);
 
   floor_geometry = gthree_geometry_new_box (1000, 10, 1000,
                                             40, 1, 40);
@@ -66,8 +79,8 @@ init_scene (void)
 
 
   geometry_smooth = gthree_geometry_new_sphere (70, 32, 16);
-  geometry_flat = gthree_geometry_new_sphere (70, 32, 16);
-  geometry_pieces = gthree_geometry_new_sphere (70, 32, 16);
+  //geometry_flat = gthree_geometry_new_sphere (70, 32, 16);
+  //geometry_pieces = gthree_geometry_new_sphere (70, 32, 16);
 
   for (i = 0; i < 16; i++)
     {
@@ -124,13 +137,13 @@ tick (GtkWidget     *widget,
   float angle;
 
   frame_time = gdk_frame_clock_get_frame_time (frame_clock);
-  angle = frame_time / 2000000.0;
+  angle = frame_time / 4000000.0;
 
   gthree_object_set_position (GTHREE_OBJECT (camera),
                               graphene_point3d_init (&pos,
-                                                     cos (angle) * 1000,
+                                                     cos (angle) * 1200,
                                                      200,
-                                                     sin (angle) * 1000));
+                                                     sin (angle) * 1200));
   if (1)
     gthree_object_set_rotation (GTHREE_OBJECT (camera),
                                 graphene_point3d_init (&pos, 0, G_PI/2 - angle, 0));
