@@ -263,11 +263,23 @@ gthree_lambert_material_set_color (GthreeLambertMaterial *lambert,
 
 void
 gthree_lambert_material_set_vertex_colors (GthreeLambertMaterial *lambert,
-                                         GthreeColorType color_type)
+					   GthreeColorType color_type)
 {
   GthreeLambertMaterialPrivate *priv = gthree_lambert_material_get_instance_private (lambert);
 
   priv->vertex_colors = color_type;
+
+  lambert->parent.needs_update = TRUE;
+}
+
+
+void
+gthree_lambert_material_set_shading_type (GthreeLambertMaterial *lambert,
+					  GthreeShadingType shading_type)
+{
+  GthreeLambertMaterialPrivate *priv = gthree_lambert_material_get_instance_private (lambert);
+
+  priv->shading_type = shading_type;
 
   lambert->parent.needs_update = TRUE;
 }

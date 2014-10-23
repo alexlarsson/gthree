@@ -36,6 +36,8 @@ void            gthree_lambert_material_set_color         (GthreeLambertMaterial
 void            gthree_lambert_material_set_vertex_colors (GthreeLambertMaterial *lambert,
 							   GthreeColorType      color_type);
 GthreeColorType gthree_lambert_material_get_vertex_colors (GthreeLambertMaterial *lambert);
+void            gthree_lambert_material_set_shading_type  (GthreeLambertMaterial *lambert,
+							   GthreeShadingType      shading_type);
 void            gthree_lambert_material_set_map           (GthreeLambertMaterial *lambert,
 							   GthreeTexture       *texture);
 GthreeTexture  *gthree_lambert_material_get_map           (GthreeLambertMaterial *lambert);
