@@ -124,12 +124,47 @@ gthree_basic_material_real_set_uniforms (GthreeMaterial *material,
     gthree_uniform_set_int (uni, priv->combine);
 }
 
+static gboolean
+gthree_basic_material_needs_uv (GthreeMaterial *material)
+{
+  GthreeBasicMaterial *basic = GTHREE_BASIC_MATERIAL (material);
+  GthreeBasicMaterialPrivate *priv = gthree_basic_material_get_instance_private (basic);
+
+  if (priv->map != NULL
+      /* TODO:  || material.lightMap ||
+         material.bumpMap ||
+         material.normalMap ||
+         material.specularMap ||
+         material.alphaMap */)
+    return TRUE;
+
+  return FALSE;
+}
+
+static GthreeShadingType
+gthree_basic_material_needs_normals (GthreeMaterial *material)
+{
+  return GTHREE_SHADING_NONE;
+}
+
+static GthreeColorType
+gthree_basic_material_needs_colors  (GthreeMaterial *material)
+{
+  GthreeBasicMaterial *basic = GTHREE_BASIC_MATERIAL (material);
+  GthreeBasicMaterialPrivate *priv = gthree_basic_material_get_instance_private (basic);
+
+  return priv->vertex_colors;
+}
+
 static void
 gthree_basic_material_class_init (GthreeBasicMaterialClass *klass)
 {
   G_OBJECT_CLASS (klass)->finalize = gthree_basic_material_finalize;
   GTHREE_MATERIAL_CLASS(klass)->set_params = gthree_basic_material_real_set_params;
   GTHREE_MATERIAL_CLASS(klass)->set_uniforms = gthree_basic_material_real_set_uniforms;
+  GTHREE_MATERIAL_CLASS(klass)->needs_uv = gthree_basic_material_needs_uv;
+  GTHREE_MATERIAL_CLASS(klass)->needs_normals = gthree_basic_material_needs_normals;
+  GTHREE_MATERIAL_CLASS(klass)->needs_colors = gthree_basic_material_needs_colors;
 }
 
 const GdkRGBA *

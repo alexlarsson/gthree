@@ -44,6 +44,10 @@ typedef struct {
   void          (*set_uniforms) (GthreeMaterial *material,
                                  GthreeUniforms *uniforms);
 
+  gboolean           (*needs_uv)      (GthreeMaterial *material);
+  GthreeShadingType  (*needs_normals) (GthreeMaterial *material);
+  GthreeColorType    (*needs_colors)  (GthreeMaterial *material);
+
 } GthreeMaterialClass;
 
 GthreeMaterial *gthree_material_new ();
@@ -101,6 +105,9 @@ void            gthree_material_set_uniforms             (GthreeMaterial *materi
                                                           GthreeUniforms *uniforms);
 
 
+gboolean          gthree_material_needs_uv      (GthreeMaterial *material);
+GthreeShadingType gthree_material_needs_normals (GthreeMaterial *material);
+GthreeColorType   gthree_material_needs_colors  (GthreeMaterial *material);
 
 G_END_DECLS
 

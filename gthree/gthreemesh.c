@@ -131,32 +131,6 @@ make_geometry_groups (GthreeMesh *mesh,
   return groups;
 }
 
-static gboolean
-buffer_guess_uv_type (GthreeMaterial *material)
-{
-  // TODO: vfuncify
-  if (GTHREE_IS_BASIC_MATERIAL (material))
-    return gthree_basic_material_get_map (GTHREE_BASIC_MATERIAL (material)) != NULL;
-
-  return FALSE;
-}
-
-static GthreeShadingType
-buffer_guess_normal_type (GthreeMaterial *material)
-{
-  return GTHREE_SHADING_NONE;
-}
-
-static GthreeColorType
-buffer_guess_vertex_color_type (GthreeMaterial *material)
-{
-  // TODO: vfuncify
-  if (GTHREE_IS_BASIC_MATERIAL (material))
-    return gthree_basic_material_get_vertex_colors (GTHREE_BASIC_MATERIAL (material));
-
-  return GTHREE_COLOR_NONE;
-}
-
 static void
 create_mesh_buffers (GthreeGeometryGroup *group)
 {
@@ -185,9 +159,9 @@ init_mesh_buffers (GthreeMesh *mesh,
   guint ntris     = face_indexes->len * 1;
   guint nlines    = face_indexes->len * 3;
   GthreeMaterial *material = gthree_buffer_resolve_material (GTHREE_BUFFER(group));
-  gboolean uv_type = buffer_guess_uv_type (material);
-  gboolean normal_type = buffer_guess_normal_type (material);
-  GthreeColorType vertex_color_type = buffer_guess_vertex_color_type (material);
+  gboolean uv_type = gthree_material_needs_uv (material);
+  gboolean normal_type = gthree_material_needs_normals (material);
+  GthreeColorType vertex_color_type = gthree_material_needs_colors (material);
 
   group->vertex_array = g_new (float, nvertices * 3);
 
@@ -281,10 +255,10 @@ set_mesh_buffers (GthreeMesh *mesh,
 {
   GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
   GthreeGeometry *geometry = priv->geometry;
-  gboolean uv_type = buffer_guess_uv_type (material);
-  GthreeShadingType normal_type = buffer_guess_normal_type (material);
+  gboolean uv_type = gthree_material_needs_uv (material);
+  gboolean normal_type = gthree_material_needs_normals (material);
+  GthreeColorType vertex_color_type = gthree_material_needs_colors (material);
   gboolean needs_smooth_normals = normal_type == GTHREE_SHADING_SMOOTH;
-  GthreeColorType vertex_color_type = buffer_guess_vertex_color_type (material);
 
   gboolean dirtyVertices = priv->verticesNeedUpdate;
   gboolean dirtyElements = priv->elementsNeedUpdate;
