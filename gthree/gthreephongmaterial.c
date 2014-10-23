@@ -283,6 +283,63 @@ gthree_phong_material_set_color (GthreePhongMaterial *phong,
   phong->parent.needs_update = TRUE;
 }
 
+const GdkRGBA *
+gthree_phong_material_get_ambient_color (GthreePhongMaterial *phong)
+{
+  GthreePhongMaterialPrivate *priv = gthree_phong_material_get_instance_private (phong);
+
+  return &priv->ambient;
+}
+
+void
+gthree_phong_material_set_ambient_color (GthreePhongMaterial *phong,
+				  	 const GdkRGBA *color)
+{
+  GthreePhongMaterialPrivate *priv = gthree_phong_material_get_instance_private (phong);
+
+  priv->ambient = *color;
+
+  phong->parent.needs_update = TRUE;
+}
+
+const GdkRGBA *
+gthree_phong_material_get_emissive_color (GthreePhongMaterial *phong)
+{
+  GthreePhongMaterialPrivate *priv = gthree_phong_material_get_instance_private (phong);
+
+  return &priv->emissive;
+}
+
+void
+gthree_phong_material_set_emissive_color (GthreePhongMaterial *phong,
+				  	 const GdkRGBA *color)
+{
+  GthreePhongMaterialPrivate *priv = gthree_phong_material_get_instance_private (phong);
+
+  priv->emissive = *color;
+
+  phong->parent.needs_update = TRUE;
+}
+
+const GdkRGBA *
+gthree_phong_material_get_specular_color (GthreePhongMaterial *phong)
+{
+  GthreePhongMaterialPrivate *priv = gthree_phong_material_get_instance_private (phong);
+
+  return &priv->specular;
+}
+
+void
+gthree_phong_material_set_specular_color (GthreePhongMaterial *phong,
+				  	 const GdkRGBA *color)
+{
+  GthreePhongMaterialPrivate *priv = gthree_phong_material_get_instance_private (phong);
+
+  priv->specular = *color;
+
+  phong->parent.needs_update = TRUE;
+}
+
 void
 gthree_phong_material_set_vertex_colors (GthreePhongMaterial *phong,
 					   GthreeColorType color_type)

@@ -30,17 +30,27 @@ typedef struct {
 GthreePhongMaterial *gthree_phong_material_new ();
 GType gthree_phong_material_get_type (void) G_GNUC_CONST;
 
-const GdkRGBA * gthree_phong_material_get_color         (GthreePhongMaterial *phong);
-void            gthree_phong_material_set_color         (GthreePhongMaterial *phong,
-							   const GdkRGBA       *color);
-void            gthree_phong_material_set_vertex_colors (GthreePhongMaterial *phong,
-							   GthreeColorType      color_type);
-GthreeColorType gthree_phong_material_get_vertex_colors (GthreePhongMaterial *phong);
-void            gthree_phong_material_set_shading_type  (GthreePhongMaterial *phong,
-							   GthreeShadingType      shading_type);
-void            gthree_phong_material_set_map           (GthreePhongMaterial *phong,
-							   GthreeTexture       *texture);
-GthreeTexture  *gthree_phong_material_get_map           (GthreePhongMaterial *phong);
+const GdkRGBA * gthree_phong_material_get_color          (GthreePhongMaterial *phong);
+void            gthree_phong_material_set_color          (GthreePhongMaterial *phong,
+							  const GdkRGBA       *color);
+const GdkRGBA * gthree_phong_material_get_ambient_color  (GthreePhongMaterial *phong);
+void            gthree_phong_material_set_ambient_color  (GthreePhongMaterial *phong,
+							  const GdkRGBA       *color);
+const GdkRGBA * gthree_phong_material_get_emissive_color (GthreePhongMaterial *phong);
+void            gthree_phong_material_set_emissive_color (GthreePhongMaterial *phong,
+							  const GdkRGBA       *color);
+const GdkRGBA * gthree_phong_material_get_specular_color (GthreePhongMaterial *phong);
+void            gthree_phong_material_set_specular_color (GthreePhongMaterial *phong,
+							  const GdkRGBA       *color);
+void            gthree_phong_material_set_vertex_colors  (GthreePhongMaterial *phong,
+							  GthreeColorType      color_type);
+GthreeColorType gthree_phong_material_get_vertex_colors  (GthreePhongMaterial *phong);
+void            gthree_phong_material_set_shading_type   (GthreePhongMaterial *phong,
+							  GthreeShadingType    shading_type);
+void            gthree_phong_material_set_map            (GthreePhongMaterial *phong,
+							  GthreeTexture       *texture);
+GthreeTexture  *gthree_phong_material_get_map            (GthreePhongMaterial *phong);
+
 
 G_END_DECLS
 

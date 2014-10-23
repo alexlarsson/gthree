@@ -33,6 +33,12 @@ GType gthree_lambert_material_get_type (void) G_GNUC_CONST;
 const GdkRGBA * gthree_lambert_material_get_color         (GthreeLambertMaterial *lambert);
 void            gthree_lambert_material_set_color         (GthreeLambertMaterial *lambert,
 							   const GdkRGBA       *color);
+const GdkRGBA * gthree_lambert_material_get_ambient_color (GthreeLambertMaterial *lambert);
+void            gthree_lambert_material_set_ambient_color (GthreeLambertMaterial *lambert,
+							   const GdkRGBA       *color);
+const GdkRGBA * gthree_lambert_material_get_emissive_color(GthreeLambertMaterial *lambert);
+void            gthree_lambert_material_set_emissive_color(GthreeLambertMaterial *lambert,
+							   const GdkRGBA       *color);
 void            gthree_lambert_material_set_vertex_colors (GthreeLambertMaterial *lambert,
 							   GthreeColorType      color_type);
 GthreeColorType gthree_lambert_material_get_vertex_colors (GthreeLambertMaterial *lambert);

@@ -260,6 +260,44 @@ gthree_lambert_material_set_color (GthreeLambertMaterial *lambert,
   lambert->parent.needs_update = TRUE;
 }
 
+const GdkRGBA *
+gthree_lambert_material_get_ambient_color (GthreeLambertMaterial *lambert)
+{
+  GthreeLambertMaterialPrivate *priv = gthree_lambert_material_get_instance_private (lambert);
+
+  return &priv->ambient;
+}
+
+void
+gthree_lambert_material_set_ambient_color (GthreeLambertMaterial *lambert,
+				  	 const GdkRGBA *color)
+{
+  GthreeLambertMaterialPrivate *priv = gthree_lambert_material_get_instance_private (lambert);
+
+  priv->ambient = *color;
+
+  lambert->parent.needs_update = TRUE;
+}
+
+const GdkRGBA *
+gthree_lambert_material_get_emissive_color (GthreeLambertMaterial *lambert)
+{
+  GthreeLambertMaterialPrivate *priv = gthree_lambert_material_get_instance_private (lambert);
+
+  return &priv->emissive;
+}
+
+void
+gthree_lambert_material_set_emissive_color (GthreeLambertMaterial *lambert,
+					    const GdkRGBA *color)
+{
+  GthreeLambertMaterialPrivate *priv = gthree_lambert_material_get_instance_private (lambert);
+
+  priv->emissive = *color;
+
+  lambert->parent.needs_update = TRUE;
+}
+
 void
 gthree_lambert_material_set_vertex_colors (GthreeLambertMaterial *lambert,
 					   GthreeColorType color_type)
