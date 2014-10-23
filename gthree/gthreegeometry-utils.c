@@ -289,5 +289,5 @@ gthree_geometry_new_sphere (float radius,
                             int   heightSegments)
 {
   return gthree_geometry_new_sphere_full (radius, widthSegments, heightSegments,
-                                          0, 2 * G_PI, 0, 2 * G_PI);
+                                          0, 2 * G_PI, 0, G_PI);
 }
