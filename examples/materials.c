@@ -23,22 +23,35 @@ init_scene (void)
   int i;
   GdkRGBA grey = {0.4, 0.4, 0.4, 1.0};
   GdkRGBA white = {1, 1, 1, 1.0};
+  GdkRGBA red = {1, 0, 0, 1.0};
   GdkRGBA dark_grey = {0.1, 0.1, 0.1, 1.0};
   graphene_point3d_t pos = { 0, 0, 0};
+  GthreeMaterial *materials[14] = { NULL };
+  int n_materials = 0;
 
   scene = gthree_scene_new ();
 
   camera = gthree_camera_new (45, 1, 1, 2000);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
   gthree_object_set_position (GTHREE_OBJECT (camera),
-                              graphene_point3d_init (&pos, 0, 200, 800));
+                              graphene_point3d_init (&pos, 0, 200, 2000));
 
   material_wireframe = gthree_basic_material_new ();
   gthree_material_set_is_wireframe (GTHREE_MATERIAL (material_wireframe), TRUE);
   gthree_basic_material_set_color (material_wireframe, &grey);
+    materials[n_materials++] = GTHREE_MATERIAL (material_wireframe);
+  
+  material_lambert = gthree_lambert_material_new ();
+  gthree_lambert_material_set_color (material_lambert, &white);
+  gthree_lambert_material_set_shading_type  (material_lambert,
+					     GTHREE_SHADING_FLAT);
+  materials[n_materials++] = GTHREE_MATERIAL (material_lambert);
 
   material_lambert = gthree_lambert_material_new ();
   gthree_lambert_material_set_color (material_lambert, &white);
+  gthree_lambert_material_set_shading_type  (material_lambert,
+					     GTHREE_SHADING_SMOOTH);
+  materials[n_materials++] = GTHREE_MATERIAL (material_lambert);
 
   floor_geometry = gthree_geometry_new_box (1000, 10, 1000,
                                             40, 1, 40);
@@ -54,9 +67,9 @@ init_scene (void)
   geometry_flat = gthree_geometry_new_sphere (70, 32, 16);
   geometry_pieces = gthree_geometry_new_sphere (70, 32, 16);
 
-  for (i = 0; i < 14; i++)
+  for (i = 0; i < 16; i++)
     {
-      GthreeMesh *sphere = gthree_mesh_new (geometry_smooth, GTHREE_MATERIAL (material_lambert));
+      GthreeMesh *sphere = gthree_mesh_new (geometry_smooth, materials[i % n_materials]);
       gthree_object_set_position (GTHREE_OBJECT (sphere),
                                   graphene_point3d_init (&pos,
                                                          (i % 4 ) * 200 - 400,
@@ -83,7 +96,7 @@ init_scene (void)
   particle_light = gthree_mesh_new (geometry_light, GTHREE_MATERIAL (material_light));
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (particle_light));
 
-  point_light = gthree_point_light_new (&white, 1, 0);
+  point_light = gthree_point_light_new (&red, 1, 0);
   gthree_object_add_child (GTHREE_OBJECT (particle_light), GTHREE_OBJECT (point_light));
   
   return scene;
@@ -101,8 +114,8 @@ tick (GtkWidget     *widget,
   float angle;
 
   frame_time = gdk_frame_clock_get_frame_time (frame_clock);
-
   angle = frame_time / 2000000.0;
+
   gthree_object_set_position (GTHREE_OBJECT (camera),
                               graphene_point3d_init (&pos,
                                                      cos (angle) * 1000,
