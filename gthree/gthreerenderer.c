@@ -798,31 +798,6 @@ setup_lights (GthreeRenderer *renderer, GList *lights)
       gthree_light_setup (light, &priv->light_setup);
 
 #if TODO
-      if ( light instanceof THREE.DirectionalLight )
-	{
-	  dirCount += 1;
-
-	  if ( ! light.visible )
-	    continue;
-
-	  _direction.setFromMatrixPosition( light.matrixWorld );
-	  _vector3.setFromMatrixPosition( light.target.matrixWorld );
-	  _direction.sub( _vector3 );
-	  _direction.normalize();
-
-	  dirOffset = dirLength * 3;
-
-	  dirPositions[ dirOffset ]     = _direction.x;
-	  dirPositions[ dirOffset + 1 ] = _direction.y;
-	  dirPositions[ dirOffset + 2 ] = _direction.z;
-
-	  if ( _this.gammaInput )
-	    setColorGamma( dirColors, dirOffset, color, intensity * intensity );
-	  else
-	    setColorLinear( dirColors, dirOffset, color, intensity );
-
-	  dirLength += 1;
-	}
       else if ( light instanceof THREE.SpotLight )
 	{
 	  spotCount += 1;
@@ -927,6 +902,16 @@ refresh_uniforms_lights (GthreeUniforms *uniforms, GthreeLightSetup *lights_setu
   if (uni != NULL)
     gthree_uniform_set_color (uni, &lights_setup->ambient);
 
+
+  uni = gthree_uniforms_lookup_from_string (uniforms, "directionalLightColor");
+  if (uni != NULL)
+    gthree_uniform_set_float3_array (uni, lights_setup->dir_colors);
+
+  uni = gthree_uniforms_lookup_from_string (uniforms, "directionalLightDirection");
+  if (uni != NULL)
+    gthree_uniform_set_float3_array (uni, lights_setup->dir_positions);
+
+  
   uni = gthree_uniforms_lookup_from_string (uniforms, "pointLightColor");
   if (uni != NULL)
     gthree_uniform_set_float3_array (uni, lights_setup->point_colors);
@@ -940,10 +925,6 @@ refresh_uniforms_lights (GthreeUniforms *uniforms, GthreeLightSetup *lights_setu
     gthree_uniform_set_float_array (uni, lights_setup->point_distances);
   
 #ifdef TODO
-  uniforms.directionalLightColor.value = lights_setup->directional.colors;
-  uniforms.directionalLightDirection.value = lights_setup->directional.positions;
-
-
   uniforms.spotLightColor.value = lights_setup->spot.colors;
   uniforms.spotLightPosition.value = lights_setup->spot.positions;
   uniforms.spotLightDistance.value = lights_setup->spot.distances;
@@ -1291,7 +1272,7 @@ render_buffer (GthreeRenderer *renderer,
   //var attributes = program.attributes;
   gboolean updateBuffers = false;
   gint position_location, color_location, uv_location, normal_location;
-  guint32 wireframeBit = gthree_material_get_is_wireframe (material) ? 1 : 0;
+  //guint32 wireframeBit = gthree_material_get_is_wireframe (material) ? 1 : 0;
   //guint32 geometryGroupHash = (guint32)buffer + (guint32)program * 2 + wireframeBit;
 
   if (!gthree_material_get_is_visible (material))

@@ -21,6 +21,7 @@
 #include <gthree/gthreelight.h>
 #include <gthree/gthreeambientlight.h>
 #include <gthree/gthreepointlight.h>
+#include <gthree/gthreedirectionallight.h>
 #include <gthree/gthreelambertmaterial.h>
 
 #undef __GTHREE_H_INSIDE__

@@ -19,11 +19,13 @@ init_scene (void)
   GthreeLambertMaterial *material_lambert;
   GthreeAmbientLight *ambient_light;
   GthreePointLight *point_light;
+  GthreeDirectionalLight *directional_light;
   GthreeMesh *floor;
   int i;
   GdkRGBA grey = {0.4, 0.4, 0.4, 1.0};
   GdkRGBA white = {1, 1, 1, 1.0};
   GdkRGBA red = {1, 0, 0, 1.0};
+  GdkRGBA green = {0, 1, 0, 1.0};
   GdkRGBA dark_grey = {0.1, 0.1, 0.1, 1.0};
   graphene_point3d_t pos = { 0, 0, 0};
   GthreeMaterial *materials[14] = { NULL };
@@ -96,8 +98,16 @@ init_scene (void)
   particle_light = gthree_mesh_new (geometry_light, GTHREE_MATERIAL (material_light));
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (particle_light));
 
-  point_light = gthree_point_light_new (&red, 1, 0);
+  point_light = gthree_point_light_new (&red, 0.25, 0);
   gthree_object_add_child (GTHREE_OBJECT (particle_light), GTHREE_OBJECT (point_light));
+  
+  directional_light = gthree_directional_light_new (&green, 0.125);
+  gthree_object_set_position (GTHREE_OBJECT (directional_light),
+			      graphene_point3d_init (&pos,
+						     1,
+						     1,
+						     -1));
+  gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (directional_light));
   
   return scene;
 }

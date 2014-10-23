@@ -9,6 +9,7 @@ typedef struct _GthreeLambertMaterial GthreeLambertMaterial;
 typedef struct _GthreeProgram GthreeProgram;
 typedef struct _GthreeAmbientLight GthreeAmbientLight;
 typedef struct _GthreePointLight GthreePointLight;
+typedef struct _GthreeDirectionalLight GthreeDirectionalLight;
 typedef struct _GthreeLightSetup GthreeLightSetup;
 
 
