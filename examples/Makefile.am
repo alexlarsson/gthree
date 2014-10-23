@@ -9,9 +9,10 @@ AM_CPPFLAGS =					\
 	$(GTHREE_CFLAGS)			\
 	$(NULL)
 
-noinst_PROGRAMS =				\
+noinst_PROGRAMS =			\
 	gtkcube				\
 	model				\
+	materials			\
 	$(NULL)
 
 gtkcube_CFLAGS = \
@@ -36,6 +37,19 @@ model_SOURCES =						\
 	$(NULL)
 
 model_LDADD = \
+	$(GTHREE_LIBS)						\
+	$(top_builddir)/gthree/libgthree-1.la			\
+	$(NULL)
+
+materials_CFLAGS = \
+	$(GTHREE_CFLAGS)					\
+	$(NULL)
+
+materials_SOURCES =						\
+	materials.c						\
+	$(NULL)
+
+materials_LDADD = \
 	$(GTHREE_LIBS)						\
 	$(top_builddir)/gthree/libgthree-1.la			\
 	$(NULL)
