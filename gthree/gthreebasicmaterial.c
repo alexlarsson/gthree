@@ -122,6 +122,9 @@ gthree_basic_material_real_set_uniforms (GthreeMaterial *material,
   uni = gthree_uniforms_lookup_from_string (uniforms, "combine");
   if (uni != NULL)
     gthree_uniform_set_int (uni, priv->combine);
+
+
+  // TODO: More from refreshUniformsCommon
 }
 
 static gboolean

@@ -6,6 +6,7 @@
 #include "gthreeshader.h"
 #include "gthreematerial.h"
 #include "gthreeutils.h"
+#include "gthreeprivate.h"
 
 typedef struct {
   int width;
@@ -29,6 +30,9 @@ typedef struct {
 
   guint used_texture_units;
 
+  gboolean lights_need_update;
+  GthreeLightSetup light_setup;
+  
   gboolean old_flip_sided;
   gboolean old_double_sided;
   gboolean old_depth_test;
@@ -89,7 +93,30 @@ gthree_renderer_init (GthreeRenderer *renderer)
   priv->sort_objects = TRUE;
   priv->width = 1;
   priv->height = 1;
+  priv->lights_need_update = TRUE;
 
+  priv->light_setup.dir_len = 0;
+  priv->light_setup.dir_colors = g_array_new (FALSE, TRUE, sizeof (float));
+  priv->light_setup.dir_positions = g_array_new (FALSE, TRUE, sizeof (float));
+
+  priv->light_setup.point_len = 0;
+  priv->light_setup.point_colors = g_array_new (FALSE, TRUE, sizeof (float));
+  priv->light_setup.point_positions = g_array_new (FALSE, TRUE, sizeof (float));
+  priv->light_setup.point_distances = g_array_new (FALSE, TRUE, sizeof (float));
+
+  priv->light_setup.spot_len = 0;
+  priv->light_setup.spot_colors = g_array_new (FALSE, TRUE, sizeof (float));
+  priv->light_setup.spot_positions = g_array_new (FALSE, TRUE, sizeof (float));
+  priv->light_setup.spot_distances = g_array_new (FALSE, TRUE, sizeof (float));
+  priv->light_setup.spot_directions = g_array_new (FALSE, TRUE, sizeof (float));
+  priv->light_setup.spot_angles_cos = g_array_new (FALSE, TRUE, sizeof (float));
+  priv->light_setup.spot_exponents = g_array_new (FALSE, TRUE, sizeof (float));
+
+  priv->light_setup.hemi_len = 0;
+  priv->light_setup.hemi_sky_colors = g_array_new (FALSE, TRUE, sizeof (float));
+  priv->light_setup.hemi_ground_colors = g_array_new (FALSE, TRUE, sizeof (float));
+  priv->light_setup.hemi_positions = g_array_new (FALSE, TRUE, sizeof (float));
+  
   priv->opaque_objects = g_ptr_array_new ();
   priv->transparent_objects = g_ptr_array_new ();
 
@@ -122,9 +149,30 @@ gthree_renderer_init (GthreeRenderer *renderer)
 static void
 gthree_renderer_finalize (GObject *obj)
 {
-  //GthreeRenderer *renderer = GTHREE_RENDERER (obj);
-  //GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  GthreeRenderer *renderer = GTHREE_RENDERER (obj);
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
 
+  g_array_free (priv->light_setup.dir_colors, TRUE);
+  g_array_free (priv->light_setup.dir_positions, TRUE);
+
+  g_array_free (priv->light_setup.point_colors, TRUE);
+  g_array_free (priv->light_setup.point_positions, TRUE);
+  g_array_free (priv->light_setup.point_distances, TRUE);
+
+  g_array_free (priv->light_setup.spot_colors, TRUE);
+  g_array_free (priv->light_setup.spot_positions, TRUE);
+  g_array_free (priv->light_setup.spot_distances, TRUE);
+  g_array_free (priv->light_setup.spot_directions, TRUE);
+  g_array_free (priv->light_setup.spot_angles_cos, TRUE);
+  g_array_free (priv->light_setup.spot_exponents, TRUE);
+
+  g_array_free (priv->light_setup.hemi_sky_colors, TRUE);
+  g_array_free (priv->light_setup.hemi_ground_colors, TRUE);
+  g_array_free (priv->light_setup.hemi_positions, TRUE);
+
+  g_ptr_array_free (priv->opaque_objects, TRUE);
+  g_ptr_array_free (priv->transparent_objects, TRUE);
+  
   G_OBJECT_CLASS (gthree_renderer_parent_class)->finalize (obj);
 }
 
@@ -507,11 +555,12 @@ project_object (GthreeRenderer *renderer,
 static GthreeProgram *
 init_material (GthreeRenderer *renderer,
                GthreeMaterial *material,
-               gpointer light,
+               GList *lights,
                gpointer fog,
                GthreeObject *object)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  GList *l;
   //char *shader_id;
   GthreeProgram *program;
   GthreeShader *shader;
@@ -521,13 +570,12 @@ init_material (GthreeRenderer *renderer,
   shader = gthree_material_get_shader (material);
 
   //material.addEventListener( 'dispose', onMaterialDispose );
-  //var u, a, identifiers, i, parameters, maxLightCount, maxBones, maxShadows, shaderID;
+  //var u, a, identifiers, i, parameters, maxBones, maxShadows, shaderID;
 
   // heuristics to create shader parameters according to lights in the scene
   // (not to blow over maxLights budget)
 
 #ifdef TODO
-  maxLightCount = allocateLights( lights );
   maxShadows = allocateShadows( lights );
   maxBones = allocateBones( object );
 #endif
@@ -536,7 +584,8 @@ init_material (GthreeRenderer *renderer,
   parameters.supports_vertex_textures = priv->supports_vertex_textures;
 
   gthree_material_set_params (material, &parameters);
-
+  for (l = lights; l != NULL; l = l->next)
+    gthree_light_set_params (l->data, &parameters);
 
 #ifdef TODO
   parameters =
@@ -568,11 +617,6 @@ init_material (GthreeRenderer *renderer,
     morphNormals: material.morphNormals,
     maxMorphTargets: this.maxMorphTargets,
     maxMorphNormals: this.maxMorphNormals,
-
-    maxDirLights: maxLightCount.directional,
-    maxPointLights: maxLightCount.point,
-    maxSpotLights: maxLightCount.spot,
-    maxHemiLights: maxLightCount.hemi,
 
     maxShadows: maxShadows,
     shadowMapEnabled: this.shadowMapEnabled && object.receiveShadow && maxShadows > 0,
@@ -722,11 +766,263 @@ load_uniforms_matrices (GthreeRenderer *renderer,
     }
 }
 
+static void
+setup_lights (GthreeRenderer *renderer, GList *lights)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  GList *l;
+
+  priv->light_setup.ambient.red = 0;
+  priv->light_setup.ambient.green = 0;
+  priv->light_setup.ambient.blue = 0;
+  priv->light_setup.ambient.alpha = 1;
+
+  priv->light_setup.dir_len = 0;
+  priv->light_setup.dir_count = 0;
+  priv->light_setup.point_len = 0;
+  priv->light_setup.point_count = 0;
+  priv->light_setup.spot_len = 0;
+  priv->light_setup.spot_count = 0;
+  priv->light_setup.hemi_len = 0;
+  priv->light_setup.hemi_count = 0;
+
+  for (l = lights; l != NULL; l = l->next)
+    {
+      GthreeLight *light = l->data;
+
+      if (gthree_light_get_is_only_shadow (light))
+	continue;
+
+      gthree_light_setup (light, &priv->light_setup);
+
+#if TODO
+      if ( light instanceof THREE.DirectionalLight )
+	{
+	  dirCount += 1;
+
+	  if ( ! light.visible )
+	    continue;
+
+	  _direction.setFromMatrixPosition( light.matrixWorld );
+	  _vector3.setFromMatrixPosition( light.target.matrixWorld );
+	  _direction.sub( _vector3 );
+	  _direction.normalize();
+
+	  dirOffset = dirLength * 3;
+
+	  dirPositions[ dirOffset ]     = _direction.x;
+	  dirPositions[ dirOffset + 1 ] = _direction.y;
+	  dirPositions[ dirOffset + 2 ] = _direction.z;
+
+	  if ( _this.gammaInput )
+	    setColorGamma( dirColors, dirOffset, color, intensity * intensity );
+	  else
+	    setColorLinear( dirColors, dirOffset, color, intensity );
+
+	  dirLength += 1;
+	}
+      else if ( light instanceof THREE.PointLight )
+	{
+	  pointCount += 1;
+
+	  if ( ! light.visible ) continue;
+
+	  pointOffset = pointLength * 3;
+
+	  if ( _this.gammaInput )
+	    setColorGamma( pointColors, pointOffset, color, intensity * intensity );
+	  else
+	    setColorLinear( pointColors, pointOffset, color, intensity );
+    
+	  _vector3.setFromMatrixPosition( light.matrixWorld );
+
+	  pointPositions[ pointOffset ]     = _vector3.x;
+	  pointPositions[ pointOffset + 1 ] = _vector3.y;
+	  pointPositions[ pointOffset + 2 ] = _vector3.z;
+
+	  pointDistances[ pointLength ] = distance;
+
+	  pointLength += 1;
+	}
+      else if ( light instanceof THREE.SpotLight )
+	{
+	  spotCount += 1;
+
+	  if ( ! light.visible ) continue;
+
+	  spotOffset = spotLength * 3;
+
+	  if ( _this.gammaInput )
+	    setColorGamma( spotColors, spotOffset, color, intensity * intensity );
+	  else
+	    setColorLinear( spotColors, spotOffset, color, intensity );
+
+	  _vector3.setFromMatrixPosition( light.matrixWorld );
+
+	  spotPositions[ spotOffset ]     = _vector3.x;
+	  spotPositions[ spotOffset + 1 ] = _vector3.y;
+	  spotPositions[ spotOffset + 2 ] = _vector3.z;
+
+	  spotDistances[ spotLength ] = distance;
+
+	  _direction.copy( _vector3 );
+	  _vector3.setFromMatrixPosition( light.target.matrixWorld );
+	  _direction.sub( _vector3 );
+	  _direction.normalize();
+
+	  spotDirections[ spotOffset ]     = _direction.x;
+	  spotDirections[ spotOffset + 1 ] = _direction.y;
+	  spotDirections[ spotOffset + 2 ] = _direction.z;
+
+	  spotAnglesCos[ spotLength ] = Math.cos( light.angle );
+	  spotExponents[ spotLength ] = light.exponent;
+
+	  spotLength += 1;
+	}
+      else if ( light instanceof THREE.HemisphereLight )
+	{
+	  hemiCount += 1;
+
+	  if ( ! light.visible ) continue;
+
+	  _direction.setFromMatrixPosition( light.matrixWorld );
+	  _direction.normalize();
+
+	  hemiOffset = hemiLength * 3;
+
+	  hemiPositions[ hemiOffset ]     = _direction.x;
+	  hemiPositions[ hemiOffset + 1 ] = _direction.y;
+	  hemiPositions[ hemiOffset + 2 ] = _direction.z;
+
+	  skyColor = light.color;
+	  groundColor = light.groundColor;
+
+	  if ( _this.gammaInput )
+	    {
+	      intensitySq = intensity * intensity;
+
+	      setColorGamma( hemiSkyColors, hemiOffset, skyColor, intensitySq );
+	      setColorGamma( hemiGroundColors, hemiOffset, groundColor, intensitySq );
+	    }
+	  else
+	    {
+	      setColorLinear( hemiSkyColors, hemiOffset, skyColor, intensity );
+	      setColorLinear( hemiGroundColors, hemiOffset, groundColor, intensity );
+	    }
+
+	  hemiLength += 1;
+	}
+#endif
+    }
+
+
+  // null eventual remains from removed lights
+  // (this is to avoid if in shader)
+#if TODO
+  for ( l = dirLength * 3, ll = MAX( dirColors.length, dirCount * 3 ); l < ll; l ++ )
+    dirColors[ l ] = 0.0;
+  for ( l = pointLength * 3, ll = MAX( pointColors.length, pointCount * 3 ); l < ll; l ++ )
+    pointColors[ l ] = 0.0;
+  for ( l = spotLength * 3, ll = MAX( spotColors.length, spotCount * 3 ); l < ll; l ++ )
+    spotColors[ l ] = 0.0;
+  for ( l = hemiLength * 3, ll = MAX( hemiSkyColors.length, hemiCount * 3 ); l < ll; l ++ )
+    hemiSkyColors[ l ] = 0.0;
+  for ( l = hemiLength * 3, ll = MAX( hemiGroundColors.length, hemiCount * 3 ); l < ll; l ++ )
+    hemiGroundColors[ l ] = 0.0;
+#endif
+}
+
+static void
+refresh_uniforms_lights (GthreeUniforms *uniforms, GthreeLightSetup *lights_setup)
+{
+  GthreeUniform *uni;
+
+  uni = gthree_uniforms_lookup_from_string (uniforms, "ambientLightColor");
+  if (uni != NULL)
+    gthree_uniform_set_color (uni, &lights_setup->ambient);
+
+#ifdef TODO
+  uniforms.directionalLightColor.value = lights_setup->directional.colors;
+  uniforms.directionalLightDirection.value = lights_setup->directional.positions;
+
+  uniforms.pointLightColor.value = lights_setup->point.colors;
+  uniforms.pointLightPosition.value = lights_setup->point.positions;
+  uniforms.pointLightDistance.value = lights_setup->point.distances;
+
+  uniforms.spotLightColor.value = lights_setup->spot.colors;
+  uniforms.spotLightPosition.value = lights_setup->spot.positions;
+  uniforms.spotLightDistance.value = lights_setup->spot.distances;
+  uniforms.spotLightDirection.value = lights_setup->spot.directions;
+  uniforms.spotLightAngleCos.value = lights_setup->spot.anglesCos;
+  uniforms.spotLightExponent.value = lights_setup->spot.exponents;
+
+  uniforms.hemisphereLightSkyColor.value = lights_setup->hemi.skyColors;
+  uniforms.hemisphereLightGroundColor.value = lights_setup->hemi.groundColors;
+  uniforms.hemisphereLightDirection.value = lights_setup->hemi.positions;
+#endif
+};
+
+// If uniforms are marked as clean, they don't need to be loaded to the GPU.
+static void
+mark_uniforms_lights_needs_update (GthreeUniforms *uniforms, gboolean needs_update)
+{
+  GthreeUniform *uni;
+
+  uni = gthree_uniforms_lookup_from_string (uniforms, "ambientLightColor");
+  if (uni)
+    gthree_uniform_set_needs_update (uni, needs_update);
+    
+  uni = gthree_uniforms_lookup_from_string (uniforms, "directionalLightColor");
+  if (uni)
+    gthree_uniform_set_needs_update (uni, needs_update);
+  uni = gthree_uniforms_lookup_from_string (uniforms, "directionalLightDirection");
+  if (uni)
+    gthree_uniform_set_needs_update (uni, needs_update);
+    
+  uni = gthree_uniforms_lookup_from_string (uniforms, "pointLightColor");
+  if (uni)
+    gthree_uniform_set_needs_update (uni, needs_update);
+  uni = gthree_uniforms_lookup_from_string (uniforms, "pointLightPosition");
+  if (uni)
+    gthree_uniform_set_needs_update (uni, needs_update);
+  uni = gthree_uniforms_lookup_from_string (uniforms, "pointLightDistance");
+  if (uni)
+    gthree_uniform_set_needs_update (uni, needs_update);
+    
+  uni = gthree_uniforms_lookup_from_string (uniforms, "spotLightColor");
+  if (uni)
+    gthree_uniform_set_needs_update (uni, needs_update);
+  uni = gthree_uniforms_lookup_from_string (uniforms, "spotLightPosition");
+  if (uni)
+    gthree_uniform_set_needs_update (uni, needs_update);
+  uni = gthree_uniforms_lookup_from_string (uniforms, "spotLightDistance");
+  if (uni)
+    gthree_uniform_set_needs_update (uni, needs_update);
+  uni = gthree_uniforms_lookup_from_string (uniforms, "spotLightDirection");
+  if (uni)
+    gthree_uniform_set_needs_update (uni, needs_update);
+  uni = gthree_uniforms_lookup_from_string (uniforms, "spotLightAngleCos");
+  if (uni)
+    gthree_uniform_set_needs_update (uni, needs_update);
+  uni = gthree_uniforms_lookup_from_string (uniforms, "spotLightExponent");
+  if (uni)
+    gthree_uniform_set_needs_update (uni, needs_update);
+  
+  uni = gthree_uniforms_lookup_from_string (uniforms, "hemisphereLightSkyColor");
+  if (uni)
+    gthree_uniform_set_needs_update (uni, needs_update);
+  uni = gthree_uniforms_lookup_from_string (uniforms, "hemisphereLightGroundColor");
+  if (uni)
+    gthree_uniform_set_needs_update (uni, needs_update);
+  uni = gthree_uniforms_lookup_from_string (uniforms, "hemisphereLightDirection");
+  if (uni)
+    gthree_uniform_set_needs_update (uni, needs_update);
+}
 
 static GthreeProgram *
 set_program (GthreeRenderer *renderer,
              GthreeCamera *camera,
-             gpointer lights,
+             GList *lights,
              gpointer fog,
              GthreeMaterial *material,
              GthreeObject *object)
@@ -865,40 +1161,25 @@ set_program (GthreeRenderer *renderer,
         refreshUniformsFog( m_uniforms, fog );
 #endif
 
-#if TODO
-      if ( material instanceof THREE.MeshPhongMaterial ||
-           material instanceof THREE.MeshLambertMaterial ||
-           material.lights )
+      if (gthree_material_needs_lights (material))
         {
-          if ( _lightsNeedUpdate )
+          if (priv->lights_need_update )
             {
-              refreshLights = true;
-              setupLights( lights );
-              _lightsNeedUpdate = false;
+              refreshLights = TRUE;
+              setup_lights (renderer, lights);
+              priv->lights_need_update = false;
             }
 
-          if ( refreshLights )
+          if (refreshLights)
             {
-              refreshUniformsLights( m_uniforms, _lights );
-              markUniformsLightsNeedsUpdate( m_uniforms, true );
+              refresh_uniforms_lights (m_uniforms, &priv->light_setup);
+              mark_uniforms_lights_needs_update (m_uniforms, TRUE);
             }
           else
             {
-              markUniformsLightsNeedsUpdate( m_uniforms, false );
+              mark_uniforms_lights_needs_update (m_uniforms, FALSE);
             }
         }
-#endif
-
-#if TODO
-      if (
-          GTHREE_IS_BASIC_MATERIAL (material) ||
-           || material instanceof THREE.MeshLambertMaterial ||
-           material instanceof THREE.MeshPhongMaterial
-          )
-        {
-          refreshUniformsCommon( m_uniforms, material );
-        }
-#endif
 
       // refresh single material specific uniforms
 
@@ -1001,7 +1282,7 @@ disable_unused_attributes (GthreeRenderer *renderer)
 static void
 render_buffer (GthreeRenderer *renderer,
                GthreeCamera *camera,
-               gpointer lights,
+               GList *lights,
                gpointer fog,
                GthreeMaterial *material,
                GthreeBuffer *buffer)
@@ -1145,7 +1426,7 @@ static void
 render_objects (GthreeRenderer *renderer,
                 GPtrArray *render_list,
                 GthreeCamera *camera,
-                gpointer lights,
+                GList *lights,
                 gpointer fog,
                 gboolean use_blending,
                 GthreeMaterial *override_material)
@@ -1215,11 +1496,16 @@ gthree_renderer_render (GthreeRenderer *renderer,
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
   GthreeMaterial *override_material;
-  gpointer lights, fog;
+  GList *lights;
+  gpointer fog;
 
-  lights = NULL;
+  lights = gthree_scene_get_lights (scene);
   fog = NULL;
 
+  priv->current_material = NULL;
+  priv->current_camera = NULL;
+  priv->lights_need_update = TRUE;
+  
   /* update scene graph */
 
   gthree_object_update_matrix_world (GTHREE_OBJECT (scene), FALSE);

@@ -141,6 +141,17 @@ gthree_material_needs_uv (GthreeMaterial *material)
   return FALSE;
 }
 
+gboolean
+gthree_material_needs_lights (GthreeMaterial *material)
+{
+  GthreeMaterialClass *class = GTHREE_MATERIAL_GET_CLASS(material);
+
+  if (class->needs_lights)
+    return class->needs_lights (material);
+
+  return FALSE;
+}
+
 GthreeShadingType
 gthree_material_needs_normals (GthreeMaterial *material)
 {

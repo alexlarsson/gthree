@@ -18,6 +18,7 @@ gthree_public_h_sources = \
 	gthreearea.h \
 	gthreebasicmaterial.h \
 	gthreecamera.h \
+	gthreeambientlight.h \
 	gthreelight.h \
 	gthreeenums.h \
 	gthreeface.h \
@@ -60,6 +61,7 @@ gthree_c_sources = \
 	gthreebuffer.c \
 	gthreebuffer.h \
 	gthreecamera.c \
+	gthreeambientlight.c \
 	gthreelight.c \
 	gthreeface.c \
 	gthreegeometry-utils.c \

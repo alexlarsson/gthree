@@ -82,6 +82,8 @@ GthreeUniform *gthree_uniforms_lookup_from_string (GthreeUniforms *uniforms,
 
 void gthree_uniform_set_location (GthreeUniform *uniform,
                                   int location);
+void gthree_uniform_set_needs_update (GthreeUniform *uniform,
+				      gboolean needs_update);
 void gthree_uniform_set_float (GthreeUniform *uniform,
                                double value);
 void gthree_uniform_set_int (GthreeUniform *uniform,

@@ -8,6 +8,7 @@ struct _GthreeUniform {
   GQuark name;
   GthreeUniformType type;
   gint location;
+  gboolean needs_update;
   union {
     float floats[4];
     int ints[4];
@@ -156,6 +157,7 @@ gthree_uniform_newq (GQuark name, GthreeUniformType type)
   uniform->name = name;
   uniform->type = type;
   uniform->location = 0;
+  uniform->needs_update = TRUE;
 
   return uniform;
 }
@@ -231,6 +233,13 @@ gthree_uniform_set_location (GthreeUniform *uniform,
                              int location)
 {
   uniform->location = location;
+}
+
+void
+gthree_uniform_set_needs_update (GthreeUniform *uniform,
+				 gboolean needs_update)
+{
+  uniform->needs_update = needs_update;
 }
 
 static GthreeUniform *
@@ -357,7 +366,9 @@ gthree_uniform_load (GthreeUniform *uniform,
   if (uniform->location == -1)
     return;
 
-  // TODO: Handle needsUpdate for some types?
+  if (!uniform->needs_update)
+    return;
+  
   switch (uniform->type)
     {
     case GTHREE_UNIFORM_TYPE_INT:
