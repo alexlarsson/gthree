@@ -204,7 +204,7 @@ gthree_uniform_free (GthreeUniform *uniform)
         g_array_free (uniform->value.array, TRUE);
       break;
     case GTHREE_UNIFORM_TYPE_TEXTURE:
-      g_object_unref (uniform->value.texture);
+      g_clear_object (&uniform->value.texture);
       break;
     case GTHREE_UNIFORM_TYPE_TEXTURE_ARRAY:
       if (uniform->value.ptr_array)
@@ -549,6 +549,11 @@ gthree_uniforms_new_from_definitions (GthreeUniformsDefinition *element, int len
             case GTHREE_UNIFORM_TYPE_VECTOR2:
               uniform->value.floats[0] = ((float *)value)[0];
               uniform->value.floats[1] = ((float *)value)[1];
+              break;
+            case GTHREE_UNIFORM_TYPE_VECTOR3:
+              uniform->value.floats[0] = ((float *)value)[0];
+              uniform->value.floats[1] = ((float *)value)[1];
+              uniform->value.floats[2] = ((float *)value)[2];
               break;
             case GTHREE_UNIFORM_TYPE_VECTOR4:
               uniform->value.floats[0] = ((float *)value)[0];
