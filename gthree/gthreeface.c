@@ -24,9 +24,23 @@ gthree_face_new (int a, int b, int c)
 
 void
 gthree_face_set_normal (GthreeFace *face,
-                        graphene_vec3_t *normal)
+                        const graphene_vec3_t *normal)
 {
   face->normal = *normal;
+}
+
+void
+gthree_face_set_vertex_normals  (GthreeFace      *face,
+                                 const graphene_vec3_t *normal_a,
+                                 const graphene_vec3_t *normal_b,
+                                 const graphene_vec3_t *normal_c)
+{
+  if (face->vertex_normals == NULL)
+    face->vertex_normals = g_new (graphene_vec3_t, 3);
+
+  face->vertex_normals[0] = *normal_a;
+  face->vertex_normals[1] = *normal_b;
+  face->vertex_normals[2] = *normal_c;
 }
 
 void
@@ -74,6 +88,7 @@ gthree_face_finalize (GObject *obj)
   GthreeFace *face = GTHREE_FACE (obj);
 
   g_clear_pointer (&face->vertex_colors, g_free);
+  g_clear_pointer (&face->vertex_normals, g_free);
 
   G_OBJECT_CLASS (gthree_face_parent_class)->finalize (obj);
 }

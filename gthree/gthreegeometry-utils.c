@@ -89,8 +89,7 @@ build_plane (GthreeGeometry *geometry,
 
           face = gthree_face_new (a + offset, b + offset, d + offset);
           gthree_face_set_normal (face, &normalv);
-          // TODO
-          //face.vertexNormals.push( normal.clone(), normal.clone(), normal.clone() );
+          gthree_face_set_vertex_normals (face, &normalv, &normalv, &normalv);
           gthree_face_set_material_index (face, materialIndex);
 
           /* Take ownership */
@@ -102,8 +101,7 @@ build_plane (GthreeGeometry *geometry,
 
           face = gthree_face_new (b + offset, c + offset, d + offset);
           gthree_face_set_normal (face, &normalv);
-          // TODO
-          //face.vertexNormals.push( normal.clone(), normal.clone(), normal.clone() );
+          gthree_face_set_vertex_normals (face, &normalv, &normalv, &normalv);
           gthree_face_set_material_index (face, materialIndex);
 
           gthree_geometry_add_face (geometry, face);

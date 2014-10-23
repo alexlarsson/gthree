@@ -2,7 +2,7 @@
 #include <epoxy/gl.h>
 
 #include "gthreegeometry.h"
-#include "gthreegeometry.h"
+#include "gthreeprivate.h"
 
 typedef struct {
   GArray *vertices; /* graphene_vec3_t */
@@ -177,6 +177,33 @@ gthree_geometry_get_bounding_sphere (GthreeGeometry *geometry)
     }
 
   return &priv->bounding_sphere;
+}
+
+void
+gthree_geometry_compute_face_normals (GthreeGeometry *geometry)
+{
+  graphene_vec3_t cb, ab;
+  const graphene_vec3_t *vertices;
+  const graphene_vec3_t *va, *vb, *vc;
+  int i, n_faces;
+
+  n_faces = gthree_geometry_get_n_faces (geometry);
+  vertices = gthree_geometry_get_vertices (geometry);
+  for (i = 0; i < n_faces; i++)
+    {
+      GthreeFace *face = gthree_geometry_get_face (geometry, i);
+
+      va = &vertices[face->a];
+      vb = &vertices[face->b];
+      vc = &vertices[face->c];
+
+      graphene_vec3_subtract (vc, vb, &cb);
+      graphene_vec3_subtract (va, vb, &ab);
+      graphene_vec3_cross (&cb, &ab, &cb);
+      graphene_vec3_normalize (&cb, &cb);
+
+      gthree_face_set_normal (face, &cb);
+    }
 }
 
 static void

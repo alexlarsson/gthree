@@ -32,7 +32,11 @@ GthreeFace *gthree_face_new                (int              a,
                                             int              b,
                                             int              c);
 void        gthree_face_set_normal         (GthreeFace      *face,
-                                            graphene_vec3_t *normal);
+                                            const graphene_vec3_t *normal);
+void        gthree_face_set_vertex_normals (GthreeFace      *face,
+                                            const graphene_vec3_t *normal_a,
+                                            const graphene_vec3_t *normal_b,
+                                            const graphene_vec3_t *normal_c);
 void        gthree_face_set_color          (GthreeFace      *face,
                                             const GdkRGBA   *color);
 void        gthree_face_set_vertex_colors  (GthreeFace      *face,

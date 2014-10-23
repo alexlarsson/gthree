@@ -55,8 +55,8 @@ void                   gthree_geometry_set_uv_n       (GthreeGeometry  *geometry
                                                        int              index,
                                                        graphene_vec2_t *v);
 
-const GthreeSphere *   gthree_geometry_get_bounding_sphere (GthreeGeometry *geometry);
-
+const GthreeSphere *gthree_geometry_get_bounding_sphere  (GthreeGeometry *geometry);
+void                gthree_geometry_compute_face_normals (GthreeGeometry *geometry);
 
 gboolean gthree_geometry_make_groups (GthreeGeometry *geometry,
                                       gboolean use_face_material,
