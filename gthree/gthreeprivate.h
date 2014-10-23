@@ -55,5 +55,4 @@ void gthree_texture_load (GthreeTexture *texture, int slot);
 void   gthree_light_setup (GthreeLight       *light,
 			   GthreeLightSetup *light_setup);
 
-
 #endif /* __GTHREE_PRIVATE_H__ */

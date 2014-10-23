@@ -203,14 +203,14 @@ gthree_uniform_free (GthreeUniform *uniform)
     case GTHREE_UNIFORM_TYPE_MATRIX3_ARRAY:
     case GTHREE_UNIFORM_TYPE_MATRIX4_ARRAY:
       if (uniform->value.array)
-        g_array_free (uniform->value.array, TRUE);
+        g_array_unref (uniform->value.array);
       break;
     case GTHREE_UNIFORM_TYPE_TEXTURE:
       g_clear_object (&uniform->value.texture);
       break;
     case GTHREE_UNIFORM_TYPE_TEXTURE_ARRAY:
       if (uniform->value.ptr_array)
-        g_ptr_array_free (uniform->value.ptr_array, TRUE);
+        g_ptr_array_unref (uniform->value.ptr_array);
       break;
     case GTHREE_UNIFORM_TYPE_INT:
     case GTHREE_UNIFORM_TYPE_FLOAT:
@@ -314,6 +314,35 @@ gthree_uniform_set_float (GthreeUniform *uniform,
 {
   g_return_if_fail (uniform->type == GTHREE_UNIFORM_TYPE_FLOAT);
   uniform->value.floats[0] = val;
+}
+
+static void
+set_array (GthreeUniform *uniform, GArray *array)
+{
+  if (array)
+    g_array_ref (array);
+  if (uniform->value.array)
+    g_array_unref (uniform->value.array);
+
+  uniform->value.array = array;
+}
+
+void
+gthree_uniform_set_float_array (GthreeUniform *uniform,
+				GArray *array)
+{
+ g_return_if_fail (uniform->type == GTHREE_UNIFORM_TYPE_FLOAT_ARRAY);
+
+ set_array (uniform, array);
+}
+
+void
+gthree_uniform_set_float3_array (GthreeUniform *uniform,
+				 GArray *array)
+{
+ g_return_if_fail (uniform->type == GTHREE_UNIFORM_TYPE_FLOAT3_ARRAY);
+
+ set_array (uniform, array);
 }
 
 void

@@ -18,6 +18,7 @@ init_scene (void)
   GthreeBasicMaterial *material_wireframe, *material_light;
   GthreeLambertMaterial *material_lambert;
   GthreeAmbientLight *ambient_light;
+  GthreePointLight *point_light;
   GthreeMesh *floor;
   int i;
   GdkRGBA grey = {0.4, 0.4, 0.4, 1.0};
@@ -72,6 +73,9 @@ init_scene (void)
       objects = g_list_prepend (objects, sphere);
     }
 
+  ambient_light = gthree_ambient_light_new (&dark_grey);
+  gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));
+
   geometry_light = gthree_geometry_new_sphere (4, 8, 8);
   material_light = gthree_basic_material_new ();
   gthree_basic_material_set_color (material_light, &white);
@@ -79,9 +83,8 @@ init_scene (void)
   particle_light = gthree_mesh_new (geometry_light, GTHREE_MATERIAL (material_light));
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (particle_light));
 
-  ambient_light = gthree_ambient_light_new (&dark_grey);
-  gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));
-
+  point_light = gthree_point_light_new (&white, 1, 0);
+  gthree_object_add_child (GTHREE_OBJECT (particle_light), GTHREE_OBJECT (point_light));
   
   return scene;
 }

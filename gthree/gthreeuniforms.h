@@ -86,6 +86,10 @@ void gthree_uniform_set_needs_update (GthreeUniform *uniform,
 				      gboolean needs_update);
 void gthree_uniform_set_float (GthreeUniform *uniform,
                                double value);
+void gthree_uniform_set_float_array (GthreeUniform *uniform,
+				     GArray *array);
+void gthree_uniform_set_float3_array (GthreeUniform *uniform,
+				      GArray *array);
 void gthree_uniform_set_int (GthreeUniform *uniform,
                              int value);
 void gthree_uniform_set_vec4 (GthreeUniform *uniform,

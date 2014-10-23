@@ -770,21 +770,23 @@ static void
 setup_lights (GthreeRenderer *renderer, GList *lights)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  GthreeLightSetup *setup = &priv->light_setup;
   GList *l;
+  int i;
 
-  priv->light_setup.ambient.red = 0;
-  priv->light_setup.ambient.green = 0;
-  priv->light_setup.ambient.blue = 0;
-  priv->light_setup.ambient.alpha = 1;
+  setup->ambient.red = 0;
+  setup->ambient.green = 0;
+  setup->ambient.blue = 0;
+  setup->ambient.alpha = 1;
 
-  priv->light_setup.dir_len = 0;
-  priv->light_setup.dir_count = 0;
-  priv->light_setup.point_len = 0;
-  priv->light_setup.point_count = 0;
-  priv->light_setup.spot_len = 0;
-  priv->light_setup.spot_count = 0;
-  priv->light_setup.hemi_len = 0;
-  priv->light_setup.hemi_count = 0;
+  setup->dir_len = 0;
+  setup->dir_count = 0;
+  setup->point_len = 0;
+  setup->point_count = 0;
+  setup->spot_len = 0;
+  setup->spot_count = 0;
+  setup->hemi_len = 0;
+  setup->hemi_count = 0;
 
   for (l = lights; l != NULL; l = l->next)
     {
@@ -820,29 +822,6 @@ setup_lights (GthreeRenderer *renderer, GList *lights)
 	    setColorLinear( dirColors, dirOffset, color, intensity );
 
 	  dirLength += 1;
-	}
-      else if ( light instanceof THREE.PointLight )
-	{
-	  pointCount += 1;
-
-	  if ( ! light.visible ) continue;
-
-	  pointOffset = pointLength * 3;
-
-	  if ( _this.gammaInput )
-	    setColorGamma( pointColors, pointOffset, color, intensity * intensity );
-	  else
-	    setColorLinear( pointColors, pointOffset, color, intensity );
-    
-	  _vector3.setFromMatrixPosition( light.matrixWorld );
-
-	  pointPositions[ pointOffset ]     = _vector3.x;
-	  pointPositions[ pointOffset + 1 ] = _vector3.y;
-	  pointPositions[ pointOffset + 2 ] = _vector3.z;
-
-	  pointDistances[ pointLength ] = distance;
-
-	  pointLength += 1;
 	}
       else if ( light instanceof THREE.SpotLight )
 	{
@@ -918,18 +897,25 @@ setup_lights (GthreeRenderer *renderer, GList *lights)
 
   // null eventual remains from removed lights
   // (this is to avoid if in shader)
-#if TODO
-  for ( l = dirLength * 3, ll = MAX( dirColors.length, dirCount * 3 ); l < ll; l ++ )
-    dirColors[ l ] = 0.0;
-  for ( l = pointLength * 3, ll = MAX( pointColors.length, pointCount * 3 ); l < ll; l ++ )
-    pointColors[ l ] = 0.0;
-  for ( l = spotLength * 3, ll = MAX( spotColors.length, spotCount * 3 ); l < ll; l ++ )
-    spotColors[ l ] = 0.0;
-  for ( l = hemiLength * 3, ll = MAX( hemiSkyColors.length, hemiCount * 3 ); l < ll; l ++ )
-    hemiSkyColors[ l ] = 0.0;
-  for ( l = hemiLength * 3, ll = MAX( hemiGroundColors.length, hemiCount * 3 ); l < ll; l ++ )
-    hemiGroundColors[ l ] = 0.0;
-#endif
+  g_array_set_size (setup->dir_colors, MAX(setup->dir_colors->len, setup->dir_count * 3));
+  for (i = setup->dir_len * 3; i < setup->dir_colors->len; i++)
+    g_array_index (setup->dir_colors, float, i) = 0.0;
+	 
+  g_array_set_size (setup->point_colors, MAX(setup->point_colors->len, setup->point_count * 3));
+  for (i = setup->point_len * 3; i < setup->point_colors->len; i++)
+    g_array_index (setup->point_colors, float, i) = 0.0;
+	 
+  g_array_set_size (setup->spot_colors, MAX(setup->spot_colors->len, setup->spot_count * 3));
+  for (i = setup->spot_len * 3; i < setup->spot_colors->len; i++)
+    g_array_index (setup->spot_colors, float, i) = 0.0;
+
+  g_array_set_size (setup->hemi_sky_colors, MAX(setup->hemi_sky_colors->len, setup->hemi_count * 3));
+  for (i = setup->hemi_len * 3; i < setup->hemi_sky_colors->len; i++)
+    g_array_index (setup->hemi_sky_colors, float, i) = 0.0;
+
+  g_array_set_size (setup->hemi_ground_colors, MAX(setup->hemi_ground_colors->len, setup->hemi_count * 3));
+  for (i = setup->hemi_len * 3; i < setup->hemi_ground_colors->len; i++)
+    g_array_index (setup->hemi_ground_colors, float, i) = 0.0;
 }
 
 static void
@@ -941,13 +927,22 @@ refresh_uniforms_lights (GthreeUniforms *uniforms, GthreeLightSetup *lights_setu
   if (uni != NULL)
     gthree_uniform_set_color (uni, &lights_setup->ambient);
 
+  uni = gthree_uniforms_lookup_from_string (uniforms, "pointLightColor");
+  if (uni != NULL)
+    gthree_uniform_set_float3_array (uni, lights_setup->point_colors);
+
+  uni = gthree_uniforms_lookup_from_string (uniforms, "pointLightPosition");
+  if (uni != NULL)
+    gthree_uniform_set_float3_array (uni, lights_setup->point_positions);
+
+  uni = gthree_uniforms_lookup_from_string (uniforms, "pointLightDistance");
+  if (uni != NULL)
+    gthree_uniform_set_float_array (uni, lights_setup->point_distances);
+  
 #ifdef TODO
   uniforms.directionalLightColor.value = lights_setup->directional.colors;
   uniforms.directionalLightDirection.value = lights_setup->directional.positions;
 
-  uniforms.pointLightColor.value = lights_setup->point.colors;
-  uniforms.pointLightPosition.value = lights_setup->point.positions;
-  uniforms.pointLightDistance.value = lights_setup->point.distances;
 
   uniforms.spotLightColor.value = lights_setup->spot.colors;
   uniforms.spotLightPosition.value = lights_setup->spot.positions;
