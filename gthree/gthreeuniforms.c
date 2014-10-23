@@ -489,7 +489,7 @@ static GthreeUniformsDefinition fog_lib[] = {
 
 static GthreeUniforms *lights;
 static GthreeUniformsDefinition lights_lib[] = {
-  {"ambientLightColor", GTHREE_UNIFORM_TYPE_FLOAT3_ARRAY, NULL},
+  {"ambientLightColor", GTHREE_UNIFORM_TYPE_COLOR, NULL},
 
   {"directionalLightDirection", GTHREE_UNIFORM_TYPE_FLOAT3_ARRAY, NULL},
   {"directionalLightColor", GTHREE_UNIFORM_TYPE_FLOAT3_ARRAY, NULL},

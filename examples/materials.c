@@ -22,7 +22,7 @@ init_scene (void)
   int i;
   GdkRGBA grey = {0.4, 0.4, 0.4, 1.0};
   GdkRGBA white = {1, 1, 1, 1.0};
-  GdkRGBA red = {1, 0, 0, 1.0};
+  GdkRGBA dark_grey = {0.1, 0.1, 0.1, 1.0};
   graphene_point3d_t pos = { 0, 0, 0};
 
   scene = gthree_scene_new ();
@@ -79,7 +79,7 @@ init_scene (void)
   particle_light = gthree_mesh_new (geometry_light, GTHREE_MATERIAL (material_light));
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (particle_light));
 
-  ambient_light = gthree_ambient_light_new (&red);
+  ambient_light = gthree_ambient_light_new (&dark_grey);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));
 
   

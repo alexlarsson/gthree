@@ -81,7 +81,7 @@ gthree_light_get_is_visible (GthreeLight *light)
 {
   GthreeLightPrivate *priv = gthree_light_get_instance_private (light);
 
-  return priv->only_shadow;
+  return priv->visible;
 }
 
 void

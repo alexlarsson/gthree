@@ -185,6 +185,12 @@ gthree_lambert_material_needs_view_matrix (GthreeMaterial *material)
 }
 
 static gboolean
+gthree_lambert_material_needs_lights (GthreeMaterial *material)
+{
+  return TRUE;
+}
+
+static gboolean
 gthree_lambert_material_needs_uv (GthreeMaterial *material)
 {
   GthreeLambertMaterial *lambert = GTHREE_LAMBERT_MATERIAL (material);
@@ -204,7 +210,13 @@ gthree_lambert_material_needs_uv (GthreeMaterial *material)
 static GthreeShadingType
 gthree_lambert_material_needs_normals (GthreeMaterial *material)
 {
-  return GTHREE_SHADING_NONE;
+  GthreeLambertMaterial *lambert = GTHREE_LAMBERT_MATERIAL (material);
+  GthreeLambertMaterialPrivate *priv = gthree_lambert_material_get_instance_private (lambert);
+
+  if (priv->shading_type == GTHREE_SHADING_SMOOTH)
+    return GTHREE_SHADING_SMOOTH;
+
+  return GTHREE_SHADING_FLAT;
 }
 
 static GthreeColorType
@@ -224,6 +236,7 @@ gthree_lambert_material_class_init (GthreeLambertMaterialClass *klass)
   GTHREE_MATERIAL_CLASS(klass)->set_params = gthree_lambert_material_real_set_params;
   GTHREE_MATERIAL_CLASS(klass)->set_uniforms = gthree_lambert_material_real_set_uniforms;
   GTHREE_MATERIAL_CLASS(klass)->needs_view_matrix = gthree_lambert_material_needs_view_matrix;
+  GTHREE_MATERIAL_CLASS(klass)->needs_lights = gthree_lambert_material_needs_lights;
   GTHREE_MATERIAL_CLASS(klass)->needs_uv = gthree_lambert_material_needs_uv;
   GTHREE_MATERIAL_CLASS(klass)->needs_normals = gthree_lambert_material_needs_normals;
   GTHREE_MATERIAL_CLASS(klass)->needs_colors = gthree_lambert_material_needs_colors;

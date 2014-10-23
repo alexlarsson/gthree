@@ -351,12 +351,13 @@ set_mesh_buffers (GthreeMesh *mesh,
         {
           int face_index = g_array_index (face_indexes, int, i);
           GthreeFace *face = gthree_geometry_get_face (geometry, face_index);
+	  int j;
 
           if (face->vertex_normals != NULL && needs_smooth_normals)
             {
-              for ( i = 0; i < 3; i ++ )
+              for (j = 0; j < 3; j++)
                 {
-                  graphene_vec3_t *vn = &face->vertex_normals[i];
+                  graphene_vec3_t *vn = &face->vertex_normals[j];
 
                   group->normal_array[offset_normal    ] = graphene_vec3_get_x (vn);
                   group->normal_array[offset_normal + 1] = graphene_vec3_get_y (vn);
@@ -367,7 +368,7 @@ set_mesh_buffers (GthreeMesh *mesh,
             }
           else
             {
-              for ( i = 0; i < 3; i ++ )
+              for (j = 0; j < 3; j ++)
                 {
                   graphene_vec3_t *vn = &face->normal;
 
