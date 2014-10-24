@@ -3,6 +3,17 @@
 
 #include "gthreearea.h"
 #include "gthreerenderer.h"
+#include "gthreemarshalers.h"
+
+enum
+{
+  RESIZE,
+
+  LAST_SIGNAL
+};
+
+static guint area_signals[LAST_SIGNAL] = { 0, };
+
 
 typedef struct {
   GthreeRenderer *renderer;
@@ -56,14 +67,33 @@ gthree_area_finalize (GObject *obj)
   G_OBJECT_CLASS (gthree_area_parent_class)->finalize (obj);
 }
 
+/* new window size or realize */
+static void
+gthree_area_real_resize (GthreeArea *area, int width, int height)
+{
+  GthreeAreaPrivate *priv = gthree_area_get_instance_private (area);
+
+  gthree_renderer_set_size (priv->renderer, width, height);
+}
+
 static void
 gthree_area_class_init (GthreeAreaClass *klass)
 {
+  klass->resize = gthree_area_real_resize;
   GTK_GL_AREA_CLASS (klass)->render = gthree_area_render;
   GTK_WIDGET_CLASS (klass)->realize = gthree_area_realize;
   GTK_WIDGET_CLASS (klass)->unrealize = gthree_area_unrealize;
   GTK_WIDGET_CLASS (klass)->size_allocate = gthree_area_size_allocate;
   G_OBJECT_CLASS (klass)->finalize = gthree_area_finalize;
+
+  area_signals[RESIZE] =
+    g_signal_new ("resize",
+                  G_TYPE_FROM_CLASS (klass),
+                  G_SIGNAL_RUN_LAST,
+                  G_STRUCT_OFFSET (GthreeAreaClass, resize),
+                  NULL, NULL,
+                  _gthree_marshal_VOID__INT_INT,
+                  G_TYPE_NONE, 2, G_TYPE_INT, G_TYPE_INT);
 }
 
 static gboolean
@@ -81,15 +111,6 @@ gthree_area_render (GtkGLArea    *gl_area,
   return TRUE;
 }
 
-/* new window size or exposure */
-static void
-reshape (GthreeArea *area, int width, int height)
-{
-  GthreeAreaPrivate *priv = gthree_area_get_instance_private (area);
-
-  gthree_renderer_set_size (priv->renderer, width, height);
-}
-
 static void
 gthree_area_size_allocate (GtkWidget     *widget,
                            GtkAllocation *allocation)
@@ -101,7 +122,7 @@ gthree_area_size_allocate (GtkWidget     *widget,
   if (gtk_widget_get_realized (widget))
     {
       gtk_gl_area_make_current (glarea);
-      reshape (GTHREE_AREA (glarea), allocation->width, allocation->height);
+      g_signal_emit (glarea, area_signals[RESIZE], 0, allocation->width, allocation->height, NULL);
     }
 }
 
@@ -120,7 +141,7 @@ gthree_area_realize (GtkWidget *widget)
   priv->renderer = gthree_renderer_new ();
 
   gtk_widget_get_allocation (widget, &allocation);
-  reshape (area, allocation.width, allocation.height);
+  g_signal_emit (glarea, area_signals[RESIZE], 0, allocation.width, allocation.height, NULL);
 }
 
 static void

@@ -7,6 +7,14 @@ AM_PROG_CC_C_O
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 
+m4_define([glib_required_version], [2.42.0])
+
+AM_PATH_GLIB_2_0(glib_required_version, :,
+  AC_MSG_ERROR([
+*** GLIB glib_required_version or better is required. The latest version of
+*** GLIB is always available from ftp://ftp.gtk.org/pub/gtk/.]),
+  gobject gmodule-no-export)
+
 AC_CONFIG_SRCDIR([gthree/gthreeobject.c])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])

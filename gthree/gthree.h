@@ -4,6 +4,7 @@
 #define __GTHREE_H_INSIDE__
 
 #include <gthree/gthreetypes.h>
+#include <gthree/gthreetypebuiltins.h>
 #include <gthree/gthreeenums.h>
 #include <gthree/gthreearea.h>
 #include <gthree/gthreebasicmaterial.h>
