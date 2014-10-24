@@ -62,6 +62,7 @@ init_scene (void)
   GthreeGeometry *floor_geometry, *geometry_smooth, *geometry_light, *geometry_flat, *geometry_pieces;
   GthreeBasicMaterial *material_wireframe, *material_light, *material_basic;
   GthreeMultiMaterial *multi_material;
+  GthreeNormalMaterial *material_normal;
   GthreeLambertMaterial *material_lambert;
   GthreePhongMaterial *material_phong;
   GthreeAmbientLight *ambient_light;
@@ -111,11 +112,9 @@ init_scene (void)
   geometries[n_materials] = geometry_flat;
   materials[n_materials++] = GTHREE_MATERIAL (material_phong);
 
-  /* TODO:
   material_normal = gthree_normal_material_new ();
-  geometries[n_materials] = geometry_smooth;
-  materials[n_materials++] = GTHREE_MATERIAL (material_phong);
-  */
+  geometries[n_materials] = geometry_flat;
+  materials[n_materials++] = GTHREE_MATERIAL (material_normal);
 
   material_basic = gthree_basic_material_new ();
   gthree_basic_material_set_color (material_basic, &orange);
@@ -151,9 +150,11 @@ init_scene (void)
   geometries[n_materials] = geometry_smooth;
   materials[n_materials++] = GTHREE_MATERIAL (material_phong);
 
-#if TODO
-  materials.push( new THREE.MeshNormalMaterial( { shading: THREE.SmoothShading } ) );
-#endif
+  material_normal = gthree_normal_material_new ();
+  gthree_normal_material_set_shading_type (GTHREE_NORMAL_MATERIAL (material_normal),
+                                          GTHREE_SHADING_SMOOTH);
+  geometries[n_materials] = geometry_smooth;
+  materials[n_materials++] = GTHREE_MATERIAL (material_normal);
 
   material_basic = gthree_basic_material_new ();
   gthree_material_set_is_wireframe (GTHREE_MATERIAL (material_basic), TRUE);
@@ -298,13 +299,19 @@ tick (GtkWidget     *widget,
       gthree_object_set_rotation (object, &rot);
     }
 
-  gtk_hsv_to_rgb (0.54, 1, 0.35 * (0.5 + 0.5 * sin (35 * angle)),
-                  &color.red, &color.green, &color.blue);
-  gthree_lambert_material_set_emissive_color (GTHREE_LAMBERT_MATERIAL (materials[anim_material1]), &color);
+  if (anim_material1)
+    {
+      gtk_hsv_to_rgb (0.54, 1, 0.35 * (0.5 + 0.5 * sin (35 * angle)),
+                      &color.red, &color.green, &color.blue);
+      gthree_lambert_material_set_emissive_color (GTHREE_LAMBERT_MATERIAL (materials[anim_material1]), &color);
+    }
 
-  gtk_hsv_to_rgb (0.04, 1, 0.35 * (0.5 + 0.5 * cos (35 * angle)),
-                  &color.red, &color.green, &color.blue);
-  gthree_phong_material_set_emissive_color (GTHREE_PHONG_MATERIAL (materials[anim_material2]), &color);
+  if (anim_material2)
+    {
+      gtk_hsv_to_rgb (0.04, 1, 0.35 * (0.5 + 0.5 * cos (35 * angle)),
+                      &color.red, &color.green, &color.blue);
+      gthree_phong_material_set_emissive_color (GTHREE_PHONG_MATERIAL (materials[anim_material2]), &color);
+    }
 
   gthree_object_set_position (GTHREE_OBJECT (particle_light),
                               graphene_point3d_init (&pos,

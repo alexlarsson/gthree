@@ -1186,10 +1186,6 @@ set_program (GthreeRenderer *renderer,
           m_uniforms.mFar.value = camera.far;
           m_uniforms.opacity.value = material.opacity;
         }
-      else if ( material instanceof THREE.MeshNormalMaterial )
-        {
-          m_uniforms.opacity.value = material.opacity;
-        }
 
       if ( object.receiveShadow && ! material._shadowPass )
         {

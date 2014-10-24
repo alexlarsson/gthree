@@ -1238,9 +1238,9 @@ gthree_shader_init_libs ()
   normal = gthree_shader_new_from_definitions (normal_uniform_libs,
 					       normal_uniforms, G_N_ELEMENTS (normal_uniforms),
 					       normal_vertex_shader, normal_fragment_shader);
-  normal = gthree_shader_new_from_definitions (normalmap_uniform_libs,
-					       normalmap_uniforms, G_N_ELEMENTS (normalmap_uniforms),
-					       normalmap_vertex_shader, normalmap_fragment_shader);
+  normalmap = gthree_shader_new_from_definitions (normalmap_uniform_libs,
+                                                  normalmap_uniforms, G_N_ELEMENTS (normalmap_uniforms),
+                                                  normalmap_vertex_shader, normalmap_fragment_shader);
   cube = gthree_shader_new_from_definitions (cube_uniform_libs,
 					     cube_uniforms, G_N_ELEMENTS (cube_uniforms),
 					     cube_vertex_shader, cube_fragment_shader);
