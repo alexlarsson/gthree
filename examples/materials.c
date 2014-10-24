@@ -42,30 +42,30 @@ init_scene (void)
   material_wireframe = gthree_basic_material_new ();
   gthree_material_set_is_wireframe (GTHREE_MATERIAL (material_wireframe), TRUE);
   gthree_basic_material_set_color (material_wireframe, &grey);
-    materials[n_materials++] = GTHREE_MATERIAL (material_wireframe);
-  
+  materials[n_materials++] = GTHREE_MATERIAL (material_wireframe);
+
   material_lambert = gthree_lambert_material_new ();
   gthree_lambert_material_set_color (material_lambert, &white);
   gthree_lambert_material_set_shading_type (material_lambert,
-					    GTHREE_SHADING_FLAT);
+                                            GTHREE_SHADING_FLAT);
   materials[n_materials++] = GTHREE_MATERIAL (material_lambert);
 
   material_lambert = gthree_lambert_material_new ();
   gthree_lambert_material_set_color (material_lambert, &white);
   gthree_lambert_material_set_shading_type (material_lambert,
-					    GTHREE_SHADING_SMOOTH);
+                                            GTHREE_SHADING_SMOOTH);
   materials[n_materials++] = GTHREE_MATERIAL (material_lambert);
 
   material_phong = gthree_phong_material_new ();
   gthree_phong_material_set_color (material_phong, &white);
   gthree_phong_material_set_shading_type (material_phong,
-					  GTHREE_SHADING_FLAT);
+                                          GTHREE_SHADING_FLAT);
   materials[n_materials++] = GTHREE_MATERIAL (material_phong);
 
   material_phong = gthree_phong_material_new ();
   gthree_phong_material_set_color (material_phong, &white);
   gthree_phong_material_set_shading_type (material_phong,
-					  GTHREE_SHADING_SMOOTH);
+                                          GTHREE_SHADING_SMOOTH);
   materials[n_materials++] = GTHREE_MATERIAL (material_phong);
 
   floor_geometry = gthree_geometry_new_box (1000, 10, 1000,
@@ -107,21 +107,19 @@ init_scene (void)
   geometry_light = gthree_geometry_new_sphere (4, 8, 8);
   material_light = gthree_basic_material_new ();
   gthree_basic_material_set_color (material_light, &white);
-  
+
   particle_light = gthree_mesh_new (geometry_light, GTHREE_MATERIAL (material_light));
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (particle_light));
 
   point_light = gthree_point_light_new (&red, 0.25, 0);
   gthree_object_add_child (GTHREE_OBJECT (particle_light), GTHREE_OBJECT (point_light));
-  
+
   directional_light = gthree_directional_light_new (&green, 0.125);
   gthree_object_set_position (GTHREE_OBJECT (directional_light),
-			      graphene_point3d_init (&pos,
-						     1,
-						     1,
-						     -1));
+                              graphene_point3d_init (&pos,
+                                                     1, 1, -1));
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (directional_light));
-  
+
   return scene;
 }
 
@@ -141,9 +139,9 @@ tick (GtkWidget     *widget,
 
   gthree_object_set_position (GTHREE_OBJECT (camera),
                               graphene_point3d_init (&pos,
-                                                     cos (angle) * 1200,
+                                                     cos (angle) * 1000,
                                                      200,
-                                                     sin (angle) * 1200));
+                                                     sin (angle) * 1000));
   if (1)
     gthree_object_set_rotation (GTHREE_OBJECT (camera),
                                 graphene_point3d_init (&pos, 0, G_PI/2 - angle, 0));
@@ -172,6 +170,14 @@ tick (GtkWidget     *widget,
   return G_SOURCE_CONTINUE;
 }
 
+static void
+resize_area (GthreeArea *area,
+             gint width,
+             gint height)
+{
+  gthree_perspective_camera_set_aspect (camera, (float)width / (float)(height));
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -197,6 +203,7 @@ main (int argc, char *argv[])
 
   init_scene ();
   area = gthree_area_new (scene, GTHREE_CAMERA (camera));
+  g_signal_connect (area, "resize", G_CALLBACK (resize_area), NULL);
   gtk_widget_set_hexpand (area, TRUE);
   gtk_widget_set_vexpand (area, TRUE);
   gtk_container_add (GTK_CONTAINER (hbox), area);

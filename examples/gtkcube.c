@@ -245,6 +245,15 @@ tick (GtkWidget     *widget,
   return G_SOURCE_CONTINUE;
 }
 
+static void
+resize_area (GthreeArea *area,
+             gint width,
+             gint height,
+             GthreePerspectiveCamera *camera)
+{
+  gthree_perspective_camera_set_aspect (camera, (float)width / (float)(height));
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -279,6 +288,7 @@ main (int argc, char *argv[])
                               graphene_point3d_init (&pos, 0, 0, 400));
 
   area = gthree_area_new (scene, GTHREE_CAMERA (camera));
+  g_signal_connect (area, "resize", G_CALLBACK (resize_area), camera);
   gtk_widget_set_hexpand (area, TRUE);
   gtk_widget_set_vexpand (area, TRUE);
   gtk_container_add (GTK_CONTAINER (hbox), area);
