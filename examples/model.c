@@ -94,12 +94,22 @@ init_scene (void)
   marine_geometry = load_model ("marine.js");
 
   marine = gthree_mesh_new (marine_geometry, GTHREE_MATERIAL (material_texture));
+  gthree_object_set_position (GTHREE_OBJECT (marine),
+			      graphene_point3d_init (&pos,
+						     80,
+						     -80,
+						     0));
 
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (marine));
 
   knight_geometry = load_model ("knight.js");
 
   knight = gthree_mesh_new (knight_geometry, GTHREE_MATERIAL (material_phong));
+  gthree_object_set_position (GTHREE_OBJECT (knight),
+			      graphene_point3d_init (&pos,
+						     -80,
+						     -80,
+						     0));
 
   gthree_object_set_scale (GTHREE_OBJECT (knight), &scale);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (knight));
@@ -127,10 +137,7 @@ tick (GtkWidget     *widget,
   static graphene_point3d_t rot2 = { 0, 0, 0};
 
   rot.y += 0.04;
-  rot.z += 0.01;
-
-  rot2.x += 0.01;
-  rot2.z -= 0.03;
+  rot2.y += 0.03;
 
   gthree_object_set_rotation (GTHREE_OBJECT (marine), &rot);
   gthree_object_set_rotation (GTHREE_OBJECT (knight), &rot2);
@@ -180,7 +187,7 @@ main (int argc, char *argv[])
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
 
   gthree_object_set_position (GTHREE_OBJECT (camera),
-                              graphene_point3d_init (&pos, 0, 0, 600));
+                              graphene_point3d_init (&pos, 0, 0, 500));
 
   area = gthree_area_new (scene, GTHREE_CAMERA (camera));
   g_signal_connect (area, "resize", G_CALLBACK (resize_area), camera);
