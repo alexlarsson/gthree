@@ -18,6 +18,7 @@ gthree_public_h_sources = \
 	gthreearea.h \
 	gthreebasicmaterial.h \
 	gthreecamera.h \
+	gthreeperspectivecamera.h \
 	gthreeambientlight.h \
 	gthreedirectionallight.h \
 	gthreepointlight.h \
@@ -65,6 +66,7 @@ gthree_c_sources = \
 	gthreebuffer.c \
 	gthreebuffer.h \
 	gthreecamera.c \
+	gthreeperspectivecamera.c \
 	gthreeambientlight.c \
 	gthreedirectionallight.c \
 	gthreepointlight.c \

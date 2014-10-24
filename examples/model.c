@@ -145,7 +145,7 @@ main (int argc, char *argv[])
 {
   GtkWidget *window, *box, *hbox, *button, *area;
   GthreeScene *scene;
-  GthreeCamera *camera;
+  GthreePerspectiveCamera *camera;
   graphene_point3d_t pos;
 
   gtk_init (&argc, &argv);
@@ -167,13 +167,13 @@ main (int argc, char *argv[])
   gtk_widget_show (hbox);
 
   scene = init_scene ();
-  camera = gthree_camera_new (30, 1, 1, 10000);
+  camera = gthree_perspective_camera_new (30, 1, 1, 10000);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
 
   gthree_object_set_position (GTHREE_OBJECT (camera),
                               graphene_point3d_init (&pos, 0, 0, 600));
 
-  area = gthree_area_new (scene, camera);
+  area = gthree_area_new (scene, GTHREE_CAMERA (camera));
   gtk_widget_set_hexpand (area, TRUE);
   gtk_widget_set_vexpand (area, TRUE);
   gtk_container_add (GTK_CONTAINER (hbox), area);

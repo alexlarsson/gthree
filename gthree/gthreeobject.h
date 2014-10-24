@@ -8,6 +8,7 @@
 #include <gtk/gtk.h>
 #include <graphene.h>
 
+#include <gthree/gthreetypes.h>
 #include <gthree/gthreeenums.h>
 #include <gthree/gthreeutils.h>
 

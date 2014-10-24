@@ -6,7 +6,7 @@
 #include <gthree/gthree.h>
 
 GthreeScene *scene;
-GthreeCamera *camera;
+GthreePerspectiveCamera *camera;
 GthreeMesh *particle_light;
 
 GList *objects;
@@ -34,7 +34,7 @@ init_scene (void)
 
   scene = gthree_scene_new ();
 
-  camera = gthree_camera_new (45, 1, 1, 2000);
+  camera = gthree_perspective_camera_new (45, 1, 1, 2000);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
   gthree_object_set_position (GTHREE_OBJECT (camera),
                               graphene_point3d_init (&pos, 0, 200, 2000));
@@ -196,7 +196,7 @@ main (int argc, char *argv[])
   gtk_widget_show (hbox);
 
   init_scene ();
-  area = gthree_area_new (scene, camera);
+  area = gthree_area_new (scene, GTHREE_CAMERA (camera));
   gtk_widget_set_hexpand (area, TRUE);
   gtk_widget_set_vexpand (area, TRUE);
   gtk_container_add (GTK_CONTAINER (hbox), area);

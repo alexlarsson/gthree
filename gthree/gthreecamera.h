@@ -19,9 +19,9 @@ G_BEGIN_DECLS
 #define GTHREE_IS_CAMERA(inst)  (G_TYPE_CHECK_INSTANCE_TYPE ((inst),    \
                                                              GTHREE_TYPE_CAMERA))
 
-typedef struct {
+struct _GthreeCamera {
   GthreeObject parent;
-} GthreeCamera;
+};
 
 typedef struct {
   GthreeObjectClass parent_class;
@@ -29,8 +29,6 @@ typedef struct {
 } GthreeCameraClass;
 
 GType gthree_camera_get_type (void) G_GNUC_CONST;
-
-GthreeCamera *gthree_camera_new (float fov, float aspect, float near, float far);
 
 void                     gthree_camera_update_matrix            (GthreeCamera      *camera);
 void                     gthree_camera_get_proj_screen_matrix   (GthreeCamera      *camera,

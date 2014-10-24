@@ -1,6 +1,8 @@
 #ifndef __GTHREE_TYPES_H__
 #define __GTHREE_TYPES_H__
 
+typedef struct _GthreeCamera GthreeCamera;
+typedef struct _GthreePerspectiveCamera GthreePerspectiveCamera;
 typedef struct _GthreeRenderer GthreeRenderer;
 typedef struct _GthreeMaterial GthreeMaterial;
 typedef struct _GthreeMultiMaterial GthreeMultiMaterial;

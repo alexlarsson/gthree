@@ -17,32 +17,6 @@ typedef struct {
 
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeCamera, gthree_camera, GTHREE_TYPE_OBJECT);
 
-GthreeCamera *
-gthree_camera_new (float fov, float aspect, float near, float far)
-{
-  GthreeCamera *camera;
-  GthreeCameraPrivate *priv;
-
-  // TODO: properties
-  camera = g_object_new (gthree_camera_get_type (),
-                         NULL);
-
-  priv = gthree_camera_get_instance_private (camera);
-
-  priv->fov = fov;
-  priv->aspect = aspect;
-  priv->near = near;
-  priv->far = far;
-
-  graphene_matrix_init_perspective (&priv->projection_matrix,
-                                    priv->fov = fov,
-                                    priv->aspect = aspect,
-                                    priv->near = near,
-                                    priv->far = far);
-
-  return camera;
-}
-
 static void
 gthree_camera_init (GthreeCamera *camera)
 {
@@ -86,6 +60,14 @@ gthree_camera_get_proj_screen_matrix (GthreeCamera *camera,
 
 const graphene_matrix_t *
 gthree_camera_get_projection_matrix (GthreeCamera *camera)
+{
+  GthreeCameraPrivate *priv = gthree_camera_get_instance_private (camera);
+
+  return &priv->projection_matrix;
+}
+
+graphene_matrix_t *
+gthree_camera_get_projection_matrix_for_write (GthreeCamera *camera)
 {
   GthreeCameraPrivate *priv = gthree_camera_get_instance_private (camera);
 
