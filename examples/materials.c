@@ -5,9 +5,25 @@
 
 #include <gthree/gthree.h>
 
-GthreeScene *scene;
-GthreePerspectiveCamera *camera;
-GthreeMesh *particle_light;
+static GthreeScene *scene;
+static GthreePerspectiveCamera *camera;
+static GthreeMesh *particle_light;
+
+static GthreeMaterial *materials[14] = { NULL };
+static GthreeGeometry *geometries[14] = { NULL };
+static int n_materials = 0;
+static int anim_material1, anim_material2;
+
+static GdkRGBA grey = {0.4, 0.4, 0.4, 1.0};
+static GdkRGBA black = {0, 0, 0, 1.0};
+static GdkRGBA white = {1, 1, 1, 1.0};
+static GdkRGBA red = {1, 0, 0, 1.0};
+static GdkRGBA dark_green = {0, 0.6, 0, 1.0};
+static GdkRGBA medium_grey = {0.4, 0.4, 0.4, 1.0};
+static GdkRGBA dark_grey = {0.07, 0.07, 0.07, 1.0};
+static GdkRGBA very_dark_grey = {0.012, 0.012, 0.012, 1.0};
+static GdkRGBA light_grey = {0.87, 0.87, 0.87, 1.0};
+static GdkRGBA orange = {1, 0.67, 0, 1.0};
 
 GList *objects;
 
@@ -45,6 +61,7 @@ init_scene (void)
 {
   GthreeGeometry *floor_geometry, *geometry_smooth, *geometry_light, *geometry_flat, *geometry_pieces;
   GthreeBasicMaterial *material_wireframe, *material_light, *material_basic;
+  GthreeMultiMaterial *multi_material;
   GthreeLambertMaterial *material_lambert;
   GthreePhongMaterial *material_phong;
   GthreeAmbientLight *ambient_light;
@@ -54,21 +71,7 @@ init_scene (void)
   GdkPixbuf *pixbuf;
   GthreeMesh *floor;
   int i;
-  GdkRGBA grey = {0.4, 0.4, 0.4, 1.0};
-  GdkRGBA black = {0, 0, 0, 1.0};
-  GdkRGBA white = {1, 1, 1, 1.0};
-  GdkRGBA red = {1, 0, 0, 1.0};
-  GdkRGBA green = {0, 1, 0, 1.0};
-  GdkRGBA dark_green = {0, 0.6, 0, 1.0};
-  GdkRGBA medium_grey = {0.4, 0.4, 0.4, 1.0};
-  GdkRGBA dark_grey = {0.07, 0.07, 0.07, 1.0};
-  GdkRGBA very_dark_grey = {0.012, 0.012, 0.012, 1.0};
-  GdkRGBA light_grey = {0.87, 0.87, 0.87, 1.0};
-  GdkRGBA orange = {1, 0.67, 0, 1.0};
   graphene_point3d_t pos = { 0, 0, 0};
-  GthreeMaterial *materials[14] = { NULL };
-  GthreeGeometry *geometries[14] = { NULL };
-  int n_materials = 0;
 
   scene = gthree_scene_new ();
 
@@ -169,6 +172,7 @@ init_scene (void)
                                             GTHREE_SHADING_SMOOTH);
   gthree_lambert_material_set_emissive_color(material_lambert, &red);
   gthree_lambert_material_set_ambient_color(material_lambert, &black);
+  anim_material1 = n_materials;
   geometries[n_materials] = geometry_smooth;
   materials[n_materials++] = GTHREE_MATERIAL (material_lambert);
 
@@ -183,6 +187,7 @@ init_scene (void)
                                           GTHREE_SHADING_SMOOTH);
   gthree_material_set_is_transparent (GTHREE_MATERIAL (material_phong), TRUE);
   gthree_material_set_opacity (GTHREE_MATERIAL (material_phong), 0.9);
+  anim_material2 = n_materials;
   geometries[n_materials] = geometry_smooth;
   materials[n_materials++] = GTHREE_MATERIAL (material_phong);
 
@@ -192,6 +197,17 @@ init_scene (void)
   geometries[n_materials] = geometry_smooth;
   materials[n_materials++] = GTHREE_MATERIAL (material_basic);
 
+  for (i = 0; i < gthree_geometry_get_n_faces (geometry_pieces); i++)
+    {
+      GthreeFace *face = gthree_geometry_get_face (geometry_pieces, i);
+      gthree_face_set_material_index (face, g_random_int_range (0, n_materials));
+    }
+  multi_material = gthree_multi_material_new ();
+  for (i = 0; i < n_materials; i++)
+    gthree_multi_material_set_index (multi_material, i, materials[i]);
+
+  geometries[n_materials] = geometry_pieces;
+  materials[n_materials++] = GTHREE_MATERIAL (multi_material);
 
   floor_geometry = gthree_geometry_new_box (1000, 10, 1000,
                                             40, 1, 40);
@@ -256,6 +272,7 @@ tick (GtkWidget     *widget,
   GList *l;
   gint64 frame_time;
   float angle;
+  GdkRGBA color;
 
   frame_time = gdk_frame_clock_get_frame_time (frame_clock);
   angle = frame_time / 4000000.0;
@@ -280,6 +297,14 @@ tick (GtkWidget     *widget,
       rot.y += 0.005;
       gthree_object_set_rotation (object, &rot);
     }
+
+  gtk_hsv_to_rgb (0.54, 1, 0.35 * (0.5 + 0.5 * sin (35 * angle)),
+                  &color.red, &color.green, &color.blue);
+  gthree_lambert_material_set_emissive_color (GTHREE_LAMBERT_MATERIAL (materials[anim_material1]), &color);
+
+  gtk_hsv_to_rgb (0.04, 1, 0.35 * (0.5 + 0.5 * cos (35 * angle)),
+                  &color.red, &color.green, &color.blue);
+  gthree_phong_material_set_emissive_color (GTHREE_PHONG_MATERIAL (materials[anim_material2]), &color);
 
   gthree_object_set_position (GTHREE_OBJECT (particle_light),
                               graphene_point3d_init (&pos,
