@@ -63,6 +63,7 @@ init_scene (void)
   GthreeBasicMaterial *material_wireframe, *material_light, *material_basic;
   GthreeMultiMaterial *multi_material;
   GthreeNormalMaterial *material_normal;
+  GthreeDepthMaterial *material_depth;
   GthreeLambertMaterial *material_lambert;
   GthreePhongMaterial *material_phong;
   GthreeAmbientLight *ambient_light;
@@ -162,9 +163,9 @@ init_scene (void)
   geometries[n_materials] = geometry_smooth;
   materials[n_materials++] = GTHREE_MATERIAL (material_basic);
 
-#if TODO
-  materials.push( new THREE.MeshDepthMaterial() );
-#endif
+  material_depth = gthree_depth_material_new ();
+  geometries[n_materials] = geometry_smooth;
+  materials[n_materials++] = GTHREE_MATERIAL (material_depth);
 
   // TODO: Animate emissive
   material_lambert = gthree_lambert_material_new ();

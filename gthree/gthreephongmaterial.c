@@ -84,13 +84,14 @@ gthree_phong_material_real_set_params (GthreeMaterial *material,
 
 static void
 gthree_phong_material_real_set_uniforms (GthreeMaterial *material,
-                                         GthreeUniforms *uniforms)
+                                         GthreeUniforms *uniforms,
+                                         GthreeCamera   *camera)
 {
   GthreePhongMaterial *phong = GTHREE_PHONG_MATERIAL (material);
   GthreePhongMaterialPrivate *priv = gthree_phong_material_get_instance_private (phong);
   GthreeUniform *uni;
 
-  GTHREE_MATERIAL_CLASS (gthree_phong_material_parent_class)->set_uniforms (material, uniforms);
+  GTHREE_MATERIAL_CLASS (gthree_phong_material_parent_class)->set_uniforms (material, uniforms, camera);
 
   uni = gthree_uniforms_lookup_from_string (uniforms, "shininess");
   if (uni != NULL)

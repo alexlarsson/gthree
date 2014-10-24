@@ -11,11 +11,11 @@ G_BEGIN_DECLS
 
 
 #define GTHREE_TYPE_CAMERA      (gthree_camera_get_type ())
-#define GTHREE_CAMERA(inst)     (G_TYPE_CHECK_INSTANCE_CAST ((inst), \
-                                                             GTHREE_TYPE_CAMERA, \
-                                                             GthreeCamera))
-#define GTHREE_IS_CAMERA(inst)  (G_TYPE_CHECK_INSTANCE_TYPE ((inst),    \
-                                                             GTHREE_TYPE_CAMERA))
+#define GTHREE_CAMERA(inst)     (G_TYPE_CHECK_INSTANCE_CAST ((inst), GTHREE_TYPE_CAMERA, GthreeCamera))
+#define GTHREE_CAMERA_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GTHREE_TYPE_CAMERA, GthreeCameraClass))
+#define GTHREE_IS_CAMERA(inst)  (G_TYPE_CHECK_INSTANCE_TYPE ((inst), GTHREE_TYPE_CAMERA))
+#define GTHREE_IS_CAMERA_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GTHREE_TYPE_CAMERA))
+#define GTHREE_CAMERA_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GTHREE_TYPE_CAMERA, GthreeCameraClass))
 
 struct _GthreeCamera {
   GthreeObject parent;
@@ -24,6 +24,7 @@ struct _GthreeCamera {
 typedef struct {
   GthreeObjectClass parent_class;
 
+  void (*update) (GthreeCamera *camera);
 } GthreeCameraClass;
 
 GType gthree_camera_get_type (void) G_GNUC_CONST;
@@ -33,6 +34,14 @@ void                     gthree_camera_get_proj_screen_matrix   (GthreeCamera   
                                                                  graphene_matrix_t *res);
 const graphene_matrix_t *gthree_camera_get_world_inverse_matrix (GthreeCamera      *camera);
 const graphene_matrix_t *gthree_camera_get_projection_matrix    (GthreeCamera      *camera);
+float                    gthree_camera_get_near                 (GthreeCamera      *camera);
+void                     gthree_camera_set_near                 (GthreeCamera      *camera,
+                                                                 float              near);
+float                    gthree_camera_get_far                  (GthreeCamera      *camera);
+void                     gthree_camera_set_far                  (GthreeCamera      *camera,
+                                                                 float              far);
+void                     gthree_camera_update                   (GthreeCamera      *camera);
+
 
 G_END_DECLS
 

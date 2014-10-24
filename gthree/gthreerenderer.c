@@ -1136,7 +1136,7 @@ set_program (GthreeRenderer *renderer,
 
   if ( refreshMaterial )
     {
-      gthree_material_set_uniforms (material, m_uniforms);
+      gthree_material_set_uniforms (material, m_uniforms, camera);
 
 #if TODO
     // refresh uniforms common to several materials
@@ -1179,12 +1179,6 @@ set_program (GthreeRenderer *renderer,
       else if ( material instanceof THREE.PointCloudMaterial )
         {
           refreshUniformsParticle( m_uniforms, material );
-        }
-      else if ( material instanceof THREE.MeshDepthMaterial )
-        {
-          m_uniforms.mNear.value = camera.near;
-          m_uniforms.mFar.value = camera.far;
-          m_uniforms.opacity.value = material.opacity;
         }
 
       if ( object.receiveShadow && ! material._shadowPass )

@@ -7,8 +7,6 @@ typedef struct {
   graphene_matrix_t projection_matrix;
   graphene_matrix_t world_matrix_inverse;
 
-  float fov;
-  float aspect;
   float near;
   float far;
 
@@ -21,6 +19,9 @@ static void
 gthree_camera_init (GthreeCamera *camera)
 {
   GthreeCameraPrivate *priv = gthree_camera_get_instance_private (camera);
+
+  priv->near = 30;
+  priv->far = 2000;
 
   graphene_matrix_init_identity (&priv->projection_matrix);
 }
@@ -80,4 +81,50 @@ gthree_camera_get_world_inverse_matrix (GthreeCamera *camera)
   GthreeCameraPrivate *priv = gthree_camera_get_instance_private (camera);
 
   return &priv->world_matrix_inverse;
+}
+
+float
+gthree_camera_get_near (GthreeCamera *camera)
+{
+  GthreeCameraPrivate *priv = gthree_camera_get_instance_private (camera);
+
+  return priv->near;
+}
+
+void
+gthree_camera_set_near (GthreeCamera *camera,
+                        float near)
+{
+  GthreeCameraPrivate *priv = gthree_camera_get_instance_private (camera);
+
+  priv->near = near;
+
+  gthree_camera_update (camera);
+}
+
+float
+gthree_camera_get_far (GthreeCamera *camera)
+{
+  GthreeCameraPrivate *priv = gthree_camera_get_instance_private (camera);
+
+  return priv->far;
+}
+
+void
+gthree_camera_set_far (GthreeCamera *camera,
+                       float far)
+{
+  GthreeCameraPrivate *priv = gthree_camera_get_instance_private (camera);
+
+  priv->far = far;
+
+  gthree_camera_update (camera);
+}
+
+void
+gthree_camera_update (GthreeCamera *camera)
+{
+  GthreeCameraClass *class = GTHREE_CAMERA_GET_CLASS(camera);
+
+  class->update (camera);
 }

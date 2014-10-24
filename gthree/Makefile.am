@@ -32,6 +32,7 @@ gthree_public_h_sources = \
 	gthreelambertmaterial.h \
 	gthreephongmaterial.h \
 	gthreenormalmaterial.h \
+	gthreedepthmaterial.h \
 	gthreeobject.h \
 	gthreerenderer.h \
 	gthreescene.h \
@@ -99,6 +100,7 @@ gthree_c_sources = \
 	gthreelambertmaterial.c \
 	gthreephongmaterial.c \
 	gthreenormalmaterial.c \
+	gthreedepthmaterial.c \
 	gthreemesh.c \
 	gthreeobject.c \
 	gthreeprivate.h \

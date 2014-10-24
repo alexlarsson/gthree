@@ -67,13 +67,14 @@ gthree_lambert_material_real_set_params (GthreeMaterial *material,
 
 static void
 gthree_lambert_material_real_set_uniforms (GthreeMaterial *material,
-                                         GthreeUniforms *uniforms)
+                                           GthreeUniforms *uniforms,
+                                           GthreeCamera   *camera)
 {
   GthreeLambertMaterial *lambert = GTHREE_LAMBERT_MATERIAL (material);
   GthreeLambertMaterialPrivate *priv = gthree_lambert_material_get_instance_private (lambert);
   GthreeUniform *uni;
 
-  GTHREE_MATERIAL_CLASS (gthree_lambert_material_parent_class)->set_uniforms (material, uniforms);
+  GTHREE_MATERIAL_CLASS (gthree_lambert_material_parent_class)->set_uniforms (material, uniforms, camera);
 
 #if TODO
   if ( _this.gammaInput )

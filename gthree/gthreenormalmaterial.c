@@ -51,10 +51,11 @@ gthree_normal_material_real_set_params (GthreeMaterial *material,
 
 static void
 gthree_normal_material_real_set_uniforms (GthreeMaterial *material,
-                                         GthreeUniforms *uniforms)
+                                          GthreeUniforms *uniforms,
+                                          GthreeCamera   *camera)
 {
 
-  GTHREE_MATERIAL_CLASS (gthree_normal_material_parent_class)->set_uniforms (material, uniforms);
+  GTHREE_MATERIAL_CLASS (gthree_normal_material_parent_class)->set_uniforms (material, uniforms, camera);
 }
 
 static GthreeShadingType
