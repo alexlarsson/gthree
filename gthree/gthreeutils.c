@@ -58,18 +58,6 @@ gthree_box3_expand_by_point (GthreeBox3 *box,
   graphene_vec3_max (&box->max, point, &box->max);
 }
 
-// TODO: Use scalar multiply when available 
-static graphene_vec3_t *
-my_vec3_scale (const graphene_vec3_t *src, float s, graphene_vec3_t *dst)
-{
-  float x, y, z;
-  x = graphene_vec3_get_x (src) * s;
-  y = graphene_vec3_get_y (src) * s;
-  z = graphene_vec3_get_z (src) * s;
-
-  return graphene_vec3_init (dst, x, y, z);
-}
-
 graphene_vec3_t *
 gthree_box3_get_center (GthreeBox3 *box,
                         graphene_vec3_t *center)
@@ -78,7 +66,7 @@ gthree_box3_get_center (GthreeBox3 *box,
 
   graphene_vec3_add (&box->min, &box->max, &sum);
 
-  my_vec3_scale (&sum, 0.5, center);
+  graphene_vec3_scale (&sum, 0.5, center);
 
   return center;
 }
