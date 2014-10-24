@@ -4,7 +4,6 @@
 #include "gthreebasicmaterial.h"
 
 typedef struct {
-  int dummy;
   GdkRGBA color;
 
   float reflectivity;
@@ -196,6 +195,25 @@ gthree_basic_material_set_vertex_colors (GthreeBasicMaterial *basic,
   GthreeBasicMaterialPrivate *priv = gthree_basic_material_get_instance_private (basic);
 
   priv->vertex_colors = color_type;
+
+  gthree_material_set_needs_update (GTHREE_MATERIAL (basic), TRUE);
+}
+
+GthreeShadingType
+gthree_basic_material_get_shading_type (GthreeBasicMaterial *basic)
+{
+  GthreeBasicMaterialPrivate *priv = gthree_basic_material_get_instance_private (basic);
+
+  return priv->shading_type;
+}
+
+void
+gthree_basic_material_set_shading_type (GthreeBasicMaterial *basic,
+                                        GthreeShadingType    shading_type)
+{
+  GthreeBasicMaterialPrivate *priv = gthree_basic_material_get_instance_private (basic);
+
+  priv->shading_type = shading_type;
 
   gthree_material_set_needs_update (GTHREE_MATERIAL (basic), TRUE);
 }

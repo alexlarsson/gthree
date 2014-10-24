@@ -5,7 +5,7 @@
 #error "Only <gthree/gthree.h> can be included directly."
 #endif
 
-#include <gthree/gthreematerial.h>
+#include <gthree/gthreebasicmaterial.h>
 #include <gthree/gthreetexture.h>
 
 G_BEGIN_DECLS
@@ -19,34 +19,23 @@ G_BEGIN_DECLS
                                                                      GTHREE_TYPE_LAMBERT_MATERIAL))
 
 struct _GthreeLambertMaterial {
-  GthreeMaterial parent;
+  GthreeBasicMaterial parent;
 };
 
 typedef struct {
-  GthreeMaterialClass parent_class;
+  GthreeBasicMaterialClass parent_class;
 
 } GthreeLambertMaterialClass;
 
 GthreeLambertMaterial *gthree_lambert_material_new ();
 GType gthree_lambert_material_get_type (void) G_GNUC_CONST;
 
-const GdkRGBA * gthree_lambert_material_get_color         (GthreeLambertMaterial *lambert);
-void            gthree_lambert_material_set_color         (GthreeLambertMaterial *lambert,
-							   const GdkRGBA       *color);
 const GdkRGBA * gthree_lambert_material_get_ambient_color (GthreeLambertMaterial *lambert);
 void            gthree_lambert_material_set_ambient_color (GthreeLambertMaterial *lambert,
-							   const GdkRGBA       *color);
+                                                           const GdkRGBA       *color);
 const GdkRGBA * gthree_lambert_material_get_emissive_color(GthreeLambertMaterial *lambert);
 void            gthree_lambert_material_set_emissive_color(GthreeLambertMaterial *lambert,
-							   const GdkRGBA       *color);
-void            gthree_lambert_material_set_vertex_colors (GthreeLambertMaterial *lambert,
-							   GthreeColorType      color_type);
-GthreeColorType gthree_lambert_material_get_vertex_colors (GthreeLambertMaterial *lambert);
-void            gthree_lambert_material_set_shading_type  (GthreeLambertMaterial *lambert,
-							   GthreeShadingType      shading_type);
-void            gthree_lambert_material_set_map           (GthreeLambertMaterial *lambert,
-							   GthreeTexture       *texture);
-GthreeTexture  *gthree_lambert_material_get_map           (GthreeLambertMaterial *lambert);
+                                                           const GdkRGBA       *color);
 
 G_END_DECLS
 
