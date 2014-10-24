@@ -167,7 +167,6 @@ init_scene (void)
   geometries[n_materials] = geometry_smooth;
   materials[n_materials++] = GTHREE_MATERIAL (material_depth);
 
-  // TODO: Animate emissive
   material_lambert = gthree_lambert_material_new ();
   gthree_basic_material_set_color (GTHREE_BASIC_MATERIAL (material_lambert), &medium_grey);
   gthree_basic_material_set_shading_type (GTHREE_BASIC_MATERIAL (material_lambert),
@@ -178,7 +177,6 @@ init_scene (void)
   geometries[n_materials] = geometry_smooth;
   materials[n_materials++] = GTHREE_MATERIAL (material_lambert);
 
-  // TODO: Animate emissive
   material_phong = gthree_phong_material_new ();
   gthree_basic_material_set_color (GTHREE_BASIC_MATERIAL (material_phong), &black);
   gthree_phong_material_set_ambient_color (material_phong, &black);
