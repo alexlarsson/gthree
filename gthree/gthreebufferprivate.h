@@ -1,8 +1,6 @@
 #ifndef __GTHREE_BUFFER_H__
 #define __GTHREE_BUFFER_H__
 
-#include <gtk/gtk.h>
-
 #include <gthreeobject.h>
 #include <gthreematerial.h>
 

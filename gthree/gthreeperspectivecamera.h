@@ -5,7 +5,7 @@
 #error "Only <gthree/gthree.h> can be included directly."
 #endif
 
-#include "gthreecamera.h"
+#include <gthree/gthreecamera.h>
 
 G_BEGIN_DECLS
 

@@ -1,10 +1,10 @@
 #ifndef __GTHREE_SHADER_H__
 #define __GTHREE_SHADER_H__
 
-#include <gtk/gtk.h>
+#include <glib-object.h>
 #include <graphene.h>
 
-#include "gthreeuniforms.h"
+#include <gthree/gthreeuniforms.h>
 
 G_BEGIN_DECLS
 

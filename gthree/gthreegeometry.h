@@ -5,11 +5,10 @@
 #error "Only <gthree/gthree.h> can be included directly."
 #endif
 
-#include <gtk/gtk.h>
 #include <graphene.h>
 
-#include "gthreeobject.h"
-#include "gthreeface.h"
+#include <gthree/gthreeobject.h>
+#include <gthree/gthreeface.h>
 
 G_BEGIN_DECLS
 

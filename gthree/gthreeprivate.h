@@ -1,10 +1,10 @@
 #ifndef __GTHREE_PRIVATE_H__
 #define __GTHREE_PRIVATE_H__
 
-#include "gthreeobject.h"
-#include "gthreeface.h"
-#include "gthreelight.h"
-#include "gthreebufferprivate.h"
+#include <gthree/gthreeobject.h>
+#include <gthree/gthreeface.h>
+#include <gthree/gthreelight.h>
+#include <gthree/gthreebufferprivate.h>
 
 struct _GthreeFace
 {

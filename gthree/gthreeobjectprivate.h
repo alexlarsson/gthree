@@ -1,9 +1,9 @@
 #ifndef __GTHREE_OBJECT_PRIVATE_H__
 #define __GTHREE_OBJECT_PRIVATE_H__
 
-#include "gthreeobject.h"
-#include "gthreebufferprivate.h"
-#include "gthreematerial.h"
+#include <gthree/gthreeobject.h>
+#include <gthree/gthreebufferprivate.h>
+#include <gthree/gthreematerial.h>
 
 G_BEGIN_DECLS
 

@@ -5,9 +5,7 @@
 #error "Only <gthree/gthree.h> can be included directly."
 #endif
 
-#include <gtk/gtk.h>
-
-#include "gthreeobject.h"
+#include <gthree/gthreeobject.h>
 
 G_BEGIN_DECLS
 

@@ -1,11 +1,12 @@
 #ifndef __GTHREE_UNIFORMS_H__
 #define __GTHREE_UNIFORMS_H__
 
-#include <gtk/gtk.h>
+#include <glib-object.h>
+#include <gdk/gdk.h>
 #include <graphene.h>
 
-#include "gthreetypes.h"
-#include "gthreetexture.h"
+#include <gthree/gthreetypes.h>
+#include <gthree/gthreetexture.h>
 
 G_BEGIN_DECLS
 

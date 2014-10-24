@@ -5,7 +5,8 @@
 #error "Only <gthree/gthree.h> can be included directly."
 #endif
 
-#include <gtk/gtk.h>
+#include <glib-object.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
 #include <graphene.h>
 
 G_BEGIN_DECLS

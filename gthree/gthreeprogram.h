@@ -1,10 +1,10 @@
 #ifndef __GTHREE_PROGRAM_H__
 #define __GTHREE_PROGRAM_H__
 
-#include <gtk/gtk.h>
+#include <glib-object.h>
 
-#include "gthreetypes.h"
-#include "gthreeenums.h"
+#include <gthree/gthreetypes.h>
+#include <gthree/gthreeenums.h>
 
 G_BEGIN_DECLS
 

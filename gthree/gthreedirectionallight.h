@@ -5,7 +5,7 @@
 #error "Only <gthree/gthree.h> can be included directly."
 #endif
 
-#include "gthreelight.h"
+#include <gthree/gthreelight.h>
 
 G_BEGIN_DECLS
 

@@ -7,8 +7,8 @@
 
 #include <gtk/gtk.h>
 
-#include "gthreescene.h"
-#include "gthreecamera.h"
+#include <gthree/gthreescene.h>
+#include <gthree/gthreecamera.h>
 
 G_BEGIN_DECLS
 

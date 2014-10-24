@@ -1,8 +1,8 @@
 #ifndef __GTHREE_GEOMETRY_GROUP_H__
 #define __GTHREE_GEOMETRY_GROUP_H__
 
-#include "gthreebufferprivate.h"
-#include "gthreeface.h"
+#include <gthree/gthreebufferprivate.h>
+#include <gthree/gthreeface.h>
 
 G_BEGIN_DECLS
 

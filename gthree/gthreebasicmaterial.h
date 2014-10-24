@@ -5,8 +5,8 @@
 #error "Only <gthree/gthree.h> can be included directly."
 #endif
 
-#include "gthreematerial.h"
-#include "gthreetexture.h"
+#include <gthree/gthreematerial.h>
+#include <gthree/gthreetexture.h>
 
 G_BEGIN_DECLS
 

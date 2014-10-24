@@ -5,12 +5,9 @@
 #error "Only <gthree/gthree.h> can be included directly."
 #endif
 
-#include <gtk/gtk.h>
-
-#include "gthreescene.h"
-#include "gthreecamera.h"
-#include "gthreematerial.h"
-#include "gthree-resources.h"
+#include <gthree/gthreescene.h>
+#include <gthree/gthreecamera.h>
+#include <gthree/gthreematerial.h>
 
 G_BEGIN_DECLS
 
