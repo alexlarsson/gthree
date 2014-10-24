@@ -1014,11 +1014,11 @@ set_program (GthreeRenderer *renderer,
 
   priv->used_texture_units = 0;
 
-  if (material->needs_update)
+  if (gthree_material_get_needs_update (material))
     {
       g_clear_object (&material->program);
       init_material (renderer, material, lights, fog, object);
-      material->needs_update = FALSE;
+      gthree_material_set_needs_update (material, FALSE);
     }
 
   program = material->program;

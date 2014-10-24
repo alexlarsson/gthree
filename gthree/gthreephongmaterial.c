@@ -287,7 +287,7 @@ gthree_phong_material_set_color (GthreePhongMaterial *phong,
 
   priv->color = *color;
 
-  phong->parent.needs_update = TRUE;
+  gthree_material_set_needs_update (GTHREE_MATERIAL (phong), TRUE);
 }
 
 const GdkRGBA *
@@ -306,7 +306,7 @@ gthree_phong_material_set_ambient_color (GthreePhongMaterial *phong,
 
   priv->ambient = *color;
 
-  phong->parent.needs_update = TRUE;
+  gthree_material_set_needs_update (GTHREE_MATERIAL (phong), TRUE);
 }
 
 const GdkRGBA *
@@ -325,7 +325,7 @@ gthree_phong_material_set_emissive_color (GthreePhongMaterial *phong,
 
   priv->emissive = *color;
 
-  phong->parent.needs_update = TRUE;
+  gthree_material_set_needs_update (GTHREE_MATERIAL (phong), TRUE);
 }
 
 const GdkRGBA *
@@ -344,7 +344,7 @@ gthree_phong_material_set_specular_color (GthreePhongMaterial *phong,
 
   priv->specular = *color;
 
-  phong->parent.needs_update = TRUE;
+  gthree_material_set_needs_update (GTHREE_MATERIAL (phong), TRUE);
 }
 
 void
@@ -355,7 +355,7 @@ gthree_phong_material_set_vertex_colors (GthreePhongMaterial *phong,
 
   priv->vertex_colors = color_type;
 
-  phong->parent.needs_update = TRUE;
+  gthree_material_set_needs_update (GTHREE_MATERIAL (phong), TRUE);
 }
 
 
@@ -367,7 +367,7 @@ gthree_phong_material_set_shading_type (GthreePhongMaterial *phong,
 
   priv->shading_type = shading_type;
 
-  phong->parent.needs_update = TRUE;
+  gthree_material_set_needs_update (GTHREE_MATERIAL (phong), TRUE);
 }
 
 void
@@ -383,7 +383,7 @@ gthree_phong_material_set_map (GthreePhongMaterial *phong,
 
   priv->map = texture;
 
-  phong->parent.needs_update = TRUE;
+  gthree_material_set_needs_update (GTHREE_MATERIAL (phong), TRUE);
 }
 
 GthreeTexture *
@@ -417,5 +417,5 @@ gthree_phong_material_set_shininess (GthreePhongMaterial *phong,
   GthreePhongMaterialPrivate *priv = gthree_phong_material_get_instance_private (phong);
 
   priv->shininess = shininess;
-  phong->parent.needs_update = TRUE;
+  gthree_material_set_needs_update (GTHREE_MATERIAL (phong), TRUE);
 }

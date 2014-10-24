@@ -257,7 +257,7 @@ gthree_lambert_material_set_color (GthreeLambertMaterial *lambert,
 
   priv->color = *color;
 
-  lambert->parent.needs_update = TRUE;
+  gthree_material_set_needs_update (GTHREE_MATERIAL (lambert), TRUE);
 }
 
 const GdkRGBA *
@@ -276,7 +276,7 @@ gthree_lambert_material_set_ambient_color (GthreeLambertMaterial *lambert,
 
   priv->ambient = *color;
 
-  lambert->parent.needs_update = TRUE;
+  gthree_material_set_needs_update (GTHREE_MATERIAL (lambert), TRUE);
 }
 
 const GdkRGBA *
@@ -295,7 +295,7 @@ gthree_lambert_material_set_emissive_color (GthreeLambertMaterial *lambert,
 
   priv->emissive = *color;
 
-  lambert->parent.needs_update = TRUE;
+  gthree_material_set_needs_update (GTHREE_MATERIAL (lambert), TRUE);
 }
 
 void
@@ -306,7 +306,7 @@ gthree_lambert_material_set_vertex_colors (GthreeLambertMaterial *lambert,
 
   priv->vertex_colors = color_type;
 
-  lambert->parent.needs_update = TRUE;
+  gthree_material_set_needs_update (GTHREE_MATERIAL (lambert), TRUE);
 }
 
 
@@ -318,7 +318,7 @@ gthree_lambert_material_set_shading_type (GthreeLambertMaterial *lambert,
 
   priv->shading_type = shading_type;
 
-  lambert->parent.needs_update = TRUE;
+  gthree_material_set_needs_update (GTHREE_MATERIAL (lambert), TRUE);
 }
 
 void
@@ -334,7 +334,7 @@ gthree_lambert_material_set_map (GthreeLambertMaterial *lambert,
 
   priv->map = texture;
 
-  lambert->parent.needs_update = TRUE;
+  gthree_material_set_needs_update (GTHREE_MATERIAL (lambert), TRUE);
 }
 
 GthreeTexture *

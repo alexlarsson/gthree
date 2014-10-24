@@ -24,8 +24,6 @@ struct _GthreeMaterial {
   GObject parent;
 
   // TODO: hide
-  gboolean needs_update;
-
   GthreeProgram *program;
   GthreeShader *shader;
 };
@@ -107,6 +105,9 @@ void            gthree_material_set_params               (GthreeMaterial       *
 void            gthree_material_set_uniforms             (GthreeMaterial *material,
                                                           GthreeUniforms *uniforms);
 
+gboolean          gthree_material_get_needs_update (GthreeMaterial *material);
+void              gthree_material_set_needs_update (GthreeMaterial *material,
+                                                    gboolean needs_update);
 
 gboolean          gthree_material_needs_camera_pos (GthreeMaterial *material);
 gboolean          gthree_material_needs_view_matrix (GthreeMaterial *material);

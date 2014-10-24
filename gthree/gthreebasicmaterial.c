@@ -186,7 +186,7 @@ gthree_basic_material_set_color (GthreeBasicMaterial *basic,
 
   priv->color = *color;
 
-  basic->parent.needs_update = TRUE;
+  gthree_material_set_needs_update (GTHREE_MATERIAL (basic), TRUE);
 }
 
 void
@@ -197,7 +197,7 @@ gthree_basic_material_set_vertex_colors (GthreeBasicMaterial *basic,
 
   priv->vertex_colors = color_type;
 
-  basic->parent.needs_update = TRUE;
+  gthree_material_set_needs_update (GTHREE_MATERIAL (basic), TRUE);
 }
 
 void
@@ -213,7 +213,7 @@ gthree_basic_material_set_map (GthreeBasicMaterial *basic,
 
   priv->map = texture;
 
-  basic->parent.needs_update = TRUE;
+  gthree_material_set_needs_update (GTHREE_MATERIAL (basic), TRUE);
 }
 
 GthreeTexture *
