@@ -34,6 +34,9 @@ gthree_loader_class_init (GthreeLoaderClass *klass)
   G_OBJECT_CLASS (klass)->finalize = gthree_loader_finalize;
 }
 
+/* GVariant has no float type, we store ieee 32bit float as 32bit ints */
+#define G_VARIANT_TYPE_FLOAT_AS_UINT32 G_VARIANT_TYPE_UINT32
+
 GVariant *
 gthree_loader_convert_json_to_variant (JsonNode *root, GError **error)
 {
@@ -64,19 +67,19 @@ gthree_loader_convert_json_to_variant (JsonNode *root, GError **error)
       GVariantBuilder uv_builder;
       int n_uvs, i;
 
-      g_variant_builder_init (&uv_builder, G_VARIANT_TYPE("aad"));
+      g_variant_builder_init (&uv_builder, G_VARIANT_TYPE("aau"));
 
       n_uvs = json_array_get_length (uvs);
       for (i = 0; i < n_uvs; i++)
         {
           JsonArray *uvN = json_array_get_array_element (uvs, i);
           int j, len = json_array_get_length (uvN);
-          double *data = g_new (double, len);
+          float *data = g_new (float, len);
 
           for (j = 0; j < len; j++)
             data[j] = json_array_get_double_element (uvN, j);
 
-          g_variant_builder_add_value (&uv_builder, g_variant_new_fixed_array (G_VARIANT_TYPE_DOUBLE, data, len, sizeof(double)));
+          g_variant_builder_add_value (&uv_builder, g_variant_new_fixed_array (G_VARIANT_TYPE_FLOAT_AS_UINT32, data, len, sizeof(float)));
           g_free (data);
         }
 
@@ -87,17 +90,17 @@ gthree_loader_convert_json_to_variant (JsonNode *root, GError **error)
   vertices = json_object_get_array_member (root_obj, "vertices");
   if (vertices != NULL)
     {
-      double *data;
+      float *data;
       int len, i;
 
       len = json_array_get_length (vertices);
-      data = g_new (double, len);
+      data = g_new (float, len);
 
       for (i = 0; i < len; i++)
         data[i] = json_array_get_double_element (vertices, i);
 
       g_variant_builder_add (&builder, "{sv}", "vertices",
-                             g_variant_new_fixed_array (G_VARIANT_TYPE_DOUBLE, data, len, sizeof(double)));
+                             g_variant_new_fixed_array (G_VARIANT_TYPE_FLOAT_AS_UINT32, data, len, sizeof(float)));
 
       g_free (data);
     }
@@ -105,17 +108,17 @@ gthree_loader_convert_json_to_variant (JsonNode *root, GError **error)
   normals = json_object_get_array_member (root_obj, "normals");
   if (normals != NULL)
     {
-      double *data;
+      float *data;
       int len, i;
 
       len = json_array_get_length (normals);
-      data = g_new (double, len);
+      data = g_new (float, len);
 
       for (i = 0; i < len; i++)
         data[i] = json_array_get_double_element (normals, i);
 
       g_variant_builder_add (&builder, "{sv}", "normals",
-                             g_variant_new_fixed_array (G_VARIANT_TYPE_DOUBLE, data, len, sizeof(double)));
+                             g_variant_new_fixed_array (G_VARIANT_TYPE_FLOAT_AS_UINT32, data, len, sizeof(float)));
 
       g_free (data);
     }
@@ -123,17 +126,17 @@ gthree_loader_convert_json_to_variant (JsonNode *root, GError **error)
   colors = json_object_get_array_member (root_obj, "colors");
   if (colors != NULL)
     {
-      double *data;
+      float *data;
       int len, i;
 
       len = json_array_get_length (colors);
-      data = g_new (double, len);
+      data = g_new (float, len);
 
       for (i = 0; i < len; i++)
         data[i] = json_array_get_double_element (colors, i);
 
       g_variant_builder_add (&builder, "{sv}", "colors",
-                             g_variant_new_fixed_array (G_VARIANT_TYPE_DOUBLE, data, len, sizeof(double)));
+                             g_variant_new_fixed_array (G_VARIANT_TYPE_FLOAT_AS_UINT32, data, len, sizeof(float)));
 
       g_free (data);
     }
@@ -141,11 +144,11 @@ gthree_loader_convert_json_to_variant (JsonNode *root, GError **error)
   faces = json_object_get_array_member (root_obj, "faces");
   if (faces != NULL)
     {
-      gint32 *data;
+      guint32 *data;
       int len, i;
 
       len = json_array_get_length (faces);
-      data = g_new (gint32, len);
+      data = g_new (guint32, len);
 
       for (i = 0; i < len; i++)
         data[i] = (guint32)json_array_get_int_element (faces, i);
@@ -210,11 +213,11 @@ gthree_loader_new_from_variant (GVariant *value, GFile *texture_path, GError **e
   GVariant *var;
   GthreeLoaderPrivate *priv;
   int n_uvs = 0;
-  const double *uvs[MAX_UVS];
+  const float *uvs[MAX_UVS];
   gsize uvs_len[MAX_UVS];
-  const double *colors = NULL;
+  const float *colors = NULL;
   gsize colors_len = 0;
-  const double *normals = NULL;
+  const float *normals = NULL;
   gsize normals_len = 0;
   gdouble scale = 1.0;
 
@@ -222,7 +225,7 @@ gthree_loader_new_from_variant (GVariant *value, GFile *texture_path, GError **e
 
   g_variant_lookup (value, "scale", "d", &scale);
 
-  if (g_variant_lookup (value, "uvs", "aad", &iter))
+  if (g_variant_lookup (value, "uvs", "aau", &iter))
     {
       GVariant *uvN;
 
@@ -232,7 +235,7 @@ gthree_loader_new_from_variant (GVariant *value, GFile *texture_path, GError **e
             {
               uvs[n_uvs] = g_variant_get_fixed_array (uvN,
                                                       &uvs_len[n_uvs],
-                                                      sizeof (double));
+                                                      sizeof (float));
               if (uvs_len[n_uvs] > 0)
                 n_uvs++;
             }
@@ -241,22 +244,22 @@ gthree_loader_new_from_variant (GVariant *value, GFile *texture_path, GError **e
       g_variant_iter_free (iter);
     }
 
-  if ((var = g_variant_lookup_value (value, "normals", G_VARIANT_TYPE ("ad"))) != NULL)
+  if ((var = g_variant_lookup_value (value, "normals", G_VARIANT_TYPE ("au"))) != NULL)
     normals = g_variant_get_fixed_array (var, &normals_len,
-                                         sizeof (double));
+                                         sizeof (float));
 
-  if ((var = g_variant_lookup_value (value, "colors", G_VARIANT_TYPE ("ad"))) != NULL)
+  if ((var = g_variant_lookup_value (value, "colors", G_VARIANT_TYPE ("au"))) != NULL)
     colors = g_variant_get_fixed_array (var, &colors_len,
-                                         sizeof (double));
+                                         sizeof (float));
 
-  if (g_variant_lookup (value, "vertices", "ad", &iter))
+  if (g_variant_lookup (value, "vertices", "au", &iter))
     {
-      double x, y, z;
+      float x, y, z;
       graphene_vec3_t v;
 
-      while (g_variant_iter_loop (iter, "d", &x) &&
-             g_variant_iter_loop (iter, "d", &y) &&
-             g_variant_iter_loop (iter, "d", &z))
+      while (g_variant_iter_loop (iter, "u", &x) &&
+             g_variant_iter_loop (iter, "u", &y) &&
+             g_variant_iter_loop (iter, "u", &z))
         {
           graphene_vec3_init (&v, x * scale, y * scale, z * scale);
           gthree_geometry_add_vertex (geometry, &v);
@@ -327,7 +330,7 @@ gthree_loader_new_from_variant (GVariant *value, GFile *texture_path, GError **e
 
                   for (j = 0; j < vec_len; j++)
                     {
-                      double u,v;
+                      float u,v;
 
                       g_variant_iter_loop (iter, "u", &index);
                       u = uvs[layer][index * 2];
