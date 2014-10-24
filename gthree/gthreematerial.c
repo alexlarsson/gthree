@@ -131,6 +131,17 @@ gthree_material_real_set_uniforms (GthreeMaterial *material,
 }
 
 gboolean
+gthree_material_needs_camera_pos (GthreeMaterial *material)
+{
+  GthreeMaterialClass *class = GTHREE_MATERIAL_GET_CLASS(material);
+
+  if (class->needs_camera_pos)
+    return class->needs_camera_pos (material);
+
+  return FALSE;
+}
+
+gboolean
 gthree_material_needs_view_matrix (GthreeMaterial *material)
 {
   GthreeMaterialClass *class = GTHREE_MATERIAL_GET_CLASS(material);

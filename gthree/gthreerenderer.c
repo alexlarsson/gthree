@@ -1063,18 +1063,22 @@ set_program (GthreeRenderer *renderer,
       // load material specific uniforms
       // (shader material also gets them for the sake of genericity)
 
+      if (gthree_material_needs_camera_pos (material)
 #if TODO
-      if (material instanceof THREE.ShaderMaterial ||
-          material instanceof THREE.MeshPhongMaterial ||
-          material.envMap )
+          || material.envMap
+#endif
+          )
         {
-          if ( uniform_locations.cameraPosition !== null )
+          gint camera_position_location = gthree_program_lookup_uniform_location (program, "cameraPosition");
+          if (camera_position_location >= 0)
             {
-              _vector3.setFromMatrixPosition( camera.matrixWorld );
-              _gl.uniform3f( uniform_locations.cameraPosition, _vector3.x, _vector3.y, _vector3.z );
+              const graphene_matrix_t *camera_matrix_world = gthree_object_get_world_matrix (GTHREE_OBJECT (camera));
+              graphene_vec4_t pos;
+              graphene_matrix_get_row (camera_matrix_world, 3, &pos);
+              glUniform3f (camera_position_location,
+                           graphene_vec4_get_x (&pos), graphene_vec4_get_y (&pos), graphene_vec4_get_z (&pos));
             }
         }
-#endif
 
       if (gthree_material_needs_view_matrix (material)
 #if TODO

@@ -37,7 +37,7 @@ typedef struct {
                                int index);
 
   GthreeShader * (*get_shader) (GthreeMaterial *material);
-  
+
   void          (*set_params) (GthreeMaterial *material,
                                GthreeProgramParameters *params);
 
@@ -45,6 +45,7 @@ typedef struct {
                                  GthreeUniforms *uniforms);
 
   gboolean           (*needs_view_matrix) (GthreeMaterial *material);
+  gboolean           (*needs_camera_pos) (GthreeMaterial *material);
   gboolean           (*needs_lights)  (GthreeMaterial *material);
   gboolean           (*needs_uv)      (GthreeMaterial *material);
   GthreeShadingType  (*needs_normals) (GthreeMaterial *material);
@@ -107,6 +108,7 @@ void            gthree_material_set_uniforms             (GthreeMaterial *materi
                                                           GthreeUniforms *uniforms);
 
 
+gboolean          gthree_material_needs_camera_pos (GthreeMaterial *material);
 gboolean          gthree_material_needs_view_matrix (GthreeMaterial *material);
 gboolean          gthree_material_needs_uv      (GthreeMaterial *material);
 gboolean          gthree_material_needs_lights  (GthreeMaterial *material);

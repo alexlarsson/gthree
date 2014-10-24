@@ -201,6 +201,12 @@ gthree_phong_material_real_set_uniforms (GthreeMaterial *material,
 }
 
 static gboolean
+gthree_phong_material_needs_camera_pos (GthreeMaterial *material)
+{
+  return TRUE;
+}
+
+static gboolean
 gthree_phong_material_needs_view_matrix (GthreeMaterial *material)
 {
   return TRUE;
@@ -257,6 +263,7 @@ gthree_phong_material_class_init (GthreePhongMaterialClass *klass)
   GTHREE_MATERIAL_CLASS(klass)->get_shader = gthree_phong_material_real_get_shader;
   GTHREE_MATERIAL_CLASS(klass)->set_params = gthree_phong_material_real_set_params;
   GTHREE_MATERIAL_CLASS(klass)->set_uniforms = gthree_phong_material_real_set_uniforms;
+  GTHREE_MATERIAL_CLASS(klass)->needs_camera_pos = gthree_phong_material_needs_camera_pos;
   GTHREE_MATERIAL_CLASS(klass)->needs_view_matrix = gthree_phong_material_needs_view_matrix;
   GTHREE_MATERIAL_CLASS(klass)->needs_lights = gthree_phong_material_needs_lights;
   GTHREE_MATERIAL_CLASS(klass)->needs_uv = gthree_phong_material_needs_uv;
@@ -393,4 +400,22 @@ gthree_phong_material_get_vertex_colors (GthreePhongMaterial *phong)
   GthreePhongMaterialPrivate *priv = gthree_phong_material_get_instance_private (phong);
 
   return priv->vertex_colors;
+}
+
+float
+gthree_phong_material_get_shininess (GthreePhongMaterial *phong)
+{
+  GthreePhongMaterialPrivate *priv = gthree_phong_material_get_instance_private (phong);
+
+  return priv->shininess;
+}
+
+void
+gthree_phong_material_set_shininess (GthreePhongMaterial *phong,
+                                     float                shininess)
+{
+  GthreePhongMaterialPrivate *priv = gthree_phong_material_get_instance_private (phong);
+
+  priv->shininess = shininess;
+  phong->parent.needs_update = TRUE;
 }
