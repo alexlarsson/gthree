@@ -2,21 +2,8 @@
 #define __GTHREE_PRIVATE_H__
 
 #include <gthree/gthreeobject.h>
-#include <gthree/gthreeface.h>
 #include <gthree/gthreelight.h>
 #include <gthree/gthreebufferprivate.h>
-
-struct _GthreeFace
-{
-  GObject parent;
-
-  int a, b, c;
-  graphene_vec3_t normal;
-  GdkRGBA color;
-  graphene_vec3_t *vertex_normals;
-  GdkRGBA *vertex_colors;
-  int material_index;
-};
 
 struct _GthreeLightSetup
 {

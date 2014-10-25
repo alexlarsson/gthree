@@ -270,12 +270,10 @@ gthree_loader_new_from_variant (GVariant *value, GFile *texture_path, GError **e
   if (g_variant_lookup (value, "faces", "au", &iter))
     {
       guint32 face_type;
-      int face_index = 0;
 
       while (g_variant_iter_loop (iter, "u", &face_type))
         {
-          GthreeFace *face1, *face2;
-          int face1_index, face2_index;
+          int face1, face2;
           guint32 a, b, c, d;
           gboolean is_quad = (face_type & FACE_QUAD_MASK);
 
@@ -286,24 +284,13 @@ gthree_loader_new_from_variant (GVariant *value, GFile *texture_path, GError **e
             {
               g_variant_iter_loop (iter, "u", &d);
 
-              face1 = gthree_face_new (a, b, d);
-              face1_index = face_index++;
-              gthree_geometry_add_face (geometry, face1);
-              g_object_unref (face1);
-
-              face2 = gthree_face_new (b, c, d);
-              face2_index = face_index++;
-              gthree_geometry_add_face (geometry, face2);
-              g_object_unref (face2);
+              face1 = gthree_geometry_add_face (geometry, a, b, d);
+              face2 = gthree_geometry_add_face (geometry, b, c, d);
             }
           else
             {
-              face1 = gthree_face_new (a, b, c);
-              face2 = NULL;
-              face1_index = face_index++;
-              face2_index = -1;
-              gthree_geometry_add_face (geometry, face1);
-              g_object_unref (face1);
+              face1 = gthree_geometry_add_face (geometry, a, b, c);
+              face2 = -1;
             }
 
           if (face_type & FACE_MATERIAL_MASK)
@@ -311,9 +298,9 @@ gthree_loader_new_from_variant (GVariant *value, GFile *texture_path, GError **e
               guint32 index;
 
               g_variant_iter_loop (iter, "u", &index);
-              gthree_face_set_material_index (face1, index);
-              if (face2)
-                gthree_face_set_material_index (face2, index);
+              gthree_geometry_face_set_material_index (geometry, face1, index);
+              if (face2 >= 0)
+                gthree_geometry_face_set_material_index (geometry, face2, index);
             }
 
           // Ignore FACE_UV_MASK, not suppored anymore
@@ -340,18 +327,18 @@ gthree_loader_new_from_variant (GVariant *value, GFile *texture_path, GError **e
 
                   if (is_quad)
                     {
-                      gthree_geometry_set_uv_n (geometry, layer, face1_index * 3    , &vec[0]);
-                      gthree_geometry_set_uv_n (geometry, layer, face1_index * 3 + 1, &vec[1]);
-                      gthree_geometry_set_uv_n (geometry, layer, face1_index * 3 + 2, &vec[3]);
-                      gthree_geometry_set_uv_n (geometry, layer, face2_index * 3   ,  &vec[1]);
-                      gthree_geometry_set_uv_n (geometry, layer, face2_index * 3 + 1, &vec[2]);
-                      gthree_geometry_set_uv_n (geometry, layer, face2_index * 3 + 2, &vec[3]);
+                      gthree_geometry_set_uv_n (geometry, layer, face1 * 3    , &vec[0]);
+                      gthree_geometry_set_uv_n (geometry, layer, face1 * 3 + 1, &vec[1]);
+                      gthree_geometry_set_uv_n (geometry, layer, face1 * 3 + 2, &vec[3]);
+                      gthree_geometry_set_uv_n (geometry, layer, face2 * 3   ,  &vec[1]);
+                      gthree_geometry_set_uv_n (geometry, layer, face2 * 3 + 1, &vec[2]);
+                      gthree_geometry_set_uv_n (geometry, layer, face2 * 3 + 2, &vec[3]);
                     }
                   else
                     {
-                      gthree_geometry_set_uv_n (geometry, layer, face1_index * 3    , &vec[0]);
-                      gthree_geometry_set_uv_n (geometry, layer, face1_index * 3 + 1, &vec[1]);
-                      gthree_geometry_set_uv_n (geometry, layer, face1_index * 3 + 2, &vec[2]);
+                      gthree_geometry_set_uv_n (geometry, layer, face1 * 3    , &vec[0]);
+                      gthree_geometry_set_uv_n (geometry, layer, face1 * 3 + 1, &vec[1]);
+                      gthree_geometry_set_uv_n (geometry, layer, face1 * 3 + 2, &vec[2]);
                     }
                 }
             }
@@ -367,9 +354,9 @@ gthree_loader_new_from_variant (GVariant *value, GFile *texture_path, GError **e
               if (index + 2 < normals_len)
                 {
                   graphene_vec3_init (&vec, normals[index], normals[index+1], normals[index+2]);
-                  gthree_face_set_normal (face1, &vec);
-                  if (face2)
-                    gthree_face_set_normal (face2, &vec);
+                  gthree_geometry_face_set_normal (geometry, face1, &vec);
+                  if (face2 >= 0)
+                    gthree_geometry_face_set_normal (geometry, face2, &vec);
                 }
             }
 
@@ -394,12 +381,12 @@ gthree_loader_new_from_variant (GVariant *value, GFile *texture_path, GError **e
                 {
                   if (is_quad)
                     {
-                      gthree_face_set_vertex_normals (face1, &vec[0], &vec[1], &vec[3]);
-                      gthree_face_set_vertex_normals (face2, &vec[1], &vec[2], &vec[3]);
+                      gthree_geometry_face_set_vertex_normals (geometry, face1, &vec[0], &vec[1], &vec[3]);
+                      gthree_geometry_face_set_vertex_normals (geometry, face2, &vec[1], &vec[2], &vec[3]);
                     }
                   else
                     {
-                      gthree_face_set_vertex_normals (face1, &vec[0], &vec[1], &vec[2]);
+                      gthree_geometry_face_set_vertex_normals (geometry, face1, &vec[0], &vec[1], &vec[2]);
                     }
                 }
             }
@@ -418,9 +405,9 @@ gthree_loader_new_from_variant (GVariant *value, GFile *texture_path, GError **e
                   rgba.green = colors[index+1];
                   rgba.blue = colors[index+2];
                   rgba.alpha = 1.0;
-                  gthree_face_set_color (face1, &rgba);
-                  if (face2)
-                    gthree_face_set_color (face2, &rgba);
+                  gthree_geometry_face_set_color (geometry, face1, &rgba);
+                  if (face2 >= 0)
+                    gthree_geometry_face_set_color (geometry, face2, &rgba);
                 }
             }
 
@@ -450,12 +437,12 @@ gthree_loader_new_from_variant (GVariant *value, GFile *texture_path, GError **e
                 {
                   if (is_quad)
                     {
-                      gthree_face_set_vertex_colors (face1, &rgba[0], &rgba[1], &rgba[3]);
-                      gthree_face_set_vertex_colors (face2, &rgba[1], &rgba[2], &rgba[3]);
+                      gthree_geometry_face_set_vertex_colors (geometry, face1, &rgba[0], &rgba[1], &rgba[3]);
+                      gthree_geometry_face_set_vertex_colors (geometry, face2, &rgba[1], &rgba[2], &rgba[3]);
                     }
                   else
                     {
-                      gthree_face_set_vertex_colors (face1, &rgba[0], &rgba[1], &rgba[2]);
+                      gthree_geometry_face_set_vertex_colors (geometry, face1, &rgba[0], &rgba[1], &rgba[2]);
                     }
                 }
             }

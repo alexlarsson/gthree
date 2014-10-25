@@ -24,7 +24,6 @@ gthree_public_h_sources = \
 	gthreepointlight.h \
 	gthreelight.h \
 	gthreeenums.h \
-	gthreeface.h \
 	gthreegeometry.h \
 	gthreematerial.h \
 	gthreemesh.h \
@@ -89,7 +88,6 @@ gthree_c_sources = \
 	gthreedirectionallight.c \
 	gthreepointlight.c \
 	gthreelight.c \
-	gthreeface.c \
 	gthreegeometry-utils.c \
 	gthreegeometry.c \
 	gthreegeometrygroup.c \

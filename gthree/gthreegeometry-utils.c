@@ -71,7 +71,7 @@ build_plane (GthreeGeometry *geometry,
     {
       for (ix = 0; ix < gridX; ix++)
         {
-          GthreeFace *face;
+          int face;
           graphene_vec2_t uva, uvb, uvc, uvd;
           int a = ix + gridX1 * iy;
           int b = ix + gridX1 * ( iy + 1 );
@@ -87,25 +87,19 @@ build_plane (GthreeGeometry *geometry,
           graphene_vec2_init (&uvd,
                               (ix + 1) / (float)gridX, 1 - iy / (float)gridY);
 
-          face = gthree_face_new (a + offset, b + offset, d + offset);
-          gthree_face_set_normal (face, &normalv);
-          gthree_face_set_vertex_normals (face, &normalv, &normalv, &normalv);
-          gthree_face_set_material_index (face, materialIndex);
-
-          gthree_geometry_add_face (geometry, face);
-          g_object_unref (face);
+          face = gthree_geometry_add_face (geometry, a + offset, b + offset, d + offset);
+          gthree_geometry_face_set_normal (geometry, face, &normalv);
+          gthree_geometry_face_set_vertex_normals (geometry, face, &normalv, &normalv, &normalv);
+          gthree_geometry_face_set_material_index (geometry, face, materialIndex);
 
           gthree_geometry_add_uv (geometry, &uva);
           gthree_geometry_add_uv (geometry, &uvb);
           gthree_geometry_add_uv (geometry, &uvd);
 
-          face = gthree_face_new (b + offset, c + offset, d + offset);
-          gthree_face_set_normal (face, &normalv);
-          gthree_face_set_vertex_normals (face, &normalv, &normalv, &normalv);
-          gthree_face_set_material_index (face, materialIndex);
-
-          gthree_geometry_add_face (geometry, face);
-          g_object_unref (face);
+          face = gthree_geometry_add_face (geometry, b + offset, c + offset, d + offset);
+          gthree_geometry_face_set_normal (geometry, face, &normalv);
+          gthree_geometry_face_set_vertex_normals (geometry, face, &normalv, &normalv, &normalv);
+          gthree_geometry_face_set_material_index (geometry, face, materialIndex);
 
           gthree_geometry_add_uv (geometry, &uvb);
           gthree_geometry_add_uv (geometry, &uvc);
@@ -207,7 +201,7 @@ gthree_geometry_new_sphere_full (float radius,
           const graphene_vec3_t *v3 = &final_vertices[vi3];
           const graphene_vec3_t *v4 = &final_vertices[vi4];
           graphene_vec3_t n1, n2, n3, n4;
-          GthreeFace *face;
+          int face;
 
           graphene_vec3_normalize (v1, &n1);
           graphene_vec3_normalize (v2, &n2);
@@ -220,11 +214,9 @@ gthree_geometry_new_sphere_full (float radius,
                                   (graphene_vec2_get_x (&uv1) + graphene_vec2_get_x (&uv2)) / 2,
                                   graphene_vec2_get_y (&uv1));
 
-              face = gthree_face_new (vi1, vi3, vi4);
-              gthree_face_set_vertex_normals (face,
-                                              &n1, &n3, &n4);
-              gthree_geometry_add_face (geometry, face);
-              g_object_unref (face);
+              face = gthree_geometry_add_face (geometry, vi1, vi3, vi4);
+              gthree_geometry_face_set_vertex_normals (geometry, face,
+						       &n1, &n3, &n4);
 
               gthree_geometry_add_uv (geometry, &uv1);
               gthree_geometry_add_uv (geometry, &uv3);
@@ -236,11 +228,9 @@ gthree_geometry_new_sphere_full (float radius,
                                   (graphene_vec2_get_x (&uv3) + graphene_vec2_get_x (&uv4)) / 2,
                                   graphene_vec2_get_y (&uv3));
 
-              face = gthree_face_new (vi1, vi2, vi3);
-              gthree_face_set_vertex_normals (face,
-                                              &n1, &n2, &n3);
-              gthree_geometry_add_face (geometry, face);
-              g_object_unref (face);
+              face = gthree_geometry_add_face (geometry, vi1, vi2, vi3);
+              gthree_geometry_face_set_vertex_normals (geometry, face,
+						       &n1, &n2, &n3);
 
               gthree_geometry_add_uv (geometry, &uv1);
               gthree_geometry_add_uv (geometry, &uv2);
@@ -248,21 +238,17 @@ gthree_geometry_new_sphere_full (float radius,
             }
           else
             {
-              face = gthree_face_new (vi1, vi2, vi4);
-              gthree_face_set_vertex_normals (face,
-                                              &n1, &n2, &n4);
-              gthree_geometry_add_face (geometry, face);
-              g_object_unref (face);
+              face = gthree_geometry_add_face (geometry, vi1, vi2, vi4);
+              gthree_geometry_face_set_vertex_normals (geometry, face,
+						       &n1, &n2, &n4);
 
               gthree_geometry_add_uv (geometry, &uv1);
               gthree_geometry_add_uv (geometry, &uv2);
               gthree_geometry_add_uv (geometry, &uv4);
 
-              face = gthree_face_new (vi2, vi3, vi4);
-              gthree_face_set_vertex_normals (face,
-                                              &n2, &n3, &n4);
-              gthree_geometry_add_face (geometry, face);
-              g_object_unref (face);
+              face = gthree_geometry_add_face (geometry, vi2, vi3, vi4);
+              gthree_geometry_face_set_vertex_normals (geometry, face,
+						       &n2, &n3, &n4);
 
               gthree_geometry_add_uv (geometry, &uv2);
               gthree_geometry_add_uv (geometry, &uv3);

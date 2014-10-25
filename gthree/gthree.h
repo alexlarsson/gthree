@@ -10,7 +10,6 @@
 #include <gthree/gthreebasicmaterial.h>
 #include <gthree/gthreecamera.h>
 #include <gthree/gthreeperspectivecamera.h>
-#include <gthree/gthreeface.h>
 #include <gthree/gthreegeometry.h>
 #include <gthree/gthreematerial.h>
 #include <gthree/gthreemesh.h>

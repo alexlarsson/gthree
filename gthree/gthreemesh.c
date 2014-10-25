@@ -73,7 +73,6 @@ make_geometry_groups (GthreeMesh *mesh,
   GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
   guint i, counter, material_index, n_faces;
   guint group_hash;
-  GthreeFace*face;
   GHashTable *hash_map, *geometry_groups;
   GthreeGeometryGroup *group;
   gpointer ptr;
@@ -87,8 +86,7 @@ make_geometry_groups (GthreeMesh *mesh,
   n_faces = gthree_geometry_get_n_faces (geometry);
   for (i = 0; i < n_faces; i++)
     {
-      face = gthree_geometry_get_face (geometry, i);
-      material_index = use_face_material ? gthree_face_get_material_index (face) : 0;
+      material_index = use_face_material ? gthree_geometry_face_get_material_index (geometry, i) : 0;
 
       counter = 0;
       if (g_hash_table_lookup_extended (hash_map, GINT_TO_POINTER(material_index), NULL, &ptr))
@@ -289,11 +287,13 @@ set_mesh_buffers (GthreeMesh *mesh,
       for (i = 0; i < face_indexes->len; i++)
         {
           int face_index = g_array_index (face_indexes, int, i);
-          GthreeFace *face = gthree_geometry_get_face (geometry, face_index);
+          int a = gthree_geometry_face_get_a (geometry, face_index);
+          int b = gthree_geometry_face_get_b (geometry, face_index);
+          int c = gthree_geometry_face_get_c (geometry, face_index);
 
-          graphene_vec3_to_float (&vertices[face->a], &group->vertex_array[offset]);
-          graphene_vec3_to_float (&vertices[face->b], &group->vertex_array[offset + 3]);
-          graphene_vec3_to_float (&vertices[face->c], &group->vertex_array[offset + 6]);
+          graphene_vec3_to_float (&vertices[a], &group->vertex_array[offset]);
+          graphene_vec3_to_float (&vertices[b], &group->vertex_array[offset + 3]);
+          graphene_vec3_to_float (&vertices[c], &group->vertex_array[offset + 6]);
 
           offset += 9;
         }
@@ -306,21 +306,15 @@ set_mesh_buffers (GthreeMesh *mesh,
     {
       for (i = 0; i < face_indexes->len; i++)
         {
-          int face_index = g_array_index (face_indexes, int, i);
-          GthreeFace *face = gthree_geometry_get_face (geometry, face_index);
-          GdkRGBA *c1, *c2, *c3;
+          int face = g_array_index (face_indexes, int, i);
+          const GdkRGBA *c1, *c2, *c3;
 
-          if (face->vertex_colors && vertex_color_type == GTHREE_COLOR_VERTEX)
+          if (!gthree_geometry_face_get_vertex_colors (geometry, face, &c1, &c2, &c3) ||
+	      vertex_color_type != GTHREE_COLOR_VERTEX)
             {
-              c1 = &face->vertex_colors[0];
-              c2 = &face->vertex_colors[1];
-              c3 = &face->vertex_colors[2];
-            }
-          else
-            {
-              c1 = &face->color;
-              c2 = &face->color;
-              c3 = &face->color;
+              c1 = gthree_geometry_face_get_color (geometry, face);
+              c2 = c1;
+              c3 = c1;
             }
 
           group->color_array[offset_color]     = c1->red;
@@ -350,14 +344,14 @@ set_mesh_buffers (GthreeMesh *mesh,
       for (i = 0; i < face_indexes->len; i++)
         {
           int face_index = g_array_index (face_indexes, int, i);
-          GthreeFace *face = gthree_geometry_get_face (geometry, face_index);
 	  int j;
+	  const graphene_vec3_t *vns[3];
 
-          if (face->vertex_normals != NULL && needs_smooth_normals)
+          if (gthree_geometry_face_get_vertex_normals (geometry, face_index, &vns[0], &vns[1], &vns[2]) && needs_smooth_normals)
             {
               for (j = 0; j < 3; j++)
                 {
-                  graphene_vec3_t *vn = &face->vertex_normals[j];
+                  const graphene_vec3_t *vn = vns[j];
 
                   group->normal_array[offset_normal    ] = graphene_vec3_get_x (vn);
                   group->normal_array[offset_normal + 1] = graphene_vec3_get_y (vn);
@@ -370,7 +364,7 @@ set_mesh_buffers (GthreeMesh *mesh,
             {
               for (j = 0; j < 3; j ++)
                 {
-                  graphene_vec3_t *vn = &face->normal;
+                  const graphene_vec3_t *vn = gthree_geometry_face_get_normal (geometry, face_index);
 
                   group->normal_array[offset_normal    ] = graphene_vec3_get_x (vn);
                   group->normal_array[offset_normal + 1] = graphene_vec3_get_y (vn);

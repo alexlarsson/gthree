@@ -32,27 +32,26 @@ colorise_faces (GthreeGeometry *geometry)
 
   for (i = 0; i < gthree_geometry_get_n_faces (geometry); i++)
     {
-      GthreeFace *face = gthree_geometry_get_face (geometry, i);
-      int c = (i/2) % 6;
+      int c = (i / 2) % 6;
       switch (c)
         {
         case 0:
-          gthree_face_set_color (face, &red);
+          gthree_geometry_face_set_color (geometry, i, &red);
           break;
         case 1:
-          gthree_face_set_color (face, &green);
+          gthree_geometry_face_set_color (geometry, i, &green);
           break;
         case 2:
-          gthree_face_set_color (face, &blue);
+          gthree_geometry_face_set_color (geometry, i, &blue);
           break;
         case 3:
-          gthree_face_set_color (face, &cyan);
+          gthree_geometry_face_set_color (geometry, i, &cyan);
           break;
         case 4:
-          gthree_face_set_color (face, &magenta);
+          gthree_geometry_face_set_color (geometry, i, &magenta);
           break;
         case 5:
-          gthree_face_set_color (face, &yellow);
+          gthree_geometry_face_set_color (geometry, i, &yellow);
           break;
         }
     }
@@ -65,17 +64,16 @@ colorise_vertices (GthreeGeometry *geometry)
 
   for (i = 0; i < gthree_geometry_get_n_faces (geometry); i++)
     {
-      GthreeFace *face = gthree_geometry_get_face (geometry, i);
-      if (i%2 == 0)
-        gthree_face_set_vertex_colors (face,
-                                       &red,
-                                       &green,
-                                       &blue);
+      if (i % 2 == 0)
+        gthree_geometry_face_set_vertex_colors (geometry, i,
+						&red,
+						&green,
+						&blue);
       else
-        gthree_face_set_vertex_colors (face,
-                                       &green,
-                                       &yellow,
-                                       &blue);
+        gthree_geometry_face_set_vertex_colors (geometry, i,
+						&green,
+						&yellow,
+						&blue);
     }
 }
 

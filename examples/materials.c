@@ -198,10 +198,8 @@ init_scene (void)
   materials[n_materials++] = GTHREE_MATERIAL (material_basic);
 
   for (i = 0; i < gthree_geometry_get_n_faces (geometry_pieces); i++)
-    {
-      GthreeFace *face = gthree_geometry_get_face (geometry_pieces, i);
-      gthree_face_set_material_index (face, g_random_int_range (0, n_materials));
-    }
+    gthree_geometry_face_set_material_index (geometry_pieces, i, g_random_int_range (0, n_materials));
+
   multi_material = gthree_multi_material_new ();
   for (i = 0; i < n_materials; i++)
     gthree_multi_material_set_index (multi_material, i, materials[i]);

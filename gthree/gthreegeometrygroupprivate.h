@@ -2,7 +2,6 @@
 #define __GTHREE_GEOMETRY_GROUP_H__
 
 #include <gthree/gthreebufferprivate.h>
-#include <gthree/gthreeface.h>
 
 G_BEGIN_DECLS
 
