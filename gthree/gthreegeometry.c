@@ -21,7 +21,7 @@ typedef struct {
 
   GArray *colors; /* GdkRGBA, per vertex */
 
-  GPtrArray *faces; /* GthreeFace* */
+  GArray *faces; /* GthreeFace */
 
   GArray *uv; /* graphene_vec2_t */
   GArray *uv2; /* graphene_vec2_t */
@@ -37,11 +37,10 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeGeometry, gthree_geometry, G_TYPE_OBJECT);
 
 static void
-gthree_face_free (GthreeFace *face)
+gthree_face_destroy (GthreeFace *face)
 {
   g_clear_pointer (&face->vertex_colors, g_free);
   g_clear_pointer (&face->vertex_normals, g_free);
-  g_free (face);
 }
 
 GthreeGeometry *
@@ -78,24 +77,6 @@ gthree_geometry_get_vertices (GthreeGeometry *geometry)
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
 
   return (graphene_vec3_t *)priv->vertices->data;
-}
-
-void
-gthree_geometry_add_face_obj (GthreeGeometry *geometry,
-			      GthreeFace *face)
-{
-  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
-
-  g_ptr_array_add (priv->faces, g_object_ref (face));
-}
-
-GthreeFace *
-gthree_geometry_get_face (GthreeGeometry *geometry,
-                          int i)
-{
-  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
-
-  return g_ptr_array_index (priv->faces, i);
 }
 
 guint
@@ -212,6 +193,8 @@ gthree_geometry_get_bounding_sphere (GthreeGeometry *geometry)
 void
 gthree_geometry_compute_face_normals (GthreeGeometry *geometry)
 {
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+  GthreeFace *face;
   graphene_vec3_t cb, ab;
   const graphene_vec3_t *vertices;
   const graphene_vec3_t *va, *vb, *vc;
@@ -221,7 +204,7 @@ gthree_geometry_compute_face_normals (GthreeGeometry *geometry)
   vertices = gthree_geometry_get_vertices (geometry);
   for (i = 0; i < n_faces; i++)
     {
-      GthreeFace *face = gthree_geometry_get_face (geometry, i);
+      face = &g_array_index (priv->faces, GthreeFace, i);
 
       va = &vertices[face->a];
       vb = &vertices[face->b];
@@ -247,11 +230,12 @@ gthree_geometry_add_face (GthreeGeometry        *geometry,
 
   int i = priv->faces->len;
 
-  face = g_new0 (GthreeFace, 1);
+  g_array_set_size (priv->faces, i + 1);
+  
+  face = &g_array_index (priv->faces, GthreeFace, i);
   face->a = a;
   face->b = b;
   face->c = c;
-  g_ptr_array_add (priv->faces, face);
 
   return i;
 }
@@ -263,8 +247,7 @@ gthree_geometry_face_get_a (GthreeGeometry *geometry,
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
   GthreeFace *face;
 
-  face = g_ptr_array_index (priv->faces, index);
-  
+  face = &g_array_index (priv->faces, GthreeFace, index);
   return face->a;
 }
 
@@ -275,8 +258,7 @@ gthree_geometry_face_get_b (GthreeGeometry *geometry,
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
   GthreeFace *face;
 
-  face = g_ptr_array_index (priv->faces, index);
-  
+  face = &g_array_index (priv->faces, GthreeFace, index);
   return face->b;
 }
 
@@ -287,7 +269,7 @@ gthree_geometry_face_get_c (GthreeGeometry *geometry,
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
   GthreeFace *face;
 
-  face = g_ptr_array_index (priv->faces, index);
+  face = &g_array_index (priv->faces, GthreeFace, index);
   
   return face->c;
 }
@@ -300,7 +282,7 @@ gthree_geometry_face_set_normal (GthreeGeometry        *geometry,
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
   GthreeFace *face;
 
-  face = g_ptr_array_index (priv->faces, index);
+  face = &g_array_index (priv->faces, GthreeFace, index);
   face->normal = *normal;
 }
 
@@ -311,7 +293,7 @@ gthree_geometry_face_get_normal (GthreeGeometry        *geometry,
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
   GthreeFace *face;
 
-  face = g_ptr_array_index (priv->faces, index);
+  face = &g_array_index (priv->faces, GthreeFace, index);
   return &face->normal;
 }
 
@@ -325,7 +307,7 @@ gthree_geometry_face_set_vertex_normals (GthreeGeometry        *geometry,
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
   GthreeFace *face;
 
-  face = g_ptr_array_index (priv->faces, index);
+  face = &g_array_index (priv->faces, GthreeFace, index);
 
     if (face->vertex_normals == NULL)
     face->vertex_normals = g_new (graphene_vec3_t, 3);
@@ -345,7 +327,7 @@ gthree_geometry_face_get_vertex_normals  (GthreeGeometry         *geometry,
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
   GthreeFace *face;
 
-  face = g_ptr_array_index (priv->faces, index);
+  face = &g_array_index (priv->faces, GthreeFace, index);
   if (face->vertex_normals == NULL)
     {
       *normal_a = NULL;
@@ -370,7 +352,7 @@ gthree_geometry_face_set_color (GthreeGeometry        *geometry,
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
   GthreeFace *face;
 
-  face = g_ptr_array_index (priv->faces, index);
+  face = &g_array_index (priv->faces, GthreeFace, index);
   face->color = *color;
 }
 
@@ -381,7 +363,7 @@ gthree_geometry_face_get_color (GthreeGeometry         *geometry,
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
   GthreeFace *face;
 
-  face = g_ptr_array_index (priv->faces, index);
+  face = &g_array_index (priv->faces, GthreeFace, index);
   return &face->color;
 }
 
@@ -395,7 +377,7 @@ gthree_geometry_face_set_vertex_colors (GthreeGeometry        *geometry,
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
   GthreeFace *face;
 
-  face = g_ptr_array_index (priv->faces, index);
+  face = &g_array_index (priv->faces, GthreeFace, index);
   if (face->vertex_colors == NULL)
     face->vertex_colors = g_new (GdkRGBA, 3);
 
@@ -414,7 +396,7 @@ gthree_geometry_face_get_vertex_colors  (GthreeGeometry         *geometry,
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
   GthreeFace *face;
 
-  face = g_ptr_array_index (priv->faces, index);
+  face = &g_array_index (priv->faces, GthreeFace, index);
   if (face->vertex_colors == NULL)
     {
       *a = NULL;
@@ -439,7 +421,7 @@ gthree_geometry_face_set_material_index (GthreeGeometry        *geometry,
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
   GthreeFace *face;
 
-  face = g_ptr_array_index (priv->faces, index);
+  face = &g_array_index (priv->faces, GthreeFace, index);
   face->material_index = material_index;
 }
 
@@ -450,7 +432,7 @@ gthree_geometry_face_get_material_index (GthreeGeometry        *geometry,
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
   GthreeFace *face;
 
-  face = g_ptr_array_index (priv->faces, index);
+  face = &g_array_index (priv->faces, GthreeFace, index);
   return face->material_index;
 }
 
@@ -461,7 +443,7 @@ gthree_geometry_init (GthreeGeometry *geometry)
 
   priv->vertices = g_array_new (FALSE, FALSE, sizeof (graphene_vec3_t));
   priv->colors = g_array_new (FALSE, FALSE, sizeof (GdkRGBA));
-  priv->faces = g_ptr_array_new_with_free_func ((GDestroyNotify)gthree_face_free);
+  priv->faces = g_array_new (FALSE, TRUE, sizeof (GthreeFace));
   priv->uv = g_array_new (FALSE, TRUE, sizeof (graphene_vec2_t));
   priv->uv2 = g_array_new (FALSE, TRUE, sizeof (graphene_vec2_t));
 }
@@ -471,10 +453,13 @@ gthree_geometry_finalize (GObject *obj)
 {
   GthreeGeometry *geometry = GTHREE_GEOMETRY (obj);
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+  int i;
 
   g_array_free (priv->vertices, TRUE);
   g_array_free (priv->colors, TRUE);
-  g_ptr_array_free (priv->faces, TRUE);
+  for (i = 0; i < priv->faces->len; i++)
+    gthree_face_destroy (&g_array_index (priv->faces, GthreeFace, i));
+  g_array_free (priv->faces, TRUE);
   g_array_free (priv->uv, TRUE);
   g_array_free (priv->uv2, TRUE);
 
