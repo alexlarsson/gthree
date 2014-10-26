@@ -37,7 +37,19 @@ struct _GthreeLightSetup
 };
 
 guint gthree_renderer_allocate_texture_unit (GthreeRenderer *renderer);
-void gthree_texture_load (GthreeTexture *texture, int slot);
+
+void     gthree_texture_load             (GthreeTexture *texture,
+					  int            slot);
+gboolean gthree_texture_get_needs_update (GthreeTexture *texture);
+void     gthree_texture_set_needs_update (GthreeTexture *texture,
+					  gboolean       needs_update);
+void     gthree_texture_bind             (GthreeTexture *texture,
+					  int            slot,
+					  int            target);
+void     gthree_texture_set_parameters (guint texture_type,
+					GthreeTexture *texture,
+					gboolean is_image_power_of_two);
+
 
 void   gthree_light_setup (GthreeLight       *light,
 			   GthreeLightSetup *light_setup);

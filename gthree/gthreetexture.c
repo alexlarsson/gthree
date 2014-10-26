@@ -2,6 +2,7 @@
 #include <epoxy/gl.h>
 
 #include "gthreetexture.h"
+#include "gthreeprivate.h"
 #include "gthreeenums.h"
 
 enum
@@ -11,6 +12,8 @@ enum
 };
 
 /*static guint texture_signals[LAST_SIGNAL] = { 0, };*/
+
+static void gthree_texture_real_load (GthreeTexture *texture, int slot);
 
 typedef struct {
   gboolean needs_update;
@@ -52,7 +55,7 @@ gthree_texture_new (GdkPixbuf *pixbuf)
                           NULL);
 
   priv = gthree_texture_get_instance_private (texture);
-  priv->pixbuf = gdk_pixbuf_flip (pixbuf, FALSE);
+  priv->pixbuf = g_object_ref (pixbuf);
 
   return texture;
 }
@@ -99,8 +102,34 @@ gthree_texture_finalize (GObject *obj)
 static void
 gthree_texture_class_init (GthreeTextureClass *klass)
 {
+  klass->load = gthree_texture_real_load;
   G_OBJECT_CLASS (klass)->finalize = gthree_texture_finalize;
 
+}
+
+gboolean
+gthree_texture_get_needs_update (GthreeTexture *texture)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  return priv->needs_update;
+}
+
+void
+gthree_texture_set_needs_update (GthreeTexture *texture,
+				 gboolean needs_update)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  priv->needs_update = needs_update;
+}
+
+gboolean
+gthree_texture_get_generate_mipmaps (GthreeTexture *texture)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  return priv->generate_mipmaps;
 }
 
 const graphene_vec2_t *
@@ -175,8 +204,8 @@ filter_fallback (GthreeFilter filter)
     }
 }
 
-static void
-set_texture_parameters (guint texture_type, GthreeTexture *texture, gboolean is_image_power_of_two)
+void
+gthree_texture_set_parameters (guint texture_type, GthreeTexture *texture, gboolean is_image_power_of_two)
 {
   GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
 
@@ -212,7 +241,7 @@ is_power_of_two (guint value)
 }
 
 void
-gthree_texture_load (GthreeTexture *texture, int slot)
+gthree_texture_bind (GthreeTexture *texture, int slot, int target)
 {
   GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
 
@@ -220,7 +249,15 @@ gthree_texture_load (GthreeTexture *texture, int slot)
     glGenTextures(1, &priv->gl_texture);
 
   glActiveTexture (GL_TEXTURE0 + slot);
-  glBindTexture (GL_TEXTURE_2D, priv->gl_texture);
+  glBindTexture (target, priv->gl_texture);
+}
+
+static void
+gthree_texture_real_load (GthreeTexture *texture, int slot)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  gthree_texture_bind (texture, slot, GL_TEXTURE_2D);
 
   if (priv->needs_update)
     {
@@ -236,7 +273,7 @@ gthree_texture_load (GthreeTexture *texture, int slot)
       gl_format = gdk_pixbuf_get_has_alpha (priv->pixbuf) ? GL_RGBA : GL_RGB;
       gl_type = priv->type;
 
-      set_texture_parameters (GL_TEXTURE_2D, texture, is_image_power_of_two);
+      gthree_texture_set_parameters (GL_TEXTURE_2D, texture, is_image_power_of_two);
 
       //var mipmap, mipmaps = texture.mipmaps;
 
@@ -295,8 +332,15 @@ gthree_texture_load (GthreeTexture *texture, int slot)
           else
 #endif
             {
+	      GdkPixbuf *pixbuf;
+	      if (priv->flip_y)
+		pixbuf = gdk_pixbuf_flip (priv->pixbuf, FALSE);
+	      else
+		pixbuf = g_object_ref (priv->pixbuf);
+
               glTexImage2D (GL_TEXTURE_2D, 0, gl_format, width, height, 0, gl_format, gl_type,
-                            gdk_pixbuf_get_pixels (priv->pixbuf));
+                            gdk_pixbuf_get_pixels (pixbuf));
+	      g_object_unref (pixbuf);
             }
         }
 
@@ -305,4 +349,12 @@ gthree_texture_load (GthreeTexture *texture, int slot)
 
       priv->needs_update = FALSE;
     }
+}
+
+void
+gthree_texture_load (GthreeTexture *texture, int slot)
+{
+  GthreeTextureClass *class = GTHREE_TEXTURE_GET_CLASS(texture);
+
+  class->load (texture, slot);
 }

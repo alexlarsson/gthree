@@ -36,6 +36,7 @@ gthree_public_h_sources = \
 	gthreerenderer.h \
 	gthreescene.h \
 	gthreetexture.h \
+	gthreecubetexture.h \
 	gthreetypes.h \
 	gthreeprogram.h			\
 	gthreeshader.h \
@@ -112,6 +113,7 @@ gthree_c_sources = \
 	gthreeshader.c \
 	gthreeshader.h \
 	gthreetexture.c \
+	gthreecubetexture.c \
 	gthreeloader.c			\
 	gthreemarshalers.c			\
 	$(NULL)
