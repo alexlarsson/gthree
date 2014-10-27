@@ -10,6 +10,7 @@ typedef struct {
   float refraction_ratio;
 
   GthreeTexture *map;
+  GthreeTexture *env_map;
 
   GthreeShadingType shading_type;
   GthreeColorType vertex_colors;
@@ -59,6 +60,7 @@ gthree_basic_material_finalize (GObject *obj)
   GthreeBasicMaterialPrivate *priv = gthree_basic_material_get_instance_private (basic);
 
   g_clear_object (&priv->map);
+  g_clear_object (&priv->env_map);
 
   G_OBJECT_CLASS (gthree_basic_material_parent_class)->finalize (obj);
 }
@@ -75,6 +77,7 @@ gthree_basic_material_real_set_params (GthreeMaterial *material,
   params->vertex_colors = priv->vertex_colors;
 
   params->map = priv->map != NULL;
+  params->env_map = priv->env_map != NULL;
 }
 
 static void
@@ -97,6 +100,13 @@ gthree_basic_material_real_set_uniforms (GthreeMaterial *material,
   if (uni != NULL)
     gthree_uniform_set_texture (uni, priv->map);
 
+  /* uv repeat and offset setting priorities
+   * 1. color map
+   * 2. specular map
+   * 3. normal map
+   * 4. bump map
+   * 5. alpha map
+   */
   scale_map = NULL;
   if (priv->map != NULL)
     scale_map = priv->map;
@@ -119,9 +129,26 @@ gthree_basic_material_real_set_uniforms (GthreeMaterial *material,
         gthree_uniform_set_vec4 (uni, &offset_repeat);
     }
 
+  uni = gthree_uniforms_lookup_from_string (uniforms, "envMap");
+  if (uni != NULL)
+    gthree_uniform_set_texture (uni, priv->env_map);
+
+  uni = gthree_uniforms_lookup_from_string (uniforms, "useRefract");
+  if (uni != NULL)
+    gthree_uniform_set_int (uni,
+                            priv->env_map && (FALSE /* TODO: material.envMap.mapping instanceof THREE.CubeRefractionMapping */));
+
+  uni = gthree_uniforms_lookup_from_string (uniforms, "flipEnvMap");
+  if (uni != NULL)
+    gthree_uniform_set_float (uni, (TRUE /* TODO: material.envMap instanceof THREE.WebGLRenderTargetCube */) ? 1 : -1);
+
   uni = gthree_uniforms_lookup_from_string (uniforms, "combine");
   if (uni != NULL)
     gthree_uniform_set_int (uni, priv->combine);
+
+  uni = gthree_uniforms_lookup_from_string (uniforms, "refractionRatio");
+  if (uni != NULL)
+    gthree_uniform_set_float (uni, priv->refraction_ratio);
 
 
   // TODO: More from refreshUniformsCommon
@@ -147,7 +174,19 @@ gthree_basic_material_needs_uv (GthreeMaterial *material)
 static GthreeShadingType
 gthree_basic_material_needs_normals (GthreeMaterial *material)
 {
-  return GTHREE_SHADING_NONE;
+  GthreeBasicMaterial *basic = GTHREE_BASIC_MATERIAL (material);
+  GthreeBasicMaterialPrivate *priv = gthree_basic_material_get_instance_private (basic);
+
+  return priv->env_map != NULL ? GTHREE_SHADING_FLAT : GTHREE_SHADING_NONE;
+}
+
+static gboolean
+gthree_basic_material_needs_camera_pos (GthreeMaterial *material)
+{
+  GthreeBasicMaterial *basic = GTHREE_BASIC_MATERIAL (material);
+  GthreeBasicMaterialPrivate *priv = gthree_basic_material_get_instance_private (basic);
+
+  return priv->env_map != NULL;
 }
 
 static GthreeColorType
@@ -167,6 +206,7 @@ gthree_basic_material_class_init (GthreeBasicMaterialClass *klass)
   GTHREE_MATERIAL_CLASS(klass)->set_uniforms = gthree_basic_material_real_set_uniforms;
   GTHREE_MATERIAL_CLASS(klass)->needs_uv = gthree_basic_material_needs_uv;
   GTHREE_MATERIAL_CLASS(klass)->needs_normals = gthree_basic_material_needs_normals;
+  GTHREE_MATERIAL_CLASS(klass)->needs_camera_pos = gthree_basic_material_needs_camera_pos;
   GTHREE_MATERIAL_CLASS(klass)->needs_colors = gthree_basic_material_needs_colors;
 }
 
@@ -241,6 +281,30 @@ gthree_basic_material_get_map (GthreeBasicMaterial *basic)
   GthreeBasicMaterialPrivate *priv = gthree_basic_material_get_instance_private (basic);
 
   return priv->map;
+}
+
+void
+gthree_basic_material_set_env_map (GthreeBasicMaterial *basic,
+                                   GthreeTexture *texture)
+{
+  GthreeBasicMaterialPrivate *priv = gthree_basic_material_get_instance_private (basic);
+
+  if (texture)
+    g_object_ref (texture);
+  if (priv->env_map)
+    g_object_unref (priv->env_map);
+
+  priv->env_map = texture;
+
+  gthree_material_set_needs_update (GTHREE_MATERIAL (basic), TRUE);
+}
+
+GthreeTexture *
+gthree_basic_material_get_env_map (GthreeBasicMaterial *basic)
+{
+  GthreeBasicMaterialPrivate *priv = gthree_basic_material_get_instance_private (basic);
+
+  return priv->env_map;
 }
 
 GthreeColorType

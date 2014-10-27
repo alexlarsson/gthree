@@ -46,6 +46,12 @@ gthree_cube_texture_new (GdkPixbuf *px,
   return cube;
 }
 
+GthreeCubeTexture *
+gthree_cube_texture_new_from_array (GdkPixbuf *pixbufs[6])
+{
+  return gthree_cube_texture_new (pixbufs[0], pixbufs[1], pixbufs[2], pixbufs[3], pixbufs[4], pixbufs[5]);
+}
+
 static void
 gthree_cube_texture_init (GthreeCubeTexture *cube)
 {

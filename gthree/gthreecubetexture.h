@@ -32,6 +32,7 @@ GthreeCubeTexture *gthree_cube_texture_new (GdkPixbuf *px,
 					    GdkPixbuf *ny,
 					    GdkPixbuf *pz,
 					    GdkPixbuf *nz);
+GthreeCubeTexture *gthree_cube_texture_new_from_array (GdkPixbuf *pixbufs[6]);
 
 GType gthree_cube_texture_get_type (void) G_GNUC_CONST;
 

@@ -39,6 +39,9 @@ GthreeColorType   gthree_basic_material_get_vertex_colors (GthreeBasicMaterial *
 void              gthree_basic_material_set_map           (GthreeBasicMaterial *basic,
                                                            GthreeTexture       *texture);
 GthreeTexture  *  gthree_basic_material_get_map           (GthreeBasicMaterial *basic);
+void              gthree_basic_material_set_env_map       (GthreeBasicMaterial *basic,
+                                                           GthreeTexture       *texture);
+GthreeTexture  *  gthree_basic_material_get_env_map       (GthreeBasicMaterial *basic);
 GthreeShadingType gthree_basic_material_get_shading_type  (GthreeBasicMaterial *basic);
 void              gthree_basic_material_set_shading_type  (GthreeBasicMaterial *basic,
                                                            GthreeShadingType    shading_type);
