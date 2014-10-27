@@ -215,6 +215,18 @@ gthree_object_is_in_frustum (GthreeObject *object,
   return TRUE;
 }
 
+gboolean
+gthree_object_has_attribute_data (GthreeObject                *object,
+                                  const char                  *attribute)
+{
+  GthreeObjectClass *class = GTHREE_OBJECT_GET_CLASS(object);
+
+  if (class->has_attribute_data)
+    return class->has_attribute_data (object, attribute);
+
+  return FALSE;
+}
+
 void
 gthree_object_look_at (GthreeObject *object,
                        graphene_point3d_t *pos)

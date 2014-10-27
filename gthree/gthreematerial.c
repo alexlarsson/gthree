@@ -21,6 +21,7 @@ typedef struct {
   float alpha_test;
   GthreeSide side;
 
+  GthreeShader *shader;
   gboolean needs_update;
 } GthreeMaterialPrivate;
 
@@ -461,14 +462,26 @@ GthreeShader *
 gthree_material_get_shader (GthreeMaterial *material)
 {
   GthreeMaterialClass *class = GTHREE_MATERIAL_GET_CLASS(material);
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
 
-  if (material->shader == NULL)
+  if (priv->shader == NULL)
     {
       if (class->get_shader)
-	material->shader = class->get_shader (material);
+        priv->shader = class->get_shader (material);
       else
-	material->shader = gthree_clone_shader_from_library ("basic");
+        priv->shader = gthree_clone_shader_from_library ("basic");
     }
 
-  return material->shader;
+  return priv->shader;
+}
+
+void
+gthree_material_load_default_attribute (GthreeMaterial       *material,
+                                        int                   attribute_location,
+                                        const char           *attribute)
+{
+  GthreeMaterialClass *class = GTHREE_MATERIAL_GET_CLASS(material);
+
+  if (class->load_default_attribute)
+    class->load_default_attribute (material, attribute_location, attribute);
 }

@@ -4,7 +4,6 @@
 #include "gthreeprogram.h"
 #include "gthreeuniforms.h"
 #include "gthreeshader.h"
-#include "gthreematerial.h"
 
 typedef struct {
   // TODO: Switch these from string to quarks
@@ -87,6 +86,24 @@ cache_uniform_locations (GHashTable *uniforms, GLuint program, char **identifier
 }
 
 static void
+generate_defines (GString *out, GPtrArray *defines)
+{
+  int i;
+
+  for (i = 0; i + 1 < defines->len; i += 2)
+    {
+      char *key = g_ptr_array_index (defines, i);
+      char *value = g_ptr_array_index (defines, i + 1);
+
+      if (value == NULL)
+        continue;
+
+      g_string_append_printf (out, "#define %s %s\n", key, value);
+    }
+}
+
+
+static void
 cache_attribute_locations (GHashTable *attributes, GLuint program, char **identifiers)
 {
   int i;
@@ -99,11 +116,11 @@ cache_attribute_locations (GHashTable *attributes, GLuint program, char **identi
 }
 
 GthreeProgram *
-gthree_program_new (gpointer code, GthreeMaterial *material, GthreeProgramParameters *parameters)
+gthree_program_new (gpointer code, GthreeShader *shader, GthreeProgramParameters *parameters)
 {
   GthreeProgram *program;
   GthreeProgramPrivate *priv;
-  //char **defines;
+  GPtrArray *defines;
   GthreeUniforms *uniforms;
   const char *vertex_shader, *fragment_shader;
   char *index0AttributeName;
@@ -119,12 +136,11 @@ gthree_program_new (gpointer code, GthreeMaterial *material, GthreeProgramParame
                           NULL);
   priv = gthree_program_get_instance_private (program);
 
-  //defines = NULL;
-  //var defines = material.defines;
   //var attributes = material.attributes;
-  uniforms = gthree_shader_get_uniforms (material->shader);
-  vertex_shader = gthree_shader_get_vertex_shader_text (material->shader);
-  fragment_shader = gthree_shader_get_fragment_shader_text (material->shader);
+  defines = gthree_shader_get_defines (shader);
+  uniforms = gthree_shader_get_uniforms (shader);
+  vertex_shader = gthree_shader_get_vertex_shader_text (shader);
+  fragment_shader = gthree_shader_get_fragment_shader_text (shader);
 
   index0AttributeName = NULL;
   //index0AttributeName = material.index0AttributeName;
@@ -150,9 +166,6 @@ gthree_program_new (gpointer code, GthreeMaterial *material, GthreeProgramParame
 
   //
 
-  //var customDefines = generateDefines( defines );
-
-  //
 
   gl_program = glCreateProgram ();
 
@@ -166,7 +179,8 @@ gthree_program_new (gpointer code, GthreeMaterial *material, GthreeProgramParame
       //g_string_append_printf (vertex, "precision %s float;\n", precision_to_string (parameters->precision));
       //g_string_append_printf (vertex, "precision %s int;\n", precision_to_string (parameters->precision));
 
-      //customDefines,
+      if (defines)
+        generate_defines (vertex, defines);
 
       if (parameters->supports_vertex_textures)
         g_string_append (vertex, "#define VERTEX_TEXTURES\n");
@@ -284,7 +298,8 @@ gthree_program_new (gpointer code, GthreeMaterial *material, GthreeProgramParame
 
       //TODO      ( parameters.bumpMap || parameters.normalMap ) ? "#extension GL_OES_standard_derivatives : enable" : "",
 
-      //customDefines,
+      if (defines)
+        generate_defines (fragment, defines);
 
       g_string_append_printf (fragment,
                               "#define MAX_DIR_LIGHTS %d\n"

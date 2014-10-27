@@ -600,12 +600,31 @@ gthree_mesh_in_frustum (GthreeObject *object,
   return gthree_frustum_intersects_sphere (frustum, &sphere);
 }
 
+static gboolean
+gthree_mesh_real_has_attribute_data (GthreeObject                *object,
+                                     const char                  *attribute)
+{
+  GthreeMesh *mesh = GTHREE_MESH (object);
+  GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
+
+  if (strcmp (attribute, "color") == 0)
+    return gthree_geometry_get_n_colors (priv->geometry) > 0 || gthree_geometry_get_n_faces (priv->geometry);
+  else if (strcmp (attribute, "uv") == 0)
+    return gthree_geometry_get_n_uv (priv->geometry) > 0;
+  else if (strcmp (attribute, "uv2") == 0)
+    return gthree_geometry_get_n_uv2 (priv->geometry) > 0;
+
+  return FALSE;
+}
+
+
 static void
 gthree_mesh_class_init (GthreeMeshClass *klass)
 {
   G_OBJECT_CLASS (klass)->finalize = gthree_mesh_finalize;
 
   GTHREE_OBJECT_CLASS (klass)->in_frustum = gthree_mesh_in_frustum;
+  GTHREE_OBJECT_CLASS (klass)->has_attribute_data = gthree_mesh_real_has_attribute_data;
   GTHREE_OBJECT_CLASS (klass)->update = gthree_mesh_update;
   GTHREE_OBJECT_CLASS (klass)->realize = gthree_mesh_realize;
   GTHREE_OBJECT_CLASS (klass)->unrealize = gthree_mesh_unrealize;

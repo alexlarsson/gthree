@@ -14,8 +14,13 @@ GthreeScene *
 init_scene (void)
 {
   GthreeGeometry *geometry;
+  GthreeMesh *skybox;
   GthreeLambertMaterial *material;
-  GthreeCubeTexture *texture;
+  GthreeShader *shader;
+  GthreeUniforms *uniforms;
+  GthreeUniform *uni;
+  GthreeShaderMaterial *shader_material;
+  GthreeCubeTexture *reflectionCube, *refractionCube;
   GdkPixbuf *pixbufs[6];
   GthreeAmbientLight *ambient_light;
   GthreePointLight *point_light;
@@ -23,16 +28,18 @@ init_scene (void)
 
   examples_load_cube_pixbufs ("cube/SwedishRoyalCastle", pixbufs);
 
-  texture = gthree_cube_texture_new_from_array (pixbufs);
+  reflectionCube = gthree_cube_texture_new_from_array (pixbufs);
+  refractionCube = gthree_cube_texture_new_from_array (pixbufs);
+  gthree_texture_set_mapping (GTHREE_TEXTURE (refractionCube), GTHREE_MAPPING_CUBE_REFRACTION);
 
   material = gthree_lambert_material_new ();
   gthree_basic_material_set_color (GTHREE_BASIC_MATERIAL (material), &white);
   gthree_lambert_material_set_ambient_color (material, &light_grey);
-  gthree_basic_material_set_env_map (GTHREE_BASIC_MATERIAL (material), GTHREE_TEXTURE (texture));
+  gthree_basic_material_set_env_map (GTHREE_BASIC_MATERIAL (material), GTHREE_TEXTURE (reflectionCube));
 
   scene = gthree_scene_new ();
 
-  geometry = gthree_geometry_new_sphere (100, 32, 16);
+  geometry = gthree_geometry_new_sphere (50, 32, 16);
   obj1 = gthree_mesh_new (geometry, GTHREE_MATERIAL (material));
   gthree_object_set_position (GTHREE_OBJECT (obj1),
                               graphene_point3d_init (&pos,
@@ -50,6 +57,19 @@ init_scene (void)
                                                      0));
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (obj2));
 
+  shader = gthree_clone_shader_from_library ("cube");
+  uniforms = gthree_shader_get_uniforms (shader);
+  uni = gthree_uniforms_lookup_from_string (uniforms, "tCube");
+  g_assert (uni != NULL);
+  gthree_uniform_set_texture (uni, GTHREE_TEXTURE (reflectionCube));
+
+  shader_material = gthree_shader_material_new (shader);
+  gthree_material_set_depth_write (GTHREE_MATERIAL (shader_material), FALSE);
+  gthree_material_set_side (GTHREE_MATERIAL (shader_material), GTHREE_SIDE_BACK);
+
+  geometry = gthree_geometry_new_box (3000, 3000, 3000, 1, 1, 1);
+  skybox = gthree_mesh_new (geometry, GTHREE_MATERIAL (shader_material));
+  gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (skybox));
 
   ambient_light = gthree_ambient_light_new (&white);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));

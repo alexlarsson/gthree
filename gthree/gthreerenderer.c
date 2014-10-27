@@ -680,12 +680,12 @@ init_material (GthreeRenderer *renderer,
 
   if (program == NULL)
     {
-      program = gthree_program_new (code, material, &parameters);
+      program = gthree_program_new (code, shader, &parameters);
       //_programs.push( program );
     }
 
   material->program = program;
-  
+
 #ifdef TODO
   var attributes = material.program.attributes;
   if (material.morphTargets)
@@ -1257,7 +1257,7 @@ render_buffer (GthreeRenderer *renderer,
   //var linewidth, a, attribute, i, il;
   //var attributes = program.attributes;
   gboolean updateBuffers = false;
-  gint position_location, color_location, uv_location, normal_location;
+  gint position_location, color_location, uv_location, uv2_location, normal_location;
   //guint32 wireframeBit = gthree_material_get_is_wireframe (material) ? 1 : 0;
   //guint32 geometryGroupHash = (guint32)buffer + (guint32)program * 2 + wireframeBit;
 
@@ -1316,36 +1316,41 @@ render_buffer (GthreeRenderer *renderer,
       color_location = gthree_program_lookup_attribute_location (program, "color");
       if (color_location >= 0)
         {
-          if ( TRUE /* object.geometry.colors.length > 0 || object.geometry.faces.length > 0 */ )
+          if (gthree_object_has_attribute_data (object, "color"))
             {
               glBindBuffer (GL_ARRAY_BUFFER, buffer->color_buffer);
               enable_attribute (renderer, color_location);
               glVertexAttribPointer (color_location, 3, GL_FLOAT, FALSE, 0, NULL);
             }
-#if TODO
-          else if (material.defaultAttributeValues)
-            {
-              glVertexAttrib3fv (attributes.color, material.defaultAttributeValues.color);
-            }
-#endif
+          else
+            gthree_material_load_default_attribute (material, color_location, "color");
         }
 
       // uvs
       uv_location = gthree_program_lookup_attribute_location (program, "uv");
       if (uv_location >= 0)
         {
-          if ( TRUE /* object.geometry.faceVertexUvs[ 0 ] */ )
+          if (gthree_object_has_attribute_data (object, "uv"))
             {
               glBindBuffer (GL_ARRAY_BUFFER, buffer->uv_buffer);
               enable_attribute (renderer, uv_location);
               glVertexAttribPointer (uv_location, 2, GL_FLOAT, FALSE, 0, NULL);
             }
-#if TODO
-          else if (material.defaultAttributeValues)
+          else
+            gthree_material_load_default_attribute (material, uv_location, "uv");
+        }
+
+      uv2_location = gthree_program_lookup_attribute_location (program, "uv2");
+      if (uv2_location >= 0)
+        {
+          if (gthree_object_has_attribute_data (object, "uv2"))
             {
-              glVertexAttrib2fv (attributes.uv, material.defaultAttributeValues.uv);
+              glBindBuffer (GL_ARRAY_BUFFER, buffer->uv2_buffer);
+              enable_attribute (renderer, uv2_location);
+              glVertexAttribPointer (uv2_location, 2, GL_FLOAT, FALSE, 0, NULL);
             }
-#endif
+          else
+            gthree_material_load_default_attribute (material, uv2_location, "uv2");
         }
 
       // normals

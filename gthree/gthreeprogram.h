@@ -5,6 +5,7 @@
 
 #include <gthree/gthreetypes.h>
 #include <gthree/gthreeenums.h>
+#include <gthree/gthreeshader.h>
 
 G_BEGIN_DECLS
 
@@ -55,7 +56,7 @@ typedef struct {
 
 GType gthree_program_get_type (void) G_GNUC_CONST;
 
-GthreeProgram *gthree_program_new (gpointer code, GthreeMaterial *material, GthreeProgramParameters *parameters);
+GthreeProgram *gthree_program_new (gpointer code, GthreeShader *shader, GthreeProgramParameters *parameters);
 
 void gthree_program_use (GthreeProgram *program);
 

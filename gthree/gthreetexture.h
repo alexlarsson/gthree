@@ -9,6 +9,7 @@
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <graphene.h>
 #include <gthree/gthreetypes.h>
+#include <gthree/gthreeenums.h>
 
 G_BEGIN_DECLS
 
@@ -33,9 +34,12 @@ GType gthree_texture_get_type (void) G_GNUC_CONST;
 
 GthreeTexture *gthree_texture_new (GdkPixbuf *pixbuf);
 
-const graphene_vec2_t *gthree_texture_get_repeat (GthreeTexture *texture);
-const graphene_vec2_t *gthree_texture_get_offset (GthreeTexture *texture);
-gboolean gthree_texture_get_generate_mipmaps (GthreeTexture *texture);
+const graphene_vec2_t *gthree_texture_get_repeat           (GthreeTexture *texture);
+const graphene_vec2_t *gthree_texture_get_offset           (GthreeTexture *texture);
+gboolean               gthree_texture_get_generate_mipmaps (GthreeTexture *texture);
+void                   gthree_texture_set_mapping          (GthreeTexture *texture,
+                                                            GthreeMapping  mapping);
+GthreeMapping          gthree_texture_get_mapping          (GthreeTexture *texture);
 
 G_END_DECLS
 

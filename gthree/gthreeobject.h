@@ -46,6 +46,8 @@ typedef struct {
   void (* removed_child)        (GthreeObject          *object,
                                  GthreeObject          *child);
 
+  gboolean (*has_attribute_data) (GthreeObject                *object,
+                                  const char                  *attribute);
 } GthreeObjectClass;
 
 GType gthree_object_get_type (void) G_GNUC_CONST;
@@ -73,7 +75,8 @@ const graphene_quaternion_t *gthree_object_get_quaternion         (GthreeObject 
 void                         gthree_object_set_rotation           (GthreeObject                *object,
                                                                    const graphene_point3d_t    *rot);
 const graphene_point3d_t *   gthree_object_get_rotation           (GthreeObject                *object);
-
+gboolean                     gthree_object_has_attribute_data     (GthreeObject                *object,
+                                                                   const char                  *attribute);
 
 
 void gthree_object_get_world_matrix_floats      (GthreeObject *object,

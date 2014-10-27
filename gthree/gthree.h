@@ -30,6 +30,7 @@
 #include <gthree/gthreephongmaterial.h>
 #include <gthree/gthreenormalmaterial.h>
 #include <gthree/gthreedepthmaterial.h>
+#include <gthree/gthreeshadermaterial.h>
 
 #undef __GTHREE_H_INSIDE__
 

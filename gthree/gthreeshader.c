@@ -6,6 +6,7 @@
 
 
 typedef struct {
+  GPtrArray *defines;
   GthreeUniforms *uniforms;
   char *vertex_shader_text;
   char *fragment_shader_text;
@@ -17,12 +18,31 @@ G_DEFINE_TYPE_WITH_PRIVATE (GthreeShader, gthree_shader, G_TYPE_OBJECT);
 static void gthree_shader_init_libs ();
 
 GthreeShader *
-gthree_shader_new ()
+gthree_shader_new (GPtrArray *defines,
+                   GthreeUniforms *uniforms,
+                   char *vertex_shader_text,
+                   char *fragment_shader_text)
 {
   GthreeShader *shader;
+  GthreeShaderPrivate *priv;
 
-  shader = g_object_new (gthree_shader_get_type (),
-                          NULL);
+  shader = g_object_new (gthree_shader_get_type (), NULL);
+  priv = gthree_shader_get_instance_private (shader);
+
+  priv->defines = g_ptr_array_ref (defines);
+  priv->uniforms = g_object_ref (uniforms);
+
+  if (vertex_shader_text)
+    priv->vertex_shader_text = g_strdup (vertex_shader_text);
+  else
+    priv->vertex_shader_text = g_strdup ("void main() {\n\tgl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n}");
+
+  if (fragment_shader_text)
+    priv->fragment_shader_text = g_strdup (fragment_shader_text);
+  else
+    priv->fragment_shader_text = g_strdup ("void main() {\n\tgl_FragColor = vec4( 1.0, 0.0, 0.0, 1.0 );\n}");
+
+  priv->owner_of_shader_text = NULL;
 
   return shader;
 }
@@ -41,6 +61,7 @@ gthree_shader_finalize (GObject *obj)
   GthreeShader *shader = GTHREE_SHADER (obj);
   GthreeShaderPrivate *priv = gthree_shader_get_instance_private (shader);
 
+  g_clear_pointer (&priv->defines, g_ptr_array_unref);
   g_clear_object (&priv->uniforms);
 
   if (priv->owner_of_shader_text)
@@ -81,6 +102,14 @@ gthree_shader_update_uniform_locations_for_program (GthreeShader *shader,
   g_list_free (unis);
 }
 
+GPtrArray *
+gthree_shader_get_defines (GthreeShader  *shader)
+{
+  GthreeShaderPrivate *priv = gthree_shader_get_instance_private (shader);
+
+  return priv->defines;
+}
+
 GthreeUniforms *
 gthree_shader_get_uniforms (GthreeShader  *shader)
 {
@@ -113,7 +142,7 @@ gthree_shader_clone (GthreeShader *orig)
 
   orig_priv = gthree_shader_get_instance_private (orig);
 
-  clone = gthree_shader_new ();
+  clone = g_object_new (gthree_shader_get_type (), NULL);
   clone_priv = gthree_shader_get_instance_private (clone);
 
   clone_priv->uniforms = gthree_uniforms_clone (orig_priv->uniforms);
@@ -204,7 +233,7 @@ gthree_shader_new_from_definitions (const char **lib_uniforms,
                                     const char *vertex_shader,
                                     const char *fragment_shader)
 {
-  GthreeShader *shader = gthree_shader_new ();
+  GthreeShader *shader = g_object_new (gthree_shader_get_type (), NULL);
   GthreeShaderPrivate *priv = gthree_shader_get_instance_private (shader);
   GthreeUniforms *uniforms;
   int i;

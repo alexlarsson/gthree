@@ -20,7 +20,7 @@ typedef struct {
 
   GdkPixbuf *pixbuf;
   GArray *mipmaps;
-  gpointer mapping;
+  GthreeMapping mapping;
   GthreeWrapping wrap_s;
   GthreeWrapping wrap_t;
 
@@ -56,6 +56,7 @@ gthree_texture_new (GdkPixbuf *pixbuf)
 
   priv = gthree_texture_get_instance_private (texture);
   priv->pixbuf = g_object_ref (pixbuf);
+  priv->mapping = GTHREE_MAPPING_UV;
 
   return texture;
 }
@@ -122,6 +123,23 @@ gthree_texture_set_needs_update (GthreeTexture *texture,
   GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
 
   priv->needs_update = needs_update;
+}
+
+void
+gthree_texture_set_mapping (GthreeTexture *texture,
+                            GthreeMapping mapping)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  priv->mapping = mapping;
+}
+
+GthreeMapping
+gthree_texture_get_mapping (GthreeTexture *texture)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  return priv->mapping;
 }
 
 gboolean

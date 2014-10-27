@@ -90,3 +90,4 @@ examples_load_model (const char *name)
 
   return geometry;
 }
+

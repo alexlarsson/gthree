@@ -40,6 +40,7 @@ gthree_public_h_sources = \
 	gthreetypes.h \
 	gthreeprogram.h			\
 	gthreeshader.h \
+	gthreeshadermaterial.h \
 	gthreeuniforms.h \
 	gthreeutils.h			\
 	gthreeloader.h			\
@@ -94,6 +95,7 @@ gthree_c_sources = \
 	gthreegeometrygroup.c \
 	gthreegeometrygroup.h \
 	gthreematerial.c \
+	gthreeshadermaterial.c \
 	gthreebasicmaterial.c \
 	gthreemultimaterial.c \
 	gthreelambertmaterial.c \

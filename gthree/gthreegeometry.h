@@ -53,6 +53,7 @@ void                   gthree_geometry_set_uv_n       (GthreeGeometry  *geometry
 						       int              layer,
 						       int              index,
 						       graphene_vec2_t *v);
+guint                  gthree_geometry_get_n_colors   (GthreeGeometry  *geometry);
 
 const GthreeSphere *gthree_geometry_get_bounding_sphere  (GthreeGeometry     *geometry);
 void                gthree_geometry_set_bounding_sphere  (GthreeGeometry     *geometry,

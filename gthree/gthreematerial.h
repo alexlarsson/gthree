@@ -43,6 +43,10 @@ typedef struct {
                                  GthreeUniforms *uniforms,
                                  GthreeCamera *camera);
 
+  void (*load_default_attribute) (GthreeMaterial       *material,
+                                  int                   attribute_location,
+                                  const char           *attribute);
+
   gboolean           (*needs_view_matrix) (GthreeMaterial *material);
   gboolean           (*needs_camera_pos) (GthreeMaterial *material);
   gboolean           (*needs_lights)  (GthreeMaterial *material);
@@ -106,6 +110,9 @@ void            gthree_material_set_params               (GthreeMaterial       *
 void            gthree_material_set_uniforms             (GthreeMaterial       *material,
                                                           GthreeUniforms       *uniforms,
                                                           GthreeCamera         *camera);
+void            gthree_material_load_default_attribute   (GthreeMaterial       *material,
+                                                          int                   attribute_location,
+                                                          const char           *attribute);
 
 gboolean          gthree_material_get_needs_update (GthreeMaterial *material);
 void              gthree_material_set_needs_update (GthreeMaterial *material,

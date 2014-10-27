@@ -80,6 +80,14 @@ gthree_geometry_get_vertices (GthreeGeometry *geometry)
 }
 
 guint
+gthree_geometry_get_n_colors (GthreeGeometry *geometry)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+
+  return priv->colors->len;
+}
+
+guint
 gthree_geometry_get_n_faces (GthreeGeometry *geometry)
 {
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
