@@ -20,8 +20,8 @@ static void gthree_shader_init_libs ();
 GthreeShader *
 gthree_shader_new (GPtrArray *defines,
                    GthreeUniforms *uniforms,
-                   char *vertex_shader_text,
-                   char *fragment_shader_text)
+                   const char *vertex_shader_text,
+                   const char *fragment_shader_text)
 {
   GthreeShader *shader;
   GthreeShaderPrivate *priv;
@@ -29,8 +29,10 @@ gthree_shader_new (GPtrArray *defines,
   shader = g_object_new (gthree_shader_get_type (), NULL);
   priv = gthree_shader_get_instance_private (shader);
 
-  priv->defines = g_ptr_array_ref (defines);
-  priv->uniforms = g_object_ref (uniforms);
+  if (defines)
+    priv->defines = g_ptr_array_ref (defines);
+  if (uniforms)
+    priv->uniforms = g_object_ref (uniforms);
 
   if (vertex_shader_text)
     priv->vertex_shader_text = g_strdup (vertex_shader_text);

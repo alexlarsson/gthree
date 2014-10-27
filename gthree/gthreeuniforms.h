@@ -68,18 +68,41 @@ GthreeUniforms *gthree_uniforms_new_from_definitions (GthreeUniformsDefinition *
 
 GthreeUniforms *gthree_get_uniforms_from_library (const char *name);
 
-GthreeUniforms *gthree_uniforms_clone (GthreeUniforms *uniforms);
-void            gthree_uniforms_merge (GthreeUniforms *uniforms,
-                                       GthreeUniforms *source);
-void            gthree_uniforms_add   (GthreeUniforms *uniforms,
-                                       GthreeUniform  *uniform);
-void           gthree_uniforms_load   (GthreeUniforms *uniforms,
-                                       GthreeRenderer *renderer);
-GthreeUniform *gthree_uniforms_lookup (GthreeUniforms *uniforms,
-                                       GQuark name);
-GList  *gthree_uniforms_get_all (GthreeUniforms *uniforms);
-GthreeUniform *gthree_uniforms_lookup_from_string (GthreeUniforms *uniforms,
-                                                   const char *name);
+GthreeUniforms *gthree_uniforms_clone              (GthreeUniforms  *uniforms);
+void            gthree_uniforms_merge              (GthreeUniforms  *uniforms,
+                                                    GthreeUniforms  *source);
+void            gthree_uniforms_add                (GthreeUniforms  *uniforms,
+                                                    GthreeUniform   *uniform);
+void            gthree_uniforms_load               (GthreeUniforms  *uniforms,
+                                                    GthreeRenderer  *renderer);
+GthreeUniform * gthree_uniforms_lookup             (GthreeUniforms  *uniforms,
+                                                    GQuark           name);
+GList  *        gthree_uniforms_get_all            (GthreeUniforms  *uniforms);
+GthreeUniform * gthree_uniforms_lookup_from_string (GthreeUniforms  *uniforms,
+                                                    const char      *name);
+void            gthree_uniforms_set_float          (GthreeUniforms  *uniforms,
+                                                    const char      *name,
+                                                    double           value);
+void            gthree_uniforms_set_float_array    (GthreeUniforms  *uniforms,
+                                                    const char      *name,
+                                                    GArray          *array);
+void            gthree_uniforms_set_float3_array   (GthreeUniforms  *uniforms,
+                                                    const char      *name,
+                                                    GArray          *array);
+void            gthree_uniforms_set_int            (GthreeUniforms  *uniforms,
+                                                    const char      *name,
+                                                    int              value);
+void            gthree_uniforms_set_vec4           (GthreeUniforms  *uniforms,
+                                                    const char      *name,
+                                                    graphene_vec4_t *value);
+void            gthree_uniforms_set_texture        (GthreeUniforms  *uniforms,
+                                                    const char      *name,
+                                                    GthreeTexture   *value);
+void            gthree_uniforms_set_color          (GthreeUniforms  *uniforms,
+                                                    const char      *name,
+                                                    GdkRGBA         *color);
+
+
 
 void gthree_uniform_set_location (GthreeUniform *uniform,
                                   int location);

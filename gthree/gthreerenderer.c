@@ -124,6 +124,8 @@ gthree_renderer_init (GthreeRenderer *renderer)
   priv->old_blend_equation = -1;
   priv->old_blend_src = -1;
   priv->old_blend_dst = -1;
+  priv->old_depth_write = -1;
+  priv->old_depth_test = -1;
 
   gthree_set_default_gl_state (renderer);
 

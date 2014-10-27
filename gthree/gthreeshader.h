@@ -29,8 +29,8 @@ GType gthree_shader_get_type (void) G_GNUC_CONST;
 
 GthreeShader *  gthree_shader_new   (GPtrArray *defines,
                                      GthreeUniforms *uniforms,
-                                     char *vertex_shader_text,
-                                     char *fragment_shader_text);
+                                     const char *vertex_shader_text,
+                                     const char *fragment_shader_text);
 
 GthreeShader *  gthree_shader_clone                                (GthreeShader  *shader);
 GPtrArray      *gthree_shader_get_defines                          (GthreeShader  *shader);

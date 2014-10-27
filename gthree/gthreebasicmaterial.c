@@ -136,7 +136,7 @@ gthree_basic_material_real_set_uniforms (GthreeMaterial *material,
   uni = gthree_uniforms_lookup_from_string (uniforms, "useRefract");
   if (uni != NULL)
     gthree_uniform_set_int (uni,
-                            priv->env_map && (FALSE /* TODO: material.envMap.mapping instanceof THREE.CubeRefractionMapping */));
+                            priv->env_map && gthree_texture_get_mapping (priv->env_map) == GTHREE_MAPPING_CUBE_REFRACTION);
 
   uni = gthree_uniforms_lookup_from_string (uniforms, "flipEnvMap");
   if (uni != NULL)
@@ -236,6 +236,25 @@ gthree_basic_material_set_vertex_colors (GthreeBasicMaterial *basic,
   GthreeBasicMaterialPrivate *priv = gthree_basic_material_get_instance_private (basic);
 
   priv->vertex_colors = color_type;
+
+  gthree_material_set_needs_update (GTHREE_MATERIAL (basic), TRUE);
+}
+
+float
+gthree_basic_material_get_refraction_ratio (GthreeBasicMaterial *basic)
+{
+  GthreeBasicMaterialPrivate *priv = gthree_basic_material_get_instance_private (basic);
+
+  return priv->refraction_ratio;
+}
+
+void
+gthree_basic_material_set_refraction_ratio (GthreeBasicMaterial *basic,
+                                            float                ratio)
+{
+  GthreeBasicMaterialPrivate *priv = gthree_basic_material_get_instance_private (basic);
+
+  priv->refraction_ratio = ratio;
 
   gthree_material_set_needs_update (GTHREE_MATERIAL (basic), TRUE);
 }

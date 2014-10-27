@@ -149,6 +149,91 @@ gthree_uniforms_load (GthreeUniforms *uniforms,
     gthree_uniform_load (uniform, renderer);
 }
 
+void
+gthree_uniforms_set_float (GthreeUniforms  *uniforms,
+                           const char      *name,
+                           double           value)
+{
+  GthreeUniform *uni;
+
+  uni = gthree_uniforms_lookup_from_string (uniforms, name);
+  if (uni)
+    gthree_uniform_set_float (uni, value);
+}
+
+void
+gthree_uniforms_set_float_array (GthreeUniforms  *uniforms,
+                                 const char      *name,
+                                 GArray          *array)
+{
+  GthreeUniform *uni;
+
+  uni = gthree_uniforms_lookup_from_string (uniforms, name);
+  if (uni)
+    gthree_uniform_set_float_array (uni, array);
+}
+
+void
+gthree_uniforms_set_float3_array (GthreeUniforms  *uniforms,
+                                  const char      *name,
+                                  GArray          *array)
+{
+  GthreeUniform *uni;
+
+  uni = gthree_uniforms_lookup_from_string (uniforms, name);
+  if (uni)
+    gthree_uniform_set_float3_array (uni, array);
+}
+
+void
+gthree_uniforms_set_int (GthreeUniforms  *uniforms,
+                         const char      *name,
+                         int              value)
+{
+  GthreeUniform *uni;
+
+  uni = gthree_uniforms_lookup_from_string (uniforms, name);
+  if (uni)
+    gthree_uniform_set_int (uni, value);
+}
+
+void
+gthree_uniforms_set_vec4 (GthreeUniforms  *uniforms,
+                          const char      *name,
+                          graphene_vec4_t *value)
+{
+  GthreeUniform *uni;
+
+  uni = gthree_uniforms_lookup_from_string (uniforms, name);
+  if (uni)
+    gthree_uniform_set_vec4 (uni, value);
+}
+
+void
+gthree_uniforms_set_texture (GthreeUniforms  *uniforms,
+                             const char      *name,
+                             GthreeTexture   *value)
+{
+  GthreeUniform *uni;
+
+  uni = gthree_uniforms_lookup_from_string (uniforms, name);
+  if (uni)
+    gthree_uniform_set_texture (uni, value);
+}
+
+void
+gthree_uniforms_set_color (GthreeUniforms  *uniforms,
+                           const char      *name,
+                           GdkRGBA         *color)
+{
+  GthreeUniform *uni;
+
+  uni = gthree_uniforms_lookup_from_string (uniforms, name);
+  if (uni)
+    gthree_uniform_set_color (uni, color);
+}
+
+
 GthreeUniform *
 gthree_uniform_newq (GQuark name, GthreeUniformType type)
 {

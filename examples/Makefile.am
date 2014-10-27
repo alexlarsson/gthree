@@ -14,6 +14,7 @@ noinst_PROGRAMS =			\
 	model				\
 	materials			\
 	envmap				\
+	shader				\
 	$(NULL)
 
 gtkcube_CFLAGS = \
@@ -68,6 +69,20 @@ envmap_SOURCES =						\
 	$(NULL)
 
 envmap_LDADD = \
+	$(GTHREE_LIBS)						\
+	$(top_builddir)/gthree/libgthree-1.la			\
+	$(NULL)
+
+shader_CFLAGS = \
+	$(GTHREE_CFLAGS)					\
+	$(NULL)
+
+shader_SOURCES =						\
+	shader.c						\
+	utils.c							\
+	$(NULL)
+
+shader_LDADD = \
 	$(GTHREE_LIBS)						\
 	$(top_builddir)/gthree/libgthree-1.la			\
 	$(NULL)
