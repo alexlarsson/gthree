@@ -21,6 +21,7 @@ gtkcube_CFLAGS = \
 
 gtkcube_SOURCES =						\
 	gtkcube.c						\
+	utils.c							\
 	$(NULL)
 
 gtkcube_LDADD = \
@@ -34,6 +35,7 @@ model_CFLAGS = \
 
 model_SOURCES =						\
 	model.c						\
+	utils.c						\
 	$(NULL)
 
 model_LDADD = \
@@ -47,6 +49,7 @@ materials_CFLAGS = \
 
 materials_SOURCES =						\
 	materials.c						\
+	utils.c							\
 	$(NULL)
 
 materials_LDADD = \

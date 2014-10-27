@@ -4,51 +4,11 @@
 #include <epoxy/gl.h>
 
 #include <gthree/gthree.h>
+#include "utils.h"
 
 GthreeScene *scene;
 
-GdkRGBA red =    {1, 0, 0, 1};
-GdkRGBA green =  {0, 1, 0, 1};
-GdkRGBA blue =   {0, 0, 1, 1};
-GdkRGBA yellow = {1, 1, 0, 1};
-GdkRGBA cyan   = {0, 1, 1, 1};
-GdkRGBA magenta= {1, 0, 1, 1};
-GdkRGBA white =  {1, 1, 1, 1};
-
 GthreeMesh *marine, *knight;
-
-GthreeGeometry *
-load_model (const char *name)
-{
-  GthreeLoader *loader;
-  GthreeGeometry *geometry;
-  char *file;
-  char *json;
-  GError *error;
-
-  error = NULL;
-  file = g_build_filename ("models/", name, NULL);
-  if (!g_file_get_contents (file, &json, NULL, &error))
-    {
-      error = NULL;
-      g_free (file);
-      file = g_build_filename ("examples/models/", name, NULL);
-      if (!g_file_get_contents (file, &json, NULL, &error))
-        g_error ("can't load model %s: %s", name, error->message);
-      g_free (file);
-    }
-
-  loader = gthree_loader_new_from_json (json, NULL, &error);
-  if (loader == NULL)
-    g_error ("can't parse json: %s", error->message);
-
-  g_free (json);
-
-  geometry = g_object_ref (gthree_loader_get_geometry (loader));
-  g_object_unref (loader);
-  return geometry;
-}
-
 
 
 GthreeScene *
@@ -62,16 +22,9 @@ init_scene (void)
   GthreeAmbientLight *ambient_light;
   GthreeDirectionalLight *directional_light;
   graphene_point3d_t pos;
-  GdkRGBA gray = {0.5, 0.5, 0.5, 1.0};
-  GdkRGBA dark_grey = {0.1, 0.1, 0.1, 1.0};
   graphene_point3d_t scale = {15,15,15};
 
-  pixbuf = gdk_pixbuf_new_from_file ("textures/MarineCv2_color.jpg", NULL);
-  if (pixbuf == NULL)
-    pixbuf = gdk_pixbuf_new_from_file ("examples/textures/MarineCv2_color.jpg", NULL);
-
-  if (pixbuf == NULL)
-    g_error ("could not load crate.gif");
+  pixbuf = examples_load_pixbuf ("MarineCv2_color.jpg");
 
   texture = gthree_texture_new (pixbuf);
 
@@ -82,7 +35,7 @@ init_scene (void)
 
   material_phong = gthree_phong_material_new ();
   gthree_phong_material_set_ambient_color (material_phong, &red);
-  gthree_phong_material_set_emissive_color (material_phong, &gray);
+  gthree_phong_material_set_emissive_color (material_phong, &grey);
   gthree_phong_material_set_specular_color (material_phong, &white);
 
   material_texture = gthree_basic_material_new ();
@@ -91,7 +44,7 @@ init_scene (void)
 
   scene = gthree_scene_new ();
 
-  marine_geometry = load_model ("marine.js");
+  marine_geometry = examples_load_model ("marine.js");
 
   marine = gthree_mesh_new (marine_geometry, GTHREE_MATERIAL (material_texture));
   gthree_object_set_position (GTHREE_OBJECT (marine),
@@ -102,7 +55,7 @@ init_scene (void)
 
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (marine));
 
-  knight_geometry = load_model ("knight.js");
+  knight_geometry = examples_load_model ("knight.js");
 
   knight = gthree_mesh_new (knight_geometry, GTHREE_MATERIAL (material_phong));
   gthree_object_set_position (GTHREE_OBJECT (knight),

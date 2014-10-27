@@ -4,6 +4,7 @@
 #include <epoxy/gl.h>
 
 #include <gthree/gthree.h>
+#include "utils.h"
 
 static GthreeScene *scene;
 static GthreePerspectiveCamera *camera;
@@ -14,16 +15,6 @@ static GthreeGeometry *geometries[14] = { NULL };
 static int n_materials = 0;
 static int anim_material1, anim_material2;
 
-static GdkRGBA grey = {0.4, 0.4, 0.4, 1.0};
-static GdkRGBA black = {0, 0, 0, 1.0};
-static GdkRGBA white = {1, 1, 1, 1.0};
-static GdkRGBA red = {1, 0, 0, 1.0};
-static GdkRGBA dark_green = {0, 0.6, 0, 1.0};
-static GdkRGBA medium_grey = {0.4, 0.4, 0.4, 1.0};
-static GdkRGBA dark_grey = {0.07, 0.07, 0.07, 1.0};
-static GdkRGBA very_dark_grey = {0.012, 0.012, 0.012, 1.0};
-static GdkRGBA light_grey = {0.87, 0.87, 0.87, 1.0};
-static GdkRGBA orange = {1, 0.67, 0, 1.0};
 
 GList *objects;
 

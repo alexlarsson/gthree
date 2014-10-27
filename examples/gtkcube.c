@@ -4,6 +4,7 @@
 #include <epoxy/gl.h>
 
 #include <gthree/gthree.h>
+#include "utils.h"
 
 GthreeScene *scene;
 GthreeBasicMaterial *material_simple;
@@ -14,14 +15,6 @@ GthreeBasicMaterial *material_wireframe;
 GthreeMultiMaterial *multi_material;
 GthreeMesh *mesh;
 double rot = 0;
-
-GdkRGBA red =    {1, 0, 0, 1};
-GdkRGBA green =  {0, 1, 0, 1};
-GdkRGBA blue =   {0, 0, 1, 1};
-GdkRGBA yellow = {1, 1, 0, 1};
-GdkRGBA cyan   = {0, 1, 1, 1};
-GdkRGBA magenta= {1, 0, 1, 1};
-GdkRGBA white =  {1, 1, 1, 1};
 
 GList *cubes;
 
@@ -135,12 +128,7 @@ init_scene (void)
   GthreeObject *cube;
   graphene_point3d_t pos = { 0, 0, 0};
 
-  crate_pixbuf = gdk_pixbuf_new_from_file ("textures/crate.gif", NULL);
-  if (crate_pixbuf == NULL)
-    crate_pixbuf = gdk_pixbuf_new_from_file ("examples/textures/crate.gif", NULL);
-
-  if (crate_pixbuf == NULL)
-    g_error ("could not load crate.gif");
+  crate_pixbuf = examples_load_pixbuf ("crate.gif");
 
   texture = gthree_texture_new (crate_pixbuf);
 
