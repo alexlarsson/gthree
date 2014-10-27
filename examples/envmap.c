@@ -7,7 +7,7 @@
 #include "utils.h"
 
 GthreeScene *scene;
-GthreeMesh *obj1, *obj2;
+GthreeMesh *obj1, *obj2, *obj3;
 static GthreePerspectiveCamera *camera;
 
 GthreeScene *
@@ -15,7 +15,7 @@ init_scene (void)
 {
   GthreeGeometry *geometry;
   GthreeMesh *skybox;
-  GthreeLambertMaterial *material;
+  GthreeLambertMaterial *material, *material2;
   GthreeShader *shader;
   GthreeUniforms *uniforms;
   GthreeUniform *uni;
@@ -37,9 +37,15 @@ init_scene (void)
   gthree_lambert_material_set_ambient_color (material, &light_grey);
   gthree_basic_material_set_env_map (GTHREE_BASIC_MATERIAL (material), GTHREE_TEXTURE (reflectionCube));
 
+  material2 = gthree_lambert_material_new ();
+  gthree_basic_material_set_color (GTHREE_BASIC_MATERIAL (material2), &yellow);
+  gthree_lambert_material_set_ambient_color (material2, &white);
+  gthree_basic_material_set_refraction_ratio (GTHREE_BASIC_MATERIAL (material2), 0.99);
+  gthree_basic_material_set_env_map (GTHREE_BASIC_MATERIAL (material2), GTHREE_TEXTURE (refractionCube));
+
   scene = gthree_scene_new ();
 
-  geometry = gthree_geometry_new_sphere (50, 32, 16);
+  geometry = gthree_geometry_new_sphere (40, 32, 16);
   obj1 = gthree_mesh_new (geometry, GTHREE_MATERIAL (material));
   gthree_object_set_position (GTHREE_OBJECT (obj1),
                               graphene_point3d_init (&pos,
@@ -48,14 +54,23 @@ init_scene (void)
                                                      0));
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (obj1));
 
-  geometry = gthree_geometry_new_box (100, 100, 100, 1, 1, 1);
-  obj2 = gthree_mesh_new (geometry, GTHREE_MATERIAL (material));
+  geometry = gthree_geometry_new_sphere (40, 32, 16);
+  obj2 = gthree_mesh_new (geometry, GTHREE_MATERIAL (material2));
   gthree_object_set_position (GTHREE_OBJECT (obj2),
+                              graphene_point3d_init (&pos,
+                                                     0,
+                                                     0,
+                                                     0));
+  gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (obj2));
+
+  geometry = gthree_geometry_new_box (70, 70, 70, 1, 1, 1);
+  obj3 = gthree_mesh_new (geometry, GTHREE_MATERIAL (material));
+  gthree_object_set_position (GTHREE_OBJECT (obj3),
                               graphene_point3d_init (&pos,
                                                      80,
                                                      0,
                                                      0));
-  gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (obj2));
+  gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (obj3));
 
   shader = gthree_clone_shader_from_library ("cube");
   uniforms = gthree_shader_get_uniforms (shader);
@@ -114,7 +129,7 @@ tick (GtkWidget     *widget,
   rot.x += 0.01;
   rot.y += 0.005;
 
-  gthree_object_set_rotation (GTHREE_OBJECT (obj2), &rot);
+  gthree_object_set_rotation (GTHREE_OBJECT (obj3), &rot);
 
   gtk_widget_queue_draw (widget);
 
