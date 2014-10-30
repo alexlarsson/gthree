@@ -26,10 +26,6 @@ typedef struct {
 
 typedef struct {
   GtkGLAreaClass parent_class;
-
-  void (*resize) (GthreeArea *area,
-                  gint width,
-                  gint height);
 } GthreeAreaClass;
 
 GtkWidget *gthree_area_new (GthreeScene *scene,
