@@ -28,6 +28,7 @@ gthree_area_new (GthreeScene *scene,
 
   area = g_object_new (gthree_area_get_type (),
                         "has-depth-buffer", TRUE,
+		       "profile", GDK_GL_PROFILE_3_2_CORE,
                         NULL);
 
   priv = gthree_area_get_instance_private (area);
