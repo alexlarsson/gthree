@@ -55,9 +55,6 @@ typedef struct {
 
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeObject, gthree_object, G_TYPE_OBJECT);
 
-static void quaternion_to_angles (const graphene_quaternion_t *q, graphene_point3d_t *rot);
-
-
 #define PRIV(_o) ((GthreeObjectPrivate*)gthree_object_get_instance_private (_o))
 
 GthreeObject *
@@ -227,6 +224,18 @@ gthree_object_has_attribute_data (GthreeObject                *object,
   return FALSE;
 }
 
+static void
+update_euler (GthreeObject *object)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+  float x, y, z;
+
+  graphene_quaternion_to_angles (&priv->quaternion, &x, &y, &z);
+  priv->euler.x = ((x) * (G_PI / 180.f));
+  priv->euler.y = ((y) * (G_PI / 180.f));
+  priv->euler.z = ((z) * (G_PI / 180.f));
+}
+
 void
 gthree_object_look_at (GthreeObject *object,
                        graphene_point3d_t *pos)
@@ -238,7 +247,7 @@ gthree_object_look_at (GthreeObject *object,
   graphene_point3d_to_vec3 (pos, &vec);
   graphene_matrix_init_look_at (&m, &priv->position, &vec, &priv->up);
   graphene_quaternion_init_from_matrix (&priv->quaternion, &m);
-  quaternion_to_angles (&priv->quaternion, &priv->euler);
+  update_euler (object);
 }
 
 void
@@ -259,30 +268,6 @@ gthree_object_set_scale (GthreeObject                *object,
   graphene_point3d_to_vec3 (scale, &priv->scale);
 }
 
-static void
-quaternion_to_angles (const graphene_quaternion_t *q, graphene_point3d_t *rot)
-{
-  graphene_vec4_t v;
-  graphene_vec4_t sq;
-  float qx, qy, qz, qw, sqx, sqy, sqz, sqw;
-
-  graphene_quaternion_to_vec4 (q, &v);
-  graphene_vec4_multiply (&v, &v, &sq);
-
-  qx = graphene_vec4_get_x (&v);
-  qy = graphene_vec4_get_y (&v);
-  qz = graphene_vec4_get_z (&v);
-  qw = graphene_vec4_get_w (&v);
-  sqx = graphene_vec4_get_x (&sq);
-  sqy = graphene_vec4_get_y (&sq);
-  sqz = graphene_vec4_get_z (&sq);
-  sqw = graphene_vec4_get_w (&sq);
-
-  rot->x = atan2( 2 * ( qx * qw - qy * qz ), (sqw - sqx - sqy + sqz));
-  rot->y = asin(CLAMP( 2 * ( qx * qz + qy * qw), - 1, 1));
-  rot->z = atan2(2 * (qz * qw - qx * qy), (sqw + sqx - sqy - sqz));
-}
-
 void
 gthree_object_set_quaternion (GthreeObject *object,
                               const graphene_quaternion_t *q)
@@ -290,7 +275,7 @@ gthree_object_set_quaternion (GthreeObject *object,
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
 
   graphene_quaternion_init_from_quaternion (&priv->quaternion, q);
-  quaternion_to_angles (&priv->quaternion, &priv->euler);
+  update_euler (object);
 }
 
 const graphene_quaternion_t *
