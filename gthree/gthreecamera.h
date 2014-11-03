@@ -42,6 +42,9 @@ void                     gthree_camera_set_far                  (GthreeCamera   
                                                                  float              far);
 void                     gthree_camera_update                   (GthreeCamera      *camera);
 
+void                     gthree_camera_unproject_point3d        (GthreeCamera      *camera,
+                                                                 const graphene_point3d_t *pos,
+                                                                 graphene_point3d_t *res);
 
 G_END_DECLS
 

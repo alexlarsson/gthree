@@ -128,3 +128,27 @@ gthree_camera_update (GthreeCamera *camera)
 
   class->update (camera);
 }
+
+void
+gthree_camera_unproject_point3d (GthreeCamera *camera,
+                                 const graphene_point3d_t *pos,
+                                 graphene_point3d_t *res)
+{
+  GthreeCameraPrivate *priv = gthree_camera_get_instance_private (camera);
+  graphene_matrix_t projection_matrix_inverse, view_projection_matrix;
+  graphene_vec4_t v;
+  float w_inv;
+
+  graphene_matrix_inverse (&priv->projection_matrix, &projection_matrix_inverse);
+  graphene_matrix_multiply (&projection_matrix_inverse,
+                            gthree_object_get_world_matrix (GTHREE_OBJECT (camera)),
+                            &view_projection_matrix);
+  graphene_vec4_init (&v, pos->x, pos->y, pos->z, 1);
+  graphene_matrix_transform_vec4 (&view_projection_matrix, &v, &v);
+
+  w_inv = 1.0f / graphene_vec4_get_w (&v);
+  graphene_point3d_init (res,
+                         graphene_vec4_get_x (&v) * w_inv,
+                         graphene_vec4_get_y (&v) * w_inv,
+                         graphene_vec4_get_z (&v) * w_inv);
+}
