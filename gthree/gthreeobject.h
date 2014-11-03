@@ -10,7 +10,6 @@
 
 #include <gthree/gthreetypes.h>
 #include <gthree/gthreeenums.h>
-#include <gthree/gthreeutils.h>
 
 G_BEGIN_DECLS
 
@@ -30,8 +29,8 @@ typedef struct {
 typedef struct {
   GInitiallyUnownedClass parent_class;
 
-  gboolean (* in_frustum)       (GthreeObject          *object,
-                                 GthreeFrustum         *frustum);
+  gboolean (* in_frustum)       (GthreeObject             *object,
+                                 const graphene_frustum_t *frustum);
 
   void (* parent_set)           (GthreeObject          *object,
                                  GthreeObject          *old_parent);
@@ -89,7 +88,7 @@ void gthree_object_get_normal_matrix3_floats    (GthreeObject *object,
 gboolean      gthree_object_get_visible          (GthreeObject *object);
 gboolean      gthree_object_get_is_frustum_culled(GthreeObject *object);
 gboolean      gthree_object_is_in_frustum        (GthreeObject *object,
-                                                  GthreeFrustum *frustum);
+                                                  const graphene_frustum_t *frustum);
 
 void          gthree_object_add_child            (GthreeObject *object,
                                                   GthreeObject *child);

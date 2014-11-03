@@ -145,7 +145,8 @@ gthree_geometry_new_sphere_full (float radius,
   int *vertices;
   graphene_vec2_t *uvs;
   const graphene_vec3_t *final_vertices;
-  GthreeSphere bound;
+  graphene_sphere_t bound;
+  graphene_point3d_t center;
 
   geometry = g_object_new (gthree_geometry_get_type (),
                            NULL);
@@ -262,8 +263,7 @@ gthree_geometry_new_sphere_full (float radius,
 
   gthree_geometry_compute_face_normals (geometry);
 
-  graphene_vec3_init (&bound.center, 0, 0, 0);
-  bound.radius = radius;
+  graphene_sphere_init (&bound, graphene_point3d_init (&center, 0, 0, 0), radius);
   gthree_geometry_set_bounding_sphere  (geometry, &bound);
 
   return geometry;

@@ -587,17 +587,17 @@ gthree_mesh_unrealize (GthreeObject *object)
 
 static gboolean
 gthree_mesh_in_frustum (GthreeObject *object,
-                        GthreeFrustum *frustum)
+                        const graphene_frustum_t *frustum)
 {
   GthreeMesh *mesh = GTHREE_MESH (object);
   GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
-  GthreeSphere sphere;
+  graphene_sphere_t sphere;
 
-  sphere = *gthree_geometry_get_bounding_sphere (priv->geometry);
+  graphene_matrix_transform_sphere (gthree_object_get_world_matrix (object),
+                                    gthree_geometry_get_bounding_sphere (priv->geometry),
+                                    &sphere);
 
-  gthree_sphere_transform (&sphere, gthree_object_get_world_matrix (object));
-
-  return gthree_frustum_intersects_sphere (frustum, &sphere);
+  return graphene_frustum_intersects_sphere (frustum, &sphere);
 }
 
 static gboolean

@@ -202,7 +202,7 @@ gthree_object_get_is_frustum_culled (GthreeObject *object)
 
 gboolean
 gthree_object_is_in_frustum (GthreeObject *object,
-                             GthreeFrustum *frustum)
+                             const graphene_frustum_t *frustum)
 {
   GthreeObjectClass *class = GTHREE_OBJECT_GET_CLASS(object);
 
