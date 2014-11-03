@@ -223,6 +223,33 @@ gthree_renderer_set_autoclear (GthreeRenderer *renderer,
 }
 
 void
+gthree_renderer_set_autoclear_color (GthreeRenderer *renderer,
+                                     gboolean        clear_color)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  priv->auto_clear_color = !!clear_color;
+}
+
+void
+gthree_renderer_set_autoclear_depth (GthreeRenderer *renderer,
+                                     gboolean        clear_depth)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  priv->auto_clear_depth = !!clear_depth;
+}
+
+void
+gthree_renderer_set_autoclear_stencil (GthreeRenderer *renderer,
+                                       gboolean        clear_stencil)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  priv->auto_clear_stencil = !!clear_stencil;
+}
+
+void
 gthree_renderer_set_clear_color (GthreeRenderer *renderer,
                                  GdkRGBA        *color)
 {
@@ -1476,7 +1503,7 @@ gthree_renderer_render (GthreeRenderer *renderer,
   priv->current_material = NULL;
   priv->current_camera = NULL;
   priv->lights_need_update = TRUE;
-  
+
   /* update scene graph */
 
   gthree_object_update_matrix_world (GTHREE_OBJECT (scene), FALSE);
@@ -1485,9 +1512,6 @@ gthree_renderer_render (GthreeRenderer *renderer,
 
   if (gthree_object_get_parent (GTHREE_OBJECT (camera)) == NULL)
     gthree_object_update_matrix_world (GTHREE_OBJECT (camera), FALSE);
-
-  if (priv->auto_clear)
-    glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   gthree_camera_update_matrix (camera);
 
@@ -1510,9 +1534,7 @@ gthree_renderer_render (GthreeRenderer *renderer,
   //this.setRenderTarget( renderTarget );
 
   if (priv->auto_clear || force_clear )
-    {
-      clear (priv->auto_clear_color, priv->auto_clear_depth, priv->auto_clear_stencil);
-    }
+    clear (priv->auto_clear_color, priv->auto_clear_depth, priv->auto_clear_stencil);
 
   /* set matrices for regular objects (frustum culled) */
 

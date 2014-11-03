@@ -27,14 +27,17 @@ gthree_area_new (GthreeScene *scene,
   GthreeAreaPrivate *priv;
 
   area = g_object_new (gthree_area_get_type (),
-                        "has-depth-buffer", TRUE,
-		       "profile", GDK_GL_PROFILE_3_2_CORE,
-                        NULL);
+                       "has-depth-buffer", TRUE,
+                       "profile", GDK_GL_PROFILE_3_2_CORE,
+                       NULL);
 
   priv = gthree_area_get_instance_private (area);
 
-  priv->scene = g_object_ref (scene);
-  priv->camera = g_object_ref (camera);
+  if (scene)
+    priv->scene = g_object_ref (scene);
+
+  if (camera)
+    priv->camera = g_object_ref (camera);
 
   return GTK_WIDGET (area);
 }
@@ -85,10 +88,11 @@ gthree_area_render (GtkGLArea    *gl_area,
   GthreeArea *area = GTHREE_AREA (gl_area);
   GthreeAreaPrivate *priv = gthree_area_get_instance_private (area);
 
-  gthree_renderer_render (priv->renderer,
-                          priv->scene,
-                          priv->camera,
-                          FALSE);
+  if (priv->scene && priv->camera)
+    gthree_renderer_render (priv->renderer,
+                            priv->scene,
+                            priv->camera,
+                            FALSE);
 
   return TRUE;
 }
@@ -115,4 +119,12 @@ gthree_area_unrealize (GtkWidget *widget)
   g_clear_object (&priv->renderer);
 
   GTK_WIDGET_CLASS (gthree_area_parent_class)->unrealize (widget);
+}
+
+GthreeRenderer *
+gthree_area_get_renderer (GthreeArea *area)
+{
+  GthreeAreaPrivate *priv = gthree_area_get_instance_private (area);
+
+  return priv->renderer;
 }

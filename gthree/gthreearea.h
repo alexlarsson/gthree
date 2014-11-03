@@ -32,6 +32,8 @@ GtkWidget *gthree_area_new (GthreeScene *scene,
                             GthreeCamera *camera);
 GType gthree_area_get_type (void) G_GNUC_CONST;
 
+GthreeRenderer *gthree_area_get_renderer (GthreeArea *area);
+
 G_END_DECLS
 
 #endif /* __GTHREE_AREA_H__ */

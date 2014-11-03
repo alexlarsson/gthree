@@ -6,9 +6,36 @@
 #include <gthree/gthree.h>
 #include "utils.h"
 
-GthreeScene *scene;
+GthreeScene *scene, *scene_cube;
 GthreeMesh *obj1, *obj2, *obj3;
 static GthreePerspectiveCamera *camera;
+static GthreePerspectiveCamera *camera_cube;
+
+static gboolean
+skybox_render (GtkGLArea    *gl_area,
+               GdkGLContext *context)
+{
+  GthreeArea *area = GTHREE_AREA (gl_area);
+
+  gthree_renderer_render (gthree_area_get_renderer (area),
+                          scene_cube,
+                          GTHREE_CAMERA (camera_cube),
+                          TRUE);
+
+  return FALSE;
+}
+
+static void
+area_realize (GtkWidget *widget)
+{
+  GthreeArea *area = GTHREE_AREA (widget);
+  GthreeRenderer *renderer;
+
+  renderer = gthree_area_get_renderer (area);
+
+  gthree_renderer_set_autoclear (renderer, FALSE);
+  gthree_renderer_set_autoclear_color (renderer, FALSE);
+}
 
 GthreeScene *
 init_scene (void)
@@ -44,6 +71,7 @@ init_scene (void)
   gthree_basic_material_set_env_map (GTHREE_BASIC_MATERIAL (material2), GTHREE_TEXTURE (refractionCube));
 
   scene = gthree_scene_new ();
+  scene_cube = gthree_scene_new ();
 
   geometry = gthree_geometry_new_sphere (40, 32, 16);
   obj1 = gthree_mesh_new (geometry, GTHREE_MATERIAL (material));
@@ -82,9 +110,9 @@ init_scene (void)
   gthree_material_set_depth_write (GTHREE_MATERIAL (shader_material), FALSE);
   gthree_material_set_side (GTHREE_MATERIAL (shader_material), GTHREE_SIDE_BACK);
 
-  geometry = gthree_geometry_new_box (3000, 3000, 3000, 1, 1, 1);
+  geometry = gthree_geometry_new_box (100, 100, 100, 1, 1, 1);
   skybox = gthree_mesh_new (geometry, GTHREE_MATERIAL (shader_material));
-  gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (skybox));
+  gthree_object_add_child (GTHREE_OBJECT (scene_cube), GTHREE_OBJECT (skybox));
 
   ambient_light = gthree_ambient_light_new (&white);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));
@@ -126,6 +154,10 @@ tick (GtkWidget     *widget,
     gthree_object_look_at (GTHREE_OBJECT (camera),
                            graphene_point3d_init (&pos, 0, 0, 0));
 
+  gthree_object_set_rotation (GTHREE_OBJECT (camera_cube),
+                              gthree_object_get_rotation (GTHREE_OBJECT (camera)));
+
+
   rot.x += 0.01;
   rot.y += 0.005;
 
@@ -143,6 +175,7 @@ resize_area (GthreeArea *area,
              GthreePerspectiveCamera *camera)
 {
   gthree_perspective_camera_set_aspect (camera, (float)width / (float)(height));
+  gthree_perspective_camera_set_aspect (camera_cube, (float)width / (float)(height));
 }
 
 int
@@ -171,14 +204,18 @@ main (int argc, char *argv[])
   gtk_widget_show (hbox);
 
   scene = init_scene ();
-  camera = gthree_perspective_camera_new (30, 1, 1, 10000);
+  camera = gthree_perspective_camera_new (30, 1, 1, 5000);
+  camera_cube = gthree_perspective_camera_new (30, 1, 1, 100);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
+  gthree_object_add_child (GTHREE_OBJECT (scene_cube), GTHREE_OBJECT (camera_cube));
 
   gthree_object_set_position (GTHREE_OBJECT (camera),
                               graphene_point3d_init (&pos, 0, 0, 500));
 
   area = gthree_area_new (scene, GTHREE_CAMERA (camera));
   g_signal_connect (area, "resize", G_CALLBACK (resize_area), camera);
+  g_signal_connect (area, "render", G_CALLBACK (skybox_render), NULL);
+  g_signal_connect (area, "realize", G_CALLBACK (area_realize), NULL);
   gtk_widget_set_hexpand (area, TRUE);
   gtk_widget_set_vexpand (area, TRUE);
   gtk_container_add (GTK_CONTAINER (hbox), area);
