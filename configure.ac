@@ -31,7 +31,7 @@ if test "x$GCC" = "xyes"; then
   esac
 fi
 
-GTHREE_PACKAGES="gtk+-3.0 graphene-1.0"
+GTHREE_PACKAGES="gtk+-3.0 >= 3.15.1 graphene-1.0 >= 1.1.1"
 GTHREE_PRIVATE_PACKAGES="epoxy json-glib-1.0 "
 PKG_CHECK_MODULES(GTHREE, [$GTHREE_PACKAGES $GTHREE_PRIVATE_PACKAGES])
 AC_SUBST(GTHREE_PACKAGES)
