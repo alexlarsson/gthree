@@ -10,23 +10,23 @@ AM_CPPFLAGS =					\
 	$(NULL)
 
 noinst_PROGRAMS =			\
-	gtkcube				\
+	cubes				\
 	model				\
 	materials			\
 	envmap				\
 	shader				\
 	$(NULL)
 
-gtkcube_CFLAGS = \
+cubes_CFLAGS = \
 	$(GTHREE_CFLAGS)					\
 	$(NULL)
 
-gtkcube_SOURCES =						\
-	gtkcube.c						\
+cubes_SOURCES =						\
+	cubes.c						\
 	utils.c							\
 	$(NULL)
 
-gtkcube_LDADD = \
+cubes_LDADD = \
 	$(GTHREE_LIBS)						\
 	$(top_builddir)/gthree/libgthree-1.la			\
 	$(NULL)
