@@ -11,6 +11,7 @@ AM_CPPFLAGS =					\
 
 noinst_PROGRAMS =			\
 	cubes				\
+	multi				\
 	model				\
 	materials			\
 	envmap				\
@@ -27,6 +28,20 @@ cubes_SOURCES =						\
 	$(NULL)
 
 cubes_LDADD = \
+	$(GTHREE_LIBS)						\
+	$(top_builddir)/gthree/libgthree-1.la			\
+	$(NULL)
+
+multi_CFLAGS = \
+	$(GTHREE_CFLAGS)					\
+	$(NULL)
+
+multi_SOURCES =						\
+	multi.c						\
+	utils.c							\
+	$(NULL)
+
+multi_LDADD = \
 	$(GTHREE_LIBS)						\
 	$(top_builddir)/gthree/libgthree-1.la			\
 	$(NULL)
