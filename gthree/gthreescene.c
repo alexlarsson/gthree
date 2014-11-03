@@ -7,6 +7,8 @@
 #include "gthreeobjectprivate.h"
 
 typedef struct {
+  GdkGLContext *context;
+  gint context_count;
   GList *added_objects;
   GList *removed_objects;
   GList *lights;
@@ -121,6 +123,49 @@ gthree_scene_get_override_material (GthreeScene *scene)
 {
   // TODO
   return NULL;
+}
+
+GdkGLContext *
+gthree_scene_get_context (GthreeScene *scene)
+{
+  GthreeScenePrivate *priv = gthree_scene_get_instance_private (scene);
+
+  return priv->context;
+}
+
+void
+gthree_scene_set_context (GthreeScene *scene,
+                          GdkGLContext *context)
+{
+  GthreeScenePrivate *priv = gthree_scene_get_instance_private (scene);
+
+  if (context != NULL)
+    {
+      if (priv->context == NULL)
+        {
+          priv->context = g_object_ref (context);
+          priv->context_count = 1;
+        }
+      else if (priv->context == context)
+        priv->context_count++;
+      else
+        g_warning ("Can't use a GthreeScene with several contexts");
+    }
+  else
+    {
+      if (priv->context != NULL)
+        {
+          priv->context_count--;
+          if (priv->context_count == 0)
+            {
+              /* TODO: Unrealize scene */
+              g_object_unref (priv->context);
+              priv->context = NULL;
+            }
+          else if (priv->context_count < 0)
+            g_warning ("Non-paired context in GthreeScene");
+        }
+    }
 }
 
 GList *

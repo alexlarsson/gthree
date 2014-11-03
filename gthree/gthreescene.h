@@ -34,6 +34,10 @@ void gthree_scene_realize_objects (GthreeScene *scene);
 GthreeMaterial * gthree_scene_get_override_material (GthreeScene *scene);
 GList * gthree_scene_get_lights (GthreeScene *scene);
 
+GdkGLContext *gthree_scene_get_context (GthreeScene *scene);
+void gthree_scene_set_context (GthreeScene *scene,
+                               GdkGLContext *context);
+
 G_END_DECLS
 
 #endif /* __GTHREE_SCENE_H__ */

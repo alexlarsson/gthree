@@ -71,10 +71,34 @@ gthree_area_real_resize (GtkGLArea *gl_area, int width, int height)
   gthree_renderer_set_size (priv->renderer, width, height);
 }
 
+static GdkGLContext *
+gthree_area_real_create_context (GtkGLArea *gl_area)
+{
+  GthreeArea *area = GTHREE_AREA (gl_area);
+  GthreeAreaPrivate *priv = gthree_area_get_instance_private (area);
+  GdkGLContext *context = NULL;
+
+  if (priv->scene)
+    {
+      context = gthree_scene_get_context (priv->scene);
+      if (context != NULL)
+        g_object_ref (context);
+    }
+
+  if (context == NULL)
+    context = GTK_GL_AREA_CLASS (gthree_area_parent_class)->create_context (gl_area);
+
+  if (priv->scene && context)
+    gthree_scene_set_context (priv->scene, context);
+
+  return context;
+}
+
 static void
 gthree_area_class_init (GthreeAreaClass *klass)
 {
   GTK_GL_AREA_CLASS (klass)->resize = gthree_area_real_resize;
+  GTK_GL_AREA_CLASS (klass)->create_context = gthree_area_real_create_context;
   GTK_GL_AREA_CLASS (klass)->render = gthree_area_render;
   GTK_WIDGET_CLASS (klass)->realize = gthree_area_realize;
   GTK_WIDGET_CLASS (klass)->unrealize = gthree_area_unrealize;
@@ -115,6 +139,9 @@ gthree_area_unrealize (GtkWidget *widget)
 {
   GthreeArea *area = GTHREE_AREA(widget);
   GthreeAreaPrivate *priv = gthree_area_get_instance_private (area);
+
+  if (priv->scene)
+    gthree_scene_set_context (priv->scene, NULL);
 
   g_clear_object (&priv->renderer);
 
