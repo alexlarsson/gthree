@@ -252,16 +252,25 @@ gthree_object_look_at (GthreeObject *object,
 
 void
 gthree_object_set_position (GthreeObject *object,
-                            graphene_point3d_t *pos)
+                            const graphene_point3d_t *pos)
 {
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
 
   graphene_point3d_to_vec3 (pos, &priv->position);
 }
 
+graphene_point3d_t *
+gthree_object_get_position (GthreeObject *object,
+                            graphene_point3d_t *pos)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  return graphene_point3d_init_from_vec3 (pos, &priv->position);
+}
+
 void
 gthree_object_set_scale (GthreeObject                *object,
-                         graphene_point3d_t          *scale)
+                         const graphene_point3d_t    *scale)
 {
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
 

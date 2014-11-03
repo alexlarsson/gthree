@@ -65,9 +65,11 @@ void                         gthree_object_update_matrix_view     (GthreeObject 
 void                         gthree_object_look_at                (GthreeObject                *object,
                                                                    graphene_point3d_t          *pos);
 void                         gthree_object_set_position           (GthreeObject                *object,
-                                                                   graphene_point3d_t          *pos);
+                                                                   const graphene_point3d_t    *pos);
+graphene_point3d_t *         gthree_object_get_position           (GthreeObject                *object,
+                                                                   graphene_point3d_t          *res);
 void                         gthree_object_set_scale              (GthreeObject                *object,
-                                                                   graphene_point3d_t          *scale);
+                                                                   const graphene_point3d_t    *scale);
 void                         gthree_object_set_quaternion         (GthreeObject                *object,
                                                                    const graphene_quaternion_t *q);
 const graphene_quaternion_t *gthree_object_get_quaternion         (GthreeObject                *object);
