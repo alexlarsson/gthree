@@ -43,7 +43,7 @@ performance_SOURCES =						\
 	$(NULL)
 
 performance_LDADD = \
-	$(GTHREE_LIBS)						\
+	$(GTHREE_LIBS) \
 	$(top_builddir)/gthree/libgthree-1.la			\
 	$(NULL)
 
@@ -85,6 +85,7 @@ materials_SOURCES =						\
 	$(NULL)
 
 materials_LDADD = \
+	$(LIBM) \
 	$(GTHREE_LIBS)						\
 	$(top_builddir)/gthree/libgthree-1.la			\
 	$(NULL)
@@ -99,6 +100,7 @@ envmap_SOURCES =						\
 	$(NULL)
 
 envmap_LDADD = \
+	$(LIBM) \
 	$(GTHREE_LIBS)						\
 	$(top_builddir)/gthree/libgthree-1.la			\
 	$(NULL)
@@ -113,6 +115,7 @@ shader_SOURCES =						\
 	$(NULL)
 
 shader_LDADD = \
+	$(LIBM) \
 	$(GTHREE_LIBS)						\
 	$(top_builddir)/gthree/libgthree-1.la			\
 	$(NULL)
