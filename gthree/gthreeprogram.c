@@ -315,7 +315,10 @@ gthree_program_new (gpointer code, GthreeShader *shader, GthreeProgramParameters
                               "#define MAX_SHADOWS %d\n",
                               parameters->max_shadows);
 
-      //parameters.alphaTest ? "#define ALPHATEST " + parameters.alphaTest: "",
+      if (parameters->alpha_test != 0)
+        g_string_append_printf (vertex,
+                                "#define ALPHATEST %f\n",
+                                parameters->alpha_test);
 
       //_this.gammaInput ? "#define GAMMA_INPUT" : "",
       //_this.gammaOutput ? "#define GAMMA_OUTPUT" : "",

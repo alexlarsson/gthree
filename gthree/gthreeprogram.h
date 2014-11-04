@@ -49,6 +49,7 @@ typedef struct {
   guint16 max_hemi_lights;
   guint16 max_shadows;
   guint16 max_bones;
+  float   alpha_test;
 
   guint double_sided : 1;
   guint flip_sided : 1;

@@ -109,6 +109,7 @@ gthree_material_real_set_params (GthreeMaterial *material,
 
   params->double_sided = priv->side == GTHREE_SIDE_DOUBLE;
   params->flip_sided = priv->side == GTHREE_SIDE_BACK;
+  params->alpha_test = priv->alpha_test;
 }
 
 void
