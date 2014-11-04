@@ -11,6 +11,7 @@ AM_CPPFLAGS =					\
 
 noinst_PROGRAMS =			\
 	cubes				\
+	performance			\
 	multi				\
 	model				\
 	materials			\
@@ -28,6 +29,20 @@ cubes_SOURCES =						\
 	$(NULL)
 
 cubes_LDADD = \
+	$(GTHREE_LIBS)						\
+	$(top_builddir)/gthree/libgthree-1.la			\
+	$(NULL)
+
+performance_CFLAGS = \
+	$(GTHREE_CFLAGS)					\
+	$(NULL)
+
+performance_SOURCES =						\
+	performance.c						\
+	utils.c							\
+	$(NULL)
+
+performance_LDADD = \
 	$(GTHREE_LIBS)						\
 	$(top_builddir)/gthree/libgthree-1.la			\
 	$(NULL)
