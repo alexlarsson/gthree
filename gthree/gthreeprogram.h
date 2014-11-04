@@ -42,6 +42,10 @@ typedef struct {
   guint fog_exp : 1;
   guint metal : 1;
   guint wrap_around : 1;
+  guint double_sided : 1;
+  guint flip_sided : 1;
+
+  guint unused : 12;
 
   guint16 max_dir_lights;
   guint16 max_point_lights;
@@ -51,13 +55,12 @@ typedef struct {
   guint16 max_bones;
   float   alpha_test;
 
-  guint double_sided : 1;
-  guint flip_sided : 1;
+  guint16 unused2[4];
 } GthreeProgramParameters;
 
 GType gthree_program_get_type (void) G_GNUC_CONST;
 
-GthreeProgram *gthree_program_new (gpointer code, GthreeShader *shader, GthreeProgramParameters *parameters);
+GthreeProgram *gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters);
 
 void gthree_program_use (GthreeProgram *program);
 
@@ -66,6 +69,14 @@ gint gthree_program_lookup_uniform_location (GthreeProgram *program,
                                              const char *uniform);
 gint gthree_program_lookup_attribute_location (GthreeProgram *program,
                                                const char *attribute);
+
+typedef struct _GthreeProgramCache GthreeProgramCache;
+
+GthreeProgramCache *gthree_program_cache_new  (void);
+void                gthree_program_cache_free (GthreeProgramCache      *cache);
+GthreeProgram *     gthree_program_cache_get  (GthreeProgramCache      *cache,
+                                               GthreeShader            *shader,
+                                               GthreeProgramParameters *parameters);
 
 G_END_DECLS
 

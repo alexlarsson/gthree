@@ -24,6 +24,8 @@ typedef struct {
   float viewport_height;
 
   /* Render state */
+  GthreeProgramCache *program_cache;
+
   graphene_frustum_t frustum;
   graphene_matrix_t proj_screen_matrix;
 
@@ -85,6 +87,8 @@ gthree_renderer_init (GthreeRenderer *renderer)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
 
+  priv->program_cache = gthree_program_cache_new ();
+
   priv->auto_clear = TRUE;
   priv->auto_clear_color = TRUE;
   priv->auto_clear_depth = TRUE;
@@ -115,7 +119,7 @@ gthree_renderer_init (GthreeRenderer *renderer)
   priv->light_setup.hemi_sky_colors = g_array_new (FALSE, TRUE, sizeof (float));
   priv->light_setup.hemi_ground_colors = g_array_new (FALSE, TRUE, sizeof (float));
   priv->light_setup.hemi_positions = g_array_new (FALSE, TRUE, sizeof (float));
-  
+
   priv->opaque_objects = g_ptr_array_new ();
   priv->transparent_objects = g_ptr_array_new ();
 
@@ -153,6 +157,8 @@ gthree_renderer_finalize (GObject *obj)
   GthreeRenderer *renderer = GTHREE_RENDERER (obj);
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
 
+  gthree_program_cache_free (priv->program_cache);
+
   g_array_free (priv->light_setup.dir_colors, TRUE);
   g_array_free (priv->light_setup.dir_positions, TRUE);
 
@@ -173,7 +179,7 @@ gthree_renderer_finalize (GObject *obj)
 
   g_ptr_array_free (priv->opaque_objects, TRUE);
   g_ptr_array_free (priv->transparent_objects, TRUE);
-  
+
   G_OBJECT_CLASS (gthree_renderer_parent_class)->finalize (obj);
 }
 
@@ -589,11 +595,9 @@ init_material (GthreeRenderer *renderer,
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
   GList *l;
-  //char *shader_id;
   GthreeProgram *program;
   GthreeShader *shader;
   GthreeProgramParameters parameters = {0};
-  gpointer code;
 
   shader = gthree_material_get_shader (material);
 
@@ -618,17 +622,11 @@ init_material (GthreeRenderer *renderer,
 #ifdef TODO
   parameters =
     {
-    precision: _precision,
-
-    map: !! material.map,
-    envMap: !! material.envMap,
     lightMap: !! material.lightMap,
     bumpMap: !! material.bumpMap,
     normalMap: !! material.normalMap,
     specularMap: !! material.specularMap,
     alphaMap: !! material.alphaMap,
-
-    vertexColors: material.vertexColors,
 
     fog: fog,
     useFog: material.fog,
@@ -651,67 +649,11 @@ init_material (GthreeRenderer *renderer,
     shadowMapType: this.shadowMapType,
     shadowMapDebug: this.shadowMapDebug,
     shadowMapCascade: this.shadowMapCascade,
-
-    alphaTest: material.alphaTest,
-    metal: material.metal,
-    wrapAround: material.wrapAround,
     };
 #endif
 
-  code = NULL;
-
-#ifdef TODO
-
-  // Generate code
-  var chunks = [];
-
-  if (shader_id)
-    {
-      chunks.push( shader_id );
-    }
-  else
-    {
-      chunks.push( material.fragmentShader );
-      chunks.push( material.vertexShader );
-    }
-
-  for ( var d in material.defines )
-    {
-      chunks.push( d );
-      chunks.push( material.defines[ d ] );
-    }
-
-  for ( var p in parameters )
-    {
-      chunks.push( p );
-      chunks.push( parameters[ p ] );
-    }
-
-  var code = chunks.join();
-#endif
-
-  program = NULL;
-
-#ifdef TODO
-  // Check if code has been already compiled
-  for ( var p = 0, pl = _programs.length; p < pl; p ++ )
-    {
-      var programInfo = _programs[ p ];
-      if (programInfo.code == code)
-        {
-          program = programInfo;
-          program.usedTimes ++;
-          break;
-        }
-    }
-#endif
-
-  if (program == NULL)
-    {
-      program = gthree_program_new (code, shader, &parameters);
-      //_programs.push( program );
-    }
-
+  program = gthree_program_cache_get (priv->program_cache, shader, &parameters);
+  g_clear_object (&material->program);
   material->program = program;
 
 #ifdef TODO
@@ -1044,7 +986,6 @@ set_program (GthreeRenderer *renderer,
 
   if (gthree_material_get_needs_update (material))
     {
-      g_clear_object (&material->program);
       init_material (renderer, material, lights, fog, object);
       gthree_material_set_needs_update (material, FALSE);
     }
