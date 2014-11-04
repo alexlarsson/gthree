@@ -11,11 +11,13 @@ typedef struct {
   char *vertex_shader_text;
   char *fragment_shader_text;
   GthreeShader *owner_of_shader_text;
+  guint hash;
 } GthreeShaderPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeShader, gthree_shader, G_TYPE_OBJECT);
 
 static void gthree_shader_init_libs ();
+static void gthree_shader_init_hash (GthreeShader *shader);
 
 GthreeShader *
 gthree_shader_new (GPtrArray *defines,
@@ -45,6 +47,8 @@ gthree_shader_new (GPtrArray *defines,
     priv->fragment_shader_text = g_strdup ("void main() {\n\tgl_FragColor = vec4( 1.0, 0.0, 0.0, 1.0 );\n}");
 
   priv->owner_of_shader_text = NULL;
+
+  gthree_shader_init_hash (shader);
 
   return shader;
 }
@@ -83,6 +87,90 @@ gthree_shader_class_init (GthreeShaderClass *klass)
   G_OBJECT_CLASS (klass)->finalize = gthree_shader_finalize;
 
   gthree_shader_init_libs ();
+}
+
+static gboolean
+str_equal (const char *a, const char *b)
+{
+  if (a == b)
+    return TRUE;
+
+  return strcmp (a, b) == 0;
+}
+
+static gboolean
+defines_equal (GPtrArray *a, GPtrArray *b)
+{
+  int i;
+
+  if (a == b)
+    return TRUE;
+
+  if (a == NULL)
+    return b == NULL;
+  if (b == NULL)
+    return a == NULL;
+
+  if (a->len != b->len)
+    return FALSE;
+
+  for (i = 0; i < a->len; i++)
+    {
+      if (!str_equal (g_ptr_array_index (a, i), g_ptr_array_index (b, i)))
+        return FALSE;
+    }
+
+  return TRUE;
+}
+
+static guint
+defines_hash (GPtrArray *a)
+{
+  guint hash = 0;
+  int i;
+
+  if (a != NULL)
+    {
+      for (i = 0; i < a->len; i++)
+        hash ^= g_str_hash (g_ptr_array_index (a, i));
+    }
+
+  return hash;
+}
+
+gboolean
+gthree_shader_equal (GthreeShader *a,
+                     GthreeShader *b)
+{
+  GthreeShaderPrivate *priv_a = gthree_shader_get_instance_private (a);
+  GthreeShaderPrivate *priv_b = gthree_shader_get_instance_private (b);
+
+  if (a == b)
+    return TRUE;
+
+  return
+    defines_equal (priv_a->defines, priv_b->defines) &&
+    str_equal (priv_a->vertex_shader_text, priv_b->vertex_shader_text) &&
+    str_equal (priv_a->fragment_shader_text, priv_b->fragment_shader_text);
+}
+
+static void
+gthree_shader_init_hash (GthreeShader *shader)
+{
+  GthreeShaderPrivate *priv = gthree_shader_get_instance_private (shader);
+
+  priv->hash =
+    defines_hash (priv->defines) ^
+    g_str_hash (priv->vertex_shader_text) ^
+    g_str_hash (priv->fragment_shader_text);
+}
+
+guint
+gthree_shader_hash (GthreeShader *shader)
+{
+  GthreeShaderPrivate *priv = gthree_shader_get_instance_private (shader);
+
+  return priv->hash;
 }
 
 void
@@ -150,6 +238,8 @@ gthree_shader_clone (GthreeShader *orig)
   clone_priv->uniforms = gthree_uniforms_clone (orig_priv->uniforms);
   clone_priv->vertex_shader_text = orig_priv->vertex_shader_text;
   clone_priv->fragment_shader_text = orig_priv->fragment_shader_text;
+
+  clone_priv->hash = orig_priv->hash;
 
   if (orig_priv->owner_of_shader_text)
     clone_priv->owner_of_shader_text = g_object_ref (orig_priv->owner_of_shader_text);
@@ -256,6 +346,8 @@ gthree_shader_new_from_definitions (const char **lib_uniforms,
 
   priv->vertex_shader_text = parse_text_with_includes (vertex_shader);
   priv->fragment_shader_text = parse_text_with_includes (fragment_shader);
+
+  gthree_shader_init_hash (shader);
 
   return shader;
 }

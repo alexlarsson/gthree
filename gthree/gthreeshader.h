@@ -39,7 +39,9 @@ const char *    gthree_shader_get_vertex_shader_text               (GthreeShader
 const char *    gthree_shader_get_fragment_shader_text             (GthreeShader  *shader);
 void            gthree_shader_update_uniform_locations_for_program (GthreeShader  *shader,
                                                                     GthreeProgram *program);
-
+gboolean        gthree_shader_equal                                (GthreeShader  *a,
+                                                                    GthreeShader  *b);
+guint           gthree_shader_hash                                 (GthreeShader  *shader);
 
 GthreeShader *gthree_get_shader_from_library   (const char *name);
 GthreeShader *gthree_clone_shader_from_library (const char *name);
