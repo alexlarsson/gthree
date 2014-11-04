@@ -59,6 +59,8 @@ const graphene_sphere_t *gthree_geometry_get_bounding_sphere  (GthreeGeometry   
 void                     gthree_geometry_set_bounding_sphere  (GthreeGeometry          *geometry,
                                                                const graphene_sphere_t *sphere);
 void                     gthree_geometry_compute_face_normals (GthreeGeometry          *geometry);
+void                     gthree_geometry_compute_vertex_normals (GthreeGeometry *geometry,
+                                                                 gboolean area_weighted);
 
 gboolean gthree_geometry_make_groups (GthreeGeometry *geometry,
                                       gboolean use_face_material,

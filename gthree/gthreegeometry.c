@@ -227,6 +227,74 @@ gthree_geometry_compute_face_normals (GthreeGeometry *geometry)
     }
 }
 
+void
+gthree_geometry_compute_vertex_normals (GthreeGeometry *geometry, gboolean area_weighted)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+  GthreeFace *face;
+  const graphene_vec3_t *vertices;
+  graphene_vec3_t *vertex_normals;
+  int i, n_faces, n_vertices;
+
+  n_faces = gthree_geometry_get_n_faces (geometry);
+  n_vertices = gthree_geometry_get_n_vertices (geometry);
+  vertices = gthree_geometry_get_vertices (geometry);
+  vertex_normals = g_new0 (graphene_vec3_t, n_vertices);
+
+  if (area_weighted)
+    {
+      for (i = 0; i < n_faces; i++)
+        {
+          face = &g_array_index (priv->faces, GthreeFace, i);
+          const graphene_vec3_t *va, *vb, *vc;
+          graphene_vec3_t cb, ab;
+
+          // vertex normals weighted by triangle areas
+          // http://www.iquilezles.org/www/articles/normals/normals.htm
+
+          va = &vertices[face->a];
+          vb = &vertices[face->b];
+          vc = &vertices[face->c];
+
+          graphene_vec3_subtract (vc, vb, &cb);
+          graphene_vec3_subtract (va, vb, &ab);
+          graphene_vec3_cross (&cb, &ab, &cb);
+
+          graphene_vec3_add (&vertex_normals[face->a], &cb, &vertex_normals[face->a]);
+          graphene_vec3_add (&vertex_normals[face->b], &cb, &vertex_normals[face->b]);
+          graphene_vec3_add (&vertex_normals[face->c], &cb, &vertex_normals[face->c]);
+        }
+    }
+  else
+    {
+      for (i = 0; i < n_faces; i++)
+        {
+          face = &g_array_index (priv->faces, GthreeFace, i);
+
+          graphene_vec3_add (&vertex_normals[face->a], &face->normal, &vertex_normals[face->a]);
+          graphene_vec3_add (&vertex_normals[face->b], &face->normal, &vertex_normals[face->b]);
+          graphene_vec3_add (&vertex_normals[face->c], &face->normal, &vertex_normals[face->c]);
+        }
+    }
+
+  for (i = 0; i < n_vertices; i++)
+    graphene_vec3_normalize (&vertex_normals[i], &vertex_normals[i]);
+
+  for (i = 0; i < n_faces; i++)
+    {
+      face = &g_array_index (priv->faces, GthreeFace, i);
+
+      if (face->vertex_normals == NULL)
+        face->vertex_normals = g_new (graphene_vec3_t, 3);
+
+      face->vertex_normals[0] = vertex_normals[face->a];
+      face->vertex_normals[1] = vertex_normals[face->b];
+      face->vertex_normals[2] = vertex_normals[face->c];
+    }
+
+  g_free (vertex_normals);
+}
+
 int
 gthree_geometry_add_face (GthreeGeometry        *geometry,
 			  int                    a,
@@ -317,7 +385,7 @@ gthree_geometry_face_set_vertex_normals (GthreeGeometry        *geometry,
 
   face = &g_array_index (priv->faces, GthreeFace, index);
 
-    if (face->vertex_normals == NULL)
+  if (face->vertex_normals == NULL)
     face->vertex_normals = g_new (graphene_vec3_t, 3);
 
   face->vertex_normals[0] = *normal_a;
