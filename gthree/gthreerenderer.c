@@ -292,8 +292,8 @@ gthree_renderer_clear (GthreeRenderer *renderer)
 static gint
 painter_sort_stable (gconstpointer  _a, gconstpointer  _b)
 {
-  const GthreeBuffer *a = _a;
-  const GthreeBuffer *b = _b;
+  const GthreeBuffer *a = *(GthreeBuffer **)_a;
+  const GthreeBuffer *b = *(GthreeBuffer **)_b;
 
   if (a->z != b->z)
     {
@@ -316,8 +316,8 @@ painter_sort_stable (gconstpointer  _a, gconstpointer  _b)
 static gint
 reverse_painter_sort_stable (gconstpointer _a, gconstpointer _b)
 {
-  const GthreeBuffer *a = _a;
-  const GthreeBuffer *b = _b;
+  const GthreeBuffer *a = *(GthreeBuffer **)_a;
+  const GthreeBuffer *b = *(GthreeBuffer **)_b;
 
   if (a->z != b->z)
     {
