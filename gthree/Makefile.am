@@ -169,15 +169,8 @@ gthree-resources.h: gthree.gresource.xml $(resource_files)
 
 
 libgthree_1_la_SOURCES = $(gthree_c_sources)
-
-libgthree_1_la_CFLAGS = \
-	$(GTHREE_CFLAGS)					\
-	$(NULL)
-
-libgthree_1_la_LIBADD =						\
-	$(GTHREE_LIBS)					\
-	$(NULL)
-
+libgthree_1_la_CFLAGS = $(GTHREE_CFLAGS)
+libgthree_1_la_LIBADD =	$(GTHREE_LIBS) $(LIBM)
 
 EXTRA_DIST += \
 	gthreetypebuiltins.c.template \
