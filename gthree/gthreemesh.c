@@ -98,7 +98,7 @@ make_geometry_groups (GthreeMesh *mesh,
         group = ptr;
       else
         {
-          group = gthree_geometry_group_new (GTHREE_OBJECT (mesh), priv->material, material_index);
+          group = gthree_geometry_group_new (priv->material, material_index);
           g_hash_table_insert (geometry_groups, GINT_TO_POINTER(group_hash), group);
           g_ptr_array_add (groups, group);
         }
@@ -114,7 +114,7 @@ make_geometry_groups (GthreeMesh *mesh,
             group = ptr;
           else
             {
-              group = gthree_geometry_group_new (GTHREE_OBJECT (mesh), priv->material, material_index);
+              group = gthree_geometry_group_new (priv->material, material_index);
               g_hash_table_insert (geometry_groups, GINT_TO_POINTER(group_hash), group);
               g_ptr_array_add (groups, group);
             }

@@ -6,6 +6,7 @@
 #include "gthreeshader.h"
 #include "gthreematerial.h"
 #include "gthreeprivate.h"
+#include "gthreeobjectprivate.h"
 
 typedef struct {
   int width;
@@ -50,8 +51,8 @@ typedef struct {
   GthreeMaterial *current_material;
   GthreeCamera *current_camera;
 
-  GPtrArray *opaque_objects;
-  GPtrArray *transparent_objects;
+  GPtrArray *opaque_objects; /* GthreeObjectBuffer */
+  GPtrArray *transparent_objects; /* GthreeObjectBuffer */
 
   guint8 new_attributes[8];
   guint8 enabled_attributes[8];
@@ -298,8 +299,8 @@ gthree_renderer_clear (GthreeRenderer *renderer)
 static gint
 painter_sort_stable (gconstpointer  _a, gconstpointer  _b)
 {
-  const GthreeBuffer *a = *(GthreeBuffer **)_a;
-  const GthreeBuffer *b = *(GthreeBuffer **)_b;
+  const GthreeObjectBuffer *a = *(GthreeObjectBuffer **)_a;
+  const GthreeObjectBuffer *b = *(GthreeObjectBuffer **)_b;
 
   if (a->z != b->z)
     {
@@ -322,8 +323,8 @@ painter_sort_stable (gconstpointer  _a, gconstpointer  _b)
 static gint
 reverse_painter_sort_stable (gconstpointer _a, gconstpointer _b)
 {
-  const GthreeBuffer *a = *(GthreeBuffer **)_a;
-  const GthreeBuffer *b = *(GthreeBuffer **)_b;
+  const GthreeObjectBuffer *a = *(GthreeObjectBuffer **)_a;
+  const GthreeObjectBuffer *b = *(GthreeObjectBuffer **)_b;
 
   if (a->z != b->z)
     {
@@ -516,46 +517,38 @@ set_blending (GthreeRenderer *renderer,
 }
 
 static void
-resolve_buffer_material (GthreeRenderer *renderer,
-                         GthreeBuffer *buffer)
-{
-  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
-  GthreeMaterial *material = gthree_buffer_resolve_material (buffer);
-
-  if (material)
-    {
-      if (gthree_material_get_is_transparent (material))
-        g_ptr_array_add (priv->transparent_objects, buffer);
-      else
-        g_ptr_array_add (priv->opaque_objects, buffer);
-    }
-}
-
-static void
 project_object (GthreeRenderer *renderer,
                 GthreeScene    *scene,
                 GthreeObject   *object,
                 GthreeCamera   *camera)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
-  GList *l, *buffers;
+  GList *l, *object_buffers;
   GthreeObject *child;
   GthreeObjectIter iter;
 
   if (!gthree_object_get_visible (object))
     return;
 
-  buffers = gthree_object_get_buffers (object);
+  object_buffers = gthree_object_get_object_buffers (object);
 
-  if (buffers != NULL && (!gthree_object_get_is_frustum_culled (object) || gthree_object_is_in_frustum (object, &priv->frustum)))
+  if (object_buffers != NULL &&
+      (!gthree_object_get_is_frustum_culled (object) || gthree_object_is_in_frustum (object, &priv->frustum)))
     {
       gthree_object_update (object);
 
-      for (l = buffers; l != NULL; l = l->next)
+      for (l = object_buffers; l != NULL; l = l->next)
         {
-          GthreeBuffer *buffer = l->data;
+          GthreeObjectBuffer *buffer_obj = l->data;
+          GthreeMaterial *material = gthree_buffer_resolve_material (buffer_obj->buffer);
 
-          resolve_buffer_material (renderer, buffer);
+          if (material)
+            {
+              if (gthree_material_get_is_transparent (material))
+                g_ptr_array_add (priv->transparent_objects, buffer_obj);
+              else
+                g_ptr_array_add (priv->opaque_objects, buffer_obj);
+            }
 
           if (priv->sort_objects)
             {
@@ -575,7 +568,7 @@ project_object (GthreeRenderer *renderer,
                   graphene_matrix_transform_vec4 (&priv->proj_screen_matrix, &vector, &vector);
                   graphene_vec4_normalize (&vector, &vector);
 
-                  buffer->z = graphene_vec4_get_z (&vector);
+                  buffer_obj->z = graphene_vec4_get_z (&vector);
                 }
             }
         }
@@ -1219,9 +1212,10 @@ render_buffer (GthreeRenderer *renderer,
                GList *lights,
                gpointer fog,
                GthreeMaterial *material,
-               GthreeBuffer *buffer)
+               GthreeObjectBuffer *object_buffer)
 {
-  GthreeObject *object = buffer->object;
+  GthreeBuffer *buffer = object_buffer->buffer;
+  GthreeObject *object = object_buffer->object;
   GthreeProgram *program = set_program (renderer, camera, lights, fog, material, object);
   //var linewidth, a, attribute, i, il;
   //var attributes = program.attributes;
@@ -1370,20 +1364,20 @@ render_objects (GthreeRenderer *renderer,
                 gboolean use_blending,
                 GthreeMaterial *override_material)
 {
-  GthreeBuffer *buffer;
+  GthreeObjectBuffer *object_buffer;
   GthreeMaterial *material;
   int i;
 
   for (i = 0; i < render_list->len; i++)
     {
-      buffer = g_ptr_array_index (render_list, i);
+      object_buffer = g_ptr_array_index (render_list, i);
 
-      gthree_object_update_matrix_view (buffer->object, gthree_camera_get_world_inverse_matrix (camera));
+      gthree_object_update_matrix_view (object_buffer->object, gthree_camera_get_world_inverse_matrix (camera));
 
       if (override_material)
         material = override_material;
       else
-        material = gthree_buffer_resolve_material (buffer);
+        material = gthree_buffer_resolve_material (object_buffer->buffer);
 
       if (material == NULL)
         continue;
@@ -1399,7 +1393,6 @@ render_objects (GthreeRenderer *renderer,
       set_depth_test (renderer, gthree_material_get_depth_test (material));
       set_depth_write (renderer, gthree_material_get_depth_write (material));
 
-
       {
         gboolean polygon_offset;
         float factor, units;
@@ -1409,7 +1402,7 @@ render_objects (GthreeRenderer *renderer,
       }
       set_material_faces (renderer, material);
 
-      render_buffer (renderer, camera, lights, fog, material, buffer);
+      render_buffer (renderer, camera, lights, fog, material, object_buffer);
     }
 }
 

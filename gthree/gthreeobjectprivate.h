@@ -5,9 +5,15 @@
 #include <gthree/gthreebufferprivate.h>
 #include <gthree/gthreematerial.h>
 
+typedef struct {
+  GthreeObject *object;
+  GthreeBuffer *buffer;
+  float z;
+} GthreeObjectBuffer;
+
 G_BEGIN_DECLS
 
-GList *gthree_object_get_buffers        (GthreeObject       *object);
+GList *gthree_object_get_object_buffers (GthreeObject       *object);
 void   gthree_object_add_buffer         (GthreeObject       *object,
                                          GthreeBuffer       *buffer);
 void   gthree_object_remove_buffer      (GthreeObject       *object,

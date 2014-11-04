@@ -49,7 +49,7 @@ typedef struct {
 
   /* Render state */
 
-  GList *buffers;
+  GList *buffer_objects;
 
 } GthreeObjectPrivate;
 
@@ -663,11 +663,11 @@ gthree_object_unrealize (GthreeObject *object)
 }
 
 GList *
-gthree_object_get_buffers (GthreeObject *object)
+gthree_object_get_object_buffers (GthreeObject *object)
 {
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
 
-  return priv->buffers;
+  return priv->buffer_objects;
 }
 
 void
@@ -675,8 +675,20 @@ gthree_object_add_buffer (GthreeObject *object,
                           GthreeBuffer *buffer)
 {
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+  GthreeObjectBuffer *obj_buffer;
 
-  priv->buffers = g_list_prepend (priv->buffers, g_object_ref (buffer));
+  obj_buffer = g_new0 (GthreeObjectBuffer, 1);
+  obj_buffer->object = object;
+  obj_buffer->buffer = g_object_ref (buffer);
+
+  priv->buffer_objects = g_list_prepend (priv->buffer_objects, obj_buffer);
+}
+
+static void
+gthree_object_buffer_free (GthreeObjectBuffer *obj_buffer)
+{
+  g_object_unref (obj_buffer->buffer);
+  g_free (obj_buffer);
 }
 
 void
@@ -684,14 +696,20 @@ gthree_object_remove_buffer (GthreeObject *object,
                              GthreeBuffer *buffer)
 {
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
-  GList *found;
+  GList *l;
 
-  found = g_list_find (priv->buffers, buffer);
-  if (found != NULL)
+  for (l = priv->buffer_objects; l != NULL; l = l->next)
     {
-      priv->buffers = g_list_remove_link (priv->buffers, found);
-      g_object_unref (buffer);
+      GthreeObjectBuffer *obj_buffer = l->data;
+
+      if (obj_buffer->buffer == buffer)
+        {
+          gthree_object_buffer_free (obj_buffer);
+          priv->buffer_objects = g_list_remove_link (priv->buffer_objects, l);
+          return;
+        }
     }
+  g_warning ("gthree_object_remove_buffer - did not find buffer");
 }
 
 void
@@ -699,8 +717,8 @@ gthree_object_remove_buffers (GthreeObject *object)
 {
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
 
-  g_list_free_full (priv->buffers, (GDestroyNotify)g_object_unref);
-  priv->buffers = NULL;
+  g_list_free_full (priv->buffer_objects, (GDestroyNotify)gthree_object_buffer_free);
+  priv->buffer_objects = NULL;
 }
 
 typedef struct _RealObjectIter

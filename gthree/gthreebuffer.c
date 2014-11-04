@@ -27,7 +27,6 @@ gthree_buffer_finalize (GObject *obj)
 {
   GthreeBuffer *buffer = GTHREE_BUFFER (obj);
 
-  buffer->object = NULL; /* weak ref, don't unref */
   g_clear_object (&buffer->material);
 
   if (buffer->vertex_buffer)
