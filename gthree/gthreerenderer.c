@@ -363,7 +363,7 @@ painter_sort_stable (gconstpointer  _a, gconstpointer  _b)
 
   if (a->z != b->z)
     {
-      if (b->z > a->z)
+      if (a->z > b->z)
         return 1;
       else
         return -1;
@@ -387,7 +387,7 @@ reverse_painter_sort_stable (gconstpointer _a, gconstpointer _b)
 
   if (a->z != b->z)
     {
-      if (a->z > b->z)
+      if (b->z > a->z)
         return 1;
       else
         return -1;
@@ -585,6 +585,7 @@ project_object (GthreeRenderer *renderer,
   GList *l, *object_buffers;
   GthreeObject *child;
   GthreeObjectIter iter;
+  float z = 0;
 
   if (!gthree_object_get_visible (object))
     return;
@@ -596,6 +597,28 @@ project_object (GthreeRenderer *renderer,
     {
       gthree_object_update (object);
 
+      if (priv->sort_objects)
+        {
+#if TODO
+          if (object.renderDepth != null)
+            {
+              z = object.renderDepth;
+            }
+          else
+#endif
+            {
+              graphene_vec4_t vector;
+
+              /* Get position */
+              graphene_matrix_get_row (gthree_object_get_world_matrix (object), 3, &vector);
+
+              /* project object position to screen */
+              graphene_matrix_transform_vec4 (&priv->proj_screen_matrix, &vector, &vector);
+
+              z = graphene_vec4_get_z (&vector) / graphene_vec4_get_w (&vector);
+            }
+        }
+
       for (l = object_buffers; l != NULL; l = l->next)
         {
           GthreeObjectBuffer *buffer_obj = l->data;
@@ -603,33 +626,14 @@ project_object (GthreeRenderer *renderer,
 
           if (material)
             {
+              buffer_obj->z = z;
+
               if (gthree_material_get_is_transparent (material))
                 g_ptr_array_add (priv->transparent_objects, buffer_obj);
               else
                 g_ptr_array_add (priv->opaque_objects, buffer_obj);
             }
 
-          if (priv->sort_objects)
-            {
-              /* TODO
-              if (object.renderDepth != null)
-                {
-                  buffer->z = object.renderDepth;
-                }
-                else */
-                {
-                  graphene_vec4_t vector;
-
-                  /* Get position */
-                  graphene_matrix_get_row (gthree_object_get_world_matrix (object), 3, &vector);
-
-                  /* project object position to screen */
-                  graphene_matrix_transform_vec4 (&priv->proj_screen_matrix, &vector, &vector);
-                  graphene_vec4_normalize (&vector, &vector);
-
-                  buffer_obj->z = graphene_vec4_get_z (&vector);
-                }
-            }
         }
     }
 
