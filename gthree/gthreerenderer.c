@@ -74,6 +74,33 @@ typedef struct {
 
 static void gthree_set_default_gl_state (GthreeRenderer *renderer);
 
+static GQuark q_position;
+static GQuark q_color;
+static GQuark q_uv;
+static GQuark q_uv2;
+static GQuark q_normal;
+static GQuark q_viewMatrix;
+static GQuark q_modelMatrix;
+static GQuark q_modelViewMatrix;
+static GQuark q_normalMatrix;
+static GQuark q_projectionMatrix;
+static GQuark q_cameraPosition;
+static GQuark q_ambientLightColor;
+static GQuark q_directionalLightColor;
+static GQuark q_directionalLightDirection;
+static GQuark q_pointLightColor;
+static GQuark q_pointLightPosition;
+static GQuark q_pointLightDistance;
+static GQuark q_spotLightColor;
+static GQuark q_spotLightPosition;
+static GQuark q_spotLightDistance;
+static GQuark q_spotLightDirection;
+static GQuark q_spotLightAngleCos;
+static GQuark q_spotLightExponent;
+static GQuark q_hemisphereLightSkyColor;
+static GQuark q_hemisphereLightGroundColor;
+static GQuark q_hemisphereLightDirection;
+
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeRenderer, gthree_renderer, G_TYPE_OBJECT);
 
 GthreeRenderer *
@@ -192,6 +219,34 @@ static void
 gthree_renderer_class_init (GthreeRendererClass *klass)
 {
   G_OBJECT_CLASS (klass)->finalize = gthree_renderer_finalize;
+
+#define INIT_QUARK(name) q_##name = g_quark_from_static_string (#name)
+  INIT_QUARK(position);
+  INIT_QUARK(color);
+  INIT_QUARK(uv);
+  INIT_QUARK(uv2);
+  INIT_QUARK(normal);
+  INIT_QUARK(viewMatrix);
+  INIT_QUARK(modelMatrix);
+  INIT_QUARK(modelViewMatrix);
+  INIT_QUARK(normalMatrix);
+  INIT_QUARK(projectionMatrix);
+  INIT_QUARK(cameraPosition);
+  INIT_QUARK(ambientLightColor);
+  INIT_QUARK(directionalLightColor);
+  INIT_QUARK(directionalLightDirection);
+  INIT_QUARK(pointLightColor);
+  INIT_QUARK(pointLightPosition);
+  INIT_QUARK(pointLightDistance);
+  INIT_QUARK(spotLightColor);
+  INIT_QUARK(spotLightPosition);
+  INIT_QUARK(spotLightDistance);
+  INIT_QUARK(spotLightDirection);
+  INIT_QUARK(spotLightAngleCos);
+  INIT_QUARK(spotLightExponent);
+  INIT_QUARK(hemisphereLightSkyColor);
+  INIT_QUARK(hemisphereLightGroundColor);
+  INIT_QUARK(hemisphereLightDirection);
 }
 
 void
@@ -720,8 +775,8 @@ load_uniforms_matrices (GthreeRenderer *renderer,
                         GthreeObject *object)
 {
   float matrix[16];
-  int mvm_location = gthree_program_lookup_uniform_location (program, "modelViewMatrix");
-  int nm_location = gthree_program_lookup_uniform_location (program, "normalMatrix");
+  int mvm_location = gthree_program_lookup_uniform_location (program, q_modelViewMatrix);
+  int nm_location = gthree_program_lookup_uniform_location (program, q_normalMatrix);
 
   gthree_object_get_model_view_matrix_floats (object, matrix);
   glUniformMatrix4fv (mvm_location, 1, FALSE, matrix);
@@ -865,32 +920,31 @@ refresh_uniforms_lights (GthreeUniforms *uniforms, GthreeLightSetup *lights_setu
 {
   GthreeUniform *uni;
 
-  uni = gthree_uniforms_lookup_from_string (uniforms, "ambientLightColor");
+  uni = gthree_uniforms_lookup (uniforms, q_ambientLightColor);
   if (uni != NULL)
     gthree_uniform_set_color (uni, &lights_setup->ambient);
 
 
-  uni = gthree_uniforms_lookup_from_string (uniforms, "directionalLightColor");
+  uni = gthree_uniforms_lookup (uniforms, q_directionalLightColor);
   if (uni != NULL)
     gthree_uniform_set_float3_array (uni, lights_setup->dir_colors);
 
-  uni = gthree_uniforms_lookup_from_string (uniforms, "directionalLightDirection");
+  uni = gthree_uniforms_lookup (uniforms, q_directionalLightDirection);
   if (uni != NULL)
     gthree_uniform_set_float3_array (uni, lights_setup->dir_positions);
 
-  
-  uni = gthree_uniforms_lookup_from_string (uniforms, "pointLightColor");
+  uni = gthree_uniforms_lookup (uniforms, q_pointLightColor);
   if (uni != NULL)
     gthree_uniform_set_float3_array (uni, lights_setup->point_colors);
 
-  uni = gthree_uniforms_lookup_from_string (uniforms, "pointLightPosition");
+  uni = gthree_uniforms_lookup (uniforms, q_pointLightPosition);
   if (uni != NULL)
     gthree_uniform_set_float3_array (uni, lights_setup->point_positions);
 
-  uni = gthree_uniforms_lookup_from_string (uniforms, "pointLightDistance");
+  uni = gthree_uniforms_lookup (uniforms, q_pointLightDistance);
   if (uni != NULL)
     gthree_uniform_set_float_array (uni, lights_setup->point_distances);
-  
+
 #ifdef TODO
   uniforms.spotLightColor.value = lights_setup->spot.colors;
   uniforms.spotLightPosition.value = lights_setup->spot.positions;
@@ -911,53 +965,53 @@ mark_uniforms_lights_needs_update (GthreeUniforms *uniforms, gboolean needs_upda
 {
   GthreeUniform *uni;
 
-  uni = gthree_uniforms_lookup_from_string (uniforms, "ambientLightColor");
+  uni = gthree_uniforms_lookup (uniforms, q_ambientLightColor);
   if (uni)
     gthree_uniform_set_needs_update (uni, needs_update);
-    
-  uni = gthree_uniforms_lookup_from_string (uniforms, "directionalLightColor");
+
+  uni = gthree_uniforms_lookup (uniforms, q_directionalLightColor);
   if (uni)
     gthree_uniform_set_needs_update (uni, needs_update);
-  uni = gthree_uniforms_lookup_from_string (uniforms, "directionalLightDirection");
+  uni = gthree_uniforms_lookup (uniforms, q_directionalLightDirection);
   if (uni)
     gthree_uniform_set_needs_update (uni, needs_update);
-    
-  uni = gthree_uniforms_lookup_from_string (uniforms, "pointLightColor");
+
+  uni = gthree_uniforms_lookup (uniforms, q_pointLightColor);
   if (uni)
     gthree_uniform_set_needs_update (uni, needs_update);
-  uni = gthree_uniforms_lookup_from_string (uniforms, "pointLightPosition");
+  uni = gthree_uniforms_lookup (uniforms, q_pointLightPosition);
   if (uni)
     gthree_uniform_set_needs_update (uni, needs_update);
-  uni = gthree_uniforms_lookup_from_string (uniforms, "pointLightDistance");
+  uni = gthree_uniforms_lookup (uniforms, q_pointLightDistance);
   if (uni)
     gthree_uniform_set_needs_update (uni, needs_update);
-    
-  uni = gthree_uniforms_lookup_from_string (uniforms, "spotLightColor");
+
+  uni = gthree_uniforms_lookup (uniforms, q_spotLightColor);
   if (uni)
     gthree_uniform_set_needs_update (uni, needs_update);
-  uni = gthree_uniforms_lookup_from_string (uniforms, "spotLightPosition");
+  uni = gthree_uniforms_lookup (uniforms, q_spotLightPosition);
   if (uni)
     gthree_uniform_set_needs_update (uni, needs_update);
-  uni = gthree_uniforms_lookup_from_string (uniforms, "spotLightDistance");
+  uni = gthree_uniforms_lookup (uniforms, q_spotLightDistance);
   if (uni)
     gthree_uniform_set_needs_update (uni, needs_update);
-  uni = gthree_uniforms_lookup_from_string (uniforms, "spotLightDirection");
+  uni = gthree_uniforms_lookup (uniforms, q_spotLightDirection);
   if (uni)
     gthree_uniform_set_needs_update (uni, needs_update);
-  uni = gthree_uniforms_lookup_from_string (uniforms, "spotLightAngleCos");
+  uni = gthree_uniforms_lookup (uniforms, q_spotLightAngleCos);
   if (uni)
     gthree_uniform_set_needs_update (uni, needs_update);
-  uni = gthree_uniforms_lookup_from_string (uniforms, "spotLightExponent");
+  uni = gthree_uniforms_lookup (uniforms, q_spotLightExponent);
   if (uni)
     gthree_uniform_set_needs_update (uni, needs_update);
-  
-  uni = gthree_uniforms_lookup_from_string (uniforms, "hemisphereLightSkyColor");
+
+  uni = gthree_uniforms_lookup (uniforms, q_hemisphereLightSkyColor);
   if (uni)
     gthree_uniform_set_needs_update (uni, needs_update);
-  uni = gthree_uniforms_lookup_from_string (uniforms, "hemisphereLightGroundColor");
+  uni = gthree_uniforms_lookup (uniforms, q_hemisphereLightGroundColor);
   if (uni)
     gthree_uniform_set_needs_update (uni, needs_update);
-  uni = gthree_uniforms_lookup_from_string (uniforms, "hemisphereLightDirection");
+  uni = gthree_uniforms_lookup (uniforms, q_hemisphereLightDirection);
   if (uni)
     gthree_uniform_set_needs_update (uni, needs_update);
 }
@@ -1013,7 +1067,7 @@ set_program (GthreeRenderer *renderer,
     {
       const graphene_matrix_t *projection_matrix = gthree_camera_get_projection_matrix (camera);
       float projection_matrixv[16];
-      gint proction_matrix_location = gthree_program_lookup_uniform_location (program, "projectionMatrix");
+      gint proction_matrix_location = gthree_program_lookup_uniform_location (program, q_projectionMatrix);
 
       graphene_matrix_to_float (projection_matrix, projection_matrixv);
       glUniformMatrix4fv (proction_matrix_location, 1, FALSE, projection_matrixv);
@@ -1035,7 +1089,7 @@ set_program (GthreeRenderer *renderer,
 #endif
           )
         {
-          gint camera_position_location = gthree_program_lookup_uniform_location (program, "cameraPosition");
+          gint camera_position_location = gthree_program_lookup_uniform_location (program, q_cameraPosition);
           if (camera_position_location >= 0)
             {
               const graphene_matrix_t *camera_matrix_world = gthree_object_get_world_matrix (GTHREE_OBJECT (camera));
@@ -1052,7 +1106,7 @@ set_program (GthreeRenderer *renderer,
 #endif
 	  )
         {
-	  gint view_matrix_location = gthree_program_lookup_uniform_location (program, "viewMatrix");
+	  gint view_matrix_location = gthree_program_lookup_uniform_location (program, q_viewMatrix);
           if (view_matrix_location >= 0)
             {
 	      const graphene_matrix_t *m = gthree_camera_get_world_inverse_matrix (camera);
@@ -1159,7 +1213,7 @@ set_program (GthreeRenderer *renderer,
 
   load_uniforms_matrices (renderer, program, object);
 
-  location = gthree_program_lookup_uniform_location (program, "modelMatrix");
+  location = gthree_program_lookup_uniform_location (program, q_modelMatrix);
   if (location >= 0)
     {
       float matrix[16];
@@ -1245,7 +1299,7 @@ render_buffer (GthreeRenderer *renderer,
     init_attributes (renderer);
 
   // vertices
-  position_location = gthree_program_lookup_attribute_location (program, "position");
+  position_location = gthree_program_lookup_attribute_location (program, q_position);
   if (/*!material.morphTargets && */ position_location >= 0)
     {
       if (update_buffers)
@@ -1284,48 +1338,48 @@ render_buffer (GthreeRenderer *renderer,
 #endif
 
       // colors
-      color_location = gthree_program_lookup_attribute_location (program, "color");
+      color_location = gthree_program_lookup_attribute_location (program, q_color);
       if (color_location >= 0)
         {
-          if (gthree_object_has_attribute_data (object, "color"))
+          if (gthree_object_has_attribute_data (object, q_color))
             {
               glBindBuffer (GL_ARRAY_BUFFER, buffer->color_buffer);
               enable_attribute (renderer, color_location);
               glVertexAttribPointer (color_location, 3, GL_FLOAT, FALSE, 0, NULL);
             }
           else
-            gthree_material_load_default_attribute (material, color_location, "color");
+            gthree_material_load_default_attribute (material, color_location, q_color);
         }
 
       // uvs
-      uv_location = gthree_program_lookup_attribute_location (program, "uv");
+      uv_location = gthree_program_lookup_attribute_location (program, q_uv);
       if (uv_location >= 0)
         {
-          if (gthree_object_has_attribute_data (object, "uv"))
+          if (gthree_object_has_attribute_data (object, q_uv))
             {
               glBindBuffer (GL_ARRAY_BUFFER, buffer->uv_buffer);
               enable_attribute (renderer, uv_location);
               glVertexAttribPointer (uv_location, 2, GL_FLOAT, FALSE, 0, NULL);
             }
           else
-            gthree_material_load_default_attribute (material, uv_location, "uv");
+            gthree_material_load_default_attribute (material, uv_location, q_uv);
         }
 
-      uv2_location = gthree_program_lookup_attribute_location (program, "uv2");
+      uv2_location = gthree_program_lookup_attribute_location (program, q_uv2);
       if (uv2_location >= 0)
         {
-          if (gthree_object_has_attribute_data (object, "uv2"))
+          if (gthree_object_has_attribute_data (object, q_uv2))
             {
               glBindBuffer (GL_ARRAY_BUFFER, buffer->uv2_buffer);
               enable_attribute (renderer, uv2_location);
               glVertexAttribPointer (uv2_location, 2, GL_FLOAT, FALSE, 0, NULL);
             }
           else
-            gthree_material_load_default_attribute (material, uv2_location, "uv2");
+            gthree_material_load_default_attribute (material, uv2_location, q_uv2);
         }
 
       // normals
-      normal_location = gthree_program_lookup_attribute_location (program, "normal");
+      normal_location = gthree_program_lookup_attribute_location (program, q_normal);
       if (normal_location >= 0 )
         {
           glBindBuffer (GL_ARRAY_BUFFER, buffer->normal_buffer);

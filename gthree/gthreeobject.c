@@ -214,7 +214,7 @@ gthree_object_is_in_frustum (GthreeObject *object,
 
 gboolean
 gthree_object_has_attribute_data (GthreeObject                *object,
-                                  const char                  *attribute)
+                                  GQuark                       attribute)
 {
   GthreeObjectClass *class = GTHREE_OBJECT_GET_CLASS(object);
 

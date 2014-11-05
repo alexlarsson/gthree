@@ -14,6 +14,10 @@ typedef struct {
 
 } GthreeMeshPrivate;
 
+static GQuark q_color;
+static GQuark q_uv;
+static GQuark q_uv2;
+
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeMesh, gthree_mesh, GTHREE_TYPE_OBJECT);
 
 GthreeMesh *
@@ -100,16 +104,16 @@ gthree_mesh_in_frustum (GthreeObject *object,
 
 static gboolean
 gthree_mesh_real_has_attribute_data (GthreeObject                *object,
-                                     const char                  *attribute)
+                                     GQuark                       attribute)
 {
   GthreeMesh *mesh = GTHREE_MESH (object);
   GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
 
-  if (strcmp (attribute, "color") == 0)
+  if (attribute == q_color)
     return gthree_geometry_get_n_colors (priv->geometry) > 0 || gthree_geometry_get_n_faces (priv->geometry);
-  else if (strcmp (attribute, "uv") == 0)
+  else if (attribute == q_uv)
     return gthree_geometry_get_n_uv (priv->geometry) > 0;
-  else if (strcmp (attribute, "uv2") == 0)
+  else if (attribute == q_uv2)
     return gthree_geometry_get_n_uv2 (priv->geometry) > 0;
 
   return FALSE;
@@ -126,4 +130,9 @@ gthree_mesh_class_init (GthreeMeshClass *klass)
   GTHREE_OBJECT_CLASS (klass)->update = gthree_mesh_update;
   GTHREE_OBJECT_CLASS (klass)->realize = gthree_mesh_realize;
   GTHREE_OBJECT_CLASS (klass)->unrealize = gthree_mesh_unrealize;
+
+#define INIT_QUARK(name) q_##name = g_quark_from_static_string (#name)
+  INIT_QUARK(color);
+  INIT_QUARK(uv);
+  INIT_QUARK(uv2);
 }

@@ -479,7 +479,7 @@ gthree_material_get_shader (GthreeMaterial *material)
 void
 gthree_material_load_default_attribute (GthreeMaterial       *material,
                                         int                   attribute_location,
-                                        const char           *attribute)
+                                        GQuark                attribute)
 {
   GthreeMaterialClass *class = GTHREE_MATERIAL_GET_CLASS(material);
 

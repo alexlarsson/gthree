@@ -16,6 +16,9 @@ typedef struct {
   gboolean fog;
 } GthreeShaderMaterialPrivate;
 
+static GQuark q_color;
+static GQuark q_uv;
+static GQuark q_uv2;
 
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeShaderMaterial, gthree_shader_material, GTHREE_TYPE_MATERIAL);
 
@@ -125,15 +128,14 @@ gthree_shader_material_needs_colors  (GthreeMaterial *material)
 static void
 gthree_shader_material_real_load_default_attribute (GthreeMaterial       *material,
                                                     int                   attribute_location,
-                                                    const char           *attribute)
+                                                    GQuark                attribute)
 {
-  if (strcmp (attribute, "color") == 0)
+  if (attribute == q_color)
     {
       float default_color[3] = {1,1,1};
       glVertexAttrib3fv (attribute_location, default_color);
     }
-  else if ((strcmp (attribute, "uv") == 0) ||
-           (strcmp (attribute, "uv2") == 0))
+  else if (attribute == q_uv || attribute == q_uv2)
     {
       float default_uv[2] = {0,0};
       glVertexAttrib2fv (attribute_location, default_uv);
@@ -163,6 +165,11 @@ gthree_shader_material_class_init (GthreeShaderMaterialClass *klass)
   GTHREE_MATERIAL_CLASS(klass)->needs_normals = gthree_shader_material_needs_normals;
   GTHREE_MATERIAL_CLASS(klass)->needs_camera_pos = gthree_shader_material_needs_camera_pos;
   GTHREE_MATERIAL_CLASS(klass)->needs_colors = gthree_shader_material_needs_colors;
+
+#define INIT_QUARK(name) q_##name = g_quark_from_static_string (#name)
+  INIT_QUARK(color);
+  INIT_QUARK(uv);
+  INIT_QUARK(uv2);
 }
 
 GthreeShadingType

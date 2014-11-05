@@ -186,7 +186,7 @@ gthree_shader_update_uniform_locations_for_program (GthreeShader *shader,
       GthreeUniform *uni = l->data;
       gint location;
 
-      location = gthree_program_lookup_uniform_location (program, gthree_uniform_get_name (uni));
+      location = gthree_program_lookup_uniform_location (program, gthree_uniform_get_qname (uni));
       gthree_uniform_set_location (uni, location);
     }
   g_list_free (unis);

@@ -6,7 +6,6 @@
 #include "gthreeshader.h"
 
 typedef struct {
-  // TODO: Switch these from string to quarks
   GHashTable *uniform_locations;
   GHashTable *attribute_locations;
 
@@ -89,7 +88,7 @@ cache_uniform_locations (GHashTable *uniforms, GLuint program, char **identifier
   for (i = 0; identifiers[i] != NULL; i++)
     {
       int location = glGetUniformLocation (program, identifiers[i]);
-      g_hash_table_insert (uniforms, identifiers[i], GINT_TO_POINTER (location));
+      g_hash_table_insert (uniforms, GINT_TO_POINTER (g_quark_from_string (identifiers[i])), GINT_TO_POINTER (location));
     }
 }
 
@@ -118,7 +117,7 @@ cache_attribute_locations (GHashTable *attributes, GLuint program, char **identi
   for (i = 0; identifiers[i] != NULL; i++)
     {
       int location = glGetAttribLocation (program, identifiers[i]);
-      g_hash_table_insert (attributes, identifiers[i], GINT_TO_POINTER (location));
+      g_hash_table_insert (attributes, GINT_TO_POINTER (g_quark_from_string (identifiers[i])), GINT_TO_POINTER (location));
     }
 }
 
@@ -521,8 +520,8 @@ gthree_program_init (GthreeProgram *program)
 {
   GthreeProgramPrivate *priv = gthree_program_get_instance_private (program);
 
-  priv->uniform_locations = g_hash_table_new (g_str_hash, g_str_equal);
-  priv->attribute_locations = g_hash_table_new (g_str_hash, g_str_equal);
+  priv->uniform_locations = g_hash_table_new (g_direct_hash, g_direct_equal);
+  priv->attribute_locations = g_hash_table_new (g_direct_hash, g_direct_equal);
 }
 
 static void
@@ -564,28 +563,43 @@ gthree_program_use (GthreeProgram *program)
 
 gint
 gthree_program_lookup_uniform_location (GthreeProgram *program,
-                                        const char *uniform)
+                                        GQuark uniform)
 {
   GthreeProgramPrivate *priv = gthree_program_get_instance_private (program);
   gpointer location;
 
   if (g_hash_table_lookup_extended (priv->uniform_locations,
-                                    uniform, NULL, &location))
+                                    GINT_TO_POINTER (uniform), NULL, &location))
     return GPOINTER_TO_INT (location);
   return -1;
 }
 
 gint
+gthree_program_lookup_uniform_location_from_string (GthreeProgram *program,
+                                                    const char *uniform)
+{
+  return gthree_program_lookup_uniform_location (program, g_quark_from_string (uniform));
+}
+
+gint
 gthree_program_lookup_attribute_location (GthreeProgram *program,
-                                          const char *attribute)
+                                          GQuark attribute)
 {
   GthreeProgramPrivate *priv = gthree_program_get_instance_private (program);
   gpointer location;
 
   if (g_hash_table_lookup_extended (priv->attribute_locations,
-                                    attribute, NULL, &location))
+                                    GINT_TO_POINTER (attribute), NULL, &location))
     return GPOINTER_TO_INT (location);
   return -1;
+}
+
+gint
+gthree_program_lookup_attribute_location_from_string (GthreeProgram *program,
+                                                      const char *attribute)
+{
+  return gthree_program_lookup_attribute_location (program,
+                                                   g_quark_from_string (attribute));
 }
 
 static guint

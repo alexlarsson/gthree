@@ -64,11 +64,14 @@ GthreeProgram *gthree_program_new (GthreeShader *shader, GthreeProgramParameters
 
 void gthree_program_use (GthreeProgram *program);
 
-// TODO: Convert to quark
 gint gthree_program_lookup_uniform_location (GthreeProgram *program,
-                                             const char *uniform);
+                                             GQuark uniform);
 gint gthree_program_lookup_attribute_location (GthreeProgram *program,
-                                               const char *attribute);
+                                               GQuark attribute);
+gint gthree_program_lookup_uniform_location_from_string (GthreeProgram *program,
+                                                         const char *uniform);
+gint gthree_program_lookup_attribute_location_from_string (GthreeProgram *program,
+                                                           const char *attribute);
 
 typedef struct _GthreeProgramCache GthreeProgramCache;
 
