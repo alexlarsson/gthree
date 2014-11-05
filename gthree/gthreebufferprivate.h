@@ -16,7 +16,6 @@ G_BEGIN_DECLS
 typedef struct {
   GObject parent;
 
-  GthreeMaterial *material;
   gint material_index;
 
   guint vertex_buffer;
@@ -31,6 +30,7 @@ typedef struct {
   guint face_count;
   guint line_buffer;
   guint line_count;
+
 } GthreeBuffer;
 
 typedef struct {

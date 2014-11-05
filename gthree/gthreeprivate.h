@@ -50,6 +50,13 @@ void     gthree_texture_set_parameters (guint texture_type,
 					GthreeTexture *texture,
 					gboolean is_image_power_of_two);
 
+void gthree_geometry_realize               (GthreeGeometry *geometry,
+                                            GthreeMaterial *material);
+void gthree_geometry_update                (GthreeGeometry *geometry,
+                                            GthreeMaterial *material);
+void gthree_geometry_add_buffers_to_object (GthreeGeometry *geometry,
+                                            GthreeMaterial *material,
+                                            GthreeObject   *object);
 
 void   gthree_light_setup (GthreeLight       *light,
 			   GthreeLightSetup *light_setup);

@@ -15,10 +15,9 @@ G_BEGIN_DECLS
 typedef struct {
   GthreeBuffer parent;
 
+  GthreeGeometry *geometry;
   GArray *face_indexes; /* int */
   int n_vertices;
-
-  guint realized : 1;
 
   float *vertex_array;
   float *normal_array;
@@ -30,6 +29,14 @@ typedef struct {
   guint16 *face_array;
   guint16 *line_array;
 
+  guint vertices_need_update : 1;
+  guint morph_targets_need_update : 1;
+  guint elements_need_update : 1;
+  guint uvs_need_update : 1;
+  guint normals_need_update : 1;
+  guint tangents_need_update : 1;
+  guint colors_need_update : 1;
+
 } GthreeGeometryGroup;
 
 typedef struct {
@@ -37,13 +44,20 @@ typedef struct {
 
 } GthreeGeometryGroupClass;
 
-GthreeGeometryGroup *gthree_geometry_group_new (GthreeMaterial *material,
-                                                guint32 material_index);
+GthreeGeometryGroup *gthree_geometry_group_new ();
 GType gthree_geometry_group_get_type (void) G_GNUC_CONST;
 
 void gthree_geometry_group_add_face (GthreeGeometryGroup *group,
                                      int face_index);
 void gthree_geometry_group_dispose (GthreeGeometryGroup *group);
+
+void gthree_geometry_group_realize (GthreeGeometryGroup *group,
+                                    GthreeMaterial *material);
+void gthree_geometry_group_update (GthreeGeometryGroup *group,
+                                   GthreeMaterial *material,
+                                   gboolean dispose);
+
+
 
 G_END_DECLS
 

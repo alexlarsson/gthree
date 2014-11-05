@@ -20,9 +20,9 @@ G_BEGIN_DECLS
 #define GTHREE_IS_GEOMETRY(inst)  (G_TYPE_CHECK_INSTANCE_TYPE ((inst),    \
                                                                GTHREE_TYPE_GEOMETRY))
 
-typedef struct {
+struct _GthreeGeometry {
   GObject parent;
-} GthreeGeometry;
+};
 
 typedef struct {
   GObjectClass parent_class;
@@ -61,11 +61,6 @@ void                     gthree_geometry_set_bounding_sphere  (GthreeGeometry   
 void                     gthree_geometry_compute_face_normals (GthreeGeometry          *geometry);
 void                     gthree_geometry_compute_vertex_normals (GthreeGeometry *geometry,
                                                                  gboolean area_weighted);
-
-gboolean gthree_geometry_make_groups (GthreeGeometry *geometry,
-                                      gboolean use_face_material,
-                                      int max_vertices_in_group);
-
 
 GthreeGeometry *gthree_geometry_new_box         (float width,
                                                  float height,

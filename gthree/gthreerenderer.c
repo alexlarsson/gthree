@@ -540,7 +540,7 @@ project_object (GthreeRenderer *renderer,
       for (l = object_buffers; l != NULL; l = l->next)
         {
           GthreeObjectBuffer *buffer_obj = l->data;
-          GthreeMaterial *material = gthree_buffer_resolve_material (buffer_obj->buffer);
+          GthreeMaterial *material = gthree_object_buffer_resolve_material (buffer_obj);
 
           if (material)
             {
@@ -1377,7 +1377,7 @@ render_objects (GthreeRenderer *renderer,
       if (override_material)
         material = override_material;
       else
-        material = gthree_buffer_resolve_material (object_buffer->buffer);
+        material = gthree_object_buffer_resolve_material (object_buffer);
 
       if (material == NULL)
         continue;

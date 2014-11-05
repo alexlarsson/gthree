@@ -662,6 +662,12 @@ gthree_object_unrealize (GthreeObject *object)
   priv->realized = FALSE;
 }
 
+GthreeMaterial *
+gthree_object_buffer_resolve_material (GthreeObjectBuffer *object_buffer)
+{
+  return gthree_material_resolve (object_buffer->material, object_buffer->buffer->material_index);
+}
+
 GList *
 gthree_object_get_object_buffers (GthreeObject *object)
 {
@@ -672,7 +678,8 @@ gthree_object_get_object_buffers (GthreeObject *object)
 
 void
 gthree_object_add_buffer (GthreeObject *object,
-                          GthreeBuffer *buffer)
+                          GthreeBuffer *buffer,
+                          GthreeMaterial     *material)
 {
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
   GthreeObjectBuffer *obj_buffer;
@@ -680,6 +687,7 @@ gthree_object_add_buffer (GthreeObject *object,
   obj_buffer = g_new0 (GthreeObjectBuffer, 1);
   obj_buffer->object = object;
   obj_buffer->buffer = g_object_ref (buffer);
+  obj_buffer->material = g_object_ref (material);
 
   priv->buffer_objects = g_list_prepend (priv->buffer_objects, obj_buffer);
 }
@@ -687,7 +695,8 @@ gthree_object_add_buffer (GthreeObject *object,
 static void
 gthree_object_buffer_free (GthreeObjectBuffer *obj_buffer)
 {
-  g_object_unref (obj_buffer->buffer);
+  g_clear_object (&obj_buffer->material);
+  g_clear_object (&obj_buffer->buffer);
   g_free (obj_buffer);
 }
 

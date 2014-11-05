@@ -2,7 +2,10 @@
 #include <epoxy/gl.h>
 
 #include "gthreegeometry.h"
+#include "gthreegeometrygroupprivate.h"
 #include "gthreeprivate.h"
+#include "gthreemultimaterial.h"
+#include "gthreeobjectprivate.h"
 
 typedef struct
 {
@@ -32,6 +35,7 @@ typedef struct {
   guint bounding_box_set;
   guint bounding_sphere_set;
 
+  GPtrArray *groups; /* GthreeGeometryGroup * */
 } GthreeGeometryPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeGeometry, gthree_geometry, G_TYPE_OBJECT);
@@ -546,4 +550,123 @@ static void
 gthree_geometry_class_init (GthreeGeometryClass *klass)
 {
   G_OBJECT_CLASS (klass)->finalize = gthree_geometry_finalize;
+}
+
+static GPtrArray *
+make_geometry_groups (GthreeGeometry *geometry,
+                      gboolean use_face_material)
+{
+  guint i, counter, material_index, n_faces;
+  guint group_hash;
+  GHashTable *hash_map, *geometry_groups;
+  GthreeGeometryGroup *group;
+  gpointer ptr;
+  GPtrArray *groups;
+  int max_vertices_in_group = 65535; /* TODO: glExtensionElementIndexUint ? 4294967296 : 65535 */
+
+  groups = g_ptr_array_new_with_free_func (g_object_unref);
+
+  hash_map = g_hash_table_new (g_direct_hash, g_direct_equal);
+  geometry_groups = g_hash_table_new (g_direct_hash, g_direct_equal);
+
+  n_faces = gthree_geometry_get_n_faces (geometry);
+  for (i = 0; i < n_faces; i++)
+    {
+      material_index = use_face_material ? gthree_geometry_face_get_material_index (geometry, i) : 0;
+
+      counter = 0;
+      if (g_hash_table_lookup_extended (hash_map, GINT_TO_POINTER(material_index), NULL, &ptr))
+        counter = GPOINTER_TO_INT (ptr);
+
+      group_hash = material_index << 16 | counter;
+
+      if (g_hash_table_lookup_extended (geometry_groups, GINT_TO_POINTER(group_hash), NULL, &ptr))
+        group = ptr;
+      else
+        {
+          group = gthree_geometry_group_new (geometry, material_index);
+          g_hash_table_insert (geometry_groups, GINT_TO_POINTER(group_hash), group);
+          g_ptr_array_add (groups, group);
+        }
+
+      if (group->n_vertices + 3 > max_vertices_in_group)
+        {
+          counter += 1;
+          g_hash_table_replace (hash_map, GINT_TO_POINTER(material_index), GINT_TO_POINTER (counter));
+
+          group_hash = material_index << 16 | counter;
+
+          if (g_hash_table_lookup_extended (geometry_groups, GINT_TO_POINTER(group_hash), NULL, &ptr))
+            group = ptr;
+          else
+            {
+              group = gthree_geometry_group_new (geometry, material_index);
+              g_hash_table_insert (geometry_groups, GINT_TO_POINTER(group_hash), group);
+              g_ptr_array_add (groups, group);
+            }
+        }
+
+      gthree_geometry_group_add_face (group, i);
+    }
+
+  g_hash_table_destroy (hash_map);
+  g_hash_table_destroy (geometry_groups);
+
+  return groups;
+}
+
+void
+gthree_geometry_realize (GthreeGeometry *geometry,
+                         GthreeMaterial *material)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+  int i;
+
+  if (priv->groups == NULL)
+    {
+      priv->groups =
+        make_geometry_groups (geometry, GTHREE_IS_MULTI_MATERIAL(material));
+    }
+
+  for (i = 0; i < priv->groups->len; i++)
+    {
+      GthreeGeometryGroup *group = g_ptr_array_index (priv->groups, i);
+      GthreeMaterial *group_material = gthree_material_resolve (material, GTHREE_BUFFER(group)->material_index);
+
+      gthree_geometry_group_realize (group, group_material);
+    }
+}
+
+void
+gthree_geometry_add_buffers_to_object (GthreeGeometry *geometry,
+                                       GthreeMaterial *material,
+                                       GthreeObject *object)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+  int i;
+
+  for (i = 0; i < priv->groups->len; i++)
+    {
+      GthreeGeometryGroup *group = g_ptr_array_index (priv->groups, i);
+      gthree_object_add_buffer (object, GTHREE_BUFFER(group), material);
+    }
+}
+
+void
+gthree_geometry_update (GthreeGeometry *geometry,
+                        GthreeMaterial *material)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+  int i;
+
+  if (priv->groups == NULL)
+    return;
+
+  for (i = 0; i < priv->groups->len; i++)
+    {
+      GthreeGeometryGroup *group = g_ptr_array_index (priv->groups, i);
+      GthreeMaterial *group_material = gthree_material_resolve (material, GTHREE_BUFFER(group)->material_index);
+
+      gthree_geometry_group_update (group, group_material, TRUE);
+    }
 }

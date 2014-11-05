@@ -27,8 +27,6 @@ gthree_buffer_finalize (GObject *obj)
 {
   GthreeBuffer *buffer = GTHREE_BUFFER (obj);
 
-  g_clear_object (&buffer->material);
-
   if (buffer->vertex_buffer)
     glDeleteBuffers (1, &buffer->vertex_buffer);
   if (buffer->normal_buffer)
@@ -56,10 +54,4 @@ gthree_buffer_class_init (GthreeBufferClass *klass)
 {
   G_OBJECT_CLASS (klass)->finalize = gthree_buffer_finalize;
 
-}
-
-GthreeMaterial *
-gthree_buffer_resolve_material (GthreeBuffer *buffer)
-{
-  return gthree_material_resolve (buffer->material, buffer->material_index);
 }

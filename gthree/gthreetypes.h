@@ -19,6 +19,7 @@ typedef struct _GthreeDirectionalLight GthreeDirectionalLight;
 typedef struct _GthreeLightSetup GthreeLightSetup;
 typedef struct _GthreeTexture GthreeTexture;
 typedef struct _GthreeCubeTexture GthreeCubeTexture;
+typedef struct _GthreeGeometry GthreeGeometry;
 
 
 #endif /* __GTHREE_TYPES_H__ */
