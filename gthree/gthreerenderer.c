@@ -51,6 +51,10 @@ typedef struct {
   GthreeMaterial *current_material;
   GthreeCamera *current_camera;
 
+  GthreeBuffer *current_geometry_group_buffer;
+  GthreeProgram *current_geometry_group_program;
+  gboolean current_geometry_group_wireframe;
+
   GPtrArray *opaque_objects; /* GthreeObjectBuffer */
   GPtrArray *transparent_objects; /* GthreeObjectBuffer */
 
@@ -1214,33 +1218,37 @@ render_buffer (GthreeRenderer *renderer,
                GthreeMaterial *material,
                GthreeObjectBuffer *object_buffer)
 {
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
   GthreeBuffer *buffer = object_buffer->buffer;
   GthreeObject *object = object_buffer->object;
   GthreeProgram *program = set_program (renderer, camera, lights, fog, material, object);
   //var linewidth, a, attribute, i, il;
   //var attributes = program.attributes;
-  gboolean updateBuffers = false;
+  gboolean update_buffers = false;
   gint position_location, color_location, uv_location, uv2_location, normal_location;
-  //guint32 wireframeBit = gthree_material_get_is_wireframe (material) ? 1 : 0;
-  //guint32 geometryGroupHash = (guint32)buffer + (guint32)program * 2 + wireframeBit;
+  gboolean wireframe = gthree_material_get_is_wireframe (material);
 
   if (!gthree_material_get_is_visible (material))
     return;
 
-  if (TRUE /* geometryGroupHash !== _currentGeometryGroupHash */)
+  if (buffer != priv->current_geometry_group_buffer ||
+      program != priv->current_geometry_group_program ||
+      wireframe != priv->current_geometry_group_wireframe)
     {
-      //_currentGeometryGroupHash = geometryGroupHash;
-      updateBuffers = true;
+      priv->current_geometry_group_buffer = buffer;
+      priv->current_geometry_group_program = program;
+      priv->current_geometry_group_wireframe = wireframe;
+      update_buffers = true;
     }
 
-  if (updateBuffers)
+  if (update_buffers)
     init_attributes (renderer);
 
   // vertices
   position_location = gthree_program_lookup_attribute_location (program, "position");
   if (/*!material.morphTargets && */ position_location >= 0)
     {
-      if (updateBuffers)
+      if (update_buffers)
         {
           glBindBuffer (GL_ARRAY_BUFFER, buffer->vertex_buffer);
           enable_attribute (renderer, position_location);
@@ -1255,7 +1263,7 @@ render_buffer (GthreeRenderer *renderer,
       */
     }
 
-  if (updateBuffers)
+  if (update_buffers)
     {
       // custom attributes
       // Use the per-geometryGroup custom attribute arrays which are setup in initMeshBuffers
@@ -1332,25 +1340,25 @@ render_buffer (GthreeRenderer *renderer,
 #endif
 
       disable_unused_attributes (renderer);
+    }
 
-      // render mesh
-      if (TRUE /* object instanceof THREE.Mesh */ )
+  // render mesh
+  if (TRUE /* object instanceof THREE.Mesh */ )
+    {
+      if (wireframe)
         {
-          if (gthree_material_get_is_wireframe (material))
-            {
-              // wireframe
-              set_line_width (renderer, gthree_material_get_wireframe_line_width (material));
-              if (updateBuffers)
-                glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, buffer->line_buffer);
-              glDrawElements (GL_LINES, buffer->line_count, GL_UNSIGNED_SHORT, 0 );
-            }
-          else
-            {
-              // triangles
-              if (updateBuffers)
-                glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, buffer->face_buffer);
-              glDrawElements (GL_TRIANGLES, buffer->face_count, GL_UNSIGNED_SHORT, 0 );
-            }
+          // wireframe
+          set_line_width (renderer, gthree_material_get_wireframe_line_width (material));
+          if (update_buffers)
+            glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, buffer->line_buffer);
+          glDrawElements (GL_LINES, buffer->line_count, GL_UNSIGNED_SHORT, 0 );
+        }
+      else
+        {
+          // triangles
+          if (update_buffers)
+            glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, buffer->face_buffer);
+          glDrawElements (GL_TRIANGLES, buffer->face_count, GL_UNSIGNED_SHORT, 0 );
         }
     }
 }
@@ -1437,6 +1445,9 @@ gthree_renderer_render (GthreeRenderer *renderer,
   priv->current_material = NULL;
   priv->current_camera = NULL;
   priv->lights_need_update = TRUE;
+  priv->current_geometry_group_buffer = NULL;
+  priv->current_geometry_group_program = NULL;
+  priv->current_geometry_group_wireframe = FALSE;
 
   /* update scene graph */
 
