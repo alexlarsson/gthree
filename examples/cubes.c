@@ -209,21 +209,26 @@ tick (GtkWidget     *widget,
 {
   static graphene_point3d_t rot = { 0, 0, 0};
   static graphene_point3d_t rot2 = { 0, 0, 0};
+  graphene_euler_t euler;
   GList *l;
 
-  rot.y += 0.04;
-  rot.z += 0.01;
+  rot.y += 2.0;
+  rot.z += 1.0;
 
-  rot2.y -= 0.07;
+  rot2.y -= 4;
 
   for (l = cubes; l != NULL; l = l->next)
     {
       GthreeObject *cube = l->data;
 
-      gthree_object_set_rotation (cube, &rot);
+      gthree_object_set_rotation (cube,
+                                  graphene_euler_init (&euler,
+                                                       rot.x, rot.y, rot.z));
 
       cube = gthree_object_get_first_child (cube);
-      gthree_object_set_rotation (cube, &rot2);
+      gthree_object_set_rotation (cube,
+                                  graphene_euler_init (&euler,
+                                                       rot2.x, rot2.y, rot2.z));
     }
 
   gtk_widget_queue_draw (widget);

@@ -74,8 +74,8 @@ void                         gthree_object_set_quaternion         (GthreeObject 
                                                                    const graphene_quaternion_t *q);
 const graphene_quaternion_t *gthree_object_get_quaternion         (GthreeObject                *object);
 void                         gthree_object_set_rotation           (GthreeObject                *object,
-                                                                   const graphene_point3d_t    *rot);
-const graphene_point3d_t *   gthree_object_get_rotation           (GthreeObject                *object);
+                                                                   const graphene_euler_t      *rot);
+const graphene_euler_t *     gthree_object_get_rotation           (GthreeObject                *object);
 gboolean                     gthree_object_has_attribute_data     (GthreeObject                *object,
                                                                    GQuark                       attribute);
 

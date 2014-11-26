@@ -18,7 +18,7 @@ static guint object_signals[LAST_SIGNAL] = { 0, };
 typedef struct {
   graphene_vec3_t position;
   graphene_quaternion_t quaternion;
-  graphene_point3d_t euler;
+  graphene_euler_t euler;
   graphene_vec3_t scale;
   graphene_vec3_t up;
 
@@ -224,18 +224,6 @@ gthree_object_has_attribute_data (GthreeObject                *object,
   return FALSE;
 }
 
-static void
-update_euler (GthreeObject *object)
-{
-  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
-  float x, y, z;
-
-  graphene_quaternion_to_angles (&priv->quaternion, &x, &y, &z);
-  priv->euler.x = ((x) * (G_PI / 180.f));
-  priv->euler.y = ((y) * (G_PI / 180.f));
-  priv->euler.z = ((z) * (G_PI / 180.f));
-}
-
 void
 gthree_object_look_at (GthreeObject *object,
                        graphene_point3d_t *pos)
@@ -247,7 +235,7 @@ gthree_object_look_at (GthreeObject *object,
   graphene_point3d_to_vec3 (pos, &vec);
   graphene_matrix_init_look_at (&m, &priv->position, &vec, &priv->up);
   graphene_quaternion_init_from_matrix (&priv->quaternion, &m);
-  update_euler (object);
+  graphene_euler_init_from_matrix (&priv->euler, &m, GRAPHENE_EULER_ORDER_DEFAULT);
 }
 
 void
@@ -284,7 +272,7 @@ gthree_object_set_quaternion (GthreeObject *object,
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
 
   graphene_quaternion_init_from_quaternion (&priv->quaternion, q);
-  update_euler (object);
+  graphene_euler_init_from_quaternion (&priv->euler, q, GRAPHENE_EULER_ORDER_DEFAULT);
 }
 
 const graphene_quaternion_t *
@@ -298,16 +286,15 @@ gthree_object_get_quaternion (GthreeObject *object)
 // Sets rotation in radiants
 void
 gthree_object_set_rotation (GthreeObject *object,
-                            const graphene_point3d_t *rot)
+                            const graphene_euler_t *rot)
 {
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
 
   priv->euler = *rot;
-
-  graphene_quaternion_init_from_angles (&priv->quaternion, priv->euler.x * 180.0 / G_PI, priv->euler.y * 180.0 / G_PI, priv->euler.z * 180.0 / G_PI);
+  graphene_quaternion_init_from_euler (&priv->quaternion, rot);
 }
 
-const graphene_point3d_t *
+const graphene_euler_t *
 gthree_object_get_rotation (GthreeObject *object)
 {
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);

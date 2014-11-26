@@ -18,7 +18,8 @@ init_scene (void)
   GthreeNormalMaterial *material;
   GthreeGeometry *geometry;
   GthreeMesh *mesh;
-  graphene_point3d_t pos, scale, rot;
+  graphene_point3d_t pos, scale;
+  graphene_euler_t rot;
   int i;
 
   geometry = examples_load_model ("Suzanne.js");
@@ -44,9 +45,10 @@ init_scene (void)
       gthree_object_set_position (GTHREE_OBJECT (mesh), &pos);
       scale.x = scale.y = scale.z = g_random_double_range (0, 50) + 100;
       gthree_object_set_scale (GTHREE_OBJECT (mesh), &scale);
-      rot.x = g_random_double_range (0, 2*G_PI);
-      rot.y = g_random_double_range (0, 2*G_PI);
-      rot.z = 0;
+      graphene_euler_init (&rot,
+                           g_random_double_range (0, 360.0),
+                           g_random_double_range (0, 360.0),
+                           0);
       gthree_object_set_rotation (GTHREE_OBJECT (mesh), &rot);
       objects = g_list_prepend (objects, mesh);
     }
@@ -59,7 +61,8 @@ tick (GtkWidget     *widget,
       GdkFrameClock *frame_clock,
       gpointer       user_data)
 {
-  graphene_point3d_t rot;
+  graphene_euler_t rot;
+  const graphene_euler_t *old_rot;
   graphene_point3d_t pos;
   GList *l;
 
@@ -74,10 +77,11 @@ tick (GtkWidget     *widget,
     {
       GthreeObject *obj = l->data;
 
-      rot = *gthree_object_get_rotation (obj);
-      rot.x += 0.01;
-      rot.y += 0.02;
-
+      old_rot = gthree_object_get_rotation (obj);
+      graphene_euler_init (&rot,
+                           graphene_euler_get_x (old_rot) + 0.5,
+                           graphene_euler_get_y (old_rot) + 1.0,
+                           0);
       gthree_object_set_rotation (obj, &rot);
     }
 

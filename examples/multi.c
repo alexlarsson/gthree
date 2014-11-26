@@ -50,11 +50,14 @@ tick (GtkWidget     *widget,
       gpointer       user_data)
 {
   static graphene_point3d_t rot = { 0, 0, 0};
+  graphene_euler_t euler;
 
-  rot.y += 0.04;
-  rot.z += 0.01;
+  rot.y += 1;
+  rot.z += 0.25;
 
-  gthree_object_set_rotation (GTHREE_OBJECT (cube), &rot);
+  gthree_object_set_rotation (GTHREE_OBJECT (cube),
+                              graphene_euler_init (&euler,
+                                                   rot.x, rot.y, rot.z));
 
   gtk_widget_queue_draw (area_z);
   gtk_widget_queue_draw (area_y);
@@ -171,6 +174,7 @@ main (int argc, char *argv[])
   GtkWidget *window, *box, *hbox, *button, *grid;
   GthreeScene *scene;
   graphene_point3d_t pos;
+  graphene_euler_t euler;
 
   gtk_init (&argc, &argv);
 
@@ -223,7 +227,7 @@ main (int argc, char *argv[])
   gthree_object_set_position (GTHREE_OBJECT (camera_y),
                               graphene_point3d_init (&pos, 0, 1000, 0));
   gthree_object_set_rotation (GTHREE_OBJECT (camera_y),
-                              graphene_point3d_init (&pos, -G_PI/2, 0, 0));
+                              graphene_euler_init (&euler, -90, 0, 0));
 
   area_y = gthree_area_new (scene, GTHREE_CAMERA (camera_y));
   g_signal_connect (area_y, "resize", G_CALLBACK (resize_area), camera_y);
@@ -241,7 +245,7 @@ main (int argc, char *argv[])
   gthree_object_set_position (GTHREE_OBJECT (camera_x),
                               graphene_point3d_init (&pos, 1000, 0, 0));
   gthree_object_set_rotation (GTHREE_OBJECT (camera_x),
-                              graphene_point3d_init (&pos, 0, G_PI/2, 0));
+                              graphene_euler_init (&euler, 0, 90, 0));
 
   area_x = gthree_area_new (scene, GTHREE_CAMERA (camera_x));
   g_signal_connect (area_x, "resize", G_CALLBACK (resize_area), camera_x);

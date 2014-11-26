@@ -135,6 +135,7 @@ tick (GtkWidget     *widget,
       gpointer       user_data)
 {
   static graphene_point3d_t rot = { 0, 0, 0};
+  graphene_euler_t euler;
   graphene_point3d_t pos;
   gint64 frame_time;
   float angle;
@@ -154,10 +155,12 @@ tick (GtkWidget     *widget,
                               gthree_object_get_rotation (GTHREE_OBJECT (camera)));
 
 
-  rot.x += 0.01;
-  rot.y += 0.005;
+  rot.x += 1.0;
+  rot.y += 0.5;
 
-  gthree_object_set_rotation (GTHREE_OBJECT (obj3), &rot);
+  gthree_object_set_rotation (GTHREE_OBJECT (obj3),
+                              graphene_euler_init (&euler,
+                                                   rot.x, rot.y, rot.z));
 
   gtk_widget_queue_draw (widget);
 

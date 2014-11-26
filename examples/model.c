@@ -88,12 +88,17 @@ tick (GtkWidget     *widget,
 {
   static graphene_point3d_t rot = { 0, 0, 0};
   static graphene_point3d_t rot2 = { 0, 0, 0};
+  graphene_euler_t euler;
 
-  rot.y += 0.04;
-  rot2.y += 0.03;
+  rot.y += 1.0;
+  rot2.y += 0.7;
 
-  gthree_object_set_rotation (GTHREE_OBJECT (marine), &rot);
-  gthree_object_set_rotation (GTHREE_OBJECT (knight), &rot2);
+  gthree_object_set_rotation (GTHREE_OBJECT (marine),
+                              graphene_euler_init (&euler,
+                                                   rot.x, rot.y, rot.z));
+  gthree_object_set_rotation (GTHREE_OBJECT (knight),
+                              graphene_euler_init (&euler,
+                                                   rot2.x, rot2.y, rot2.z));
 
   gtk_widget_queue_draw (widget);
 

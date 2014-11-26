@@ -65,6 +65,7 @@ init_scene (void)
   GthreeMesh *floor;
   int i;
   graphene_point3d_t pos = { 0, 0, 0};
+  graphene_euler_t euler;
 
   scene = gthree_scene_new ();
 
@@ -221,10 +222,10 @@ init_scene (void)
                                                          0,
                                                          (i / 4) * 200 - 200));
       gthree_object_set_rotation (GTHREE_OBJECT (sphere),
-                                  graphene_point3d_init (&pos,
-                                                         g_random_double_range (0, 2*G_PI),
-                                                         g_random_double_range (0, 2*G_PI),
-                                                         g_random_double_range (0, 2*G_PI)));
+                                  graphene_euler_init (&euler,
+                                                       g_random_double_range (0, 360),
+                                                       g_random_double_range (0, 360),
+                                                       g_random_double_range (0, 360)));
 
       gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (sphere));
 
@@ -257,7 +258,8 @@ tick (GtkWidget     *widget,
       gpointer       user_data)
 {
   graphene_point3d_t pos;
-  graphene_point3d_t rot;
+  const graphene_euler_t *old_rot;
+  graphene_euler_t rot;
   GList *l;
   gint64 frame_time;
   float angle;
@@ -277,9 +279,12 @@ tick (GtkWidget     *widget,
   for (l = objects; l != NULL; l = l->next)
     {
       GthreeObject *object = l->data;
-      rot = *gthree_object_get_rotation (object);
-      rot.x += 0.01;
-      rot.y += 0.005;
+      old_rot = gthree_object_get_rotation (object);
+
+      graphene_euler_init (&rot,
+                           graphene_euler_get_x (old_rot) + 1.0,
+                           graphene_euler_get_y (old_rot) + 0.5,
+                           0);
       gthree_object_set_rotation (object, &rot);
     }
 
