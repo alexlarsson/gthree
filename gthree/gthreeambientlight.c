@@ -4,35 +4,19 @@
 #include "gthreeambientlight.h"
 #include "gthreeprivate.h"
 
-typedef struct {
-  int dummy;
-} GthreeAmbientLightPrivate;
-
-
-G_DEFINE_TYPE_WITH_PRIVATE (GthreeAmbientLight, gthree_ambient_light, GTHREE_TYPE_LIGHT);
+G_DEFINE_TYPE (GthreeAmbientLight, gthree_ambient_light, GTHREE_TYPE_LIGHT)
 
 GthreeAmbientLight *
 gthree_ambient_light_new (const GdkRGBA *color)
 {
-  GthreeAmbientLight *light;
-
-  light = g_object_new (gthree_ambient_light_get_type (),
-                           NULL);
-
-  gthree_light_set_color (GTHREE_LIGHT (light), color);
-
-  return light;
+  return g_object_new (GTHREE_TYPE_LIGHT,
+                       "color", color,
+                       NULL);
 }
 
 static void
 gthree_ambient_light_init (GthreeAmbientLight *ambient)
 {
-}
-
-static void
-gthree_ambient_light_finalize (GObject *obj)
-{
-  G_OBJECT_CLASS (gthree_ambient_light_parent_class)->finalize (obj);
 }
 
 static void
@@ -70,7 +54,6 @@ gthree_ambient_light_real_setup (GthreeLight *light,
 static void
 gthree_ambient_light_class_init (GthreeAmbientLightClass *klass)
 {
-  G_OBJECT_CLASS (klass)->finalize = gthree_ambient_light_finalize;
   GTHREE_LIGHT_CLASS(klass)->set_params = gthree_ambient_light_real_set_params;
   GTHREE_LIGHT_CLASS(klass)->setup = gthree_ambient_light_real_setup;
 }
