@@ -27,7 +27,6 @@ typedef struct {
 
 } GthreeShaderMaterialClass;
 
-GthreeShaderMaterial *gthree_shader_material_new ();
 GType gthree_shader_material_get_type (void) G_GNUC_CONST;
 
 GthreeShaderMaterial *gthree_shader_material_new (GthreeShader *shader);
