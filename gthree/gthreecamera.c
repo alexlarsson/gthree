@@ -1,5 +1,4 @@
 #include <math.h>
-#include <epoxy/gl.h>
 
 #include "gthreecamera.h"
 
@@ -12,8 +11,85 @@ typedef struct {
 
 } GthreeCameraPrivate;
 
+enum {
+  PROP_0,
 
-G_DEFINE_TYPE_WITH_PRIVATE (GthreeCamera, gthree_camera, GTHREE_TYPE_OBJECT);
+  PROP_NEAR,
+  PROP_FAR,
+
+  N_PROPS
+};
+
+static GParamSpec *obj_props[N_PROPS] = { NULL, };
+
+G_DEFINE_TYPE_WITH_PRIVATE (GthreeCamera, gthree_camera, GTHREE_TYPE_OBJECT)
+
+static void
+gthree_camera_set_property (GObject *obj,
+                            guint prop_id,
+                            const GValue *value,
+                            GParamSpec *pspec)
+{
+  GthreeCamera *camera = GTHREE_CAMERA (obj);
+
+  switch (prop_id)
+    {
+    case PROP_NEAR:
+      gthree_camera_set_near (camera, g_value_get_float (value));
+      break;
+
+    case PROP_FAR:
+      gthree_camera_set_far (camera, g_value_get_float (value));
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
+    }
+}
+
+static void
+gthree_camera_get_property (GObject *obj,
+                            guint prop_id,
+                            GValue *value,
+                            GParamSpec *pspec)
+{
+  GthreeCamera *camera = GTHREE_CAMERA (obj);
+  GthreeCameraPrivate *priv = gthree_camera_get_instance_private (camera);
+
+  switch (prop_id)
+    {
+    case PROP_NEAR:
+      g_value_set_float (value, priv->near);
+      break;
+
+    case PROP_FAR:
+      g_value_set_float (value, priv->far);
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
+    }
+}
+
+static void
+gthree_camera_class_init (GthreeCameraClass *klass)
+{
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+
+  gobject_class->set_property = gthree_camera_set_property;
+  gobject_class->get_property = gthree_camera_get_property;
+
+  obj_props[PROP_NEAR] =
+    g_param_spec_float ("near", "Near", "Near",
+                        -G_MAXFLOAT, G_MAXFLOAT, 30.f,
+                        G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_FAR] =
+    g_param_spec_float ("far", "Far", "Far",
+                        -G_MAXFLOAT, G_MAXFLOAT, 2000.f,
+                        G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  g_object_class_install_properties (gobject_class, N_PROPS, obj_props);
+}
 
 static void
 gthree_camera_init (GthreeCamera *camera)
@@ -24,21 +100,6 @@ gthree_camera_init (GthreeCamera *camera)
   priv->far = 2000;
 
   graphene_matrix_init_identity (&priv->projection_matrix);
-}
-
-static void
-gthree_camera_finalize (GObject *obj)
-{
-  //GthreeCamera *camera = GTHREE_CAMERA (obj);
-  //GthreeCameraPrivate *priv = gthree_camera_get_instance_private (camera);
-
-  G_OBJECT_CLASS (gthree_camera_parent_class)->finalize (obj);
-}
-
-static void
-gthree_camera_class_init (GthreeCameraClass *klass)
-{
-  G_OBJECT_CLASS (klass)->finalize = gthree_camera_finalize;
 }
 
 void

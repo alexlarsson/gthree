@@ -3,23 +3,17 @@
 
 #include "gthreebufferprivate.h"
 
-G_DEFINE_TYPE (GthreeBuffer, gthree_buffer, G_TYPE_OBJECT);
+G_DEFINE_TYPE (GthreeBuffer, gthree_buffer, G_TYPE_OBJECT)
 
 GthreeBuffer *
-gthree_buffer_new ()
+gthree_buffer_new (void)
 {
-  GthreeBuffer *buffer;
-
-  buffer = g_object_new (gthree_buffer_get_type (),
-                         NULL);
-
-  return buffer;
+  return g_object_new (gthree_buffer_get_type (), NULL);
 }
 
 static void
 gthree_buffer_init (GthreeBuffer *buffer)
 {
-
 }
 
 static void

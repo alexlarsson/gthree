@@ -46,7 +46,6 @@ gthree_public_h_sources = \
 	$(NULL)
 
 gthree_private_h_sources =		\
-	gthree-resources.h		\
 	gthreebufferprivate.h		\
 	gthreegeometrygroupprivate.h	\
 	gthreeobjectprivate.h		\
@@ -79,7 +78,6 @@ gthree_extra_sources =				\
 	$(NULL)
 
 gthree_c_sources = \
-	gthree-resources.c			\
 	gthreearea.c \
 	gthreebuffer.c \
 	gthreebuffer.h \
@@ -168,7 +166,7 @@ gthree-resources.h: gthree.gresource.xml $(resource_files)
 	$(AM_V_GEN) glib-compile-resources --target=$@ --sourcedir=$(srcdir) --generate-header --c-name gthree $(srcdir)/gthree.gresource.xml
 
 
-libgthree_1_la_SOURCES = $(gthree_c_sources)
+libgthree_1_la_SOURCES = $(gthree_built_sources) $(gthree_c_sources)
 libgthree_1_la_CFLAGS = $(GTHREE_CFLAGS)
 libgthree_1_la_LIBADD =	$(GTHREE_LIBS) $(LIBM)
 

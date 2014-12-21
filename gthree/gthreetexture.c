@@ -43,22 +43,24 @@ typedef struct {
   guint gl_texture;
 } GthreeTexturePrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE (GthreeTexture, gthree_texture, G_TYPE_OBJECT);
+enum {
+  PROP_0,
+
+  PROP_PIXBUF,
+
+  N_PROPS
+};
+
+static GParamSpec *obj_props[N_PROPS] = { NULL, };
+
+G_DEFINE_TYPE_WITH_PRIVATE (GthreeTexture, gthree_texture, G_TYPE_OBJECT)
 
 GthreeTexture *
 gthree_texture_new (GdkPixbuf *pixbuf)
 {
-  GthreeTexture *texture;
-  GthreeTexturePrivate *priv;
-
-  texture = g_object_new (gthree_texture_get_type (),
-                          NULL);
-
-  priv = gthree_texture_get_instance_private (texture);
-  priv->pixbuf = g_object_ref (pixbuf);
-  priv->mapping = GTHREE_MAPPING_UV;
-
-  return texture;
+  return g_object_new (gthree_texture_get_type (),
+                       "pixbuf", pixbuf,
+                       NULL);
 }
 
 static void
@@ -74,6 +76,7 @@ gthree_texture_init (GthreeTexture *texture)
   priv->wrap_t = GTHREE_WRAPPING_CLAMP;
   priv->mag_filter = GTHREE_FILTER_LINEAR;
   priv->min_filter = GTHREE_FILTER_LINEAR_MIPMAP_LINEAR;
+  priv->mapping = GTHREE_MAPPING_UV;
 
   priv->format = GL_RGBA;
   priv->type = GL_UNSIGNED_BYTE;
@@ -96,16 +99,67 @@ gthree_texture_finalize (GObject *obj)
   if (priv->gl_texture)
     glDeleteTextures (1, &priv->gl_texture);
 
-
   G_OBJECT_CLASS (gthree_texture_parent_class)->finalize (obj);
+}
+
+static void
+gthree_texture_set_property (GObject *obj,
+                             guint prop_id,
+                             const GValue *value,
+                             GParamSpec *pspec)
+{
+  GthreeTexture *texture = GTHREE_TEXTURE (obj);
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  switch (prop_id)
+    {
+    case PROP_PIXBUF:
+      g_clear_object (&priv->pixbuf);
+      priv->pixbuf = g_value_dup_object (value);
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
+    }
+}
+
+static void
+gthree_texture_get_property (GObject *obj,
+                             guint prop_id,
+                             GValue *value,
+                             GParamSpec *pspec)
+{
+  GthreeTexture *texture = GTHREE_TEXTURE (obj);
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  switch (prop_id)
+    {
+    case PROP_PIXBUF:
+      g_value_set_object (value, priv->pixbuf);
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
+    }
 }
 
 static void
 gthree_texture_class_init (GthreeTextureClass *klass)
 {
-  klass->load = gthree_texture_real_load;
-  G_OBJECT_CLASS (klass)->finalize = gthree_texture_finalize;
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
+  gobject_class->set_property = gthree_texture_set_property;
+  gobject_class->get_property = gthree_texture_get_property;
+  gobject_class->finalize = gthree_texture_finalize;
+
+  klass->load = gthree_texture_real_load;
+
+  obj_props[PROP_PIXBUF] =
+    g_param_spec_object ("pixbuf", "Pixbuf", "Pixbuf",
+                         GDK_TYPE_PIXBUF,
+                         G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+
+  g_object_class_install_properties (gobject_class, N_PROPS, obj_props);
 }
 
 gboolean

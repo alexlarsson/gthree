@@ -12,7 +12,6 @@
 
 G_BEGIN_DECLS
 
-
 #define GTHREE_TYPE_AREA      (gthree_area_get_type ())
 #define GTHREE_AREA(inst)     (G_TYPE_CHECK_INSTANCE_CAST ((inst), \
                                                             GTHREE_TYPE_AREA, \
@@ -32,6 +31,12 @@ GtkWidget *gthree_area_new (GthreeScene *scene,
                             GthreeCamera *camera);
 GType gthree_area_get_type (void) G_GNUC_CONST;
 
+GthreeScene *gthree_area_get_scene (GthreeArea *area);
+void gthree_area_set_scene (GthreeArea *area,
+                            GthreeScene *scene);
+GthreeCamera *gthree_area_get_camera (GthreeArea *area);
+void gthree_area_set_camera (GthreeArea *area,
+                             GthreeCamera *camera);
 GthreeRenderer *gthree_area_get_renderer (GthreeArea *area);
 
 G_END_DECLS

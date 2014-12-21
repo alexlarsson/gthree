@@ -246,15 +246,18 @@ tick (GtkWidget     *widget,
   gthree_uniforms_set_float (shader1_uniforms, "time", time);
   gthree_uniforms_set_float (shader2_uniforms, "time", time / 5.0);
 
-  rot.y += 0.009;
-  rot.z += 0.003;
+  rot.y += 2.0;
+  rot.z += 1.0;
 
   for (l = cubes; l != NULL; l = l->next)
     {
       GthreeObject *cube = l->data;
+      graphene_euler_t euler;
 
       rot.y = -rot.y;
-      gthree_object_set_rotation (cube, &rot);
+
+      gthree_object_set_rotation (cube,
+                                  graphene_euler_init (&euler, rot.x, rot.y, rot.z));
     }
 
   gtk_widget_queue_draw (widget);

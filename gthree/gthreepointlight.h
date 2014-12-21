@@ -26,10 +26,17 @@ typedef struct {
 
 } GthreePointLightClass;
 
+GType gthree_point_light_get_type (void) G_GNUC_CONST;
 GthreePointLight *gthree_point_light_new (const GdkRGBA *color,
 					  float intensity,
 					  float distance);
-GType gthree_point_light_get_type (void) G_GNUC_CONST;
+
+void gthree_point_light_set_intensity (GthreePointLight *light,
+                                       float intensity);
+float gthree_point_light_get_intensity (GthreePointLight *light);
+void gthree_point_light_set_distance (GthreePointLight *light,
+                                      float distance);
+float gthree_point_light_get_distance (GthreePointLight *light);
 
 G_END_DECLS
 
