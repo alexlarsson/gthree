@@ -38,10 +38,9 @@ typedef struct {
 
 } GthreeBufferClass;
 
-GthreeBuffer *gthree_buffer_new ();
 GType gthree_buffer_get_type (void) G_GNUC_CONST;
 
-GthreeMaterial *gthree_buffer_resolve_material (GthreeBuffer *buffer);
+GthreeBuffer *gthree_buffer_new (void);
 
 G_END_DECLS
 
