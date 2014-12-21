@@ -48,7 +48,9 @@ void              gthree_basic_material_set_shading_type  (GthreeBasicMaterial *
 float             gthree_basic_material_get_refraction_ratio (GthreeBasicMaterial *basic);
 void              gthree_basic_material_set_refraction_ratio (GthreeBasicMaterial *basic,
                                                               float                ratio);
-
+GthreeOperation   gthree_basic_material_get_combine       (GthreeBasicMaterial *basic);
+void              gthree_basic_material_set_combine       (GthreeBasicMaterial *basic,
+                                                           GthreeOperation      combine);
 
 G_END_DECLS
 
