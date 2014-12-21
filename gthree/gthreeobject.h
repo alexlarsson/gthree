@@ -99,7 +99,6 @@ void          gthree_object_remove_child         (GthreeObject *object,
 void          gthree_object_update               (GthreeObject *object);
 void          gthree_object_realize              (GthreeObject *object);
 void          gthree_object_unrealize            (GthreeObject *object);
-void          gthree_object_update               (GthreeObject *object);
 void          gthree_object_destroy              (GthreeObject *object);
 GthreeObject *gthree_object_get_parent           (GthreeObject *object);
 GthreeObject *gthree_object_get_first_child      (GthreeObject *object);
