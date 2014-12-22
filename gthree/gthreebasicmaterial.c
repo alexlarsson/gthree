@@ -422,16 +422,12 @@ gthree_basic_material_set_map (GthreeBasicMaterial *basic,
 {
   GthreeBasicMaterialPrivate *priv = gthree_basic_material_get_instance_private (basic);
 
-  if (priv->map == texture)
-    return;
+  if (g_set_object (&priv->map, texture))
+    {
+      gthree_material_set_needs_update (GTHREE_MATERIAL (basic), TRUE);
 
-  g_clear_object (&priv->map);
-  if (texture)
-    priv->map = g_object_ref (texture);
-
-  gthree_material_set_needs_update (GTHREE_MATERIAL (basic), TRUE);
-
-  g_object_notify_by_pspec (G_OBJECT (basic), obj_props[PROP_MAP]);
+      g_object_notify_by_pspec (G_OBJECT (basic), obj_props[PROP_MAP]);
+    }
 }
 
 GthreeTexture *
@@ -448,16 +444,12 @@ gthree_basic_material_set_env_map (GthreeBasicMaterial *basic,
 {
   GthreeBasicMaterialPrivate *priv = gthree_basic_material_get_instance_private (basic);
 
-  if (priv->env_map == texture)
-    return;
+  if (g_set_object (&priv->env_map, texture))
+    {
+      gthree_material_set_needs_update (GTHREE_MATERIAL (basic), TRUE);
 
-  g_clear_object (&priv->env_map);
-  if (texture)
-    priv->env_map = g_object_ref (texture);
-
-  gthree_material_set_needs_update (GTHREE_MATERIAL (basic), TRUE);
-
-  g_object_notify_by_pspec (G_OBJECT (basic), obj_props[PROP_ENV_MAP]);
+      g_object_notify_by_pspec (G_OBJECT (basic), obj_props[PROP_ENV_MAP]);
+    }
 }
 
 GthreeTexture *
