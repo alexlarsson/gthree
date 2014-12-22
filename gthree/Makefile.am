@@ -188,11 +188,8 @@ Gthree-1.0.gir: libgthree-1.la Makefile
 Gthree_1_0_gir_VERSION = 1.0
 Gthree_1_0_gir_LIBS = libgthree-1.la
 Gthree_1_0_gir_SCANNERFLAGS = \
-	--identifier-filter-cmd="$(SED) -e 's|\(.*\)_t\b|\1|' -e 's|^\([a-z]\)|\u\1|' -e 's|_\([a-z]\)|\u\1|g' -e 's|\([0-9]\)\([a-z]\)|\1\u\2|g'" \
-	--accept-unprefixed \
-	--symbol-prefix=gthree \
-	--c-include="gthree.h" \
 	--warn-all \
+	--c-include="gthree.h" \
 	--pkg-export gthree-1.0
 
 Gthree_1_0_gir_PACKAGES = gtk+-3.0 graphene-gobject-1.0
