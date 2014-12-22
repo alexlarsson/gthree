@@ -120,6 +120,14 @@ gthree_camera_get_proj_screen_matrix (GthreeCamera *camera,
   graphene_matrix_multiply (&priv->world_matrix_inverse, &priv->projection_matrix, res);
 }
 
+/**
+ * gthree_camera_get_projection_matrix:
+ * @camera: a #GthreeCamera
+ *
+ * ...
+ *
+ * Returns: (type Graphene.Matrix): ...
+ */
 const graphene_matrix_t *
 gthree_camera_get_projection_matrix (GthreeCamera *camera)
 {
@@ -190,6 +198,14 @@ gthree_camera_update (GthreeCamera *camera)
   class->update (camera);
 }
 
+/**
+ * gthree_camera_unproject_point3d:
+ * @camera: ...
+ * @pos: (type Graphene.Point3D): ...
+ * @res: (out caller-allocates) (type Graphene.Point3D): ...
+ *
+ * ...
+ */
 void
 gthree_camera_unproject_point3d (GthreeCamera *camera,
                                  const graphene_point3d_t *pos,
