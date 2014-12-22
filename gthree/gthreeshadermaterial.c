@@ -2,6 +2,7 @@
 #include <epoxy/gl.h>
 
 #include "gthreeshadermaterial.h"
+#include "gthreetypebuiltins.h"
 
 typedef struct {
   GthreeShader *shader;
@@ -16,24 +17,31 @@ typedef struct {
   gboolean fog;
 } GthreeShaderMaterialPrivate;
 
+enum {
+  PROP_0,
+
+  PROP_SHADER,
+  PROP_VERTEX_COLORS,
+  PROP_SHADING_TYPE,
+  PROP_USE_LIGHTS,
+
+  N_PROPS
+};
+
+static GParamSpec *obj_props[N_PROPS] = { NULL, };
+
 static GQuark q_color;
 static GQuark q_uv;
 static GQuark q_uv2;
 
-G_DEFINE_TYPE_WITH_PRIVATE (GthreeShaderMaterial, gthree_shader_material, GTHREE_TYPE_MATERIAL);
+G_DEFINE_TYPE_WITH_PRIVATE (GthreeShaderMaterial, gthree_shader_material, GTHREE_TYPE_MATERIAL)
 
 GthreeShaderMaterial *
 gthree_shader_material_new (GthreeShader *shader)
 {
-  GthreeShaderMaterial *material;
-  GthreeShaderMaterialPrivate *priv;
-
-  material = g_object_new (gthree_shader_material_get_type (), NULL);
-  priv = gthree_shader_material_get_instance_private (GTHREE_SHADER_MATERIAL (material));
-
-  priv->shader = g_object_ref (shader);
-
-  return material;
+  return g_object_new (gthree_shader_material_get_type (),
+                       "shader", shader,
+                       NULL);
 }
 
 static void
@@ -152,19 +160,110 @@ gthree_shader_material_real_get_shader (GthreeMaterial *material)
 }
 
 static void
+gthree_shader_material_set_property (GObject *obj,
+                                     guint prop_id,
+                                     const GValue *value,
+                                     GParamSpec *pspec)
+{
+  GthreeShaderMaterial *shader = GTHREE_SHADER_MATERIAL (obj);
+  GthreeShaderMaterialPrivate *priv = gthree_shader_material_get_instance_private (shader);
+
+  switch (prop_id)
+    {
+    case PROP_SHADER:
+      g_set_object (&priv->shader, g_value_get_object (value));
+      break;
+
+    case PROP_SHADING_TYPE:
+      gthree_shader_material_set_shading_type (shader, g_value_get_enum (value));
+      break;
+
+    case PROP_VERTEX_COLORS:
+      gthree_shader_material_set_vertex_colors (shader, g_value_get_enum (value));
+      break;
+
+    case PROP_USE_LIGHTS:
+      gthree_shader_material_set_use_lights (shader, g_value_get_boolean (value));
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
+    }
+}
+
+static void
+gthree_shader_material_get_property (GObject *obj,
+                                     guint prop_id,
+                                     GValue *value,
+                                     GParamSpec *pspec)
+{
+  GthreeShaderMaterial *shader = GTHREE_SHADER_MATERIAL (obj);
+  GthreeShaderMaterialPrivate *priv = gthree_shader_material_get_instance_private (shader);
+
+  switch (prop_id)
+    {
+    case PROP_SHADER:
+      g_value_set_object (value, priv->shader);
+      break;
+
+    case PROP_SHADING_TYPE:
+      g_value_set_enum (value, priv->shading_type);
+      break;
+
+    case PROP_VERTEX_COLORS:
+      g_value_set_enum (value, priv->vertex_colors);
+      break;
+
+    case PROP_USE_LIGHTS:
+      g_value_set_boolean (value, priv->use_lights);
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
+    }
+}
+
+static void
 gthree_shader_material_class_init (GthreeShaderMaterialClass *klass)
 {
-  G_OBJECT_CLASS (klass)->finalize = gthree_shader_material_finalize;
-  GTHREE_MATERIAL_CLASS(klass)->get_shader = gthree_shader_material_real_get_shader;
-  GTHREE_MATERIAL_CLASS(klass)->load_default_attribute = gthree_shader_material_real_load_default_attribute;
-  GTHREE_MATERIAL_CLASS(klass)->set_params = gthree_shader_material_real_set_params;
-  GTHREE_MATERIAL_CLASS(klass)->set_uniforms = gthree_shader_material_real_set_uniforms;
-  GTHREE_MATERIAL_CLASS(klass)->needs_lights = gthree_shader_material_needs_lights;
-  GTHREE_MATERIAL_CLASS(klass)->needs_view_matrix = gthree_shader_material_needs_view_matrix;
-  GTHREE_MATERIAL_CLASS(klass)->needs_uv = gthree_shader_material_needs_uv;
-  GTHREE_MATERIAL_CLASS(klass)->needs_normals = gthree_shader_material_needs_normals;
-  GTHREE_MATERIAL_CLASS(klass)->needs_camera_pos = gthree_shader_material_needs_camera_pos;
-  GTHREE_MATERIAL_CLASS(klass)->needs_colors = gthree_shader_material_needs_colors;
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GthreeMaterialClass *material_class = GTHREE_MATERIAL_CLASS (klass);
+
+  gobject_class->set_property = gthree_shader_material_set_property;
+  gobject_class->get_property = gthree_shader_material_get_property;
+  gobject_class->finalize = gthree_shader_material_finalize;
+
+  material_class->get_shader = gthree_shader_material_real_get_shader;
+  material_class->load_default_attribute = gthree_shader_material_real_load_default_attribute;
+  material_class->set_params = gthree_shader_material_real_set_params;
+  material_class->set_uniforms = gthree_shader_material_real_set_uniforms;
+  material_class->needs_lights = gthree_shader_material_needs_lights;
+  material_class->needs_view_matrix = gthree_shader_material_needs_view_matrix;
+  material_class->needs_uv = gthree_shader_material_needs_uv;
+  material_class->needs_normals = gthree_shader_material_needs_normals;
+  material_class->needs_camera_pos = gthree_shader_material_needs_camera_pos;
+  material_class->needs_colors = gthree_shader_material_needs_colors;
+
+  obj_props[PROP_SHADER] =
+    g_param_spec_object ("shader", "Shader", "Shader",
+                         GTHREE_TYPE_SHADER,
+                         G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_SHADING_TYPE] =
+    g_param_spec_enum ("shading-type", "Shading Type", "Shading Type",
+                       GTHREE_TYPE_SHADING_TYPE,
+                       GTHREE_SHADING_SMOOTH,
+                       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_VERTEX_COLORS] =
+    g_param_spec_enum ("vertex-colors", "Vertex Colors", "Vertex Colors",
+                       GTHREE_TYPE_COLOR_TYPE,
+                       GTHREE_COLOR_NONE,
+                       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_USE_LIGHTS] =
+    g_param_spec_boolean ("use-lights", "Use Lights", "Use Lights",
+                          FALSE,
+                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  g_object_class_install_properties (gobject_class, N_PROPS, obj_props);
 
 #define INIT_QUARK(name) q_##name = g_quark_from_static_string (#name)
   INIT_QUARK(color);
@@ -173,7 +272,7 @@ gthree_shader_material_class_init (GthreeShaderMaterialClass *klass)
 }
 
 GthreeShadingType
-gthree_shader_material_get_shading_type    (GthreeShaderMaterial     *shader)
+gthree_shader_material_get_shading_type (GthreeShaderMaterial *shader)
 {
   GthreeShaderMaterialPrivate *priv = gthree_shader_material_get_instance_private (shader);
 
@@ -181,31 +280,67 @@ gthree_shader_material_get_shading_type    (GthreeShaderMaterial     *shader)
 }
 
 void
-gthree_shader_material_set_shading_type    (GthreeShaderMaterial     *shader,
-                                            GthreeShadingType         shading_type)
+gthree_shader_material_set_shading_type (GthreeShaderMaterial *shader,
+                                         GthreeShadingType     shading_type)
 {
   GthreeShaderMaterialPrivate *priv = gthree_shader_material_get_instance_private (shader);
+
+  if (priv->shading_type == shading_type)
+    return;
 
   priv->shading_type = shading_type;
 
   gthree_material_set_needs_update (GTHREE_MATERIAL (shader), TRUE);
+
+  g_object_notify_by_pspec (G_OBJECT (shader), obj_props[PROP_SHADING_TYPE]);
 }
 
 void
-gthree_shader_material_set_vertex_colors   (GthreeShaderMaterial     *shader,
-                                            GthreeColorType           color_type)
+gthree_shader_material_set_vertex_colors (GthreeShaderMaterial *shader,
+                                          GthreeColorType       color_type)
 {
   GthreeShaderMaterialPrivate *priv = gthree_shader_material_get_instance_private (shader);
+
+  if (priv->vertex_colors == color_type)
+    return;
 
   priv->vertex_colors = color_type;
 
   gthree_material_set_needs_update (GTHREE_MATERIAL (shader), TRUE);
+
+  g_object_notify_by_pspec (G_OBJECT (shader), obj_props[PROP_VERTEX_COLORS]);
 }
 
 GthreeColorType
-gthree_shader_material_get_vertex_colors   (GthreeShaderMaterial     *shader)
+gthree_shader_material_get_vertex_colors (GthreeShaderMaterial *shader)
 {
   GthreeShaderMaterialPrivate *priv = gthree_shader_material_get_instance_private (shader);
 
   return priv->vertex_colors;
+}
+
+void
+gthree_shader_material_set_use_lights (GthreeShaderMaterial *shader,
+                                       gboolean use_lights)
+{
+  GthreeShaderMaterialPrivate *priv = gthree_shader_material_get_instance_private (shader);
+
+  use_lights = !!use_lights;
+
+  if (priv->use_lights == use_lights)
+    return;
+
+  priv->use_lights = use_lights;
+
+  gthree_material_set_needs_update (GTHREE_MATERIAL (shader), TRUE);
+
+  g_object_notify_by_pspec (G_OBJECT (shader), obj_props[PROP_USE_LIGHTS]);
+}
+
+gboolean
+gthree_shader_material_get_use_lights (GthreeShaderMaterial *shader)
+{
+  GthreeShaderMaterialPrivate *priv = gthree_shader_material_get_instance_private (shader);
+
+  return priv->use_lights;
 }
