@@ -239,15 +239,8 @@ gthree_area_set_scene (GthreeArea *area,
 {
   GthreeAreaPrivate *priv = gthree_area_get_instance_private (area);
 
-  if (priv->scene == scene)
-    return;
-
-  g_clear_object (&priv->scene);
-
-  if (scene)
-    priv->scene = g_object_ref (scene);
-
-  g_object_notify_by_pspec (G_OBJECT (area), obj_props[PROP_SCENE]);
+  if (g_set_object (&priv->scene, scene))
+    g_object_notify_by_pspec (G_OBJECT (area), obj_props[PROP_SCENE]);
 }
 
 GthreeScene *
@@ -264,15 +257,8 @@ gthree_area_set_camera (GthreeArea *area,
 {
   GthreeAreaPrivate *priv = gthree_area_get_instance_private (area);
 
-  if (priv->camera == camera)
-    return;
-
-  g_clear_object (&priv->camera);
-
-  if (camera)
-    priv->camera = g_object_ref (camera);
-
-  g_object_notify_by_pspec (G_OBJECT (area), obj_props[PROP_CAMERA]);
+  if (g_set_object (&priv->camera, camera))
+    g_object_notify_by_pspec (G_OBJECT (area), obj_props[PROP_CAMERA]);
 }
 
 GthreeCamera *

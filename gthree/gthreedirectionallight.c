@@ -9,24 +9,27 @@ typedef struct {
   GthreeObject *target;
 } GthreeDirectionalLightPrivate;
 
+enum {
+  PROP_0,
 
-G_DEFINE_TYPE_WITH_PRIVATE (GthreeDirectionalLight, gthree_directional_light, GTHREE_TYPE_LIGHT);
+  PROP_INTENSITY,
+  PROP_TARGET,
+
+  N_PROPS
+};
+
+static GParamSpec *obj_props[N_PROPS] = { NULL, };
+
+G_DEFINE_TYPE_WITH_PRIVATE (GthreeDirectionalLight, gthree_directional_light, GTHREE_TYPE_LIGHT)
 
 GthreeDirectionalLight *
 gthree_directional_light_new (const GdkRGBA *color,
 			      float intensity)
 {
-  GthreeDirectionalLight *light;
-  GthreeDirectionalLightPrivate *priv;
-
-  light = g_object_new (gthree_directional_light_get_type (),
-			NULL);
-  priv = gthree_directional_light_get_instance_private (light);
-
-  gthree_light_set_color (GTHREE_LIGHT (light), color);
-  priv->intensity = intensity;
-
-  return light;
+  return g_object_new (gthree_directional_light_get_type (),
+                       "color", color,
+                       "intensity", intensity,
+                       NULL);
 }
 
 static void
@@ -43,18 +46,43 @@ gthree_directional_light_init (GthreeDirectionalLight *directional)
 }
 
 void
+gthree_directional_light_set_intensity (GthreeDirectionalLight *directional,
+                                        float intensity)
+{
+  GthreeDirectionalLightPrivate *priv = gthree_directional_light_get_instance_private (directional);
+
+  priv->intensity = intensity;
+
+  g_object_notify_by_pspec (G_OBJECT (directional), obj_props[PROP_INTENSITY]);
+}
+
+float
+gthree_directional_light_get_intensity (GthreeDirectionalLight *directional)
+{
+  GthreeDirectionalLightPrivate *priv = gthree_directional_light_get_instance_private (directional);
+
+  return priv->intensity;
+}
+
+void
 gthree_directional_light_set_target (GthreeDirectionalLight *directional,
 				     GthreeObject *object)
 {
   GthreeDirectionalLightPrivate *priv = gthree_directional_light_get_instance_private (directional);
 
-  if (object)
-    g_object_ref (object);
+  if (object == NULL)
+    object = g_object_ref_sink (gthree_object_new ());
 
-  if (priv->target)
-    g_object_unref (priv->target);
+  if (g_set_object (&priv->target, object))
+    g_object_notify_by_pspec (G_OBJECT (directional), obj_props[PROP_TARGET]);
+}
 
-  priv->target = object;
+GthreeObject *
+gthree_directional_light_get_target (GthreeDirectionalLight *directional)
+{
+  GthreeDirectionalLightPrivate *priv = gthree_directional_light_get_instance_private (directional);
+
+  return priv->target;
 }
 
 static void
@@ -123,9 +151,73 @@ gthree_directional_light_real_setup (GthreeLight *light,
 }
 
 static void
+gthree_directional_light_set_property (GObject *obj,
+                                       guint prop_id,
+                                       const GValue *value,
+                                       GParamSpec *pspec)
+{
+  GthreeDirectionalLight *directional = GTHREE_DIRECTIONAL_LIGHT (obj);
+
+  switch (prop_id)
+    {
+    case PROP_INTENSITY:
+      gthree_directional_light_set_intensity (directional, g_value_get_float (value));
+      break;
+
+    case PROP_TARGET:
+      gthree_directional_light_set_target (directional, g_value_get_object (value));
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
+    }
+}
+
+static void
+gthree_directional_light_get_property (GObject *obj,
+                                       guint prop_id,
+                                       GValue *value,
+                                       GParamSpec *pspec)
+{
+  GthreeDirectionalLight *directional = GTHREE_DIRECTIONAL_LIGHT (obj);
+  GthreeDirectionalLightPrivate *priv = gthree_directional_light_get_instance_private (directional);
+
+  switch (prop_id)
+    {
+    case PROP_INTENSITY:
+      g_value_set_float (value, priv->intensity);
+      break;
+
+    case PROP_TARGET:
+      g_value_set_object (value, priv->target);
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
+    }
+}
+
+static void
 gthree_directional_light_class_init (GthreeDirectionalLightClass *klass)
 {
-  G_OBJECT_CLASS (klass)->finalize = gthree_directional_light_finalize;
-  GTHREE_LIGHT_CLASS(klass)->set_params = gthree_directional_light_real_set_params;
-  GTHREE_LIGHT_CLASS(klass)->setup = gthree_directional_light_real_setup;
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GthreeLightClass *light_class = GTHREE_LIGHT_CLASS (klass);
+
+  gobject_class->set_property = gthree_directional_light_set_property;
+  gobject_class->get_property = gthree_directional_light_get_property;
+  gobject_class->finalize = gthree_directional_light_finalize;
+
+  light_class->set_params = gthree_directional_light_real_set_params;
+  light_class->setup = gthree_directional_light_real_setup;
+
+  obj_props[PROP_INTENSITY] =
+    g_param_spec_float ("intensity", "Intensity", "Intensity",
+                        -G_MAXFLOAT, G_MAXFLOAT, 1.f,
+                        G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_TARGET] =
+    g_param_spec_object ("target", "Target", "Target",
+                         GTHREE_TYPE_OBJECT,
+                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  g_object_class_install_properties (gobject_class, N_PROPS, obj_props);
 }

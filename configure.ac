@@ -10,12 +10,12 @@ LT_PREREQ([2.2.6])
 LT_INIT([disable-static])
 LT_LIB_M
 
-m4_define([glib_required_version], [2.42.0])
+m4_define([glib_required_version], [2.43.2])
 
 AM_PATH_GLIB_2_0(glib_required_version, :,
   AC_MSG_ERROR([
 *** GLIB glib_required_version or better is required. The latest version of
-*** GLIB is always available from ftp://ftp.gtk.org/pub/gtk/.]),
+*** GLIB is always available from https://download.gnome.org/sources/glib/.]),
   gobject gmodule-no-export)
 
 AC_CONFIG_SRCDIR([gthree/gthreeobject.c])

@@ -38,8 +38,9 @@ void              gthree_shader_material_set_shading_type    (GthreeShaderMateri
 void              gthree_shader_material_set_vertex_colors   (GthreeShaderMaterial     *shader,
                                                               GthreeColorType           color_type);
 GthreeColorType   gthree_shader_material_get_vertex_colors   (GthreeShaderMaterial     *shader);
-
-
+void              gthree_shader_material_set_use_lights      (GthreeShaderMaterial     *shader,
+                                                              gboolean                  use_lights);
+gboolean          gthree_shader_material_get_use_lights      (GthreeShaderMaterial     *shader);
 
 G_END_DECLS
 
