@@ -70,6 +70,8 @@ typedef struct {
   gboolean supports_vertex_textures;
   gboolean supports_bone_textures;
 
+  guint vertex_array_object;
+
 } GthreeRendererPrivate;
 
 static void gthree_set_default_gl_state (GthreeRenderer *renderer);
@@ -163,6 +165,10 @@ gthree_renderer_init (GthreeRenderer *renderer)
   priv->old_depth_test = -1;
 
   gthree_set_default_gl_state (renderer);
+
+  /* We only use one vao, so bind it here */
+  glGenVertexArrays (1, &priv->vertex_array_object);
+  glBindVertexArray (priv->vertex_array_object);
 
   // GPU capabilities
   glGetIntegerv (GL_MAX_TEXTURE_IMAGE_UNITS, &priv->max_textures);
