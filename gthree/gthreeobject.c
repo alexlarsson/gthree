@@ -53,6 +53,22 @@ typedef struct {
 
 } GthreeObjectPrivate;
 
+enum
+{
+  PROP_0,
+
+  PROP_PARENT,
+  PROP_FIRST_CHILD,
+  PROP_LAST_CHILD,
+
+  PROP_NEXT_SIBLING,
+  PROP_PREVIOUS_SIBLING,
+
+  N_PROPS
+};
+
+static GParamSpec *obj_props[N_PROPS] = { NULL, };
+
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeObject, gthree_object, G_TYPE_OBJECT);
 
 #define PRIV(_o) ((GthreeObjectPrivate*)gthree_object_get_instance_private (_o))
@@ -145,10 +161,62 @@ gthree_object_finalize (GObject *obj)
 }
 
 static void
+gthree_object_set_property (GObject *obj,
+                          guint prop_id,
+                          const GValue *value,
+                          GParamSpec *pspec)
+{
+  switch (prop_id)
+    {
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
+    }
+}
+
+static void
+gthree_object_get_property (GObject *obj,
+                          guint prop_id,
+                          GValue *value,
+                          GParamSpec *pspec)
+{
+  GthreeObject *object = GTHREE_OBJECT (obj);
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  switch (prop_id)
+    {
+    case PROP_PARENT:
+      g_value_set_object (value, priv->parent);
+      break;
+
+    case PROP_FIRST_CHILD:
+      g_value_set_object (value, priv->first_child);
+      break;
+
+    case PROP_LAST_CHILD:
+      g_value_set_object (value, priv->last_child);
+      break;
+
+    case PROP_NEXT_SIBLING:
+      g_value_set_object (value, priv->next_sibling);
+      break;
+
+    case PROP_PREVIOUS_SIBLING:
+      g_value_set_object (value, priv->prev_sibling);
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
+    }
+}
+
+
+static void
 gthree_object_class_init (GthreeObjectClass *klass)
 {
   GObjectClass *obj_class = G_OBJECT_CLASS (klass);
 
+  obj_class->set_property = gthree_object_set_property;
+  obj_class->get_property = gthree_object_get_property;
   obj_class->dispose = gthree_object_dispose;
   obj_class->finalize = gthree_object_finalize;
 
@@ -173,6 +241,29 @@ gthree_object_class_init (GthreeObjectClass *klass)
                   G_TYPE_NONE, 1,
                   GTHREE_TYPE_OBJECT);
 
+
+  obj_props[PROP_PARENT] =
+    g_param_spec_object ("parent", "Parent", "Parent",
+                         GTHREE_TYPE_OBJECT,
+                         G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_FIRST_CHILD] =
+    g_param_spec_object ("first-child", "First Child", "First Child",
+                         GTHREE_TYPE_OBJECT,
+                         G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_LAST_CHILD] =
+    g_param_spec_object ("last-child", "Last Child", "Last Child",
+                         GTHREE_TYPE_OBJECT,
+                         G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_NEXT_SIBLING] =
+    g_param_spec_object ("next-sibling", "Next Sibling", "Next Sibling",
+                         GTHREE_TYPE_OBJECT,
+                         G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_PREVIOUS_SIBLING] =
+    g_param_spec_object ("previous-sibling", "Previous Sibling", "Previous Sibling",
+                         GTHREE_TYPE_OBJECT,
+                         G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+
+  g_object_class_install_properties (obj_class, N_PROPS, obj_props);
 }
 
 void
