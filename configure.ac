@@ -1,10 +1,14 @@
 AC_PREREQ([2.63])
 
-AC_INIT([gtkglobe],[0.0.1])
+AC_INIT([gthree],[0.0.1])
+
+AC_CONFIG_SRCDIR([gthree/gthreeobject.c])
+AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_MACRO_DIR([m4])
+AM_INIT_AUTOMAKE([1.11 no-define no-dist-gzip dist-bzip2 tar-ustar foreign])
 
 AC_PROG_CC
 AM_PROG_CC_C_O
-AC_DISABLE_STATIC
 
 LT_PREREQ([2.2.6])
 LT_INIT([disable-static])
@@ -17,11 +21,6 @@ AM_PATH_GLIB_2_0(glib_required_version, :,
 *** GLIB glib_required_version or better is required. The latest version of
 *** GLIB is always available from https://download.gnome.org/sources/glib/.]),
   gobject gmodule-no-export)
-
-AC_CONFIG_SRCDIR([gthree/gthreeobject.c])
-AC_CONFIG_HEADERS([config.h])
-AC_CONFIG_MACRO_DIR([m4])
-AM_INIT_AUTOMAKE([1.11 no-define no-dist-gzip dist-bzip2 tar-ustar foreign])
 
 # Enable silent rules is available
 AM_SILENT_RULES([yes])
