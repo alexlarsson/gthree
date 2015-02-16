@@ -218,7 +218,6 @@ gthree_area_new (GthreeScene *scene,
 {
   return g_object_new (GTHREE_TYPE_AREA,
                        "has-depth-buffer", TRUE,
-                       "profile", GDK_GL_PROFILE_3_2_CORE,
                        "scene", scene,
                        "camera", camera,
                        NULL);
