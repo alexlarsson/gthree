@@ -8,5 +8,5 @@ Description: Gthree 3d rendering library
 Version: 1.0
 Requires: @GTHREE_PACKAGES@
 Requires.private: @GTHREE_PRIVATE_PACKAGES@
-Libs: -L${libdir} -lgthree
+Libs: -L${libdir} -lgthree-1
 Cflags: -I${includedir}/gthree-1.0
