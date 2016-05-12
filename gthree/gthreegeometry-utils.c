@@ -277,3 +277,113 @@ gthree_geometry_new_sphere (float radius,
   return gthree_geometry_new_sphere_full (radius, widthSegments, heightSegments,
                                           0, 2 * G_PI, 0, G_PI);
 }
+
+GthreeGeometry *
+gthree_geometry_new_cylinder_full (float radius,
+                                   float height,
+                                   int   radialSegments,
+                                   int   heightSegments)
+{
+  GthreeGeometry *geometry;
+  int x, y;
+  int center;
+  graphene_vec3_t vertex;
+  const graphene_vec3_t *vertices;
+  graphene_vec3_t n;
+
+  geometry = g_object_new (gthree_geometry_get_type (), NULL);
+
+  radialSegments = MAX(radialSegments, 3);
+  heightSegments = MAX(heightSegments, 1);
+
+  for (y = 0; y <= heightSegments; y++)
+    {
+      float v = y * 1.0 / heightSegments;
+      float vy;
+
+      vy = (v - 0.5) * height;
+
+      for (x = 0; x <= radialSegments; x++)
+        {
+          float u = x * 1.0 / radialSegments;
+          float vx, vz;
+
+          vx = radius * sin (u * 2 * G_PI);
+          vz = radius * cos (u * 2 * G_PI);
+
+          gthree_geometry_add_vertex (geometry, graphene_vec3_init (&vertex, vx, vy, vz));
+        }
+    }
+
+  vertices = gthree_geometry_get_vertices (geometry);
+
+  for (y = 0; y < heightSegments; y++)
+    {
+      for (x = 0; x < radialSegments; x++)
+        {
+          int i1 = x + y * (radialSegments + 1);
+          int i2 = x + (y + 1) * (radialSegments + 1);
+          int i3 = x + 1 + (y + 1) * (radialSegments + 1);
+          int i4 = x + 1 + y * (radialSegments + 1);
+          int f1, f2;
+          graphene_vec3_t n1, n2, n3, n4;
+
+          f1 = gthree_geometry_add_face (geometry, i1, i2, i4);
+          f2 = gthree_geometry_add_face (geometry, i2, i3, i4);
+
+          graphene_vec3_normalize (&vertices[i1], &n1);
+          graphene_vec3_normalize (&vertices[i2], &n2);
+          graphene_vec3_normalize (&vertices[i3], &n3);
+          graphene_vec3_normalize (&vertices[i4], &n4);
+
+          gthree_geometry_face_set_vertex_normals (geometry, f1, &n1, &n2, &n4);
+          gthree_geometry_face_set_vertex_normals (geometry, f2, &n2, &n3, &n4);
+        }
+    }
+
+  center = gthree_geometry_get_n_vertices (geometry);
+
+  gthree_geometry_add_vertex (geometry, graphene_vec3_init (&vertex, 0, -0.5 * height, 0));
+
+  graphene_vec3_normalize (&vertex, &n);
+
+  for (x = 0; x < radialSegments; x++)
+    {
+      int i1 = center;
+      int i2 = x;
+      int i3 = x + 1;
+      int f;
+
+      f = gthree_geometry_add_face (geometry, i1, i2, i3);
+      gthree_geometry_face_set_vertex_normals (geometry, f, &n, &n, &n);
+    }
+
+  center = gthree_geometry_get_n_vertices (geometry);
+
+  gthree_geometry_add_vertex (geometry, graphene_vec3_init (&vertex, 0, 0.5 * height, 0));
+
+  graphene_vec3_normalize (&vertex, &n);
+
+  for (x = 0; x < radialSegments; x++)
+    {
+      int i1 = center;
+      int i2 = x + heightSegments * (radialSegments + 1);
+      int i3 = x + 1 + heightSegments * (radialSegments + 1);
+      int f;
+
+      f = gthree_geometry_add_face (geometry, i1, i3, i2);
+      gthree_geometry_face_set_vertex_normals (geometry, f, &n, &n, &n);
+    }
+
+  gthree_geometry_compute_face_normals (geometry);
+
+  return geometry;
+};
+
+GthreeGeometry *
+gthree_geometry_new_cylinder (float radius,
+                              float height)
+{
+  return gthree_geometry_new_cylinder_full (radius, height, 8, 1);
+}
+

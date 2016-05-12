@@ -17,6 +17,7 @@ noinst_PROGRAMS =			\
 	materials			\
 	envmap				\
 	shader				\
+	gtklogo				\
 	$(NULL)
 
 cubes_CFLAGS = \
@@ -115,6 +116,21 @@ shader_SOURCES =						\
 	$(NULL)
 
 shader_LDADD = \
+	$(LIBM) \
+	$(GTHREE_LIBS)						\
+	$(top_builddir)/gthree/libgthree-1.la			\
+	$(NULL)
+
+gtklogo_CFLAGS = \
+	$(GTHREE_CFLAGS)					\
+	$(NULL)
+
+gtklogo_SOURCES =						\
+	gtklogo.c						\
+	utils.c							\
+	$(NULL)
+
+gtklogo_LDADD = \
 	$(LIBM) \
 	$(GTHREE_LIBS)						\
 	$(top_builddir)/gthree/libgthree-1.la			\
