@@ -12,28 +12,9 @@ static GthreeObject *
 new_cube (GthreeMaterial *material)
 {
   static GthreeGeometry *geometry = NULL;
-  int n, i;
 
   if (geometry == NULL)
-    {
-      geometry = gthree_geometry_new_box (60, 60, 60, 1, 1, 1);
-
-      /* make a double-sided cube */
-      n = gthree_geometry_get_n_faces (geometry);
-      for (i = 0; i < n; i++)
-        {
-          int a = gthree_geometry_face_get_a (geometry, i);
-          int b = gthree_geometry_face_get_b (geometry, i);
-          int c = gthree_geometry_face_get_c (geometry, i);
-          int m = gthree_geometry_face_get_material_index (geometry, i);
-          int f;
-
-          f = gthree_geometry_add_face (geometry, a, c, b);
-          gthree_geometry_face_set_material_index (geometry, f, m);
-        }
-
-      gthree_geometry_compute_face_normals (geometry);
-    }
+    geometry = gthree_geometry_new_box (60, 60, 60, 1, 1, 1);
 
   return GTHREE_OBJECT (gthree_mesh_new (geometry, material));
 }
@@ -73,6 +54,7 @@ gtk_logo (void)
 
   material = gthree_lambert_material_new ();
   gthree_basic_material_set_color (GTHREE_BASIC_MATERIAL (material), &red);
+  gthree_material_set_side (GTHREE_MATERIAL (material), GTHREE_SIDE_DOUBLE);
   gthree_material_set_is_transparent (GTHREE_MATERIAL (material), TRUE);
   gthree_material_set_opacity (GTHREE_MATERIAL (material), 0.75);
   gthree_lambert_material_set_ambient_color (GTHREE_LAMBERT_MATERIAL (material), &red);
@@ -83,6 +65,7 @@ gtk_logo (void)
 
   material = gthree_lambert_material_new ();
   gthree_basic_material_set_color (GTHREE_BASIC_MATERIAL (material), &green);
+  gthree_material_set_side (GTHREE_MATERIAL (material), GTHREE_SIDE_DOUBLE);
   gthree_material_set_is_transparent (GTHREE_MATERIAL (material), TRUE);
   gthree_material_set_opacity (GTHREE_MATERIAL (material), 0.75);
   gthree_lambert_material_set_ambient_color (GTHREE_LAMBERT_MATERIAL (material), &green);
@@ -93,6 +76,7 @@ gtk_logo (void)
 
   material = gthree_lambert_material_new ();
   gthree_basic_material_set_color (GTHREE_BASIC_MATERIAL (material), &blue);
+  gthree_material_set_side (GTHREE_MATERIAL (material), GTHREE_SIDE_DOUBLE);
   gthree_material_set_is_transparent (GTHREE_MATERIAL (material), TRUE);
   gthree_material_set_opacity (GTHREE_MATERIAL (material), 0.75);
   gthree_lambert_material_set_ambient_color (GTHREE_LAMBERT_MATERIAL (material), &blue);
