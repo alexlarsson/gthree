@@ -308,7 +308,7 @@ gthree_geometry_new_cylinder_full (float    radiusTop,
     {
       float v = y * 1.0 / heightSegments;
       float radius = v * (radiusBottom - radiusTop) + radiusTop;
-      float vy = (v - 0.5) * height;
+      float vy = (0.5 - v) * height;
 
       for (x = 0; x <= radialSegments; x++)
         {
