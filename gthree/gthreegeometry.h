@@ -80,10 +80,14 @@ GthreeGeometry *gthree_geometry_new_sphere_full (float radius,
                                                  float thetaLength);
 GthreeGeometry *gthree_geometry_new_cylinder    (float radius,
                                                  float length);
-GthreeGeometry *gthree_geometry_new_cylinder_full (float    radius,
+GthreeGeometry *gthree_geometry_new_cylinder_full (float    radiusTop,
+                                                   float    radiusBottom,
                                                    float    height,
                                                    int      radialSegments,
-                                                   int      heightSegments);
+                                                   int      heightSegments,
+                                                   gboolean openEnded,
+                                                   float    thetaStart,
+                                                   float    thetaLength);
 
 int                    gthree_geometry_face_get_a              (GthreeGeometry         *geometry,
 								int                     index);
