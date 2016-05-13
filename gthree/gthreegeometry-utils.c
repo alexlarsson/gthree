@@ -356,7 +356,7 @@ gthree_geometry_new_cylinder_full (float    radiusTop,
         }
     }
 
-  if (!openEnded)
+  if (!openEnded && radiusTop > 0)
     {
       center = gthree_geometry_get_n_vertices (geometry);
 
@@ -374,7 +374,10 @@ gthree_geometry_new_cylinder_full (float    radiusTop,
           f = gthree_geometry_add_face (geometry, i1, i2, i3);
           gthree_geometry_face_set_vertex_normals (geometry, f, &n, &n, &n);
         }
+    }
 
+  if (!openEnded && radiusBottom > 0)
+    {
       center = gthree_geometry_get_n_vertices (geometry);
 
       gthree_geometry_add_vertex (geometry, graphene_vec3_init (&vertex, 0, 0.5 * height, 0));
