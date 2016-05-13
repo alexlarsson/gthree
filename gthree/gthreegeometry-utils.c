@@ -334,33 +334,57 @@ gthree_geometry_new_cylinder_full (float    radiusTop,
 
   for (y = 0; y < heightSegments; y++)
     {
+      float v1 = y * 1.0 / heightSegments;
+      float v2 = (y + 1) * 1.0 / heightSegments;
+
       for (x = 0; x < radialSegments; x++)
         {
+          float u1 = x * 1.0 / radialSegments;
+          float u2 = (x + 1) * 1.0 / radialSegments;
+
           int i1 = x + y * (radialSegments + 1);
           int i2 = x + (y + 1) * (radialSegments + 1);
           int i3 = x + 1 + (y + 1) * (radialSegments + 1);
           int i4 = x + 1 + y * (radialSegments + 1);
-          int f1, f2;
+          int face;
           graphene_vec3_t *n1, *n2, *n3, *n4;
-
-          f1 = gthree_geometry_add_face (geometry, i1, i2, i4);
-          f2 = gthree_geometry_add_face (geometry, i2, i3, i4);
+          graphene_vec2_t uv1, uv2, uv3, uv4;
 
           n1 = &normals[x];
           n2 = &normals[x];
           n3 = &normals[x + 1];
           n4 = &normals[x + 1];
 
-          gthree_geometry_face_set_vertex_normals (geometry, f1, n1, n2, n4);
-          gthree_geometry_face_set_vertex_normals (geometry, f2, n2, n3, n4);
+          graphene_vec2_init (&uv1, u1, v1);
+          graphene_vec2_init (&uv2, u1, v2);
+          graphene_vec2_init (&uv3, u2, v2);
+          graphene_vec2_init (&uv4, u2, v1);
+
+          face = gthree_geometry_add_face (geometry, i1, i2, i4);
+          gthree_geometry_face_set_vertex_normals (geometry, face, n1, n2, n4);
+
+          gthree_geometry_add_uv (geometry, &uv1);
+          gthree_geometry_add_uv (geometry, &uv2);
+          gthree_geometry_add_uv (geometry, &uv4);
+
+          face = gthree_geometry_add_face (geometry, i2, i3, i4);
+          gthree_geometry_face_set_vertex_normals (geometry, face, n2, n3, n4);
+
+          gthree_geometry_add_uv (geometry, &uv2);
+          gthree_geometry_add_uv (geometry, &uv3);
+          gthree_geometry_add_uv (geometry, &uv4);
         }
     }
 
   if (!openEnded && radiusTop > 0)
     {
+      graphene_vec2_t uv1, uv2, uv3;
+
       center = gthree_geometry_get_n_vertices (geometry);
 
       gthree_geometry_add_vertex (geometry, graphene_vec3_init (&vertex, 0, -0.5 * height, 0));
+
+      graphene_vec2_init (&uv1, 1, 1);
 
       graphene_vec3_normalize (&vertex, &n);
 
@@ -369,18 +393,29 @@ gthree_geometry_new_cylinder_full (float    radiusTop,
           int i1 = center;
           int i2 = x;
           int i3 = x + 1;
-          int f;
+          int face;
 
-          f = gthree_geometry_add_face (geometry, i1, i2, i3);
-          gthree_geometry_face_set_vertex_normals (geometry, f, &n, &n, &n);
+          graphene_vec2_init (&uv2, x * 1.0 / radialSegments, 0);
+          graphene_vec2_init (&uv3, (x + 1) * 1.0 / radialSegments, 0);
+
+          face = gthree_geometry_add_face (geometry, i1, i2, i3);
+          gthree_geometry_face_set_vertex_normals (geometry, face, &n, &n, &n);
+
+          gthree_geometry_add_uv (geometry, &uv1);
+          gthree_geometry_add_uv (geometry, &uv2);
+          gthree_geometry_add_uv (geometry, &uv3);
         }
     }
 
   if (!openEnded && radiusBottom > 0)
     {
+      graphene_vec2_t uv1, uv2, uv3;
+
       center = gthree_geometry_get_n_vertices (geometry);
 
       gthree_geometry_add_vertex (geometry, graphene_vec3_init (&vertex, 0, 0.5 * height, 0));
+
+      graphene_vec2_init (&uv1, 0, 0);
 
       graphene_vec3_normalize (&vertex, &n);
 
@@ -389,10 +424,17 @@ gthree_geometry_new_cylinder_full (float    radiusTop,
           int i1 = center;
           int i2 = x + heightSegments * (radialSegments + 1);
           int i3 = x + 1 + heightSegments * (radialSegments + 1);
-          int f;
+          int face;
 
-          f = gthree_geometry_add_face (geometry, i1, i3, i2);
-          gthree_geometry_face_set_vertex_normals (geometry, f, &n, &n, &n);
+          graphene_vec2_init (&uv2, (x + 1) * 1.0 / radialSegments, 1);
+          graphene_vec2_init (&uv3, x * 1.0 / radialSegments, 1);
+
+          face = gthree_geometry_add_face (geometry, i1, i3, i2);
+          gthree_geometry_face_set_vertex_normals (geometry, face, &n, &n, &n);
+
+          gthree_geometry_add_uv (geometry, &uv1);
+          gthree_geometry_add_uv (geometry, &uv2);
+          gthree_geometry_add_uv (geometry, &uv3);
         }
     }
 
