@@ -105,6 +105,11 @@ void                   gthree_geometry_face_set_material_index (GthreeGeometry  
 int                    gthree_geometry_face_get_material_index (GthreeGeometry         *geometry,
 								int                     index);
 
+void     gthree_geometry_set_is_lines (GthreeGeometry *geometry,
+                                       gboolean        lines);
+
+gboolean gthree_geometry_get_is_lines (GthreeGeometry *geometry);
+
 G_END_DECLS
 
 #endif /* __GTHREE_GEOMETRY_H__ */

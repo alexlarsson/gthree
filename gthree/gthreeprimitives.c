@@ -382,7 +382,7 @@ gthree_geometry_new_cylinder_full (float    radiusTop,
 
       center = gthree_geometry_get_n_vertices (geometry);
 
-      gthree_geometry_add_vertex (geometry, graphene_vec3_init (&vertex, 0, -0.5 * height, 0));
+      gthree_geometry_add_vertex (geometry, graphene_vec3_init (&vertex, 0, 0.5 * height, 0));
 
       graphene_vec2_init (&uv1, 1, 1);
 
@@ -413,7 +413,7 @@ gthree_geometry_new_cylinder_full (float    radiusTop,
 
       center = gthree_geometry_get_n_vertices (geometry);
 
-      gthree_geometry_add_vertex (geometry, graphene_vec3_init (&vertex, 0, 0.5 * height, 0));
+      gthree_geometry_add_vertex (geometry, graphene_vec3_init (&vertex, 0, -0.5 * height, 0));
 
       graphene_vec2_init (&uv1, 0, 0);
 
