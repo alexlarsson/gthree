@@ -35,6 +35,13 @@ GthreeGeometry *gthree_geometry_new_cylinder_full (float    radiusTop,
                                                    gboolean openEnded,
                                                    float    thetaStart,
                                                    float    thetaLength);
+GthreeGeometry *gthree_geometry_new_torus         (float    radius,
+                                                   float    tube);
+GthreeGeometry *gthree_geometry_new_torus_full    (float    radius,
+                                                   float    tube,
+                                                   int      radialSegments,
+                                                   int      tubularSegments,
+                                                   float    arc);
 
 G_END_DECLS
 

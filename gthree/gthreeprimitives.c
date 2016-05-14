@@ -450,3 +450,93 @@ gthree_geometry_new_cylinder (float radius,
   return gthree_geometry_new_cylinder_full (radius, radius, height, 8, 1, FALSE, 0, 2 * G_PI);
 }
 
+GthreeGeometry *
+gthree_geometry_new_torus_full (float radius,
+                                float tube,
+                                int   radialSegments,
+                                int   tubularSegments,
+                                float arc)
+{
+  GthreeGeometry *geometry;
+  const graphene_vec3_t *vertices;
+  int i, j;
+
+  geometry = g_object_new (gthree_geometry_get_type (), NULL);
+
+  for (j = 0; j <= radialSegments; j++)
+    {
+      for (i = 0; i <= tubularSegments; i++)
+        {
+          float u = i * arc / tubularSegments;
+          float v = j * 2 * G_PI / radialSegments;
+          graphene_vec3_t vertex;
+
+          gthree_geometry_add_vertex (geometry,
+                                      graphene_vec3_init (&vertex,
+                                                          (radius + tube * cos (v)) * cos (u),
+                                                          (radius + tube * cos (v)) * sin (u),
+                                                          tube * sin (v)));
+        }
+    }
+
+  vertices = gthree_geometry_get_vertices (geometry);
+
+  for (j = 1; j <= radialSegments; j++)
+    {
+      for (i = 1; i <= tubularSegments; i++)
+        {
+          int a = (tubularSegments + 1) * j + i - 1;
+          int b = (tubularSegments + 1) * (j - 1) + i - 1;
+          int c = (tubularSegments + 1) * (j - 1) + i;
+          int d = (tubularSegments + 1) * j + i;
+          int face1, face2;
+
+          float u1 = (i - 1) * 1.0 / tubularSegments * arc;
+          float u2 = i * 1.0 / tubularSegments * arc;
+
+          graphene_vec3_t na, nb, nc, nd, center;
+          graphene_vec2_t uv;
+
+          face1 = gthree_geometry_add_face (geometry, a, b, d);
+          face2 = gthree_geometry_add_face (geometry, b, c, d);
+
+          graphene_vec3_init (&center, radius * cos (u1), radius * sin (u1), 0);
+
+          graphene_vec3_subtract (&vertices[a], &center, &na);
+          graphene_vec3_normalize (&na, &na);
+
+          graphene_vec3_subtract (&vertices[b], &center, &nb);
+          graphene_vec3_normalize (&nb, &nb);
+
+          graphene_vec3_init (&center, radius * cos (u2), radius * sin (u2), 0);
+
+          graphene_vec3_subtract (&vertices[c], &center, &nc);
+          graphene_vec3_normalize (&nc, &nc);
+
+          graphene_vec3_subtract (&vertices[d], &center, &nd);
+          graphene_vec3_normalize (&nd, &nd);
+
+          gthree_geometry_face_set_vertex_normals (geometry, face1, &na, &nb, &nd);
+          gthree_geometry_face_set_vertex_normals (geometry, face2, &nb, &nc, &nd);
+
+          gthree_geometry_add_uv (geometry, graphene_vec2_init (&uv, (i - 1) * 1.0 / tubularSegments, j * 1.0 / radialSegments));
+          gthree_geometry_add_uv (geometry, graphene_vec2_init (&uv, (i - 1) * 1.0 / tubularSegments, (j - 1) * 1.0 / radialSegments));
+          gthree_geometry_add_uv (geometry, graphene_vec2_init (&uv, i * 1.0 / tubularSegments, j * 1.0 / radialSegments));
+
+          gthree_geometry_add_uv (geometry, graphene_vec2_init (&uv, (i - 1) * 1.0 / tubularSegments, (j - 1) * 1.0 / radialSegments));
+          gthree_geometry_add_uv (geometry, graphene_vec2_init (&uv, i * 1.0 / tubularSegments, (j - 1) * 1.0 / radialSegments));
+          gthree_geometry_add_uv (geometry, graphene_vec2_init (&uv, i * 1.0 / tubularSegments, j * 1.0 / radialSegments));
+        }
+    }
+
+  gthree_geometry_compute_face_normals (geometry);
+
+  return geometry;
+};
+
+GthreeGeometry *
+gthree_geometry_new_torus (float radius,
+                           float tube)
+{
+  return gthree_geometry_new_torus_full (radius, tube, 8, 6, 2 * G_PI);
+}
