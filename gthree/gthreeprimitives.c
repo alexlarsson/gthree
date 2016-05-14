@@ -1,7 +1,7 @@
 #include <math.h>
 #include <epoxy/gl.h>
 
-#include "gthreegeometry.h"
+#include "gthreeprimitives.h"
 
 enum {
   AXIS_X,
