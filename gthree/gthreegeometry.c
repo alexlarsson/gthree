@@ -36,6 +36,8 @@ typedef struct {
   guint bounding_sphere_set;
 
   GPtrArray *groups; /* GthreeGeometryGroup * */
+
+  gboolean is_lines;
 } GthreeGeometryPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeGeometry, gthree_geometry, G_TYPE_OBJECT);
@@ -307,6 +309,9 @@ gthree_geometry_add_face (GthreeGeometry        *geometry,
 {
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
   GthreeFace *face;
+
+  if (priv->is_lines)
+    g_return_val_if_fail (b == c, -1);
 
   int i = priv->faces->len;
 
@@ -669,4 +674,21 @@ gthree_geometry_update (GthreeGeometry *geometry,
 
       gthree_geometry_group_update (group, group_material, TRUE);
     }
+}
+
+void
+gthree_geometry_set_is_lines (GthreeGeometry *geometry,
+                              gboolean        is_lines)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+
+  priv->is_lines = is_lines;
+}
+
+gboolean
+gthree_geometry_get_is_lines (GthreeGeometry *geometry)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+
+  return priv->is_lines;
 }

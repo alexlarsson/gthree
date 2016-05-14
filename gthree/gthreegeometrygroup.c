@@ -87,9 +87,10 @@ init_buffers (GthreeGeometryGroup *group,
               GthreeMaterial *group_material)
 {
   GArray *face_indexes = group->face_indexes;
-  guint nvertices = face_indexes->len * 3;
-  guint ntris     = face_indexes->len * 1;
-  guint nlines    = face_indexes->len * 3;
+  gboolean is_lines = gthree_geometry_get_is_lines (group->geometry);
+  guint nvertices = face_indexes->len * (is_lines ? 2 : 3);
+  guint ntris     = is_lines ? 0 : face_indexes->len * 1;
+  guint nlines    = face_indexes->len * (is_lines ? 1 : 3);
   gboolean uv_type = gthree_material_needs_uv (group_material);
   gboolean normal_type = gthree_material_needs_normals (group_material);
   GthreeColorType vertex_color_type = gthree_material_needs_colors (group_material);
@@ -230,6 +231,8 @@ gthree_geometry_group_update (GthreeGeometryGroup *group,
   gboolean dirtyColors = group->colors_need_update;
   //gboolean dirtyMorphTargets = group->morph_targets_need_update;
 
+  gboolean is_lines = gthree_geometry_get_is_lines (geometry);
+
   guint vertexIndex = 0;
   guint offset = 0;
   guint offset_face = 0;
@@ -257,10 +260,15 @@ gthree_geometry_group_update (GthreeGeometryGroup *group,
           int c = gthree_geometry_face_get_c (geometry, face_index);
 
           graphene_vec3_to_float (&vertices[a], &group->vertex_array[offset]);
-          graphene_vec3_to_float (&vertices[b], &group->vertex_array[offset + 3]);
-          graphene_vec3_to_float (&vertices[c], &group->vertex_array[offset + 6]);
+          offset += 3;
+          graphene_vec3_to_float (&vertices[b], &group->vertex_array[offset]);
+          offset += 3;
 
-          offset += 9;
+          if (is_lines)
+            continue;
+
+          graphene_vec3_to_float (&vertices[c], &group->vertex_array[offset]);
+          offset += 3;
         }
 
       glBindBuffer (GL_ARRAY_BUFFER, GTHREE_BUFFER (group)->vertex_buffer);
@@ -287,16 +295,20 @@ gthree_geometry_group_update (GthreeGeometryGroup *group,
           group->color_array[offset_color]     = c1->red;
           group->color_array[offset_color + 1] = c1->green;
           group->color_array[offset_color + 2] = c1->blue;
+          offset_color += 3;
 
-          group->color_array[offset_color + 3] = c2->red;
-          group->color_array[offset_color + 4] = c2->green;
-          group->color_array[offset_color + 5] = c2->blue;
+          group->color_array[offset_color]     = c2->red;
+          group->color_array[offset_color + 1] = c2->green;
+          group->color_array[offset_color + 2] = c2->blue;
+          offset_color += 3;
 
-          group->color_array[offset_color + 6] = c3->red;
-          group->color_array[offset_color + 7] = c3->green;
-          group->color_array[offset_color + 8] = c3->blue;
+          if (is_lines)
+            continue;
 
-          offset_color += 9;
+          group->color_array[offset_color]     = c3->red;
+          group->color_array[offset_color + 1] = c3->green;
+          group->color_array[offset_color + 2] = c3->blue;
+          offset_color += 3;
         }
 
       if (offset_color > 0)
@@ -428,31 +440,45 @@ gthree_geometry_group_update (GthreeGeometryGroup *group,
 
   if (dirtyElements)
     {
-      for (i = 0; i < face_indexes->len; i++)
+      if (is_lines)
+        for (i = 0; i < face_indexes->len; i++)
+          {
+            group->line_array[offset_line]     = vertexIndex;
+            group->line_array[offset_line + 1] = vertexIndex + 1;
+
+            offset_line += 2;
+
+            vertexIndex += 2;
+          }
+      else
+        for (i = 0; i < face_indexes->len; i++)
+          {
+            group->face_array[offset_face]   = vertexIndex;
+            group->face_array[offset_face + 1] = vertexIndex + 1;
+            group->face_array[offset_face + 2] = vertexIndex + 2;
+
+            offset_face += 3;
+
+            group->line_array[offset_line]     = vertexIndex;
+            group->line_array[offset_line + 1] = vertexIndex + 1;
+
+            group->line_array[offset_line + 2] = vertexIndex;
+            group->line_array[offset_line + 3] = vertexIndex + 2;
+
+            group->line_array[offset_line + 4] = vertexIndex + 1;
+            group->line_array[offset_line + 5] = vertexIndex + 2;
+
+            offset_line += 6;
+
+            vertexIndex += 3;
+          }
+
+      if (!is_lines)
         {
-          group->face_array[offset_face]   = vertexIndex;
-          group->face_array[offset_face + 1] = vertexIndex + 1;
-          group->face_array[offset_face + 2] = vertexIndex + 2;
-
-          offset_face += 3;
-
-          group->line_array[offset_line]     = vertexIndex;
-          group->line_array[offset_line + 1] = vertexIndex + 1;
-
-          group->line_array[offset_line + 2] = vertexIndex;
-          group->line_array[offset_line + 3] = vertexIndex + 2;
-
-          group->line_array[offset_line + 4] = vertexIndex + 1;
-          group->line_array[offset_line + 5] = vertexIndex + 2;
-
-          offset_line += 6;
-
-          vertexIndex += 3;
+          glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GTHREE_BUFFER (group)->face_buffer);
+          glBufferData(GL_ELEMENT_ARRAY_BUFFER, offset_face * sizeof (guint16), group->face_array, hint);
+          GTHREE_BUFFER(group)->face_count = offset_face;
         }
-
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GTHREE_BUFFER (group)->face_buffer);
-      glBufferData(GL_ELEMENT_ARRAY_BUFFER, offset_face * sizeof (guint16), group->face_array, hint);
-      GTHREE_BUFFER(group)->face_count = offset_face;
 
       glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, GTHREE_BUFFER (group)->line_buffer);
       glBufferData(GL_ELEMENT_ARRAY_BUFFER, offset_line * sizeof (guint16), group->line_array, hint);
@@ -474,6 +500,8 @@ void
 gthree_geometry_group_add_face (GthreeGeometryGroup *group,
                                 int face_index)
 {
+  gboolean is_lines = gthree_geometry_get_is_lines (group->geometry);
+
   g_array_append_val (group->face_indexes, face_index);
-  group->n_vertices += 3;
+  group->n_vertices += is_lines ? 2 : 3;
 }
