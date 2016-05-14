@@ -48,6 +48,7 @@ gthree_public_h_sources = \
 	gthreeshadermaterial.h \
 	gthreeuniforms.h \
 	gthreeloader.h			\
+	gthreeprimitives.h		\
 	$(NULL)
 
 gthree_private_h_sources =		\
@@ -91,7 +92,7 @@ gthree_c_sources = \
 	gthreedirectionallight.c \
 	gthreepointlight.c \
 	gthreelight.c \
-	gthreegeometry-utils.c \
+	gthreeprimitives.c \
 	gthreegeometry.c \
 	gthreegeometrygroup.c \
 	gthreematerial.c \
