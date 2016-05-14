@@ -18,6 +18,7 @@ noinst_PROGRAMS =			\
 	envmap				\
 	shader				\
 	gtklogo				\
+	normals				\
 	$(NULL)
 
 cubes_CFLAGS = \
@@ -131,6 +132,21 @@ gtklogo_SOURCES =						\
 	$(NULL)
 
 gtklogo_LDADD = \
+	$(LIBM) \
+	$(GTHREE_LIBS)						\
+	$(top_builddir)/gthree/libgthree-1.la			\
+	$(NULL)
+
+normals_CFLAGS = \
+	$(GTHREE_CFLAGS)					\
+	$(NULL)
+
+normals_SOURCES =						\
+	normals.c						\
+	utils.c							\
+	$(NULL)
+
+normals_LDADD = \
 	$(LIBM) \
 	$(GTHREE_LIBS)						\
 	$(top_builddir)/gthree/libgthree-1.la			\
