@@ -3,6 +3,7 @@
 
 #include "gthreegeometrygroupprivate.h"
 #include "gthreegeometry.h"
+#include "gthreelinebasicmaterial.h"
 
 G_DEFINE_TYPE (GthreeGeometryGroup, gthree_geometry_group, GTHREE_TYPE_BUFFER);
 
@@ -87,12 +88,23 @@ init_buffers (GthreeGeometryGroup *group,
               GthreeMaterial *group_material)
 {
   GArray *face_indexes = group->face_indexes;
-  guint nvertices = face_indexes->len * 3;
-  guint ntris     = face_indexes->len * 1;
-  guint nlines    = face_indexes->len * 3;
+  guint nvertices, ntris, nlines;
   gboolean uv_type = gthree_material_needs_uv (group_material);
   gboolean normal_type = gthree_material_needs_normals (group_material);
   GthreeColorType vertex_color_type = gthree_material_needs_colors (group_material);
+
+  if (GTHREE_IS_LINE_BASIC_MATERIAL (group_material))
+    {
+      nvertices = gthree_geometry_get_n_vertices (group->geometry);
+      ntris = 0;
+      nlines = nvertices / 2;
+    }
+  else
+    {
+      nvertices = face_indexes->len * 3;
+      ntris     = face_indexes->len * 1;
+      nlines    = face_indexes->len * 3;
+    }
 
   if (group->vertex_array == NULL)
     {
@@ -244,6 +256,62 @@ gthree_geometry_group_update (GthreeGeometryGroup *group,
   GArray *face_indexes = group->face_indexes;
 
   const graphene_vec3_t *vertices = gthree_geometry_get_vertices (geometry);
+
+  if (GTHREE_IS_LINE_BASIC_MATERIAL (material))
+    {
+      if (dirtyVertices)
+        {
+          for (i = 0; i < gthree_geometry_get_n_vertices (geometry); i++)
+            {
+              graphene_vec3_to_float (&vertices[i], &group->vertex_array[offset]);
+              offset += 3;
+            }
+          glBindBuffer (GL_ARRAY_BUFFER, GTHREE_BUFFER (group)->vertex_buffer);
+          glBufferData (GL_ARRAY_BUFFER, offset * sizeof (float), group->vertex_array, hint);
+          group->vertices_need_update = FALSE;
+        }
+
+#if 0
+      if (dirtyColors && vertex_color_type != GTHREE_COLOR_NONE)
+        {
+          for (i = 0; i < gthree_geometry_get_n_vertices (geometry); i++)
+            {
+              group->color_array[offset_color]     = ->red;
+              group->color_array[offset_color + 1] = ->green;
+              group->color_array[offset_color + 2] = ->blue;
+
+              offset_color += 3;
+            }
+
+          if (offset_color > 0)
+            {
+              glBindBuffer (GL_ARRAY_BUFFER, GTHREE_BUFFER (group)->color_buffer);
+              glBufferData (GL_ARRAY_BUFFER, offset_color * sizeof (float), group->color_array, hint);
+            }
+
+          group->colors_need_update = FALSE;
+        }
+#endif
+
+      if (dirtyElements)
+        {
+          for (i = 0; i + 1 < gthree_geometry_get_n_vertices (geometry); i += 2)
+            {
+              group->line_array[offset_line]     = i;
+              group->line_array[offset_line + 1] = i + 1;
+
+              offset_line += 2;
+            }
+
+          glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, GTHREE_BUFFER (group)->line_buffer);
+          glBufferData(GL_ELEMENT_ARRAY_BUFFER, offset_line * sizeof (guint16), group->line_array, hint);
+          GTHREE_BUFFER(group)->line_count = offset_line;
+
+          group->elements_need_update = FALSE;
+        }
+
+      return;
+    }
 
   if (dirtyVertices)
     {
