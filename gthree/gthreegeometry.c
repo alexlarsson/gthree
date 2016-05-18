@@ -5,6 +5,7 @@
 #include "gthreegeometrygroupprivate.h"
 #include "gthreeprivate.h"
 #include "gthreemultimaterial.h"
+#include "gthreelinebasicmaterial.h"
 #include "gthreeobjectprivate.h"
 
 typedef struct
@@ -624,8 +625,14 @@ gthree_geometry_realize (GthreeGeometry *geometry,
 
   if (priv->groups == NULL)
     {
-      priv->groups =
-        make_geometry_groups (geometry, GTHREE_IS_MULTI_MATERIAL(material));
+      if (GTHREE_IS_LINE_BASIC_MATERIAL (material))
+        {
+          priv->groups = g_ptr_array_new_with_free_func (g_object_unref);
+          g_ptr_array_add (priv->groups, gthree_geometry_group_new (geometry, 0));
+        }
+      else
+        priv->groups =
+          make_geometry_groups (geometry, GTHREE_IS_MULTI_MATERIAL(material));
     }
 
   for (i = 0; i < priv->groups->len; i++)

@@ -3,6 +3,8 @@
 
 #include "gthreerenderer.h"
 #include "gthreeobjectprivate.h"
+#include "gthreemesh.h"
+#include "gthreelinesegments.h"
 #include "gthreeshader.h"
 #include "gthreematerial.h"
 #include "gthreeprivate.h"
@@ -1407,7 +1409,7 @@ render_buffer (GthreeRenderer *renderer,
     }
 
   // render mesh
-  if (TRUE /* object instanceof THREE.Mesh */ )
+  if (GTHREE_IS_MESH (object))
     {
       if (wireframe)
         {
@@ -1424,6 +1426,13 @@ render_buffer (GthreeRenderer *renderer,
             glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, buffer->face_buffer);
           glDrawElements (GL_TRIANGLES, buffer->face_count, GL_UNSIGNED_SHORT, 0 );
         }
+    }
+  else if (GTHREE_IS_LINE_SEGMENTS (object))
+    {
+      set_line_width (renderer, gthree_material_get_wireframe_line_width (material));
+      if (update_buffers)
+        glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, buffer->line_buffer);
+      glDrawElements (GL_LINES, buffer->line_count, GL_UNSIGNED_SHORT, 0 );
     }
 }
 
