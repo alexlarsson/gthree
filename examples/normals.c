@@ -52,12 +52,9 @@ face_normals (GthreeMesh *object, float size, GdkRGBA *color, float width)
   g_object_get (object, "geometry", &geometry, NULL);
 
   geo = gthree_geometry_new ();
-  gthree_geometry_set_is_lines (geo, TRUE);
 
-  material = GTHREE_MATERIAL (gthree_basic_material_new ());
-  gthree_material_set_is_wireframe (material, TRUE);
-  gthree_material_set_wireframe_line_width (material, width);
-  gthree_basic_material_set_color (GTHREE_BASIC_MATERIAL (material), color);
+  material = GTHREE_MATERIAL (gthree_line_basic_material_new ());
+  gthree_line_basic_material_set_color (GTHREE_LINE_BASIC_MATERIAL (material), color);
 
   vertices = gthree_geometry_get_vertices (geometry);
   for (i = 0; i < gthree_geometry_get_n_faces (geometry); i++)
@@ -79,13 +76,11 @@ face_normals (GthreeMesh *object, float size, GdkRGBA *color, float width)
 
       gthree_geometry_add_vertex (geo, &v);
       gthree_geometry_add_vertex (geo, &v2);
-
-      gthree_geometry_add_face (geo, 2 * i, 2 * i + 1, 2 * i + 1);
     }
 
   g_object_unref (geometry);
 
-  return GTHREE_OBJECT (gthree_mesh_new (geo, material));
+  return GTHREE_OBJECT (gthree_line_segments_new (geo, material));
 }
 
 GthreeScene *
