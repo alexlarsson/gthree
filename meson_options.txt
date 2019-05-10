@@ -1,0 +1,4 @@
+option('introspection',
+       description: 'Whether to build introspection files',
+       type: 'boolean',
+       value: true)
