@@ -22,18 +22,11 @@ GdkPixbuf *
 examples_load_pixbuf (char *file)
 {
   GdkPixbuf *pixbuf;
-  char *full, *examples_full;
+  char *full;
 
-  full = g_build_filename ("textures", file, NULL);
+  full = g_build_filename ("/org/gnome/gthree-examples/textures/", file, NULL);
 
-  pixbuf = gdk_pixbuf_new_from_file (full, NULL);
-  if (pixbuf == NULL)
-    {
-      examples_full = g_build_filename ("examples", full, NULL);
-      pixbuf = gdk_pixbuf_new_from_file (examples_full, NULL);
-      g_free (examples_full);
-    }
-
+  pixbuf = gdk_pixbuf_new_from_resource (full, NULL);
   if (pixbuf == NULL)
     g_error ("could not load %s", file);
 
@@ -64,26 +57,21 @@ examples_load_model (const char *name)
   GthreeLoader *loader;
   GthreeGeometry *geometry;
   char *file;
-  char *json;
+  GFile *textures;
   GError *error;
+  GBytes *bytes;
 
-  error = NULL;
-  file = g_build_filename ("models/", name, NULL);
-  if (!g_file_get_contents (file, &json, NULL, &error))
-    {
-      error = NULL;
-      g_free (file);
-      file = g_build_filename ("examples/models/", name, NULL);
-      if (!g_file_get_contents (file, &json, NULL, &error))
-        g_error ("can't load model %s: %s", name, error->message);
-      g_free (file);
-    }
+  file = g_build_filename ("/org/gnome/gthree-examples/models/", name, NULL);
+  bytes = g_resources_lookup_data (file, G_RESOURCE_LOOKUP_FLAGS_NONE, &error);
+  if (bytes == NULL)
+    g_error ("can't load model %s: %s", name, error->message);
 
-  loader = gthree_loader_new_from_json (json, NULL, &error);
+  textures = g_file_new_for_uri ("resources:///org/gnome/gthree-examples/textures");
+  loader = gthree_loader_new_from_json (g_bytes_get_data (bytes, NULL), NULL, &error);
   if (loader == NULL)
     g_error ("can't parse json: %s", error->message);
-
-  g_free (json);
+  g_bytes_unref (bytes);
+  g_object_unref (textures);
 
   geometry = g_object_ref (gthree_loader_get_geometry (loader));
   g_object_unref (loader);
