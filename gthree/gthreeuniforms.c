@@ -322,7 +322,7 @@ gthree_uniform_set_location (GthreeUniform *uniform,
 
 void
 gthree_uniform_set_needs_update (GthreeUniform *uniform,
-				 gboolean needs_update)
+                                 gboolean needs_update)
 {
   uniform->needs_update = needs_update;
 }
@@ -414,7 +414,7 @@ set_array (GthreeUniform *uniform, GArray *array)
 
 void
 gthree_uniform_set_float_array (GthreeUniform *uniform,
-				GArray *array)
+                                GArray *array)
 {
  g_return_if_fail (uniform->type == GTHREE_UNIFORM_TYPE_FLOAT_ARRAY);
 
@@ -423,7 +423,7 @@ gthree_uniform_set_float_array (GthreeUniform *uniform,
 
 void
 gthree_uniform_set_float3_array (GthreeUniform *uniform,
-				 GArray *array)
+                                 GArray *array)
 {
  g_return_if_fail (uniform->type == GTHREE_UNIFORM_TYPE_FLOAT3_ARRAY);
 
@@ -482,7 +482,7 @@ gthree_uniform_load (GthreeUniform *uniform,
 
   if (!uniform->needs_update)
     return;
-  
+
   switch (uniform->type)
     {
     case GTHREE_UNIFORM_TYPE_INT:
@@ -506,19 +506,19 @@ gthree_uniform_load (GthreeUniform *uniform,
       break;
     case GTHREE_UNIFORM_TYPE_FLOAT_ARRAY:
       if (uniform->value.array)
-	glUniform1fv (uniform->location, uniform->value.array->len, &g_array_index (uniform->value.array, float, 0));
+        glUniform1fv (uniform->location, uniform->value.array->len, &g_array_index (uniform->value.array, float, 0));
       break;
     case GTHREE_UNIFORM_TYPE_FLOAT2_ARRAY:
       if (uniform->value.array)
-	glUniform2fv (uniform->location, uniform->value.array->len, &g_array_index (uniform->value.array, float, 0));
+        glUniform2fv (uniform->location, uniform->value.array->len, &g_array_index (uniform->value.array, float, 0));
       break;
     case GTHREE_UNIFORM_TYPE_FLOAT3_ARRAY:
       if (uniform->value.array)
-	glUniform3fv (uniform->location, uniform->value.array->len, &g_array_index (uniform->value.array, float, 0));
+        glUniform3fv (uniform->location, uniform->value.array->len, &g_array_index (uniform->value.array, float, 0));
       break;
     case GTHREE_UNIFORM_TYPE_FLOAT4_ARRAY:
       if (uniform->value.array)
-	glUniform4fv (uniform->location, uniform->value.array->len, &g_array_index (uniform->value.array, float, 0));
+        glUniform4fv (uniform->location, uniform->value.array->len, &g_array_index (uniform->value.array, float, 0));
       break;
     case GTHREE_UNIFORM_TYPE_MATRIX3:
       glUniformMatrix3fv (uniform->location, 1, FALSE, uniform->value.more_floats);
@@ -528,11 +528,11 @@ gthree_uniform_load (GthreeUniform *uniform,
       break;
     case GTHREE_UNIFORM_TYPE_INT_ARRAY:
       if (uniform->value.array)
-	glUniform1iv (uniform->location, uniform->value.array->len, &g_array_index (uniform->value.array, int, 0));
+        glUniform1iv (uniform->location, uniform->value.array->len, &g_array_index (uniform->value.array, int, 0));
       break;
     case GTHREE_UNIFORM_TYPE_INT3_ARRAY:
       if (uniform->value.array)
-	glUniform3iv (uniform->location, uniform->value.array->len, &g_array_index (uniform->value.array, int, 0));
+        glUniform3iv (uniform->location, uniform->value.array->len, &g_array_index (uniform->value.array, int, 0));
       break;
     case GTHREE_UNIFORM_TYPE_TEXTURE:
       if (uniform->value.texture)

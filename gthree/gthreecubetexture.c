@@ -21,11 +21,11 @@ G_DEFINE_TYPE_WITH_PRIVATE (GthreeCubeTexture, gthree_cube_texture, GTHREE_TYPE_
 
 GthreeCubeTexture *
 gthree_cube_texture_new (GdkPixbuf *px,
-			 GdkPixbuf *nx,
-			 GdkPixbuf *py,
-			 GdkPixbuf *ny,
-			 GdkPixbuf *pz,
-			 GdkPixbuf *nz)
+                         GdkPixbuf *nx,
+                         GdkPixbuf *py,
+                         GdkPixbuf *ny,
+                         GdkPixbuf *pz,
+                         GdkPixbuf *nz)
 {
   GthreeCubeTexture *cube;
   GthreeCubeTexturePrivate *priv;
@@ -83,58 +83,57 @@ gthree_cube_texture_real_load (GthreeTexture *texture, int slot)
       gboolean is_image_power_of_two = is_power_of_two (width) && is_power_of_two (height);
 
       for (i = 0; i < 6; i++)
-	{
+        {
 #ifdef TODO
-	  if ( autoScaleCubemaps && ! is_compressed )
-	    {
-	      glGetIntegerv (GL_MAX_CUBE_MAP_TEXTURE_SIZE, &max_cubemap_size);
-	      cubeImage[ i ] = clampToMaxSize( texture.image[ i ], max_cubemap_size);
-	    }
-	  else
+          if ( autoScaleCubemaps && ! is_compressed )
+            {
+              glGetIntegerv (GL_MAX_CUBE_MAP_TEXTURE_SIZE, &max_cubemap_size);
+              cubeImage[ i ] = clampToMaxSize( texture.image[ i ], max_cubemap_size);
+            }
+          else
 #endif
-	    cube_pixbufs[i] = g_object_ref (priv->pixbufs[i]);
-	}
+            cube_pixbufs[i] = g_object_ref (priv->pixbufs[i]);
+        }
 
       width = gdk_pixbuf_get_width (cube_pixbufs[0]);
       height = gdk_pixbuf_get_height (cube_pixbufs[0]);
       is_image_power_of_two = is_power_of_two (width) && is_power_of_two (height);
-	  
+
       gl_format = gdk_pixbuf_get_has_alpha (cube_pixbufs[0]) ? GL_RGBA : GL_RGB;
       gl_type = GL_UNSIGNED_BYTE;
 
       gthree_texture_set_parameters (GL_TEXTURE_CUBE_MAP, texture, is_image_power_of_two);
 
       for (i = 0; i < 6; i++)
-	{
-	  if (!is_compressed)
-	    {
+        {
+          if (!is_compressed)
+            {
               glTexImage2D (GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, gl_format, width, height, 0, gl_format, gl_type,
                             gdk_pixbuf_get_pixels (cube_pixbufs[i]));
-	      
-	    }
+            }
 #ifdef TODO
-	  else
-	    {
-	      var mipmap, mipmaps = cubeImage[ i ].mipmaps;
-	      for ( var j = 0, jl = mipmaps.length; j < jl; j ++ )
-		{
-		  mipmap = mipmaps[ j ];
-		  if ( texture.format !== THREE.RGBAFormat )
-		    {
-		      _gl.compressedTexImage2D( _gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, j, glFormat, mipmap.width, mipmap.height, 0, mipmap.data );
-		    }
-		  else
-		    {
-		      _gl.texImage2D( _gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, j, glFormat, mipmap.width, mipmap.height, 0, glFormat, glType, mipmap.data );
-		    }
-		}
-	    }
+          else
+            {
+              var mipmap, mipmaps = cubeImage[ i ].mipmaps;
+              for ( var j = 0, jl = mipmaps.length; j < jl; j ++ )
+                {
+                  mipmap = mipmaps[ j ];
+                  if ( texture.format !== THREE.RGBAFormat )
+                    {
+                      _gl.compressedTexImage2D( _gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, j, glFormat, mipmap.width, mipmap.height, 0, mipmap.data );
+                    }
+                  else
+                    {
+                      _gl.texImage2D( _gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, j, glFormat, mipmap.width, mipmap.height, 0, glFormat, glType, mipmap.data );
+                    }
+                }
+            }
 #endif
-	}
-      
+        }
+
       if (gthree_texture_get_generate_mipmaps (texture) && is_image_power_of_two)
         glGenerateMipmap (GL_TEXTURE_CUBE_MAP);
-      
+
       gthree_texture_set_needs_update (texture, FALSE);
     }
 }
@@ -148,7 +147,7 @@ gthree_cube_texture_finalize (GObject *obj)
 
   for (i = 0; i < 6; i++)
     g_clear_object (&priv->pixbufs[i]);
-  
+
   G_OBJECT_CLASS (gthree_cube_texture_parent_class)->finalize (obj);
 }
 

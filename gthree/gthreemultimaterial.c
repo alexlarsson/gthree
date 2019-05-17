@@ -68,4 +68,3 @@ gthree_multi_material_class_init (GthreeMultiMaterialClass *klass)
 
   GTHREE_MATERIAL_CLASS(klass)->resolve = gthree_multi_material_resolve;
 }
-

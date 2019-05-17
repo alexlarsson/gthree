@@ -26,8 +26,9 @@ typedef struct {
 
 } GthreeMultiMaterialClass;
 
-GthreeMultiMaterial *gthree_multi_material_new ();
 GType gthree_multi_material_get_type (void) G_GNUC_CONST;
+
+GthreeMultiMaterial *gthree_multi_material_new ();
 
 void gthree_multi_material_set_index (GthreeMultiMaterial *multi_material,
                                       int index,

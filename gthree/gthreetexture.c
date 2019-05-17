@@ -172,7 +172,7 @@ gthree_texture_get_needs_update (GthreeTexture *texture)
 
 void
 gthree_texture_set_needs_update (GthreeTexture *texture,
-				 gboolean needs_update)
+                                 gboolean needs_update)
 {
   GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
 
@@ -404,15 +404,15 @@ gthree_texture_real_load (GthreeTexture *texture, int slot)
           else
 #endif
             {
-	      GdkPixbuf *pixbuf;
-	      if (priv->flip_y)
-		pixbuf = gdk_pixbuf_flip (priv->pixbuf, FALSE);
-	      else
-		pixbuf = g_object_ref (priv->pixbuf);
+              GdkPixbuf *pixbuf;
+              if (priv->flip_y)
+                pixbuf = gdk_pixbuf_flip (priv->pixbuf, FALSE);
+              else
+                pixbuf = g_object_ref (priv->pixbuf);
 
               glTexImage2D (GL_TEXTURE_2D, 0, gl_format, width, height, 0, gl_format, gl_type,
                             gdk_pixbuf_get_pixels (pixbuf));
-	      g_object_unref (pixbuf);
+              g_object_unref (pixbuf);
             }
         }
 

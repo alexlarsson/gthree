@@ -25,13 +25,13 @@ G_DEFINE_TYPE_WITH_PRIVATE (GthreeLight, gthree_light, GTHREE_TYPE_OBJECT);
 
 static void
 gthree_light_real_set_params (GthreeLight *light,
-			      GthreeProgramParameters *params)
+                              GthreeProgramParameters *params)
 {
 }
 
 static void
 gthree_light_real_setup (GthreeLight *light,
-			 GthreeLightSetup *setup)
+                         GthreeLightSetup *setup)
 {
 }
 
@@ -187,7 +187,7 @@ gthree_light_get_is_visible (GthreeLight *light)
 
 void
 gthree_light_set_is_visible (GthreeLight *light,
-			     gboolean visible)
+                             gboolean visible)
 {
   GthreeLightPrivate *priv = gthree_light_get_instance_private (light);
 
@@ -227,7 +227,7 @@ gthree_light_get_casts_shadow (GthreeLight *light)
 
 void
 gthree_light_set_params (GthreeLight             *light,
-			 GthreeProgramParameters *params)
+                         GthreeProgramParameters *params)
 {
   GthreeLightClass *class = GTHREE_LIGHT_GET_CLASS(light);
 
@@ -244,7 +244,7 @@ gthree_light_get_color (GthreeLight *light)
 
 void
 gthree_light_set_color (GthreeLight *light,
-			const GdkRGBA *color)
+                        const GdkRGBA *color)
 {
   GthreeLightPrivate *priv = gthree_light_get_instance_private (light);
 
@@ -258,7 +258,7 @@ gthree_light_set_color (GthreeLight *light,
 
 void
 gthree_light_setup (GthreeLight *light,
-		    GthreeLightSetup *setup)
+                    GthreeLightSetup *setup)
 {
   GthreeLightClass *class = GTHREE_LIGHT_GET_CLASS(light);
 

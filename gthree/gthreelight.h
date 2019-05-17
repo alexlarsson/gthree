@@ -27,9 +27,8 @@ typedef struct {
 
   void          (*set_params) (GthreeLight *light,
                                GthreeProgramParameters *params);
-  
   void          (*setup) (GthreeLight *light,
-			  GthreeLightSetup *light_setup);
+                          GthreeLightSetup *light_setup);
 } GthreeLightClass;
 
 GType gthree_light_get_type (void) G_GNUC_CONST;
@@ -38,7 +37,7 @@ GthreeLight *gthree_light_new (void);
 
 gboolean       gthree_light_get_is_visible     (GthreeLight   *light);
 void           gthree_light_set_is_visible     (GthreeLight   *light,
-						gboolean       visible);
+                                                gboolean       visible);
 gboolean       gthree_light_get_is_only_shadow (GthreeLight   *light);
 void           gthree_light_set_is_only_shadow (GthreeLight   *light,
                                                 gboolean       only_shadow);
@@ -47,8 +46,7 @@ void           gthree_light_set_casts_shadow   (GthreeLight   *light,
                                                 gboolean       casts_shadow);
 const GdkRGBA *gthree_light_get_color          (GthreeLight   *light);
 void           gthree_light_set_color          (GthreeLight   *light,
-						const GdkRGBA *color);
-
+                                                const GdkRGBA *color);
 void           gthree_light_set_params         (GthreeLight   *light,
                                                 GthreeProgramParameters *params);
 void           gthree_light_setup              (GthreeLight   *light,

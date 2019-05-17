@@ -27,9 +27,10 @@ typedef struct {
 
 } GthreeLineSegmentsClass;
 
+GType gthree_line_segments_get_type (void) G_GNUC_CONST;
+
 GthreeLineSegments *gthree_line_segments_new (GthreeGeometry *geometry,
                                               GthreeMaterial *material);
-GType gthree_line_segments_get_type (void) G_GNUC_CONST;
 
 G_END_DECLS
 

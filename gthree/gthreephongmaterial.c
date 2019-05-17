@@ -109,15 +109,15 @@ gthree_phong_material_real_set_uniforms (GthreeMaterial *material,
     {
       uni = gthree_uniforms_lookup_from_string (uniforms, "ambient");
       if (uni != NULL)
-	gthree_uniform_set_color (uni, &priv->ambient);
+        gthree_uniform_set_color (uni, &priv->ambient);
 
       uni = gthree_uniforms_lookup_from_string (uniforms, "emissive");
       if (uni != NULL)
-	gthree_uniform_set_color (uni, &priv->emissive);
+        gthree_uniform_set_color (uni, &priv->emissive);
 
       uni = gthree_uniforms_lookup_from_string (uniforms, "specular");
       if (uni != NULL)
-	gthree_uniform_set_color (uni, &priv->specular);
+        gthree_uniform_set_color (uni, &priv->specular);
     }
 
 #if TODO

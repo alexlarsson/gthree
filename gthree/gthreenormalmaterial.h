@@ -27,13 +27,13 @@ typedef struct {
 
 } GthreeNormalMaterialClass;
 
-GthreeNormalMaterial *gthree_normal_material_new ();
 GType gthree_normal_material_get_type (void) G_GNUC_CONST;
+
+GthreeNormalMaterial *gthree_normal_material_new ();
 
 GthreeShadingType gthree_normal_material_get_shading_type  (GthreeNormalMaterial *normal);
 void              gthree_normal_material_set_shading_type  (GthreeNormalMaterial *normal,
                                                            GthreeShadingType    shading_type);
-
 
 G_END_DECLS
 

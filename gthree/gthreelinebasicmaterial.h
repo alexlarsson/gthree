@@ -27,12 +27,13 @@ typedef struct {
 
 } GthreeLineBasicMaterialClass;
 
-GthreeLineBasicMaterial *gthree_line_basic_material_new ();
 GType gthree_line_basic_material_get_type (void) G_GNUC_CONST;
 
-const GdkRGBA *   gthree_line_basic_material_get_color         (GthreeLineBasicMaterial *line_basic);
-void              gthree_line_basic_material_set_color         (GthreeLineBasicMaterial *line_basic,
-                                                                const GdkRGBA       *color);
+GthreeLineBasicMaterial *gthree_line_basic_material_new ();
+
+const GdkRGBA *gthree_line_basic_material_get_color (GthreeLineBasicMaterial *line_basic);
+void           gthree_line_basic_material_set_color (GthreeLineBasicMaterial *line_basic,
+                                                     const GdkRGBA           *color);
 
 G_END_DECLS
 

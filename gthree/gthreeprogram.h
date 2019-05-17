@@ -62,16 +62,15 @@ GType gthree_program_get_type (void) G_GNUC_CONST;
 
 GthreeProgram *gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters);
 
-void gthree_program_use (GthreeProgram *program);
-
-gint gthree_program_lookup_uniform_location (GthreeProgram *program,
-                                             GQuark uniform);
-gint gthree_program_lookup_attribute_location (GthreeProgram *program,
-                                               GQuark attribute);
-gint gthree_program_lookup_uniform_location_from_string (GthreeProgram *program,
-                                                         const char *uniform);
+void gthree_program_use                                   (GthreeProgram *program);
+gint gthree_program_lookup_uniform_location               (GthreeProgram *program,
+                                                           GQuark         uniform);
+gint gthree_program_lookup_attribute_location             (GthreeProgram *program,
+                                                           GQuark         attribute);
+gint gthree_program_lookup_uniform_location_from_string   (GthreeProgram *program,
+                                                           const char    *uniform);
 gint gthree_program_lookup_attribute_location_from_string (GthreeProgram *program,
-                                                           const char *attribute);
+                                                           const char    *attribute);
 
 typedef struct _GthreeProgramCache GthreeProgramCache;
 

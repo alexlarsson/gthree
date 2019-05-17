@@ -21,33 +21,33 @@ gthree_ambient_light_init (GthreeAmbientLight *ambient)
 
 static void
 gthree_ambient_light_real_set_params (GthreeLight *light,
-				      GthreeProgramParameters *params)
+                                      GthreeProgramParameters *params)
 {
   GTHREE_LIGHT_CLASS (gthree_ambient_light_parent_class)->set_params (light, params);
 }
 
 static void
 gthree_ambient_light_real_setup (GthreeLight *light,
-				 GthreeLightSetup *setup)
+                                 GthreeLightSetup *setup)
 {
   const GdkRGBA *color = gthree_light_get_color (light);
-  
+
   if (gthree_light_get_is_visible (light))
     {
       if (FALSE /* this.gammaInput */)
-	{
-	  setup->ambient.red += color->red * color->red;
-	  setup->ambient.green += color->green * color->green;
-	  setup->ambient.blue += color->blue * color->blue;
-	}
+        {
+          setup->ambient.red += color->red * color->red;
+          setup->ambient.green += color->green * color->green;
+          setup->ambient.blue += color->blue * color->blue;
+        }
       else
-	{
-	  setup->ambient.red += color->red;
-	  setup->ambient.green += color->green;
-	  setup->ambient.blue += color->blue;
-	}
+        {
+          setup->ambient.red += color->red;
+          setup->ambient.green += color->green;
+          setup->ambient.blue += color->blue;
+        }
     }
-  
+
   GTHREE_LIGHT_CLASS (gthree_ambient_light_parent_class)->setup (light, setup);
 }
 

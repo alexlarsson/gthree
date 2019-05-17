@@ -56,74 +56,73 @@ typedef struct {
 
 } GthreeMaterialClass;
 
-GthreeMaterial *gthree_material_new ();
 GType gthree_material_get_type (void) G_GNUC_CONST;
 
-gboolean        gthree_material_get_is_visible           (GthreeMaterial       *material);
-void            gthree_material_set_is_visible           (GthreeMaterial       *material,
-                                                          gboolean              is_visible);
-gboolean        gthree_material_get_is_transparent       (GthreeMaterial       *material);
-void            gthree_material_set_is_transparent       (GthreeMaterial       *material,
-                                                          gboolean              is_transparent);
-gboolean        gthree_material_get_is_wireframe         (GthreeMaterial       *material);
-void            gthree_material_set_is_wireframe         (GthreeMaterial       *material,
-                                                          gboolean              is_wireframe);
-float           gthree_material_get_wireframe_line_width (GthreeMaterial       *material);
-void            gthree_material_set_wireframe_line_width (GthreeMaterial       *material,
-                                                          float                 line_width);
-float           gthree_material_get_opacity              (GthreeMaterial       *material);
-void            gthree_material_set_opacity              (GthreeMaterial       *material,
-                                                          float                 opacity);
-GthreeBlendMode gthree_material_get_blend_mode           (GthreeMaterial       *material,
-                                                          guint                *equation,
-                                                          guint                *src_factor,
-                                                          guint                *dst_factor);
-void            gthree_material_set_blend_mode           (GthreeMaterial       *material,
-                                                          GthreeBlendMode       mode,
-                                                          guint                 equation,
-                                                          guint                 src_factor,
-                                                          guint                 dst_factor);
-gboolean        gthree_material_get_polygon_offset       (GthreeMaterial       *material,
-                                                          float                *factor,
-                                                          float                *units);
-void            gthree_material_set_polygon_offset       (GthreeMaterial       *material,
-                                                          gboolean              polygon_offset,
-                                                          float                 factor,
-                                                          float                 units);
-gboolean        gthree_material_get_depth_test           (GthreeMaterial       *material);
-void            gthree_material_set_depth_test           (GthreeMaterial       *material,
-                                                          gboolean              depth_test);
-gboolean        gthree_material_get_depth_write          (GthreeMaterial       *material);
-void            gthree_material_set_depth_write          (GthreeMaterial       *material,
-                                                          gboolean              depth_write);
-float           gthree_material_get_alpha_test           (GthreeMaterial       *material);
-void            gthree_material_set_alpha_test           (GthreeMaterial       *material,
-                                                          float                 alpha_test);
-GthreeSide      gthree_material_get_side                 (GthreeMaterial       *material);
-void            gthree_material_set_side                 (GthreeMaterial       *material,
-                                                          GthreeSide            side);
-GthreeShader *  gthree_material_get_shader               (GthreeMaterial       *material);
-GthreeMaterial *gthree_material_resolve                  (GthreeMaterial       *material,
-                                                          int                   index);
-void            gthree_material_set_params               (GthreeMaterial       *material,
-                                                          GthreeProgramParameters *params);
-void            gthree_material_set_uniforms             (GthreeMaterial       *material,
-                                                          GthreeUniforms       *uniforms,
-                                                          GthreeCamera         *camera);
-void            gthree_material_load_default_attribute   (GthreeMaterial       *material,
-                                                          int                   attribute_location,
-                                                          GQuark                attribute);
+GthreeMaterial *gthree_material_new ();
 
-gboolean          gthree_material_get_needs_update (GthreeMaterial *material);
-void              gthree_material_set_needs_update (GthreeMaterial *material,
-                                                    gboolean needs_update);
-
-gboolean          gthree_material_needs_camera_pos (GthreeMaterial *material);
-gboolean          gthree_material_needs_view_matrix (GthreeMaterial *material);
-gboolean          gthree_material_needs_uv      (GthreeMaterial *material);
-gboolean          gthree_material_needs_lights  (GthreeMaterial *material);
-GthreeShadingType gthree_material_needs_normals (GthreeMaterial *material);
-GthreeColorType   gthree_material_needs_colors  (GthreeMaterial *material);
+gboolean          gthree_material_get_is_visible           (GthreeMaterial          *material);
+void              gthree_material_set_is_visible           (GthreeMaterial          *material,
+                                                            gboolean                 is_visible);
+gboolean          gthree_material_get_is_transparent       (GthreeMaterial          *material);
+void              gthree_material_set_is_transparent       (GthreeMaterial          *material,
+                                                            gboolean                 is_transparent);
+gboolean          gthree_material_get_is_wireframe         (GthreeMaterial          *material);
+void              gthree_material_set_is_wireframe         (GthreeMaterial          *material,
+                                                            gboolean                 is_wireframe);
+float             gthree_material_get_wireframe_line_width (GthreeMaterial          *material);
+void              gthree_material_set_wireframe_line_width (GthreeMaterial          *material,
+                                                            float                    line_width);
+float             gthree_material_get_opacity              (GthreeMaterial          *material);
+void              gthree_material_set_opacity              (GthreeMaterial          *material,
+                                                            float                    opacity);
+GthreeBlendMode   gthree_material_get_blend_mode           (GthreeMaterial          *material,
+                                                            guint                   *equation,
+                                                            guint                   *src_factor,
+                                                            guint                   *dst_factor);
+void              gthree_material_set_blend_mode           (GthreeMaterial          *material,
+                                                            GthreeBlendMode          mode,
+                                                            guint                    equation,
+                                                            guint                    src_factor,
+                                                            guint                    dst_factor);
+gboolean          gthree_material_get_polygon_offset       (GthreeMaterial          *material,
+                                                            float                   *factor,
+                                                            float                   *units);
+void              gthree_material_set_polygon_offset       (GthreeMaterial          *material,
+                                                            gboolean                 polygon_offset,
+                                                            float                    factor,
+                                                            float                    units);
+gboolean          gthree_material_get_depth_test           (GthreeMaterial          *material);
+void              gthree_material_set_depth_test           (GthreeMaterial          *material,
+                                                            gboolean                 depth_test);
+gboolean          gthree_material_get_depth_write          (GthreeMaterial          *material);
+void              gthree_material_set_depth_write          (GthreeMaterial          *material,
+                                                            gboolean                 depth_write);
+float             gthree_material_get_alpha_test           (GthreeMaterial          *material);
+void              gthree_material_set_alpha_test           (GthreeMaterial          *material,
+                                                            float                    alpha_test);
+GthreeSide        gthree_material_get_side                 (GthreeMaterial          *material);
+void              gthree_material_set_side                 (GthreeMaterial          *material,
+                                                            GthreeSide               side);
+GthreeShader *    gthree_material_get_shader               (GthreeMaterial          *material);
+GthreeMaterial *  gthree_material_resolve                  (GthreeMaterial          *material,
+                                                            int                      index);
+void              gthree_material_set_params               (GthreeMaterial          *material,
+                                                            GthreeProgramParameters *params);
+void              gthree_material_set_uniforms             (GthreeMaterial          *material,
+                                                            GthreeUniforms          *uniforms,
+                                                            GthreeCamera            *camera);
+void              gthree_material_load_default_attribute   (GthreeMaterial          *material,
+                                                            int                      attribute_location,
+                                                            GQuark                   attribute);
+gboolean          gthree_material_get_needs_update         (GthreeMaterial          *material);
+void              gthree_material_set_needs_update         (GthreeMaterial          *material,
+                                                            gboolean                 needs_update);
+gboolean          gthree_material_needs_camera_pos         (GthreeMaterial          *material);
+gboolean          gthree_material_needs_view_matrix        (GthreeMaterial          *material);
+gboolean          gthree_material_needs_uv                 (GthreeMaterial          *material);
+gboolean          gthree_material_needs_lights             (GthreeMaterial          *material);
+GthreeShadingType gthree_material_needs_normals            (GthreeMaterial          *material);
+GthreeColorType   gthree_material_needs_colors             (GthreeMaterial          *material);
 
 G_END_DECLS
 

@@ -30,12 +30,12 @@ GType gthree_perspective_camera_get_type (void) G_GNUC_CONST;
 
 GthreePerspectiveCamera *gthree_perspective_camera_new (float fov, float aspect, float near, float far);
 
-void gthree_perspective_camera_set_aspect (GthreePerspectiveCamera *perspective,
-                                           float aspect);
+void  gthree_perspective_camera_set_aspect (GthreePerspectiveCamera *perspective,
+                                            float                    aspect);
 float gthree_perspective_camera_get_aspect (GthreePerspectiveCamera *perspective);
-void gthree_perspective_camera_set_fov (GthreePerspectiveCamera *perspective,
-                                        float aspect);
-float gthree_perspective_camera_get_fov (GthreePerspectiveCamera *perspective);
+void  gthree_perspective_camera_set_fov    (GthreePerspectiveCamera *perspective,
+                                            float                    aspect);
+float gthree_perspective_camera_get_fov    (GthreePerspectiveCamera *perspective);
 
 G_END_DECLS
 

@@ -102,32 +102,28 @@ void            gthree_uniforms_set_color          (GthreeUniforms  *uniforms,
                                                     const char      *name,
                                                     GdkRGBA         *color);
 
-
-
-void gthree_uniform_set_location (GthreeUniform *uniform,
-                                  int location);
-void gthree_uniform_set_needs_update (GthreeUniform *uniform,
-				      gboolean needs_update);
-void gthree_uniform_set_float (GthreeUniform *uniform,
-                               double value);
-void gthree_uniform_set_float_array (GthreeUniform *uniform,
-				     GArray *array);
-void gthree_uniform_set_float3_array (GthreeUniform *uniform,
-				      GArray *array);
-void gthree_uniform_set_int (GthreeUniform *uniform,
-                             int value);
-void gthree_uniform_set_vec4 (GthreeUniform *uniform,
-                              graphene_vec4_t *value);
-void gthree_uniform_set_texture (GthreeUniform *uniform,
-                                 GthreeTexture *value);
-void gthree_uniform_set_color (GthreeUniform *uniform,
-                               GdkRGBA *color);
-
-const char *gthree_uniform_get_name (GthreeUniform *uniform);
-GQuark gthree_uniform_get_qname (GthreeUniform *uniform);
-void gthree_uniform_load (GthreeUniform *uniform,
-                          GthreeRenderer *renderer);
-
+void        gthree_uniform_set_location     (GthreeUniform   *uniform,
+                                             int              location);
+void        gthree_uniform_set_needs_update (GthreeUniform   *uniform,
+                                             gboolean         needs_update);
+void        gthree_uniform_set_float        (GthreeUniform   *uniform,
+                                             double           value);
+void        gthree_uniform_set_float_array  (GthreeUniform   *uniform,
+                                             GArray          *array);
+void        gthree_uniform_set_float3_array (GthreeUniform   *uniform,
+                                             GArray          *array);
+void        gthree_uniform_set_int          (GthreeUniform   *uniform,
+                                             int              value);
+void        gthree_uniform_set_vec4         (GthreeUniform   *uniform,
+                                             graphene_vec4_t *value);
+void        gthree_uniform_set_texture      (GthreeUniform   *uniform,
+                                             GthreeTexture   *value);
+void        gthree_uniform_set_color        (GthreeUniform   *uniform,
+                                             GdkRGBA         *color);
+const char *gthree_uniform_get_name         (GthreeUniform   *uniform);
+GQuark      gthree_uniform_get_qname        (GthreeUniform   *uniform);
+void        gthree_uniform_load             (GthreeUniform   *uniform,
+                                             GthreeRenderer  *renderer);
 
 G_END_DECLS
 

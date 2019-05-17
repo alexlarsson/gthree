@@ -53,59 +53,55 @@ GType gthree_object_get_type (void) G_GNUC_CONST;
 
 GthreeObject *gthree_object_new ();
 
-const graphene_matrix_t * gthree_object_get_world_matrix (GthreeObject *object);
+const graphene_matrix_t *    gthree_object_get_world_matrix             (GthreeObject                *object);
+void                         gthree_object_set_matrix_auto_update       (GthreeObject                *object,
+                                                                         gboolean                     auto_update);
+void                         gthree_object_update_matrix_world          (GthreeObject                *object,
+                                                                         gboolean                     force);
+void                         gthree_object_update_matrix                (GthreeObject                *object);
+void                         gthree_object_update_matrix_view           (GthreeObject                *object,
+                                                                         const graphene_matrix_t     *camera_matrix);
+void                         gthree_object_look_at                      (GthreeObject                *object,
+                                                                         graphene_point3d_t          *pos);
+void                         gthree_object_set_position                 (GthreeObject                *object,
+                                                                         const graphene_point3d_t    *pos);
+graphene_point3d_t *         gthree_object_get_position                 (GthreeObject                *object,
+                                                                         graphene_point3d_t          *res);
+void                         gthree_object_set_scale                    (GthreeObject                *object,
+                                                                         const graphene_point3d_t    *scale);
+void                         gthree_object_set_quaternion               (GthreeObject                *object,
+                                                                         const graphene_quaternion_t *q);
+const graphene_quaternion_t *gthree_object_get_quaternion               (GthreeObject                *object);
+void                         gthree_object_set_rotation                 (GthreeObject                *object,
+                                                                         const graphene_euler_t      *rot);
+const graphene_euler_t *     gthree_object_get_rotation                 (GthreeObject                *object);
+gboolean                     gthree_object_has_attribute_data           (GthreeObject                *object,
+                                                                         GQuark                       attribute);
+void                         gthree_object_get_world_matrix_floats      (GthreeObject                *object,
+                                                                         float                       *dest);
+void                         gthree_object_get_model_view_matrix_floats (GthreeObject                *object,
+                                                                         float                       *dest);
+void                         gthree_object_get_normal_matrix3_floats    (GthreeObject                *object,
+                                                                         float                       *dest);
+gboolean                     gthree_object_get_visible                  (GthreeObject                *object);
+gboolean                     gthree_object_get_is_frustum_culled        (GthreeObject                *object);
+gboolean                     gthree_object_is_in_frustum                (GthreeObject                *object,
+                                                                         const graphene_frustum_t    *frustum);
+void                         gthree_object_add_child                    (GthreeObject                *object,
+                                                                         GthreeObject                *child);
+void                         gthree_object_remove_child                 (GthreeObject                *object,
+                                                                         GthreeObject                *child);
+void                         gthree_object_update                       (GthreeObject                *object);
+void                         gthree_object_realize                      (GthreeObject                *object);
+void                         gthree_object_unrealize                    (GthreeObject                *object);
+void                         gthree_object_destroy                      (GthreeObject                *object);
+GthreeObject *               gthree_object_get_parent                   (GthreeObject                *object);
+GthreeObject *               gthree_object_get_first_child              (GthreeObject                *object);
+GthreeObject *               gthree_object_get_last_child               (GthreeObject                *object);
+GthreeObject *               gthree_object_get_next_sibling             (GthreeObject                *object);
+GthreeObject *               gthree_object_get_previous_sibling         (GthreeObject                *object);
+void                         gthree_object_destroy_all_children         (GthreeObject                *object);
 
-void                         gthree_object_set_matrix_auto_update (GthreeObject                *object,
-                                                                   gboolean                     auto_update);
-void                         gthree_object_update_matrix_world    (GthreeObject                *object,
-                                                                   gboolean                     force);
-void                         gthree_object_update_matrix          (GthreeObject                *object);
-void                         gthree_object_update_matrix_view     (GthreeObject                *object,
-                                                                   const graphene_matrix_t     *camera_matrix);
-void                         gthree_object_look_at                (GthreeObject                *object,
-                                                                   graphene_point3d_t          *pos);
-void                         gthree_object_set_position           (GthreeObject                *object,
-                                                                   const graphene_point3d_t    *pos);
-graphene_point3d_t *         gthree_object_get_position           (GthreeObject                *object,
-                                                                   graphene_point3d_t          *res);
-void                         gthree_object_set_scale              (GthreeObject                *object,
-                                                                   const graphene_point3d_t    *scale);
-void                         gthree_object_set_quaternion         (GthreeObject                *object,
-                                                                   const graphene_quaternion_t *q);
-const graphene_quaternion_t *gthree_object_get_quaternion         (GthreeObject                *object);
-void                         gthree_object_set_rotation           (GthreeObject                *object,
-                                                                   const graphene_euler_t      *rot);
-const graphene_euler_t *     gthree_object_get_rotation           (GthreeObject                *object);
-gboolean                     gthree_object_has_attribute_data     (GthreeObject                *object,
-                                                                   GQuark                       attribute);
-
-
-void gthree_object_get_world_matrix_floats      (GthreeObject *object,
-                                                 float        *dest);
-void gthree_object_get_model_view_matrix_floats (GthreeObject *object,
-                                                 float        *dest);
-void gthree_object_get_normal_matrix3_floats    (GthreeObject *object,
-                                                 float        *dest);
-
-gboolean      gthree_object_get_visible          (GthreeObject *object);
-gboolean      gthree_object_get_is_frustum_culled(GthreeObject *object);
-gboolean      gthree_object_is_in_frustum        (GthreeObject *object,
-                                                  const graphene_frustum_t *frustum);
-
-void          gthree_object_add_child            (GthreeObject *object,
-                                                  GthreeObject *child);
-void          gthree_object_remove_child         (GthreeObject *object,
-                                                  GthreeObject *child);
-void          gthree_object_update               (GthreeObject *object);
-void          gthree_object_realize              (GthreeObject *object);
-void          gthree_object_unrealize            (GthreeObject *object);
-void          gthree_object_destroy              (GthreeObject *object);
-GthreeObject *gthree_object_get_parent           (GthreeObject *object);
-GthreeObject *gthree_object_get_first_child      (GthreeObject *object);
-GthreeObject *gthree_object_get_last_child       (GthreeObject *object);
-GthreeObject *gthree_object_get_next_sibling     (GthreeObject *object);
-GthreeObject *gthree_object_get_previous_sibling (GthreeObject *object);
-void          gthree_object_destroy_all_children (GthreeObject *object);
 
 typedef struct _GthreeObjectIter GthreeObjectIter;
 

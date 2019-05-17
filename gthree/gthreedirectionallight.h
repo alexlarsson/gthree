@@ -27,14 +27,17 @@ typedef struct {
 } GthreeDirectionalLightClass;
 
 GType gthree_directional_light_get_type (void) G_GNUC_CONST;
+
 GthreeDirectionalLight *gthree_directional_light_new (const GdkRGBA *color,
-						      float intensity);
-void gthree_directional_light_set_intensity (GthreeDirectionalLight *directional,
-                                             float intensity);
-float gthree_directional_light_get_intensity (GthreeDirectionalLight *directional);
-void gthree_directional_light_set_target (GthreeDirectionalLight *directional,
-                                          GthreeObject *target);
-GthreeObject *gthree_directional_light_get_target (GthreeDirectionalLight *directional);
+                                                      float intensity);
+
+void          gthree_directional_light_set_intensity (GthreeDirectionalLight *directional,
+                                                      float                   intensity);
+float         gthree_directional_light_get_intensity (GthreeDirectionalLight *directional);
+void          gthree_directional_light_set_target    (GthreeDirectionalLight *directional,
+                                                      GthreeObject           *target);
+GthreeObject *gthree_directional_light_get_target    (GthreeDirectionalLight *directional);
+
 
 G_END_DECLS
 
