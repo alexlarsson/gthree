@@ -53,6 +53,10 @@ GType gthree_object_get_type (void) G_GNUC_CONST;
 
 GthreeObject *gthree_object_new ();
 
+typedef void (*GthreeBeforeRenderCallback) (GthreeObject                *object,
+                                            GthreeScene                 *scene,
+                                            GthreeCamera                *camera);
+
 const graphene_matrix_t *    gthree_object_get_world_matrix             (GthreeObject                *object);
 void                         gthree_object_set_matrix_auto_update       (GthreeObject                *object,
                                                                          gboolean                     auto_update);
@@ -101,7 +105,8 @@ GthreeObject *               gthree_object_get_last_child               (GthreeO
 GthreeObject *               gthree_object_get_next_sibling             (GthreeObject                *object);
 GthreeObject *               gthree_object_get_previous_sibling         (GthreeObject                *object);
 void                         gthree_object_destroy_all_children         (GthreeObject                *object);
-
+void                         gthree_object_set_before_render_callback   (GthreeObject                *object,
+                                                                         GthreeBeforeRenderCallback  callback);
 
 typedef struct _GthreeObjectIter GthreeObjectIter;
 

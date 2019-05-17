@@ -14,13 +14,16 @@ typedef struct {
 
 G_BEGIN_DECLS
 
-GList *gthree_object_get_object_buffers (GthreeObject       *object);
-void   gthree_object_add_buffer         (GthreeObject       *object,
-                                         GthreeBuffer       *buffer,
-                                         GthreeMaterial     *material);
-void   gthree_object_remove_buffer      (GthreeObject       *object,
-                                         GthreeBuffer       *buffer);
-void   gthree_object_remove_buffers     (GthreeObject       *object);
+GList *gthree_object_get_object_buffers          (GthreeObject   *object);
+void   gthree_object_add_buffer                  (GthreeObject   *object,
+                                                  GthreeBuffer   *buffer,
+                                                  GthreeMaterial *material);
+void   gthree_object_remove_buffer               (GthreeObject   *object,
+                                                  GthreeBuffer   *buffer);
+void   gthree_object_remove_buffers              (GthreeObject   *object);
+void   gthree_object_call_before_render_callback (GthreeObject   *object,
+                                                  GthreeScene    *scene,
+                                                  GthreeCamera   *camera);
 
 GthreeMaterial * gthree_object_buffer_resolve_material (GthreeObjectBuffer *object_buffer);
 

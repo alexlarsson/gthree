@@ -1438,6 +1438,7 @@ render_buffer (GthreeRenderer *renderer,
 
 static void
 render_objects (GthreeRenderer *renderer,
+                GthreeScene    *scene,
                 GPtrArray *render_list,
                 GthreeCamera *camera,
                 GList *lights,
@@ -1452,6 +1453,8 @@ render_objects (GthreeRenderer *renderer,
   for (i = 0; i < render_list->len; i++)
     {
       object_buffer = g_ptr_array_index (render_list, i);
+
+      gthree_object_call_before_render_callback (object_buffer->object, scene, camera);
 
       gthree_object_update_matrix_view (object_buffer->object, gthree_camera_get_world_inverse_matrix (camera));
 
@@ -1572,18 +1575,18 @@ gthree_renderer_render (GthreeRenderer *renderer,
       polygon_offset = gthree_material_get_polygon_offset (override_material, &factor, &units);
       set_polygon_offset (renderer, polygon_offset, factor, units);
 
-      render_objects (renderer, priv->opaque_objects, camera, lights, fog, TRUE, override_material );
-      render_objects (renderer, priv->transparent_objects, camera, lights, fog, TRUE, override_material );
+      render_objects (renderer, scene, priv->opaque_objects, camera, lights, fog, TRUE, override_material );
+      render_objects (renderer, scene, priv->transparent_objects, camera, lights, fog, TRUE, override_material );
     }
   else
     {
       // opaque pass (front-to-back order)
 
       set_blending (renderer, GTHREE_BLEND_NO, 0, 0, 0);
-      render_objects (renderer, priv->opaque_objects, camera, lights, fog, FALSE, NULL);
+      render_objects (renderer, scene, priv->opaque_objects, camera, lights, fog, FALSE, NULL);
 
       // transparent pass (back-to-front order)
-      render_objects (renderer, priv->transparent_objects, camera, lights, fog, TRUE, NULL);
+      render_objects (renderer, scene, priv->transparent_objects, camera, lights, fog, TRUE, NULL);
     }
 }
 

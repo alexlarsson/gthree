@@ -30,6 +30,8 @@ typedef struct {
 
   gboolean visible;
 
+  GthreeBeforeRenderCallback before_render_cb;
+
   /* object graph */
   GthreeObject *parent;
   GthreeObject *prev_sibling;
@@ -814,6 +816,26 @@ gthree_object_remove_buffers (GthreeObject *object)
   g_list_free_full (priv->buffer_objects, (GDestroyNotify)gthree_object_buffer_free);
   priv->buffer_objects = NULL;
 }
+
+void
+gthree_object_set_before_render_callback (GthreeObject                *object,
+                                          GthreeBeforeRenderCallback  callback)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+  priv->before_render_cb = callback;
+}
+
+void
+gthree_object_call_before_render_callback  (GthreeObject                *object,
+                                            GthreeScene                 *scene,
+                                            GthreeCamera                *camera)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  if (priv->before_render_cb)
+    priv->before_render_cb (object, scene, camera);
+}
+
 
 typedef struct _RealObjectIter
 {
