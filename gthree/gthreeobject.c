@@ -18,7 +18,7 @@ static guint object_signals[LAST_SIGNAL] = { 0, };
 typedef struct {
   graphene_vec3_t position;
   graphene_quaternion_t quaternion;
-  graphene_euler_t euler;
+  graphene_euler_t euler; /* Only valid if euler_valid == TRUE, canonical value in quaternion */
   graphene_vec3_t scale;
   graphene_vec3_t up;
 
@@ -42,6 +42,7 @@ typedef struct {
 
   guint realized : 1;
   guint in_destruction : 1;
+  guint euler_valid : 1;
   guint world_matrix_need_update : 1;
   guint matrix_auto_update : 1;
 
@@ -326,7 +327,7 @@ gthree_object_look_at (GthreeObject *object,
   graphene_point3d_to_vec3 (pos, &vec);
   graphene_matrix_init_look_at (&m, &priv->position, &vec, &priv->up);
   graphene_quaternion_init_from_matrix (&priv->quaternion, &m);
-  graphene_euler_init_from_quaternion (&priv->euler, &priv->quaternion, GRAPHENE_EULER_ORDER_DEFAULT);
+  priv->euler_valid = FALSE;
 }
 
 void
@@ -363,7 +364,7 @@ gthree_object_set_quaternion (GthreeObject *object,
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
 
   graphene_quaternion_init_from_quaternion (&priv->quaternion, q);
-  graphene_euler_init_from_quaternion (&priv->euler, q, GRAPHENE_EULER_ORDER_DEFAULT);
+  priv->euler_valid = FALSE;
 }
 
 const graphene_quaternion_t *
@@ -374,7 +375,6 @@ gthree_object_get_quaternion (GthreeObject *object)
   return &priv->quaternion;
 }
 
-// Sets rotation in radiants
 void
 gthree_object_set_rotation (GthreeObject *object,
                             const graphene_euler_t *rot)
@@ -382,6 +382,7 @@ gthree_object_set_rotation (GthreeObject *object,
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
 
   priv->euler = *rot;
+  priv->euler_valid = TRUE;
   graphene_quaternion_init_from_euler (&priv->quaternion, rot);
 }
 
@@ -389,6 +390,12 @@ const graphene_euler_t *
 gthree_object_get_rotation (GthreeObject *object)
 {
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  if (!priv->euler_valid)
+    {
+      graphene_euler_init_from_quaternion (&priv->euler, &priv->quaternion, GRAPHENE_EULER_ORDER_DEFAULT);
+      priv->euler_valid = TRUE;
+    }
 
   return &priv->euler;
 }
