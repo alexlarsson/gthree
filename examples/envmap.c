@@ -6,6 +6,12 @@
 #include <gthree/gthree.h>
 #include "utils.h"
 
+/* In this example we draw two scenes, with the first one being the
+   sky box. We could just add the skybox as a regular box, but then we
+   would need to clear the background, and then overdraw it, and then
+   increase the camera clip to very large values to ensure its
+   visible, which is not ideal.
+*/
 GthreeScene *scene, *scene_cube;
 GthreeMesh *obj1, *obj2, *obj3;
 static GthreePerspectiveCamera *camera;
@@ -134,33 +140,44 @@ tick (GtkWidget     *widget,
       GdkFrameClock *frame_clock,
       gpointer       user_data)
 {
-  static graphene_point3d_t rot = { 0, 0, 0};
+  static gint64 first_frame_time = 0;
+  gint64 frame_time;
   graphene_euler_t euler;
   graphene_point3d_t pos;
-  gint64 frame_time;
-  float angle;
+  float relative_time, camera_angle, camera_height;
+  int cursor_x, cursor_y;
 
   frame_time = gdk_frame_clock_get_frame_time (frame_clock);
-  angle = frame_time / 1000000.0;
+  if (first_frame_time == 0)
+    first_frame_time = frame_time;
+
+  /* This converts to a (float) count of ideal 60hz frames, just so we
+     can use some nice numbers when defining animation speed below */
+  relative_time = (frame_time - first_frame_time) * 60 / (float) G_USEC_PER_SEC;
+
+  /* Control camera with mouse */
+  gtk_widget_get_pointer (widget, &cursor_x, &cursor_y);
+  camera_angle = (cursor_x)  * 2.0 * G_PI / gtk_widget_get_allocated_width (widget) - G_PI / 2.0;
+  camera_height = (((float)cursor_y / gtk_widget_get_allocated_height (widget)) - 0.5) * 500;
 
   gthree_object_set_position (GTHREE_OBJECT (camera),
                               graphene_point3d_init (&pos,
-                                                     cos (angle) * 500,
-                                                     0,
-                                                     sin (angle) * 500));
+                                                     cos (camera_angle) * 500,
+                                                     camera_height,
+                                                     sin (camera_angle) * 500));
   gthree_object_look_at (GTHREE_OBJECT (camera),
                          graphene_point3d_init (&pos, 0, 0, 0));
 
-  gthree_object_set_rotation (GTHREE_OBJECT (camera_cube),
-                              gthree_object_get_rotation (GTHREE_OBJECT (camera)));
+  gthree_object_set_quaternion (GTHREE_OBJECT (camera_cube),
+                                gthree_object_get_quaternion (GTHREE_OBJECT (camera)));
 
-
-  rot.x += 1.0;
-  rot.y += 0.5;
 
   gthree_object_set_rotation (GTHREE_OBJECT (obj3),
                               graphene_euler_init (&euler,
-                                                   rot.x, rot.y, rot.z));
+                                                   0.5 * relative_time,
+                                                   0.2 * relative_time,
+                                                   0.0 * relative_time
+                                                   ));
 
   gtk_widget_queue_draw (widget);
 
