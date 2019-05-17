@@ -18,9 +18,9 @@ G_BEGIN_DECLS
 #define GTHREE_IS_SCENE(inst)  (G_TYPE_CHECK_INSTANCE_TYPE ((inst),    \
                                                              GTHREE_TYPE_SCENE))
 
-typedef struct {
+struct _GthreeScene {
   GthreeObject parent;
-} GthreeScene;
+};
 
 typedef struct {
   GthreeObjectClass parent_class;
@@ -31,12 +31,18 @@ GType  gthree_scene_get_type (void) G_GNUC_CONST;
 
 GthreeScene *gthree_scene_new ();
 
-void            gthree_scene_realize_objects       (GthreeScene  *scene);
-GthreeMaterial *gthree_scene_get_override_material (GthreeScene  *scene);
-GList *         gthree_scene_get_lights            (GthreeScene  *scene);
-GdkGLContext *  gthree_scene_get_context           (GthreeScene  *scene);
-void            gthree_scene_set_context           (GthreeScene  *scene,
-                                                    GdkGLContext *context);
+void            gthree_scene_realize_objects        (GthreeScene   *scene);
+GthreeMaterial *gthree_scene_get_override_material  (GthreeScene   *scene);
+GList *         gthree_scene_get_lights             (GthreeScene   *scene);
+GdkGLContext *  gthree_scene_get_context            (GthreeScene   *scene);
+void            gthree_scene_set_context            (GthreeScene   *scene,
+                                                     GdkGLContext  *context);
+const GdkRGBA * gthree_scene_get_background_color   (GthreeScene   *scene);
+void            gthree_scene_set_background_color   (GthreeScene   *scene,
+                                                     GdkRGBA       *color);
+GthreeTexture * gthree_scene_get_background_texture (GthreeScene   *scene);
+void            gthree_scene_set_background_texture (GthreeScene   *scene,
+                                                     GthreeTexture *texture);
 
 G_END_DECLS
 

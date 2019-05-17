@@ -12,6 +12,9 @@ typedef struct {
   GList *added_objects;
   GList *removed_objects;
   GList *lights;
+  GdkRGBA bg_color;
+  gboolean bg_color_is_set;
+  GthreeTexture *bg_texture;
 } GthreeScenePrivate;
 
 
@@ -44,8 +47,52 @@ gthree_scene_finalize (GObject *obj)
   g_assert (priv->lights == NULL);
   g_assert (priv->added_objects == NULL);
 
+  g_clear_object (&priv->bg_texture);
+
   g_list_free_full (priv->removed_objects, g_object_unref);
   G_OBJECT_CLASS (gthree_scene_parent_class)->finalize (obj);
+}
+
+const GdkRGBA *
+gthree_scene_get_background_color (GthreeScene *scene)
+{
+  GthreeScenePrivate *priv = gthree_scene_get_instance_private (scene);
+  if (priv->bg_color_is_set)
+    return &priv->bg_color;
+  return NULL;
+}
+
+void
+gthree_scene_set_background_color   (GthreeScene   *scene,
+                                     GdkRGBA       *color)
+{
+  GthreeScenePrivate *priv = gthree_scene_get_instance_private (scene);
+  if (color != NULL)
+    {
+      priv->bg_color_is_set = TRUE;
+      priv->bg_color = *color;
+    }
+  else
+    priv->bg_color_is_set = FALSE;
+}
+
+GthreeTexture *
+gthree_scene_get_background_texture (GthreeScene   *scene)
+{
+  GthreeScenePrivate *priv = gthree_scene_get_instance_private (scene);
+
+  return priv->bg_texture;
+}
+
+void
+gthree_scene_set_background_texture (GthreeScene   *scene,
+                                     GthreeTexture *texture)
+{
+  GthreeScenePrivate *priv = gthree_scene_get_instance_private (scene);
+
+  g_object_ref (texture);
+  g_clear_object (&priv->bg_texture);
+  priv->bg_texture = texture;
 }
 
 static void
