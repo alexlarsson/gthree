@@ -172,6 +172,22 @@ gthree_mesh_get_property (GObject *obj,
     }
 }
 
+GthreeMaterial *
+gthree_mesh_get_material (GthreeMesh *mesh)
+{
+  GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
+
+  return priv->material;
+}
+
+GthreeGeometry *
+gthree_mesh_get_geometry (GthreeMesh *mesh)
+{
+  GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
+
+  return priv->geometry;
+}
+
 static void
 gthree_mesh_class_init (GthreeMeshClass *klass)
 {

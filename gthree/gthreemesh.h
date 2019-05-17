@@ -32,6 +32,9 @@ GType gthree_mesh_get_type (void) G_GNUC_CONST;
 GthreeMesh *gthree_mesh_new (GthreeGeometry *geometry,
                              GthreeMaterial *material);
 
+GthreeMaterial *gthree_mesh_get_material (GthreeMesh *mesh);
+GthreeGeometry *gthree_mesh_get_geometry (GthreeMesh *mesh);
+
 G_END_DECLS
 
 #endif /* __GTHREE_MESH_H__ */
