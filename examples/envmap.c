@@ -25,8 +25,7 @@ skybox_render (GtkGLArea    *gl_area,
 
   gthree_renderer_render (gthree_area_get_renderer (area),
                           scene_cube,
-                          GTHREE_CAMERA (camera_cube),
-                          TRUE);
+                          GTHREE_CAMERA (camera_cube));
 
   return FALSE;
 }
@@ -39,8 +38,8 @@ area_realize (GtkWidget *widget)
 
   renderer = gthree_area_get_renderer (area);
 
-  gthree_renderer_set_autoclear (renderer, FALSE);
-  gthree_renderer_set_autoclear_color (renderer, FALSE);
+  //gthree_renderer_set_autoclear (renderer, FALSE);
+  //gthree_renderer_set_autoclear_color (renderer, FALSE);
 }
 
 GthreeScene *
@@ -77,6 +76,8 @@ init_scene (void)
   gthree_basic_material_set_env_map (GTHREE_BASIC_MATERIAL (material2), GTHREE_TEXTURE (refractionCube));
 
   scene = gthree_scene_new ();
+  gthree_scene_set_background_texture (scene, GTHREE_TEXTURE (reflectionCube));
+
   scene_cube = gthree_scene_new ();
 
   geometry = gthree_geometry_new_sphere (40, 32, 16);
@@ -230,7 +231,7 @@ main (int argc, char *argv[])
 
   area = gthree_area_new (scene, GTHREE_CAMERA (camera));
   g_signal_connect (area, "resize", G_CALLBACK (resize_area), camera);
-  g_signal_connect (area, "render", G_CALLBACK (skybox_render), NULL);
+  //g_signal_connect (area, "render", G_CALLBACK (skybox_render), NULL);
   g_signal_connect (area, "realize", G_CALLBACK (area_realize), NULL);
   gtk_widget_set_hexpand (area, TRUE);
   gtk_widget_set_vexpand (area, TRUE);

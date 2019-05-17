@@ -178,8 +178,7 @@ gthree_area_render (GtkGLArea    *gl_area,
   if (priv->scene && priv->camera)
     gthree_renderer_render (priv->renderer,
                             priv->scene,
-                            priv->camera,
-                            FALSE);
+                            priv->camera);
 
   return TRUE;
 }

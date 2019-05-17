@@ -58,6 +58,8 @@ typedef void (*GthreeBeforeRenderCallback) (GthreeObject                *object,
                                             GthreeCamera                *camera);
 
 const graphene_matrix_t *    gthree_object_get_world_matrix             (GthreeObject                *object);
+void                         gthree_object_set_world_matrix             (GthreeObject                *object,
+                                                                         const graphene_matrix_t     *matrix);
 void                         gthree_object_set_matrix_auto_update       (GthreeObject                *object,
                                                                          gboolean                     auto_update);
 void                         gthree_object_update_matrix_world          (GthreeObject                *object,

@@ -9,6 +9,9 @@
 #include "gthreematerial.h"
 #include "gthreeprivate.h"
 #include "gthreeobjectprivate.h"
+#include "gthreecubetexture.h"
+#include "gthreeshadermaterial.h"
+#include "gthreeprimitives.h"
 
 typedef struct {
   int width;
@@ -49,6 +52,7 @@ typedef struct {
   guint old_blend_equation;
   guint old_blend_src;
   guint old_blend_dst;
+  GdkRGBA old_clear_color;
   GthreeProgram *current_program;
   GthreeMaterial *current_material;
   GthreeCamera *current_camera;
@@ -73,6 +77,9 @@ typedef struct {
   gboolean supports_bone_textures;
 
   guint vertex_array_object;
+
+  /* Background */
+  GthreeMesh *bg_box_mesh;
 
 } GthreeRendererPrivate;
 
@@ -1504,11 +1511,127 @@ clear (gboolean color, gboolean depth, gboolean stencil)
   glClear (bits);
 }
 
+static void
+before_render_skybox (GthreeObject                *object,
+                      GthreeScene                 *scene,
+                      GthreeCamera                *camera)
+{
+  g_print ("before_render_skybox\n");
+  const graphene_matrix_t *camera_world_matrix;
+  graphene_matrix_t m;
+  graphene_point3d_t camera_offset;
+
+  g_print ("skybox world matrix:\n");
+  graphene_matrix_print (gthree_object_get_world_matrix (GTHREE_OBJECT (object)));
+
+  camera_world_matrix = gthree_object_get_world_matrix (GTHREE_OBJECT (camera));
+  camera_offset.x = graphene_matrix_get_x_translation (camera_world_matrix);
+  camera_offset.y = graphene_matrix_get_y_translation (camera_world_matrix);
+  camera_offset.z = graphene_matrix_get_z_translation (camera_world_matrix);
+  g_print ("camera offset: %f, %f, %f\n", camera_offset.x, camera_offset.y, camera_offset.z);
+
+  graphene_matrix_init_translate (&m, &camera_offset);
+
+  gthree_object_set_world_matrix (object, &m);
+}
+
+static void
+gthree_renderer_render_background (GthreeRenderer *renderer,
+                                   GthreeScene    *scene)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  const GdkRGBA *bg_color = gthree_scene_get_background_color (scene);
+  GthreeTexture *bg_texture = gthree_scene_get_background_texture (scene);
+  gboolean force_clear = FALSE;
+
+  if (bg_color == NULL)
+    {
+      GdkRGBA default_col = { 0, 0, 0, 0};
+      if (!gdk_rgba_equal (&default_col, &priv->old_clear_color))
+        {
+          glClearColor (0, 0, 0, 0);
+          priv->old_clear_color = default_col;
+        }
+    }
+  else
+    {
+      if (!gdk_rgba_equal (bg_color, &priv->old_clear_color))
+        {
+          glClearColor (bg_color->red, bg_color->green, bg_color->blue, bg_color->alpha);
+          priv->old_clear_color = *bg_color;
+        }
+      force_clear = TRUE;
+    }
+
+  if (priv->auto_clear || force_clear)
+    clear (priv->auto_clear_color, priv->auto_clear_depth, priv->auto_clear_stencil);
+
+  if (bg_texture && GTHREE_IS_CUBE_TEXTURE (bg_texture))
+    {
+      GthreeUniforms *uniforms;
+      GthreeUniform *uni;
+      GthreeShader *shader;
+      GList *l, *object_buffers;
+
+      g_print ("FOOO\n");
+      if (priv->bg_box_mesh == NULL)
+        {
+          GthreeGeometry *geometry;
+          GthreeShaderMaterial *shader_material;
+          GthreeShader *shader;
+          GthreeMesh *box_mesh;
+
+          shader = gthree_clone_shader_from_library ("cube");
+          g_assert (shader != NULL);
+
+          shader_material = gthree_shader_material_new (shader);
+          gthree_material_set_depth_test (GTHREE_MATERIAL (shader_material), FALSE);
+          gthree_material_set_depth_write (GTHREE_MATERIAL (shader_material), FALSE);
+          gthree_material_set_side (GTHREE_MATERIAL (shader_material), GTHREE_SIDE_BACK);
+
+          geometry = gthree_geometry_new_box (10, 10, 10, 1, 1, 1);
+
+          box_mesh = gthree_mesh_new (geometry, GTHREE_MATERIAL (shader_material));
+
+          gthree_object_set_matrix_auto_update (GTHREE_OBJECT (box_mesh), FALSE);
+          gthree_object_set_before_render_callback (GTHREE_OBJECT (box_mesh), before_render_skybox);
+
+          /* TODO: Unrealize, and then re-realize as neeed */
+          gthree_object_realize (GTHREE_OBJECT (box_mesh));
+
+          gthree_object_update (GTHREE_OBJECT (box_mesh));
+
+          priv->bg_box_mesh = box_mesh;
+        }
+
+      /* TODO: Only re-set texture when it changes */
+      shader = gthree_material_get_shader (gthree_mesh_get_material (priv->bg_box_mesh));
+      uniforms = gthree_shader_get_uniforms (shader);
+      uni = gthree_uniforms_lookup_from_string (uniforms, "tCube");
+      g_assert (uni != NULL);
+      gthree_uniform_set_texture (uni, bg_texture);
+
+      object_buffers = gthree_object_get_object_buffers (GTHREE_OBJECT (priv->bg_box_mesh));
+      g_print ("skybox buffers: %p\n", object_buffers);
+      for (l = object_buffers; l != NULL; l = l->next)
+        {
+          GthreeObjectBuffer *buffer_obj = l->data;
+          GthreeMaterial *material = gthree_object_buffer_resolve_material (buffer_obj);
+
+          if (material)
+            {
+              buffer_obj->z = 0;
+
+              g_ptr_array_insert (priv->opaque_objects, 0, buffer_obj);
+            }
+        }
+    }
+}
+
 void
 gthree_renderer_render (GthreeRenderer *renderer,
                         GthreeScene    *scene,
-                        GthreeCamera   *camera,
-                        gboolean force_clear)
+                        GthreeCamera   *camera)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
   GthreeMaterial *override_material;
@@ -1554,8 +1677,7 @@ gthree_renderer_render (GthreeRenderer *renderer,
 
   //this.setRenderTarget( renderTarget );
 
-  if (priv->auto_clear || force_clear )
-    clear (priv->auto_clear_color, priv->auto_clear_depth, priv->auto_clear_stencil);
+  gthree_renderer_render_background (renderer, scene);
 
   /* set matrices for regular objects (frustum culled) */
 
