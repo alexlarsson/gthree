@@ -207,15 +207,19 @@ tick (GtkWidget     *widget,
       GdkFrameClock *frame_clock,
       gpointer       user_data)
 {
-  static graphene_point3d_t rot = { 0, 0, 0};
-  static graphene_point3d_t rot2 = { 0, 0, 0};
+  static gint64 first_frame_time = 0;
+  gint64 frame_time;
+  float relative_time;
   graphene_euler_t euler;
   GList *l;
 
-  rot.y += 2.0;
-  rot.z += 1.0;
+  frame_time = gdk_frame_clock_get_frame_time (frame_clock);
+  if (first_frame_time == 0)
+    first_frame_time = frame_time;
 
-  rot2.y -= 4;
+  /* This converts to a (float) count of ideal 60hz frames, just so we
+     can use some nice numbers when defining animation speed below */
+  relative_time = (frame_time - first_frame_time) * 60 / (float) G_USEC_PER_SEC;
 
   for (l = cubes; l != NULL; l = l->next)
     {
@@ -223,12 +227,18 @@ tick (GtkWidget     *widget,
 
       gthree_object_set_rotation (cube,
                                   graphene_euler_init (&euler,
-                                                       rot.x, rot.y, rot.z));
+                                                       0.0 * relative_time,
+                                                       2.0 * relative_time,
+                                                       1.0 * relative_time
+                                                       ));
 
       cube = gthree_object_get_first_child (cube);
       gthree_object_set_rotation (cube,
                                   graphene_euler_init (&euler,
-                                                       rot2.x, rot2.y, rot2.z));
+                                                        0.0 * relative_time,
+                                                       -4.0 * relative_time,
+                                                        0.0 * relative_time
+                                                       ));
     }
 
   gtk_widget_queue_draw (widget);
