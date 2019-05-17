@@ -190,6 +190,8 @@ init_scene (void)
 
   scene = gthree_scene_new ();
 
+  gthree_scene_set_background_color (scene, &grey);
+
   ambient_light = gthree_ambient_light_new (&white);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));
 
