@@ -9,7 +9,7 @@
 		// http://en.wikibooks.org/wiki/GLSL_Programming/Applying_Matrix_Transformations
 		// Transforming Normal Vectors with the Inverse Transformation
 
-		vec3 worldNormal = normalize( vec3( vec4( normal, 0.0 ) * viewMatrix ) );
+		vec3 worldNormal = transformDirection( normal, viewMatrix );
 
 		if ( useRefract ) {
 

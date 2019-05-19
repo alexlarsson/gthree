@@ -370,6 +370,7 @@ static float onev3[3] = { 1, 1, 1 };
 
 static const char *basic_uniform_libs[] = { "common", "fog", "shadowmap", NULL };
 static const char *basic_vertex_shader =
+  "#include \"/org/gnome/gthree/shader_chunks/common.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/map_pars_vertex.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/lightmap_pars_vertex.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/envmap_pars_vertex.glsl\"\n"
@@ -401,6 +402,7 @@ static const char *basic_vertex_shader =
 static const char *basic_fragment_shader =
   "uniform vec3 diffuse;\n"
   "uniform float opacity;\n"
+  "#include \"/org/gnome/gthree/shader_chunks/common.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/color_pars_fragment.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/map_pars_fragment.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/alphamap_pars_fragment.glsl\"\n"
@@ -440,6 +442,7 @@ static const char *lambert_vertex_shader =
   "#ifdef DOUBLE_SIDED\n"
   "     varying vec3 vLightBack;\n"
   "#endif\n"
+  "#include \"/org/gnome/gthree/shader_chunks/common.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/map_pars_vertex.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/lightmap_pars_vertex.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/envmap_pars_vertex.glsl\"\n"
@@ -476,6 +479,7 @@ static const char *lambert_fragment_shader =
   "#ifdef DOUBLE_SIDED\n"
   "     varying vec3 vLightBack;\n"
   "#endif\n"
+  "#include \"/org/gnome/gthree/shader_chunks/common.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/color_pars_fragment.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/map_pars_fragment.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/alphamap_pars_fragment.glsl\"\n"
@@ -527,6 +531,7 @@ static const char *phong_vertex_shader =
   "varying vec3 vViewPosition;\n"
   "varying vec3 vNormal;\n"
 
+  "#include \"/org/gnome/gthree/shader_chunks/common.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/map_pars_vertex.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/lightmap_pars_vertex.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/envmap_pars_vertex.glsl\"\n"
@@ -572,6 +577,7 @@ static const char *phong_fragment_shader =
   "uniform vec3 specular;\n"
   "uniform float shininess;\n"
 
+  "#include \"/org/gnome/gthree/shader_chunks/common.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/color_pars_fragment.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/map_pars_fragment.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/alphamap_pars_fragment.glsl\"\n"
@@ -612,6 +618,7 @@ static const char *particle_basic_vertex_shader =
   "uniform float size;\n"
   "uniform float scale;\n"
 
+  "#include \"/org/gnome/gthree/shader_chunks/common.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/color_pars_vertex.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/shadowmap_pars_vertex.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/logdepthbuf_pars_vertex.glsl\"\n"
@@ -639,6 +646,7 @@ static const char *particle_basic_fragment_shader =
   "uniform vec3 psColor;\n"
   "uniform float opacity;\n"
 
+  "#include \"/org/gnome/gthree/shader_chunks/common.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/color_pars_fragment.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/map_particle_pars_fragment.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/fog_pars_fragment.glsl\"\n"
@@ -671,6 +679,7 @@ static const char *dashed_vertex_shader =
 
   "varying float vLineDistance;\n"
 
+  "#include \"/org/gnome/gthree/shader_chunks/common.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/color_pars_vertex.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/logdepthbuf_pars_vertex.glsl\"\n"
 
@@ -696,6 +705,7 @@ static const char *dashed_fragment_shader =
 
   "varying float vLineDistance;\n"
 
+  "#include \"/org/gnome/gthree/shader_chunks/common.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/color_pars_fragment.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/fog_pars_fragment.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/logdepthbuf_pars_fragment.glsl\"\n"
@@ -719,6 +729,7 @@ static GthreeUniformsDefinition depth_uniforms[] = {
 };
 
 static const char *depth_vertex_shader =
+  "#include \"/org/gnome/gthree/shader_chunks/common.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/morphtarget_pars_vertex.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/logdepthbuf_pars_vertex.glsl\"\n"
 
@@ -755,6 +766,7 @@ static GthreeUniformsDefinition normal_uniforms[] = {
 
 static const char *normal_vertex_shader =
   "varying vec3 vNormal;\n"
+  "#include \"/org/gnome/gthree/shader_chunks/common.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/morphtarget_pars_vertex.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/logdepthbuf_pars_vertex.glsl\"\n"
 
@@ -887,6 +899,7 @@ static const char *normalmap_fragment_shader =
   "varying vec3 vWorldPosition;\n"
   "varying vec3 vViewPosition;\n"
 
+  "#include \"/org/gnome/gthree/shader_chunks/common.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/shadowmap_pars_fragment.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/fog_pars_fragment.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/logdepthbuf_pars_fragment.glsl\"\n"
@@ -1017,8 +1030,7 @@ static const char *normalmap_fragment_shader =
   "             vec3 dirDiffuse = vec3( 0.0 );\n"
   "             vec3 dirSpecular = vec3( 0.0 );\n"
   "             for( int i = 0; i < MAX_DIR_LIGHTS; i++ ) {\n"
-  "                     vec4 lDirection = viewMatrix * vec4( directionalLightDirection[ i ], 0.0 );\n"
-  "                     vec3 dirVector = normalize( lDirection.xyz );\n"
+  "                     vec3 dirVector = transformDirection( directionalLightDirection[ i ], viewMatrix );\n"
 
   // diffuse
 
@@ -1051,8 +1063,7 @@ static const char *normalmap_fragment_shader =
   "             vec3 hemiDiffuse = vec3( 0.0 );\n"
   "             vec3 hemiSpecular = vec3( 0.0 );\n" 
   "             for( int i = 0; i < MAX_HEMI_LIGHTS; i ++ ) {\n"
-  "                     vec4 lDirection = viewMatrix * vec4( hemisphereLightDirection[ i ], 0.0 );\n"
-  "                     vec3 lVector = normalize( lDirection.xyz );\n"
+  "                     vec3 lVector = transformDirection( hemisphereLightDirection[ i ], viewMatrix );\n"
 
   // diffuse
   "                     float dotProduct = dot( normal, lVector );\n"
@@ -1159,6 +1170,7 @@ static const char *normalmap_vertex_shader =
   "varying vec3 vWorldPosition;\n"
   "varying vec3 vViewPosition;\n"
 
+  "#include \"/org/gnome/gthree/shader_chunks/common.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/skinning_pars_vertex.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/shadowmap_pars_vertex.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/logdepthbuf_pars_vertex.glsl\"\n"
@@ -1255,11 +1267,11 @@ static GthreeUniformsDefinition cube_uniforms[] = {
 static const char *cube_vertex_shader =
   "varying vec3 vWorldPosition;\n"
 
+  "#include \"/org/gnome/gthree/shader_chunks/common.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/logdepthbuf_pars_vertex.glsl\"\n"
 
   "void main() {\n"
-  "     vec4 worldPosition = modelMatrix * vec4( position, 1.0 );\n"
-  "     vWorldPosition = worldPosition.xyz;\n"
+  "     vWorldPosition = transformDirection( position, modelMatrix );\n"
   "     gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n"
   "#include \"/org/gnome/gthree/shader_chunks/logdepthbuf_vertex.glsl\"\n"
   "}";
@@ -1270,6 +1282,7 @@ static const char *cube_fragment_shader =
 
   "varying vec3 vWorldPosition;\n"
 
+  "#include \"/org/gnome/gthree/shader_chunks/common.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/logdepthbuf_pars_fragment.glsl\"\n"
 
   "void main() {\n"
@@ -1293,6 +1306,7 @@ static const char *depthRGBA_uniform_libs[] = { NULL };
 static GthreeUniformsDefinition depthRGBA_uniforms[] = {
 };
 static const char *depthRGBA_vertex_shader =
+  "#include \"/org/gnome/gthree/shader_chunks/common.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/morphtarget_pars_vertex.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/skinning_pars_vertex.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/logdepthbuf_pars_vertex.glsl\"\n"
@@ -1306,6 +1320,7 @@ static const char *depthRGBA_vertex_shader =
   "}";
 
 static const char *depthRGBA_fragment_shader =
+  "#include \"/org/gnome/gthree/shader_chunks/common.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/logdepthbuf_pars_fragment.glsl\"\n"
 
   "vec4 pack_depth( const in float depth ) {\n"

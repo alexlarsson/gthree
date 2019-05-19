@@ -9,6 +9,7 @@
     <file>shader_chunks/color_pars_fragment.glsl</file>
     <file>shader_chunks/color_pars_vertex.glsl</file>
     <file>shader_chunks/color_vertex.glsl</file>
+    <file>shader_chunks/common.glsl</file>
     <file>shader_chunks/defaultnormal_vertex.glsl</file>
     <file>shader_chunks/default_vertex.glsl</file>
     <file>shader_chunks/envmap_fragment.glsl</file>
