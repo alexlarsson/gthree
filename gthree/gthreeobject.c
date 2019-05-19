@@ -427,6 +427,19 @@ gthree_object_get_world_matrix (GthreeObject *object)
   return &priv->world_matrix;
 }
 
+/* This is a bit special, it overrides the *world* matrix, which is
+   normally calculated from the object position/rotation/scale + that
+   of its parent. However, it can be use quite useful in e.g. the pre_render
+   callback. */
+void
+gthree_object_set_world_matrix (GthreeObject *object, const graphene_matrix_t *matrix)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  priv->world_matrix = *matrix;
+  priv->world_matrix_need_update = FALSE;
+}
+
 void
 gthree_object_update_matrix_world (GthreeObject *object,
                                    gboolean force)
