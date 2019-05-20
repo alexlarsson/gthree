@@ -200,8 +200,11 @@ gthree_area_realize (GtkWidget *widget)
 static void
 gthree_area_unrealize (GtkWidget *widget)
 {
+  GtkGLArea *glarea = GTK_GL_AREA (widget);
   GthreeArea *area = GTHREE_AREA(widget);
   GthreeAreaPrivate *priv = gthree_area_get_instance_private (area);
+
+  gtk_gl_area_make_current (glarea);
 
   if (priv->scene)
     gthree_scene_set_context (priv->scene, NULL);
