@@ -14,6 +14,8 @@
 #include "gthreeprimitives.h"
 
 typedef struct {
+  GdkGLContext *gl_context;
+
   int width;
   int height;
   gboolean auto_clear;
@@ -120,9 +122,17 @@ GthreeRenderer *
 gthree_renderer_new ()
 {
   GthreeRenderer *renderer;
+  GdkGLContext *gl_context;
+  GthreeRendererPrivate *priv;
+
+  gl_context = gdk_gl_context_get_current ();
+  g_assert (gl_context != NULL);
 
   renderer = g_object_new (gthree_renderer_get_type (),
                            NULL);
+
+  priv = gthree_renderer_get_instance_private (renderer);
+  priv->gl_context = g_object_ref (gl_context);
 
   return renderer;
 }
@@ -206,6 +216,8 @@ gthree_renderer_finalize (GObject *obj)
   GthreeRenderer *renderer = GTHREE_RENDERER (obj);
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
 
+  g_assert (gdk_gl_context_get_current () == priv->gl_context);
+
   gthree_program_cache_free (priv->program_cache);
 
   g_array_free (priv->light_setup.dir_colors, TRUE);
@@ -232,6 +244,8 @@ gthree_renderer_finalize (GObject *obj)
   g_clear_object (&priv->bg_box_mesh);
   g_clear_object (&priv->bg_plane_mesh);
   g_clear_object (&priv->current_bg_texture);
+
+  g_clear_object (&priv->gl_context);
 
   G_OBJECT_CLASS (gthree_renderer_parent_class)->finalize (obj);
 }
@@ -374,6 +388,11 @@ gthree_set_default_gl_state (GthreeRenderer *renderer)
 void
 gthree_renderer_clear (GthreeRenderer *renderer)
 {
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  g_assert (gdk_gl_context_get_current () == priv->gl_context);
+
+  /* TODO */
 }
 
 static gint
@@ -1696,6 +1715,8 @@ gthree_renderer_render (GthreeRenderer *renderer,
   GthreeMaterial *override_material;
   GList *lights;
   gpointer fog;
+
+  g_assert (gdk_gl_context_get_current () == priv->gl_context);
 
   lights = gthree_scene_get_lights (scene);
   fog = NULL;
