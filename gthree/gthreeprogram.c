@@ -185,8 +185,8 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters)
   if (TRUE /*! material instanceof THREE.RawShaderMaterial */)
     {
       g_string_append (vertex, "#version 130\n");
-      //g_string_append_printf (vertex, "precision %s float;\n", precision_to_string (parameters->precision));
-      //g_string_append_printf (vertex, "precision %s int;\n", precision_to_string (parameters->precision));
+      g_string_append_printf (vertex, "precision %s float;\n", precision_to_string (parameters->precision));
+      g_string_append_printf (vertex, "precision %s int;\n", precision_to_string (parameters->precision));
 
       if (defines)
         generate_defines (vertex, defines);
@@ -302,8 +302,8 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters)
       /* fragment shader prefix */
 
       g_string_append (fragment, "#version 130\n");
-      //g_string_append_printf (fragment, "precision %s float;\n", precision_to_string (parameters->precision));
-      //g_string_append_printf (fragment, "precision %s int;\n", precision_to_string (parameters->precision));
+      g_string_append_printf (fragment, "precision %s float;\n", precision_to_string (parameters->precision));
+      g_string_append_printf (fragment, "precision %s int;\n", precision_to_string (parameters->precision));
 
       //TODO      ( parameters.bumpMap || parameters.normalMap ) ? "#extension GL_OES_standard_derivatives : enable" : "",
 
