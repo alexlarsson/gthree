@@ -24,7 +24,6 @@ typedef struct {
   gboolean auto_clear_stencil;
   GdkRGBA clear_color;
   gboolean sort_objects;
-  GthreeMaterial *override_material;
 
   float viewport_x;
   float viewport_y;
