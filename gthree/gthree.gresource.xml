@@ -4,6 +4,8 @@
     <file>shader_chunks/alphamap_fragment.glsl</file>
     <file>shader_chunks/alphamap_pars_fragment.glsl</file>
     <file>shader_chunks/alphatest_fragment.glsl</file>
+    <file>shader_chunks/background_fragment.glsl</file>
+    <file>shader_chunks/background_vertex.glsl</file>
     <file>shader_chunks/bumpmap_pars_fragment.glsl</file>
     <file>shader_chunks/color_fragment.glsl</file>
     <file>shader_chunks/color_pars_fragment.glsl</file>

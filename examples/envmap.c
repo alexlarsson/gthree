@@ -23,10 +23,14 @@ skybox_render (GtkGLArea    *gl_area,
 {
   GthreeArea *area = GTHREE_AREA (gl_area);
 
+  gthree_renderer_set_autoclear (gthree_area_get_renderer (area), TRUE);
+  gthree_renderer_set_autoclear_color (gthree_area_get_renderer (area), TRUE);
   gthree_renderer_render (gthree_area_get_renderer (area),
                           scene_cube,
-                          GTHREE_CAMERA (camera_cube),
-                          TRUE);
+                          GTHREE_CAMERA (camera_cube));
+  gthree_renderer_set_autoclear (gthree_area_get_renderer (area), FALSE);
+  gthree_renderer_set_autoclear_color (gthree_area_get_renderer (area), FALSE);
+
 
   return FALSE;
 }

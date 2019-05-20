@@ -48,7 +48,7 @@ build_plane (GthreeGeometry *geometry,
 
   normal[u] = 0;
   normal[v] = 0;
-  normal[w] = depth > 0 ? 1 : -1;
+  normal[w] = depth >= 0 ? 1 : -1;
   graphene_vec3_init_from_float (&normalv, normal);
 
   for (iy = 0; iy < gridY1; iy++)
@@ -129,6 +129,21 @@ gthree_geometry_new_box (float width, float height, float depth,
 
   // TODO
   //this.mergeVertices();
+
+  return geometry;
+}
+
+
+GthreeGeometry *
+gthree_geometry_new_plane (float width, float height,
+                           int widthSegments, int heightSegments)
+{
+  GthreeGeometry *geometry;
+
+  geometry = g_object_new (gthree_geometry_get_type (),
+                           NULL);
+
+  build_plane (geometry, AXIS_X, AXIS_Y,  1, -1, width, height, 0, 4, widthSegments, heightSegments, 1); // pz
 
   return geometry;
 }

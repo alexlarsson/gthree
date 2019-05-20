@@ -558,6 +558,9 @@ static GdkRGBA grey = { 0.9333333333333333, 0.9333333333333333, 0.93333333333333
 static GdkRGBA white = { 1, 1, 1, 1.0 };
 static float default_offset_repeat[4] = { 0, 0, 1, 1 };
 static float onev2[2] = { 1, 1 };
+static float one_matrix3[9] = { 1, 0, 0,
+                                0, 1, 0,
+                                0, 0, 1};
 
 static GthreeUniforms *common;
 static GthreeUniformsDefinition common_lib[] = {
@@ -569,6 +572,7 @@ static GthreeUniformsDefinition common_lib[] = {
 
   {"lightMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
   {"specularMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
+  {"uvTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
   {"alphaMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
 
   {"envMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
@@ -691,6 +695,9 @@ gthree_uniforms_new_from_definitions (GthreeUniformsDefinition *element, int len
               uniform->value.floats[1] = ((float *)value)[1];
               uniform->value.floats[2] = ((float *)value)[2];
               uniform->value.floats[3] = ((float *)value)[3];
+              break;
+            case GTHREE_UNIFORM_TYPE_MATRIX3:
+              uniform->value.more_floats = g_memdup (value, sizeof (float) * 9);
               break;
             default:
               g_error ("Unsupported type %d in uniform library\n", element->type);

@@ -42,6 +42,10 @@ GthreeGeometry *gthree_geometry_new_torus_full    (float    radius,
                                                    int      radialSegments,
                                                    int      tubularSegments,
                                                    float    arc);
+GthreeGeometry *gthree_geometry_new_plane          (float width,
+                                                    float height,
+                                                    int   width_segments,
+                                                    int   height_segments);
 
 G_END_DECLS
 

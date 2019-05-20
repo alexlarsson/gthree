@@ -1254,6 +1254,21 @@ static const char *normalmap_vertex_shader =
   "}";
 
 
+static float one_matrix3[9] = { 1, 0, 0,
+                                0, 1, 0,
+                                0, 0, 1};
+static const char *background_uniform_libs[] = { NULL };
+static GthreeUniformsDefinition background_uniforms[] = {
+  {"uvTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3},
+  {"t2D", GTHREE_UNIFORM_TYPE_TEXTURE, NULL},
+};
+
+static const char *background_vertex_shader =
+  "#include \"/org/gnome/gthree/shader_chunks/background_vertex.glsl\"\n";
+
+static const char *background_fragment_shader =
+  "#include \"/org/gnome/gthree/shader_chunks/background_fragment.glsl\"\n";
+
 /* -------------------------------------------------------------------------
 //      Cube map shader
 ------------------------------------------------------------------------- */
@@ -1345,7 +1360,7 @@ static const char *depthRGBA_fragment_shader =
   "}";
 
 static GthreeShader *basic, *lambert, *phong, *particle_basic, *dashed;
-static GthreeShader *depth, *normal, *normalmap, *cube, *depthRGBA;
+static GthreeShader *depth, *normal, *normalmap, *background, *cube, *depthRGBA;
 
 static void
 gthree_shader_init_libs ()
@@ -1379,6 +1394,9 @@ gthree_shader_init_libs ()
   normalmap = gthree_shader_new_from_definitions (normalmap_uniform_libs,
                                                   normalmap_uniforms, G_N_ELEMENTS (normalmap_uniforms),
                                                   normalmap_vertex_shader, normalmap_fragment_shader);
+  background = gthree_shader_new_from_definitions (background_uniform_libs,
+                                                   background_uniforms, G_N_ELEMENTS (background_uniforms),
+                                                   background_vertex_shader, background_fragment_shader);
   cube = gthree_shader_new_from_definitions (cube_uniform_libs,
                                              cube_uniforms, G_N_ELEMENTS (cube_uniforms),
                                              cube_vertex_shader, cube_fragment_shader);
@@ -1417,6 +1435,9 @@ gthree_get_shader_from_library (const char *name)
 
   if (strcmp (name, "normalmap") == 0)
     return normalmap;
+
+  if (strcmp (name, "background") == 0)
+    return background;
 
   if (strcmp (name, "cube") == 0)
     return cube;

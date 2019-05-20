@@ -47,8 +47,7 @@ void gthree_renderer_set_clear_color       (GthreeRenderer *renderer,
 void gthree_renderer_clear                 (GthreeRenderer *renderer);
 void gthree_renderer_render                (GthreeRenderer *renderer,
                                             GthreeScene    *scene,
-                                            GthreeCamera   *camera,
-                                            gboolean        force_clear);
+                                            GthreeCamera   *camera);
 
 G_END_DECLS
 
