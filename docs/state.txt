@@ -1,0 +1,41 @@
+GThree State
+============
+
+There are two types of state in gthree, regular data, and gl resources.
+
+Regular data is things like the object in the scene, their positions
+and relations, but also 3d data like the vertex position and face
+indexes as well as the pixbuf data for textures. GLSL code in
+textual form is another such type of data.
+
+GL resources are something that is tied to the OpenGL context, and any time
+such contents is manipulated or references the GL context must be active.
+
+This is particularly sensitive when it comes to destroying state, such
+as when finalizing a widget, or even more so when moving between different
+GL contexts (such as when a widget moves to a new toplevel window). The main
+problem here is that finalization can be arbitrary delayed by a reference
+being held somewhere, and by the time we're finalizing we may no longer
+have access to the GL context.
+
+GL resources are transient and generated from regular data when
+needed. As such it can be destroyed and recreated as needed. This is
+called realization/unrealization. For example, to realize a texture
+means allocating a gl texture id for it and uploading the data, and
+unrealizing it means freeing the data and deleting the id.
+
+Data Ownership
+==============
+
+The toplevel owner of data is the GThreeArea widget. It owns the
+scene, as well as as camera object (which is typically also part of
+the scenen. It also has a renderer object, but only while the widget
+is realized. A more complex use might have multiple scenes and/or
+cameras, but only one renderer, because the renderer keeps track of the
+GL state and would be confused if something else used that context.
+
+The scene contains both regular data and gl state. For example, it
+indirectly references vertex arrays and textures, which are created
+and uploaded to the GPU on when needed. This means a scene can only
+be used by one gl context at a time. However, by unrealizing and then
+re-realizing the scene it can be switched to a different context.

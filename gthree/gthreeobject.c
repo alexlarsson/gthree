@@ -47,6 +47,7 @@ typedef struct {
   guint euler_valid : 1;
   guint world_matrix_need_update : 1;
   guint matrix_auto_update : 1;
+  guint scene_state : 2;
 
   guint frustum_culled : 1;
 
@@ -157,8 +158,10 @@ gthree_object_dispose (GObject *obj)
 static void
 gthree_object_finalize (GObject *obj)
 {
-  //GthreeObject *object = GTHREE_OBJECT (obj);
-  //GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+  GthreeObject *object = GTHREE_OBJECT (obj);
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  g_assert (priv->scene_state == GTHREE_SCENE_STATE_DETACHED);
 
   G_OBJECT_CLASS (gthree_object_parent_class)->finalize (obj);
 }
@@ -697,6 +700,31 @@ gthree_object_get_next_sibling (GthreeObject *object)
 
   return priv->next_sibling;
 }
+
+gboolean
+gthree_object_get_realized (GthreeObject *object)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+  return priv->realized;
+}
+
+GthreeSceneState
+gthree_object_get_scene_state (GthreeObject *object)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  return priv->state;
+}
+
+void
+gthree_object_set_scene_state (GthreeObject     *object,
+                               GthreeSceneState  state)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  priv->state = state;
+}
+
 
 void
 gthree_object_destroy_all_children (GthreeObject *object)

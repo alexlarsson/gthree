@@ -1,7 +1,7 @@
 #include <math.h>
 #include <epoxy/gl.h>
 
-#include "gthreescene.h"
+#include "gthreesceneprivate.h"
 #include "gthreelight.h"
 
 #include "gthreeobjectprivate.h"
@@ -104,16 +104,25 @@ gthree_scene_added_child (GthreeObject *scene_obj,
   GList *found;
   GthreeObjectIter iter;
   GthreeObject *grand_child;
+  GthreeSceneState old_state;
+
+  old_state = gthree_object_get_scene_state (child);
+  g_assert (old_state <= GTHREE_SCENE_STATE_REMOVED);
 
   if (GTHREE_IS_LIGHT (child))
     priv->lights = g_list_prepend (priv->lights, child);
 
+  if (old_state == GTHREE_SCENE_STATE_REMOVED)
+    {
+      found = g_list_find (priv->removed_objects, child);
+      g_assert (found != NULL);
+      priv->removed_objects = g_list_remove_link (priv->removed_objects, found);
+    }
+
   priv->added_objects = g_list_prepend (priv->added_objects, child);
+  gthree_object_set_scene_state (object, GTHREE_SCENE_STATE_ADDED);
 
-  found = g_list_find (priv->removed_objects, child);
-  if (found)
-    priv->removed_objects = g_list_remove_link (priv->removed_objects, found);
-
+  /* Add children after parents */
   gthree_object_iter_init (&iter, child);
   while (gthree_object_iter_next (&iter, &grand_child))
     gthree_scene_added_child (scene_obj, grand_child);
@@ -128,21 +137,34 @@ gthree_scene_removed_child (GthreeObject *scene_obj,
   GList *found;
   GthreeObjectIter iter;
   GthreeObject *grand_child;
+  GthreeSceneState old_state;
+
+  /* Remove children before parents */
+  gthree_object_iter_init (&iter, child);
+  while (gthree_object_iter_next (&iter, &grand_child))
+    gthree_scene_removed_child (scene_obj, grand_child);
+
+  old_state = gthree_object_get_scene_state (child);
+  g_assert (old_state >= GTHREE_SCENE_STATE_ADDED);
 
   if (GTHREE_IS_LIGHT (child))
     priv->lights = g_list_remove (priv->lights, child);
 
+  if (old_state == GTHREE_SCENE_STATE_ADDED)
+    {
+      found = g_list_find (priv->added_objects, child);
+      g_assert (found != NULL);
+      priv->added_objects = g_list_remove_link (priv->added_objects, found);
+    }
+
   priv->removed_objects = g_list_prepend (priv->removed_objects, g_object_ref (child));
-
-  found = g_list_find (priv->added_objects, child);
-  if (found)
-    priv->added_objects = g_list_remove_link (priv->added_objects, found);
-
-  gthree_object_iter_init (&iter, child);
-  while (gthree_object_iter_next (&iter, &grand_child))
-    gthree_scene_removed_child (scene_obj, grand_child);
+  gthree_object_set_scene_state (object, GTHREE_SCENE_STATE_REMOVED);
 }
 
+/* This is not a great name, because it also unrealizes previously
+ * removed object. Basically it ensures that all objects in the scene
+ * changes since last call gets the proper realization state.
+ */
 void
 gthree_scene_realize_objects (GthreeScene *scene)
 {
@@ -150,14 +172,30 @@ gthree_scene_realize_objects (GthreeScene *scene)
   GList *l;
 
   for (l = priv->added_objects; l != NULL; l = l->next)
-    gthree_object_realize (l->data);
+    {
+      GthreeObject *obj = l->data;
+
+      g_assert (gthree_object_get_scene_state (obj) == GTHREE_SCENE_STATE_ADDED);
+
+      /* We might still be realized if the object was removed + added in this cycle. */
+      if (!gthree_object_get_realized (obj))
+        gthree_object_realize (obj);
+
+      gthree_object_set_scene_state (object, GTHREE_SCENE_STATE_ATTACHED);
+    }
 
   g_list_free (priv->added_objects);
   priv->added_objects = NULL;
 
   for (l = priv->removed_objects; l != NULL; l = l->next)
     {
+      GthreeObject *obj = l->data;
+
+      g_assert (gthree_object_get_scene_state (obj) == GTHREE_SCENE_STATE_REMOVED);
+
       gthree_object_unrealize (l->data);
+      gthree_object_set_scene_state (object, GTHREE_SCENE_STATE_DETACHED);
+
       g_object_unref (l->data);
     }
 
