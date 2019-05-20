@@ -52,7 +52,7 @@ get_vertex_type_name (int type)
 }
 
 GLuint
-create_shader (int type, const char const *code)
+create_shader (int type, const char *code)
 {
   GLuint shader = glCreateShader (type);
   GLint status;
