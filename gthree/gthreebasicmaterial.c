@@ -45,8 +45,16 @@ gthree_basic_material_finalize (GObject *obj)
   GthreeBasicMaterial *basic = GTHREE_BASIC_MATERIAL (obj);
   GthreeBasicMaterialPrivate *priv = gthree_basic_material_get_instance_private (basic);
 
-  g_clear_object (&priv->map);
-  g_clear_object (&priv->env_map);
+  if (priv->map)
+    {
+      gthree_resource_unuse (GTHREE_RESOURCE (priv->map));
+      g_clear_object (&priv->map);
+    }
+  if (priv->env_map)
+    {
+      gthree_resource_unuse (GTHREE_RESOURCE (priv->env_map));
+      g_clear_object (&priv->env_map);
+    }
 
   G_OBJECT_CLASS (gthree_basic_material_parent_class)->finalize (obj);
 }
@@ -422,6 +430,11 @@ gthree_basic_material_set_map (GthreeBasicMaterial *basic,
 {
   GthreeBasicMaterialPrivate *priv = gthree_basic_material_get_instance_private (basic);
 
+  if (texture)
+    gthree_resource_use (GTHREE_RESOURCE (texture));
+  if (priv->map)
+    gthree_resource_unuse (GTHREE_RESOURCE (priv->map));
+
   if (g_set_object (&priv->map, texture))
     {
       gthree_material_set_needs_update (GTHREE_MATERIAL (basic), TRUE);
@@ -443,6 +456,11 @@ gthree_basic_material_set_env_map (GthreeBasicMaterial *basic,
                                    GthreeTexture *texture)
 {
   GthreeBasicMaterialPrivate *priv = gthree_basic_material_get_instance_private (basic);
+
+  if (texture)
+    gthree_resource_use (GTHREE_RESOURCE (texture));
+  if (priv->env_map)
+    gthree_resource_unuse (GTHREE_RESOURCE (priv->env_map));
 
   if (g_set_object (&priv->env_map, texture))
     {
