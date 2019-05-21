@@ -10,6 +10,7 @@
 #include <graphene.h>
 #include <gthree/gthreetypes.h>
 #include <gthree/gthreeenums.h>
+#include <gthree/gthreeresource.h>
 
 G_BEGIN_DECLS
 
@@ -21,11 +22,11 @@ G_BEGIN_DECLS
 #define GTHREE_TEXTURE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GTHREE_TYPE_TEXTURE, GthreeTextureClass))
 
 struct _GthreeTexture {
-  GObject parent;
+  GthreeResource parent;
 };
 
 typedef struct {
-  GObjectClass parent_class;
+  GthreeResourceClass parent_class;
 
   void (*load) (GthreeTexture *texture, int slot);
 } GthreeTextureClass;

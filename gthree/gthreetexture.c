@@ -14,6 +14,7 @@ enum
 /*static guint texture_signals[LAST_SIGNAL] = { 0, };*/
 
 static void gthree_texture_real_load (GthreeTexture *texture, int slot);
+static void gthree_texture_real_unrealize (GthreeResource *resource);
 
 typedef struct {
   gboolean needs_update;
@@ -53,7 +54,7 @@ enum {
 
 static GParamSpec *obj_props[N_PROPS] = { NULL, };
 
-G_DEFINE_TYPE_WITH_PRIVATE (GthreeTexture, gthree_texture, G_TYPE_OBJECT)
+G_DEFINE_TYPE_WITH_PRIVATE (GthreeTexture, gthree_texture, GTHREE_TYPE_RESOURCE)
 
 GthreeTexture *
 gthree_texture_new (GdkPixbuf *pixbuf)
@@ -147,10 +148,13 @@ static void
 gthree_texture_class_init (GthreeTextureClass *klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GthreeResourceClass *resource_class = GTHREE_RESOURCE_CLASS (klass);
 
   gobject_class->set_property = gthree_texture_set_property;
   gobject_class->get_property = gthree_texture_get_property;
   gobject_class->finalize = gthree_texture_finalize;
+
+  resource_class->unrealize = gthree_texture_real_unrealize;
 
   klass->load = gthree_texture_real_load;
 
@@ -312,13 +316,29 @@ is_power_of_two (guint value)
   return value != 0 && (value & (value - 1)) == 0;
 }
 
+static void
+gthree_texture_real_unrealize (GthreeResource *resource)
+{
+  GthreeTexture *texture = GTHREE_TEXTURE (resource);
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  g_assert (priv->gl_texture != 0);
+
+  glDeleteTextures (1, &priv->gl_texture);
+  priv->gl_texture = 0;
+  priv->needs_update = TRUE;
+}
+
 void
 gthree_texture_bind (GthreeTexture *texture, int slot, int target)
 {
   GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
 
   if (!priv->gl_texture)
-    glGenTextures(1, &priv->gl_texture);
+    {
+      gthree_resource_set_realized_for (GTHREE_RESOURCE (texture), gdk_gl_context_get_current ());
+      glGenTextures(1, &priv->gl_texture);
+    }
 
   glActiveTexture (GL_TEXTURE0 + slot);
   glBindTexture (target, priv->gl_texture);
