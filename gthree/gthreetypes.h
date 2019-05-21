@@ -18,6 +18,7 @@ typedef struct _GthreeAmbientLight GthreeAmbientLight;
 typedef struct _GthreePointLight GthreePointLight;
 typedef struct _GthreeDirectionalLight GthreeDirectionalLight;
 typedef struct _GthreeLightSetup GthreeLightSetup;
+typedef struct _GthreeResource GthreeResource;
 typedef struct _GthreeTexture GthreeTexture;
 typedef struct _GthreeCubeTexture GthreeCubeTexture;
 typedef struct _GthreeGeometry GthreeGeometry;

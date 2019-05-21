@@ -1741,6 +1741,9 @@ gthree_renderer_render (GthreeRenderer *renderer,
   gthree_camera_get_proj_screen_matrix (camera, &priv->proj_screen_matrix);
   graphene_frustum_init_from_matrix (&priv->frustum, &priv->proj_screen_matrix);
 
+  /* Unrealize unused resources to avoid leaking forever */
+  gthree_resources_unrealize_unused_for (priv->gl_context);
+
   gthree_scene_realize_objects (scene);
 
   g_ptr_array_set_size (priv->opaque_objects, 0);

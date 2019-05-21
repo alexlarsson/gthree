@@ -206,6 +206,8 @@ gthree_area_unrealize (GtkWidget *widget)
 
   gtk_gl_area_make_current (glarea);
 
+  gthree_resources_unrealize_all_for (gtk_gl_area_get_context (glarea));
+
   if (priv->scene)
     gthree_scene_set_context (priv->scene, NULL);
 
