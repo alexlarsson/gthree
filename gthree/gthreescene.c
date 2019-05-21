@@ -9,8 +9,6 @@
 typedef struct {
   GdkGLContext *context;
   gint context_count;
-  GList *added_objects;
-  GList *removed_objects;
   GList *lights;
   GdkRGBA bg_color;
   gboolean bg_color_is_set;
@@ -45,7 +43,6 @@ gthree_scene_finalize (GObject *obj)
 
   // These should all have been freed during dispose
   g_assert (priv->lights == NULL);
-  g_assert (priv->added_objects == NULL);
 
   if (priv->bg_texture)
     {
@@ -53,7 +50,6 @@ gthree_scene_finalize (GObject *obj)
       g_clear_object (&priv->bg_texture);
     }
 
-  g_list_free_full (priv->removed_objects, g_object_unref);
   G_OBJECT_CLASS (gthree_scene_parent_class)->finalize (obj);
 }
 
@@ -110,18 +106,11 @@ gthree_scene_added_child (GthreeObject *scene_obj,
 {
   GthreeScene *scene = GTHREE_SCENE (scene_obj);
   GthreeScenePrivate *priv = gthree_scene_get_instance_private (scene);
-  GList *found;
   GthreeObjectIter iter;
   GthreeObject *grand_child;
 
   if (GTHREE_IS_LIGHT (child))
     priv->lights = g_list_prepend (priv->lights, child);
-
-  priv->added_objects = g_list_prepend (priv->added_objects, child);
-
-  found = g_list_find (priv->removed_objects, child);
-  if (found)
-    priv->removed_objects = g_list_remove_link (priv->removed_objects, found);
 
   gthree_object_iter_init (&iter, child);
   while (gthree_object_iter_next (&iter, &grand_child))
@@ -134,44 +123,15 @@ gthree_scene_removed_child (GthreeObject *scene_obj,
 {
   GthreeScene *scene = GTHREE_SCENE (scene_obj);
   GthreeScenePrivate *priv = gthree_scene_get_instance_private (scene);
-  GList *found;
   GthreeObjectIter iter;
   GthreeObject *grand_child;
 
   if (GTHREE_IS_LIGHT (child))
     priv->lights = g_list_remove (priv->lights, child);
 
-  priv->removed_objects = g_list_prepend (priv->removed_objects, g_object_ref (child));
-
-  found = g_list_find (priv->added_objects, child);
-  if (found)
-    priv->added_objects = g_list_remove_link (priv->added_objects, found);
-
   gthree_object_iter_init (&iter, child);
   while (gthree_object_iter_next (&iter, &grand_child))
     gthree_scene_removed_child (scene_obj, grand_child);
-}
-
-void
-gthree_scene_realize_objects (GthreeScene *scene)
-{
-  GthreeScenePrivate *priv = gthree_scene_get_instance_private (scene);
-  GList *l;
-
-  for (l = priv->added_objects; l != NULL; l = l->next)
-    gthree_object_realize (l->data);
-
-  g_list_free (priv->added_objects);
-  priv->added_objects = NULL;
-
-  for (l = priv->removed_objects; l != NULL; l = l->next)
-    {
-      gthree_object_unrealize (l->data);
-      g_object_unref (l->data);
-    }
-
-  g_list_free (priv->removed_objects);
-  priv->removed_objects = NULL;
 }
 
 GthreeMaterial *

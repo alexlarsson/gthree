@@ -49,11 +49,6 @@ typedef struct {
   guint matrix_auto_update : 1;
 
   guint frustum_culled : 1;
-
-  /* Render state */
-
-  GList *buffer_objects;
-
 } GthreeObjectPrivate;
 
 enum
@@ -732,102 +727,21 @@ gthree_object_update (GthreeObject *object)
     class->update (object);
 }
 
-void
-gthree_object_realize (GthreeObject *object)
-{
-  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
-  GthreeObjectClass *class = GTHREE_OBJECT_GET_CLASS(object);
-
-  g_return_if_fail (!priv->realized);
-
-  if (class->realize)
-    class->realize (object);
-
-  priv->realized = TRUE;
-}
-
-void
-gthree_object_unrealize (GthreeObject *object)
-{
-  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
-  GthreeObjectClass *class = GTHREE_OBJECT_GET_CLASS(object);
-
-  g_return_if_fail (priv->realized);
-
-  gthree_object_remove_buffers (object);
-
-  if (class->unrealize)
-    class->unrealize (object);
-
-  priv->realized = FALSE;
-}
-
 GthreeMaterial *
 gthree_object_buffer_resolve_material (GthreeObjectBuffer *object_buffer)
 {
   return gthree_material_resolve (object_buffer->material, object_buffer->buffer->material_index);
 }
 
-GList *
+GPtrArray *
 gthree_object_get_object_buffers (GthreeObject *object)
 {
-  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+  GthreeObjectClass *class = GTHREE_OBJECT_GET_CLASS(object);
 
-  return priv->buffer_objects;
-}
+  if (class->get_object_buffers)
+    return class->get_object_buffers (object);
 
-void
-gthree_object_add_buffer (GthreeObject *object,
-                          GthreeBuffer *buffer,
-                          GthreeMaterial     *material)
-{
-  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
-  GthreeObjectBuffer *obj_buffer;
-
-  obj_buffer = g_new0 (GthreeObjectBuffer, 1);
-  obj_buffer->object = object;
-  obj_buffer->buffer = g_object_ref (buffer);
-  obj_buffer->material = g_object_ref (material);
-
-  priv->buffer_objects = g_list_prepend (priv->buffer_objects, obj_buffer);
-}
-
-static void
-gthree_object_buffer_free (GthreeObjectBuffer *obj_buffer)
-{
-  g_clear_object (&obj_buffer->material);
-  g_clear_object (&obj_buffer->buffer);
-  g_free (obj_buffer);
-}
-
-void
-gthree_object_remove_buffer (GthreeObject *object,
-                             GthreeBuffer *buffer)
-{
-  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
-  GList *l;
-
-  for (l = priv->buffer_objects; l != NULL; l = l->next)
-    {
-      GthreeObjectBuffer *obj_buffer = l->data;
-
-      if (obj_buffer->buffer == buffer)
-        {
-          gthree_object_buffer_free (obj_buffer);
-          priv->buffer_objects = g_list_remove_link (priv->buffer_objects, l);
-          return;
-        }
-    }
-  g_warning ("gthree_object_remove_buffer - did not find buffer");
-}
-
-void
-gthree_object_remove_buffers (GthreeObject *object)
-{
-  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
-
-  g_list_free_full (priv->buffer_objects, (GDestroyNotify)gthree_object_buffer_free);
-  priv->buffer_objects = NULL;
+  return NULL;
 }
 
 void

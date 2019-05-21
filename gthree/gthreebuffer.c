@@ -16,29 +16,63 @@ gthree_buffer_init (GthreeBuffer *buffer)
 {
 }
 
+void
+gthree_buffer_unrealize (GthreeBuffer *buffer)
+{
+  buffer->realized = FALSE;
+
+  if (buffer->vertex_buffer)
+    {
+      glDeleteBuffers (1, &buffer->vertex_buffer);
+      buffer->vertex_buffer = 0;
+    }
+  if (buffer->normal_buffer)
+    {
+      glDeleteBuffers (1, &buffer->normal_buffer);
+      buffer->normal_buffer = 0;
+    }
+  if (buffer->tangent_buffer)
+    {
+      glDeleteBuffers (1, &buffer->tangent_buffer);
+      buffer->tangent_buffer = 0;
+    }
+  if (buffer->color_buffer)
+    {
+      glDeleteBuffers (1, &buffer->color_buffer);
+      buffer->color_buffer = 0;
+    }
+  if (buffer->uv_buffer)
+    {
+      glDeleteBuffers (1, &buffer->uv_buffer);
+      buffer->uv_buffer = 0;
+    }
+  if (buffer->uv2_buffer)
+    {
+      glDeleteBuffers (1, &buffer->uv2_buffer);
+      buffer->uv2_buffer = 0;
+    }
+  if (buffer->line_distance_buffer)
+    {
+      glDeleteBuffers (1, &buffer->line_distance_buffer);
+      buffer->line_distance_buffer = 0;
+    }
+  if (buffer->face_buffer)
+    {
+      glDeleteBuffers (1, &buffer->face_buffer);
+      buffer->face_buffer = 0;
+    }
+  if (buffer->line_buffer)
+    {
+      glDeleteBuffers (1, &buffer->line_buffer);
+      buffer->line_buffer = 0;
+    }
+}
+
 static void
 gthree_buffer_finalize (GObject *obj)
 {
   GthreeBuffer *buffer = GTHREE_BUFFER (obj);
-
-  if (buffer->vertex_buffer)
-    glDeleteBuffers (1, &buffer->vertex_buffer);
-  if (buffer->normal_buffer)
-    glDeleteBuffers (1, &buffer->normal_buffer);
-  if (buffer->tangent_buffer)
-    glDeleteBuffers (1, &buffer->tangent_buffer);
-  if (buffer->color_buffer)
-    glDeleteBuffers (1, &buffer->color_buffer);
-  if (buffer->uv_buffer)
-    glDeleteBuffers (1, &buffer->uv_buffer);
-  if (buffer->uv2_buffer)
-    glDeleteBuffers (1, &buffer->uv2_buffer);
-  if (buffer->line_distance_buffer)
-    glDeleteBuffers (1, &buffer->line_distance_buffer);
-  if (buffer->face_buffer)
-    glDeleteBuffers (1, &buffer->face_buffer);
-  if (buffer->line_buffer)
-    glDeleteBuffers (1, &buffer->line_buffer);
+  g_assert (!buffer->realized);
 
   G_OBJECT_CLASS (gthree_buffer_parent_class)->finalize (obj);
 }

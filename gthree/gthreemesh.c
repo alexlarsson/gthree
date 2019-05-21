@@ -11,6 +11,7 @@
 typedef struct {
   GthreeGeometry *geometry;
   GthreeMaterial *material;
+  GPtrArray *object_buffers;
 } GthreeMeshPrivate;
 
 enum {
@@ -51,8 +52,11 @@ gthree_mesh_finalize (GObject *obj)
   GthreeMesh *mesh = GTHREE_MESH (obj);
   GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
 
+  gthree_resource_unuse (GTHREE_RESOURCE (priv->geometry));
   g_clear_object (&priv->geometry);
   g_clear_object (&priv->material);
+
+  g_clear_pointer (&priv->object_buffers, g_ptr_array_unref);
 
   G_OBJECT_CLASS (gthree_mesh_parent_class)->finalize (obj);
 }
@@ -70,20 +74,33 @@ gthree_mesh_update (GthreeObject *object)
   //material.attributes && clearCustomAttributes( material );
 }
 
-static void
-gthree_mesh_realize (GthreeObject *object)
+static GPtrArray *
+gthree_mesh_get_object_buffers (GthreeObject *object)
 {
   GthreeMesh *mesh = GTHREE_MESH (object);
   GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
 
-  gthree_geometry_realize (priv->geometry, priv->material);
-  gthree_geometry_add_buffers_to_object (priv->geometry, priv->material, object);
-}
+  if (priv->object_buffers != NULL)
+    {
+      GthreeBuffer *buffer = NULL;
 
-static void
-gthree_mesh_unrealize (GthreeObject *object)
-{
-  /* TODO: unrealize the geometry? */
+      if (priv->object_buffers->len > 0)
+        {
+          GthreeObjectBuffer *object_buffer = g_ptr_array_index (priv->object_buffers, 0);
+          buffer = object_buffer->buffer;
+        }
+
+      /* We assume all are valid as long as some buffer is realized */
+      if (buffer == NULL && buffer->realized)
+        return priv->object_buffers;
+
+      g_ptr_array_unref (priv->object_buffers);
+      priv->object_buffers = NULL;
+    }
+
+  priv->object_buffers = gthree_geometry_create_buffers (priv->geometry, priv->material, object);
+
+  return priv->object_buffers;
 }
 
 static gboolean
@@ -132,11 +149,14 @@ gthree_mesh_set_property (GObject *obj,
 {
   GthreeMesh *mesh = GTHREE_MESH (obj);
   GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
+  GthreeGeometry *geometry;
 
   switch (prop_id)
     {
     case PROP_GEOMETRY:
-      g_set_object (&priv->geometry, g_value_get_object (value));
+      geometry = g_value_get_object (value);
+      gthree_resource_use (GTHREE_RESOURCE (geometry));
+      g_set_object (&priv->geometry, geometry);
       break;
 
     case PROP_MATERIAL:
@@ -201,8 +221,7 @@ gthree_mesh_class_init (GthreeMeshClass *klass)
   object_class->in_frustum = gthree_mesh_in_frustum;
   object_class->has_attribute_data = gthree_mesh_real_has_attribute_data;
   object_class->update = gthree_mesh_update;
-  object_class->realize = gthree_mesh_realize;
-  object_class->unrealize = gthree_mesh_unrealize;
+  object_class->get_object_buffers = gthree_mesh_get_object_buffers;
 
   obj_props[PROP_GEOMETRY] =
     g_param_spec_object ("geometry", "Geometry", "Geometry",

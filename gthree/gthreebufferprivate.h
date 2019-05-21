@@ -16,6 +16,8 @@ G_BEGIN_DECLS
 typedef struct {
   GObject parent;
 
+  gboolean realized;
+
   gint material_index;
 
   guint vertex_buffer;
@@ -41,6 +43,7 @@ typedef struct {
 GType gthree_buffer_get_type (void) G_GNUC_CONST;
 
 GthreeBuffer *gthree_buffer_new (void);
+void gthree_buffer_unrealize (GthreeBuffer *buffer);
 
 G_END_DECLS
 

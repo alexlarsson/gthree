@@ -37,8 +37,6 @@ typedef struct {
 
   void (* update)               (GthreeObject          *object);
   void (* destroy)              (GthreeObject          *object);
-  void (* realize)              (GthreeObject          *object);
-  void (* unrealize)            (GthreeObject          *object);
 
   void (* added_child)          (GthreeObject          *object,
                                  GthreeObject          *child);
@@ -47,6 +45,8 @@ typedef struct {
 
   gboolean (*has_attribute_data) (GthreeObject                *object,
                                   GQuark                       attribute);
+
+  GPtrArray *(* get_object_buffers) (GthreeObject          *object);
 } GthreeObjectClass;
 
 GType gthree_object_get_type (void) G_GNUC_CONST;
@@ -98,8 +98,6 @@ void                         gthree_object_add_child                    (GthreeO
 void                         gthree_object_remove_child                 (GthreeObject                *object,
                                                                          GthreeObject                *child);
 void                         gthree_object_update                       (GthreeObject                *object);
-void                         gthree_object_realize                      (GthreeObject                *object);
-void                         gthree_object_unrealize                    (GthreeObject                *object);
 void                         gthree_object_destroy                      (GthreeObject                *object);
 GthreeObject *               gthree_object_get_parent                   (GthreeObject                *object);
 GthreeObject *               gthree_object_get_first_child              (GthreeObject                *object);

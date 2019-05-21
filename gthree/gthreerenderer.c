@@ -621,7 +621,8 @@ project_object (GthreeRenderer *renderer,
                 GthreeCamera   *camera)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
-  GList *l, *object_buffers;
+  int i;
+  GPtrArray *object_buffers;
   GthreeObject *child;
   GthreeObjectIter iter;
   float z = 0;
@@ -658,21 +659,16 @@ project_object (GthreeRenderer *renderer,
             }
         }
 
-      for (l = object_buffers; l != NULL; l = l->next)
+      for (i = 0; i < object_buffers->len; i++)
         {
-          GthreeObjectBuffer *buffer_obj = l->data;
-          GthreeMaterial *material = gthree_object_buffer_resolve_material (buffer_obj);
+          GthreeObjectBuffer *buffer_obj = g_ptr_array_index (object_buffers, i);
 
-          if (material)
-            {
-              buffer_obj->z = z;
+          buffer_obj->z = z;
 
-              if (gthree_material_get_is_transparent (material))
-                g_ptr_array_add (priv->transparent_objects, buffer_obj);
-              else
-                g_ptr_array_add (priv->opaque_objects, buffer_obj);
-            }
-
+          if (gthree_material_get_is_transparent (buffer_obj->material))
+            g_ptr_array_add (priv->transparent_objects, buffer_obj);
+          else
+            g_ptr_array_add (priv->opaque_objects, buffer_obj);
         }
     }
 
@@ -1611,11 +1607,6 @@ gthree_renderer_render_background (GthreeRenderer *renderer,
           gthree_object_set_matrix_auto_update (GTHREE_OBJECT (box_mesh), FALSE);
           gthree_object_set_before_render_callback (GTHREE_OBJECT (box_mesh), before_render_bg_cube);
 
-          /* TODO: Where do we Unrealize this? */
-          gthree_object_realize (GTHREE_OBJECT (box_mesh));
-
-          gthree_object_update (GTHREE_OBJECT (box_mesh));
-
           priv->bg_box_mesh = box_mesh;
         }
 
@@ -1657,11 +1648,6 @@ gthree_renderer_render_background (GthreeRenderer *renderer,
 
           plane_mesh = gthree_mesh_new (geometry, GTHREE_MATERIAL (shader_material));
 
-          /* TODO: Where do we Unrealize this? */
-          gthree_object_realize (GTHREE_OBJECT (plane_mesh));
-
-          gthree_object_update (GTHREE_OBJECT (plane_mesh));
-
           priv->bg_plane_mesh = plane_mesh;
         }
 
@@ -1687,12 +1673,15 @@ gthree_renderer_render_background (GthreeRenderer *renderer,
 
   if (bg_mesh != NULL)
     {
-      GList *l, *object_buffers;
+      GPtrArray *object_buffers;
+      int i;
 
       object_buffers = gthree_object_get_object_buffers (GTHREE_OBJECT (bg_mesh));
-      for (l = object_buffers; l != NULL; l = l->next)
+      gthree_object_update (GTHREE_OBJECT (bg_mesh));
+
+      for (i = 0; i < object_buffers->len; i++)
         {
-          GthreeObjectBuffer *buffer_obj = l->data;
+          GthreeObjectBuffer *buffer_obj = g_ptr_array_index (object_buffers, i);
           GthreeMaterial *material = gthree_object_buffer_resolve_material (buffer_obj);
 
           if (material)
@@ -1743,8 +1732,6 @@ gthree_renderer_render (GthreeRenderer *renderer,
 
   /* Unrealize unused resources to avoid leaking forever */
   gthree_resources_unrealize_unused_for (priv->gl_context);
-
-  gthree_scene_realize_objects (scene);
 
   g_ptr_array_set_size (priv->opaque_objects, 0);
   g_ptr_array_set_size (priv->transparent_objects, 0);

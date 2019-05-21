@@ -51,8 +51,8 @@ GthreeGeometryGroup *gthree_geometry_group_new ();
 void gthree_geometry_group_add_face (GthreeGeometryGroup *group,
                                      int                  face_index);
 void gthree_geometry_group_dispose  (GthreeGeometryGroup *group);
-void gthree_geometry_group_realize  (GthreeGeometryGroup *group,
-                                     GthreeMaterial      *material);
+void gthree_geometry_group_realize_for_material  (GthreeGeometryGroup *group,
+                                                  GthreeMaterial      *material);
 void gthree_geometry_group_update   (GthreeGeometryGroup *group,
                                      GthreeMaterial      *material,
                                      gboolean             dispose);

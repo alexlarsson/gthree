@@ -56,7 +56,6 @@ static void
 gthree_geometry_group_class_init (GthreeGeometryGroupClass *klass)
 {
   G_OBJECT_CLASS (klass)->finalize = gthree_geometry_group_finalize;
-
 }
 
 static void
@@ -65,6 +64,8 @@ create_buffers (GthreeGeometryGroup *group)
   GthreeBuffer *buffer;
 
   buffer = GTHREE_BUFFER (group);
+  buffer->realized = TRUE;
+
   if (buffer->vertex_buffer == 0)
     glGenBuffers (1, &buffer->vertex_buffer);
   if (buffer->face_buffer == 0)
@@ -214,13 +215,14 @@ init_buffers (GthreeGeometryGroup *group,
 
 };
 
+/* Note, this can be called multiple times with more materials, and each time
+   will possibly add more buffers as needed for those materials */
 void
-gthree_geometry_group_realize (GthreeGeometryGroup *group,
-                               GthreeMaterial *group_material)
+gthree_geometry_group_realize_for_material (GthreeGeometryGroup *group,
+                                            GthreeMaterial *group_material)
 {
   create_buffers (group);
   init_buffers (group, group_material);
-
 }
 
 void
