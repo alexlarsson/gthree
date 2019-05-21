@@ -47,7 +47,11 @@ gthree_scene_finalize (GObject *obj)
   g_assert (priv->lights == NULL);
   g_assert (priv->added_objects == NULL);
 
-  g_clear_object (&priv->bg_texture);
+  if (priv->bg_texture)
+    {
+      gthree_resource_unuse (GTHREE_RESOURCE (priv->bg_texture));
+      g_clear_object (&priv->bg_texture);
+    }
 
   g_list_free_full (priv->removed_objects, g_object_unref);
   G_OBJECT_CLASS (gthree_scene_parent_class)->finalize (obj);
@@ -89,6 +93,11 @@ gthree_scene_set_background_texture (GthreeScene   *scene,
                                      GthreeTexture *texture)
 {
   GthreeScenePrivate *priv = gthree_scene_get_instance_private (scene);
+
+  if (texture)
+    gthree_resource_use (GTHREE_RESOURCE (texture));
+  if (priv->bg_texture)
+    gthree_resource_unuse (GTHREE_RESOURCE (priv->bg_texture));
 
   g_object_ref (texture);
   g_clear_object (&priv->bg_texture);
