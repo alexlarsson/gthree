@@ -1488,7 +1488,7 @@ render_objects (GthreeRenderer *renderer,
       if (override_material)
         material = override_material;
       else
-        material = gthree_object_buffer_resolve_material (object_buffer);
+        material = object_buffer->material;
 
       if (material == NULL)
         continue;
@@ -1682,9 +1682,8 @@ gthree_renderer_render_background (GthreeRenderer *renderer,
       for (i = 0; i < object_buffers->len; i++)
         {
           GthreeObjectBuffer *buffer_obj = g_ptr_array_index (object_buffers, i);
-          GthreeMaterial *material = gthree_object_buffer_resolve_material (buffer_obj);
 
-          if (material)
+          if (buffer_obj->material)
             {
               buffer_obj->z = 0;
 

@@ -727,12 +727,6 @@ gthree_object_update (GthreeObject *object)
     class->update (object);
 }
 
-GthreeMaterial *
-gthree_object_buffer_resolve_material (GthreeObjectBuffer *object_buffer)
-{
-  return gthree_material_resolve (object_buffer->material, object_buffer->buffer->material_index);
-}
-
 GPtrArray *
 gthree_object_get_object_buffers (GthreeObject *object)
 {
