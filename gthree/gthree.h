@@ -8,6 +8,7 @@
 #include <gthree/gthreetypes.h>
 #include <gthree/gthreetypebuiltins.h>
 #include <gthree/gthreeenums.h>
+#include <gthree/gthreeattribute.h>
 #include <gthree/gthreearea.h>
 #include <gthree/gthreebasicmaterial.h>
 #include <gthree/gthreecamera.h>

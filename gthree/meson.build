@@ -1,4 +1,5 @@
 gthree_sources = [
+    'gthreeattribute.c',
     'gthreeambientlight.c',
     'gthreearea.c',
     'gthreebasicmaterial.c',
@@ -35,6 +36,7 @@ gthree_sources = [
 
 gthree_headers = [
     'gthree.h',
+    'gthreeattribute.h',
     'gthreeambientlight.h',
     'gthreearea.h',
     'gthreebasicmaterial.h',
