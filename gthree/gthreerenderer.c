@@ -14,6 +14,23 @@
 #include "gthreeprimitives.h"
 
 typedef struct {
+  GthreeObject *object;
+  GthreeGeometry *geometry;
+  GthreeMaterial *material;
+  GthreeGroup *group;
+  float z;
+} GthreeRenderListItem;
+
+struct _GthreeRenderList {
+  float current_z;
+  gboolean use_background;
+  GArray *items;
+  GArray *opaque;
+  GArray *transparent;
+  GArray *background;
+};
+
+typedef struct {
   GdkGLContext *gl_context;
 
   int width;
@@ -1792,4 +1809,120 @@ gthree_renderer_allocate_texture_unit (GthreeRenderer *renderer)
   priv->used_texture_units += 1;
 
   return texture_unit;
+}
+
+
+GthreeRenderList *
+gthree_render_list_new ()
+{
+  GthreeRenderList *list = g_new0 (GthreeRenderList, 1);
+
+  list->items = g_array_new (FALSE, FALSE, sizeof (GthreeRenderListItem));
+  list->opaque = g_array_new (FALSE, FALSE, sizeof (int));
+  list->transparent = g_array_new (FALSE, FALSE, sizeof (int));
+  list->background = g_array_new (FALSE, FALSE, sizeof (int));
+
+  return list;
+}
+
+void
+gthree_render_list_free (GthreeRenderList *list)
+{
+  g_array_unref (list->items);
+  g_array_unref (list->opaque);
+  g_array_unref (list->transparent);
+  g_array_unref (list->background);
+  g_free (list);
+}
+
+void
+gthree_render_list_init (GthreeRenderList *list)
+{
+  list->current_z = 0;
+  list->use_background = FALSE;
+  g_array_set_size (list->items, 0);
+  g_array_set_size (list->opaque, 0);
+  g_array_set_size (list->transparent, 0);
+  g_array_set_size (list->background, 0);
+}
+
+static gint
+render_list_painter_sort_stable (gconstpointer _a, gconstpointer _b, gpointer user_data)
+{
+  GthreeRenderList *list = user_data;
+  int ai = *(int *)_a;
+  int bi = *(int *)_b;
+  GthreeRenderListItem *a = &g_array_index (list->items, GthreeRenderListItem, ai);
+  GthreeRenderListItem *b = &g_array_index (list->items, GthreeRenderListItem, bi);
+
+  if (a->z != b->z)
+    {
+      if (a->z > b->z)
+        return 1;
+      else
+        return -1;
+    }
+  else if (a->object != b->object)
+    {
+      if ((gsize)a->object > (gsize)b->object)
+        return 1;
+      else
+        return -1;
+    }
+
+  return 0;
+}
+
+static gint
+render_list_reverse_painter_sort_stable (gconstpointer _a, gconstpointer _b, gpointer user_data)
+{
+  GthreeRenderList *list = user_data;
+  int ai = *(int *)_a;
+  int bi = *(int *)_b;
+  GthreeRenderListItem *a = &g_array_index (list->items, GthreeRenderListItem, ai);
+  GthreeRenderListItem *b = &g_array_index (list->items, GthreeRenderListItem, bi);
+
+  if (a->z != b->z)
+    {
+      if (b->z > a->z)
+        return 1;
+      else
+        return -1;
+    }
+  else if (a->object != b->object)
+    {
+      if ((gsize)a->object > (gsize)b->object)
+        return 1;
+      else
+        return -1;
+    }
+
+  return 0;
+}
+
+void
+gthree_render_list_sort (GthreeRenderList *list)
+{
+  g_array_sort_with_data (list->opaque, render_list_painter_sort_stable, list);
+  g_array_sort_with_data (list->transparent, render_list_reverse_painter_sort_stable, list);
+}
+
+void
+gthree_render_list_push (GthreeRenderList *list,
+                         GthreeObject *object,
+                         GthreeGeometry *geometry,
+                         GthreeMaterial *material,
+                         GthreeGroup *group)
+{
+  GthreeRenderListItem item = { object, geometry, material, group, list->current_z };
+  int index = list->items->len;
+
+  g_array_append_val (list->items, item);
+
+  if (list->use_background)
+    g_array_append_val (list->background, index);
+  else if (gthree_material_get_is_transparent (material))
+    g_array_append_val (list->transparent, index);
+  else
+    g_array_append_val (list->opaque, index);
 }

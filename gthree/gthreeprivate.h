@@ -4,6 +4,7 @@
 #include <gthree/gthreeobject.h>
 #include <gthree/gthreelight.h>
 #include <gthree/gthreebufferprivate.h>
+#include <gthree/gthreegeometry.h>
 
 struct _GthreeLightSetup
 {
@@ -35,6 +36,17 @@ struct _GthreeLightSetup
   GArray *hemi_ground_colors;
   GArray *hemi_positions;
 };
+
+GthreeRenderList *gthree_render_list_new ();
+void gthree_render_list_free (GthreeRenderList *list);
+void gthree_render_list_init (GthreeRenderList *list);
+void gthree_render_list_push (GthreeRenderList *list,
+                              GthreeObject *object,
+                              GthreeGeometry *geometry,
+                              GthreeMaterial *material,
+                              GthreeGroup *group);
+void gthree_render_list_sort (GthreeRenderList *list);
+
 
 guint gthree_renderer_allocate_texture_unit (GthreeRenderer *renderer);
 

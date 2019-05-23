@@ -24,6 +24,7 @@ typedef struct _GthreeCubeTexture GthreeCubeTexture;
 typedef struct _GthreeGeometry GthreeGeometry;
 typedef struct _GthreeAttribute GthreeAttribute;
 typedef struct _GthreeAttributeArray GthreeAttributeArray;
+typedef struct _GthreeRenderList GthreeRenderList;
 typedef int GthreeAttributeName;
 
 
