@@ -67,6 +67,7 @@ gint gthree_program_lookup_uniform_location               (GthreeProgram *progra
                                                            GQuark         uniform);
 gint gthree_program_lookup_attribute_location             (GthreeProgram *program,
                                                            GQuark         attribute);
+GHashTable * gthree_program_get_attribute_locations (GthreeProgram *program);
 gint gthree_program_lookup_uniform_location_from_string   (GthreeProgram *program,
                                                            const char    *uniform);
 gint gthree_program_lookup_attribute_location_from_string (GthreeProgram *program,

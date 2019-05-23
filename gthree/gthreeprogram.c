@@ -602,6 +602,35 @@ gthree_program_lookup_attribute_location_from_string (GthreeProgram *program,
                                                    g_quark_from_string (attribute));
 }
 
+GHashTable *
+gthree_program_get_attribute_locations (GthreeProgram *program)
+{
+  GthreeProgramPrivate *priv = gthree_program_get_instance_private (program);
+
+  if (priv->attribute_locations == NULL)
+    {
+      GLint n, i, max_len;
+      char *buffer;
+
+      priv->attribute_locations = g_hash_table_new (g_direct_hash, g_direct_equal);
+
+      glGetProgramiv (priv->gl_program,  GL_ACTIVE_ATTRIBUTE_MAX_LENGTH,  &max_len);
+      buffer = g_alloca (max_len + 1);
+
+      glGetProgramiv (priv->gl_program,  GL_ACTIVE_ATTRIBUTES,  &n);
+      for (i = 0; i < n; i++)
+        {
+          GLint size;
+          GLenum type;
+
+          glGetActiveAttrib (priv->gl_program,  i,  max_len,  NULL,  &size,  &type,  buffer);
+          cache_attribute_location (priv->attribute_locations, priv->gl_program, buffer);
+        }
+    }
+
+  return priv->attribute_locations;
+}
+
 static guint
 gthree_program_parameters_hash (GthreeProgramParameters *params)
 {
