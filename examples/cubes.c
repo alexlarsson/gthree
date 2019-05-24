@@ -9,7 +9,6 @@
 GthreeScene *scene;
 GthreeBasicMaterial *material_simple;
 GthreeBasicMaterial *material_texture;
-GthreeBasicMaterial *material_face_color;
 GthreeBasicMaterial *material_vertex_color;
 GthreeBasicMaterial *material_wireframe;
 GthreeMultiMaterial *multi_material;
@@ -21,53 +20,62 @@ GList *cubes;
 static void
 colorise_faces (GthreeGeometry *geometry)
 {
-  int i;
+  int count = gthree_geometry_get_position_count (geometry);
+  GthreeAttribute *color = gthree_geometry_add_attribute (geometry,
+                                                          gthree_attribute_new ("color", GTHREE_ATTRIBUTE_TYPE_FLOAT, count,
+                                                                                3, FALSE));
+  int i, j;
 
-  for (i = 0; i < gthree_geometry_get_n_faces (geometry); i++)
+  for (i = 0; i < count / 4; i++)
     {
-      int c = (i / 2) % 6;
-      switch (c)
+      GdkRGBA *rgba;
+      switch (i)
         {
         case 0:
-          gthree_geometry_face_set_color (geometry, i, &red);
+          rgba = &red;
           break;
         case 1:
-          gthree_geometry_face_set_color (geometry, i, &green);
+          rgba = &green;
           break;
         case 2:
-          gthree_geometry_face_set_color (geometry, i, &blue);
+          rgba = &blue;
           break;
         case 3:
-          gthree_geometry_face_set_color (geometry, i, &cyan);
+          rgba = &cyan;
           break;
         case 4:
-          gthree_geometry_face_set_color (geometry, i, &magenta);
+          rgba = &magenta;
           break;
         case 5:
-          gthree_geometry_face_set_color (geometry, i, &yellow);
+          rgba = &yellow;
           break;
         }
+
+      for (j = 0; j < 4; j++)
+        gthree_attribute_set_rgb (color, i * 4 + j, rgba);
     }
+
+  g_object_unref (color);
 }
 
 static void
 colorise_vertices (GthreeGeometry *geometry)
 {
+  int count = gthree_geometry_get_position_count (geometry);
+  GthreeAttribute *color = gthree_geometry_add_attribute (geometry,
+                                                          gthree_attribute_new ("color", GTHREE_ATTRIBUTE_TYPE_FLOAT, count,
+                                                                                3, FALSE));
   int i;
 
-  for (i = 0; i < gthree_geometry_get_n_faces (geometry); i++)
+  for (i = 0; i < count / 4; i++)
     {
-      if (i % 2 == 0)
-        gthree_geometry_face_set_vertex_colors (geometry, i,
-						&red,
-						&green,
-						&blue);
-      else
-        gthree_geometry_face_set_vertex_colors (geometry, i,
-						&green,
-						&yellow,
-						&blue);
+      gthree_attribute_set_rgb (color, i * 4 + 0, &red);
+      gthree_attribute_set_rgb (color, i * 4 + 1, &blue);
+      gthree_attribute_set_rgb (color, i * 4 + 2, &green);
+      gthree_attribute_set_rgb (color, i * 4 + 3, &yellow);
     }
+
+  g_object_unref (color);
 }
 
 static GthreeObject *
@@ -108,7 +116,6 @@ new_cube (GthreeMaterial *material, gboolean vertex_colors)
 
   mesh = gthree_mesh_new (geometry, material);
 
-
   sub_mesh = gthree_mesh_new (sub_geometry, material);
 
   pos.y = 25;
@@ -135,9 +142,6 @@ init_scene (void)
   material_simple = gthree_basic_material_new ();
   gthree_basic_material_set_color (material_simple, &cyan);
   gthree_basic_material_set_vertex_colors (material_simple, GTHREE_COLOR_NONE);
-
-  material_face_color = gthree_basic_material_new ();
-  gthree_basic_material_set_vertex_colors (material_face_color, GTHREE_COLOR_FACE);
 
   material_vertex_color = gthree_basic_material_new ();
   gthree_basic_material_set_vertex_colors (material_vertex_color, GTHREE_COLOR_VERTEX);
@@ -168,7 +172,7 @@ init_scene (void)
   cubes = g_list_prepend (cubes, cube);
 
   pos.x += 60;
-  cube = new_cube (GTHREE_MATERIAL (material_face_color), FALSE);
+  cube = new_cube (GTHREE_MATERIAL (material_vertex_color), FALSE);
   gthree_object_add_child (GTHREE_OBJECT (scene), cube);
   gthree_object_set_position (GTHREE_OBJECT (cube), &pos);
   cubes = g_list_prepend (cubes, cube);

@@ -30,81 +30,49 @@ typedef struct {
 
 } GthreeGeometryClass;
 
+typedef struct {
+  int start;
+  int count;
+  int material_index;
+} GthreeGroup;
+
 GthreeGeometry *gthree_geometry_new ();
 GType gthree_geometry_get_type (void) G_GNUC_CONST;
 
-void                   gthree_geometry_add_vertex     (GthreeGeometry  *geometry,
-                                                       graphene_vec3_t *v);
-guint                  gthree_geometry_get_n_vertices (GthreeGeometry  *geometry);
-const graphene_vec3_t *gthree_geometry_get_vertices   (GthreeGeometry  *geometry);
-int                    gthree_geometry_add_face       (GthreeGeometry  *geometry,
-                                                       int              a,
-                                                       int              b,
-                                                       int              c);
-guint                  gthree_geometry_get_n_faces    (GthreeGeometry  *geometry);
-const graphene_vec2_t *gthree_geometry_get_uvs        (GthreeGeometry  *geometry);
-guint                  gthree_geometry_get_n_uv       (GthreeGeometry  *geometry);
-void                   gthree_geometry_add_uv         (GthreeGeometry  *geometry,
-                                                       graphene_vec2_t *v);
-const graphene_vec2_t *gthree_geometry_get_uv2s       (GthreeGeometry  *geometry);
-guint                  gthree_geometry_get_n_uv2      (GthreeGeometry  *geometry);
-void                   gthree_geometry_add_uv2        (GthreeGeometry  *geometry,
-                                                       graphene_vec2_t *v);
-void                   gthree_geometry_set_uv_n       (GthreeGeometry  *geometry,
-                                                       int              layer,
-                                                       int              index,
-                                                       graphene_vec2_t *v);
-guint                  gthree_geometry_get_n_colors   (GthreeGeometry  *geometry);
-
-const graphene_sphere_t *gthree_geometry_get_bounding_sphere  (GthreeGeometry          *geometry);
-void                     gthree_geometry_set_bounding_sphere  (GthreeGeometry          *geometry,
-                                                               const graphene_sphere_t *sphere);
-void                     gthree_geometry_compute_face_normals (GthreeGeometry          *geometry);
-void                     gthree_geometry_compute_vertex_normals (GthreeGeometry *geometry,
-                                                                 gboolean area_weighted);
-
-
-int                    gthree_geometry_face_get_a              (GthreeGeometry         *geometry,
-                                                                int                     index);
-int                    gthree_geometry_face_get_b              (GthreeGeometry         *geometry,
-                                                                int                     index);
-int                    gthree_geometry_face_get_c              (GthreeGeometry         *geometry,
-                                                                int                     index);
-void                   gthree_geometry_face_set_normal         (GthreeGeometry         *geometry,
-                                                                int                     index,
-                                                                const graphene_vec3_t  *normal);
-const graphene_vec3_t  *gthree_geometry_face_get_normal        (GthreeGeometry         *geometry,
-                                                                int                     index);
-void                   gthree_geometry_face_set_vertex_normals (GthreeGeometry         *geometry,
-                                                                int                     index,
-                                                                const graphene_vec3_t  *normal_a,
-                                                                const graphene_vec3_t  *normal_b,
-                                                                const graphene_vec3_t  *normal_c);
-gboolean               gthree_geometry_face_get_vertex_normals (GthreeGeometry         *geometry,
-                                                                int                     index,
-                                                                const graphene_vec3_t **normal_a,
-                                                                const graphene_vec3_t **normal_b,
-                                                                const graphene_vec3_t **normal_c);
-void                   gthree_geometry_face_set_color          (GthreeGeometry         *geometry,
-                                                                int                     index,
-                                                                const GdkRGBA          *color);
-const GdkRGBA         *gthree_geometry_face_get_color          (GthreeGeometry         *geometry,
-                                                                int                     index);
-void                   gthree_geometry_face_set_vertex_colors  (GthreeGeometry         *geometry,
-                                                                int                     index,
-                                                                const GdkRGBA          *a,
-                                                                const GdkRGBA          *b,
-                                                                const GdkRGBA          *c);
-gboolean               gthree_geometry_face_get_vertex_colors  (GthreeGeometry         *geometry,
-                                                                int                     index,
-                                                                const GdkRGBA         **a,
-                                                                const GdkRGBA         **b,
-                                                                const GdkRGBA         **c);
-void                   gthree_geometry_face_set_material_index (GthreeGeometry         *geometry,
-                                                                int                     index,
-                                                                int                     material_index);
-int                    gthree_geometry_face_get_material_index (GthreeGeometry         *geometry,
-                                                                int                     index);
+GthreeAttribute *        gthree_geometry_add_attribute          (GthreeGeometry          *geometry,
+                                                                 GthreeAttribute         *attribute);
+void                     gthree_geometry_remove_attribute       (GthreeGeometry          *geometry,
+                                                                 GthreeAttributeName      name);
+GthreeAttribute *        gthree_geometry_get_attribute          (GthreeGeometry          *geometry,
+                                                                 GthreeAttributeName      name);
+GthreeAttribute *        gthree_geometry_get_position           (GthreeGeometry          *geometry);
+int                      gthree_geometry_get_position_count     (GthreeGeometry          *geometry);
+GthreeAttribute *        gthree_geometry_get_normal             (GthreeGeometry          *geometry);
+GthreeAttribute *        gthree_geometry_get_color              (GthreeGeometry          *geometry);
+GthreeAttribute *        gthree_geometry_get_uv                 (GthreeGeometry          *geometry);
+void                     gthree_geometry_set_index              (GthreeGeometry          *geometry,
+                                                                 GthreeAttribute         *index);
+GthreeAttribute *        gthree_geometry_get_index              (GthreeGeometry          *geometry);
+GthreeAttribute *        gthree_geometry_get_wireframe_index    (GthreeGeometry          *geometry);
+void                     gthree_geometry_add_group              (GthreeGeometry          *geometry,
+                                                                 int                      start,
+                                                                 int                      count,
+                                                                 int                      material_index);
+void                     gthree_geometry_clear_groups           (GthreeGeometry          *geometry);
+int                      gthree_geometry_get_n_groups           (GthreeGeometry          *geometry);
+GthreeGroup *            gthree_geometry_get_group              (GthreeGeometry          *geometry,
+                                                                 int                      index);
+GthreeGroup *            gthree_geometry_peek_groups            (GthreeGeometry          *geometry);
+int                      gthree_geometry_get_draw_range_start   (GthreeGeometry          *geometry);
+int                      gthree_geometry_get_draw_range_count   (GthreeGeometry          *geometry);
+void                     gthree_geometry_set_draw_range         (GthreeGeometry          *geometry,
+                                                                 int                      start,
+                                                                 int                      count);
+const graphene_sphere_t *gthree_geometry_get_bounding_sphere    (GthreeGeometry          *geometry);
+void                     gthree_geometry_set_bounding_sphere    (GthreeGeometry          *geometry,
+                                                                 const graphene_sphere_t *sphere);
+void                     gthree_geometry_compute_vertex_normals (GthreeGeometry          *geometry,
+                                                                 gboolean                 area_weighted);
 
 G_END_DECLS
 

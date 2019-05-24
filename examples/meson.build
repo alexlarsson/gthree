@@ -5,7 +5,7 @@ examples = [
   'materials',
   'model',
   'multi',
-  'normals',
+#  'normals',
   'performance',
   'shader',
 ]

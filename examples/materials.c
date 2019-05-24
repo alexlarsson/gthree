@@ -115,14 +115,13 @@ init_scene (void)
   gthree_material_set_blend_mode (GTHREE_MATERIAL (material_basic), GTHREE_BLEND_ADDITIVE, 0, 0 , 0);
   geometries[n_materials] = geometry_flat;
   materials[n_materials++] = GTHREE_MATERIAL (material_basic);
-  /*
+
   material_basic = gthree_basic_material_new ();
   gthree_basic_material_set_color (material_basic, &red);
   gthree_material_set_is_transparent (GTHREE_MATERIAL (material_basic), TRUE);
   gthree_material_set_blend_mode (GTHREE_MATERIAL (material_basic), GTHREE_BLEND_SUBTRACTIVE, 0, 0 , 0);
   geometries[n_materials] = geometry_flat;
   materials[n_materials++] = GTHREE_MATERIAL (material_basic);
-  */
 
   material_lambert = gthree_lambert_material_new ();
   gthree_basic_material_set_color (GTHREE_BASIC_MATERIAL (material_lambert), &light_grey);
@@ -189,8 +188,11 @@ init_scene (void)
   geometries[n_materials] = geometry_smooth;
   materials[n_materials++] = GTHREE_MATERIAL (material_basic);
 
-  for (i = 0; i < gthree_geometry_get_n_faces (geometry_pieces); i++)
-    gthree_geometry_face_set_material_index (geometry_pieces, i, g_random_int_range (0, n_materials));
+  for (i = 0; i < gthree_geometry_get_n_groups (geometry_pieces); i++)
+    {
+      GthreeGroup *group = gthree_geometry_get_group (geometry_pieces, i);
+      group->material_index = g_random_int_range (0, n_materials);
+    }
 
   multi_material = gthree_multi_material_new ();
   for (i = 0; i < n_materials; i++)

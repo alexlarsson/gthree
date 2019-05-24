@@ -301,18 +301,6 @@ gthree_object_is_in_frustum (GthreeObject *object,
   return TRUE;
 }
 
-gboolean
-gthree_object_has_attribute_data (GthreeObject                *object,
-                                  GQuark                       attribute)
-{
-  GthreeObjectClass *class = GTHREE_OBJECT_GET_CLASS(object);
-
-  if (class->has_attribute_data)
-    return class->has_attribute_data (object, attribute);
-
-  return FALSE;
-}
-
 void
 gthree_object_look_at (GthreeObject *object,
                        graphene_point3d_t *pos)
@@ -727,15 +715,14 @@ gthree_object_update (GthreeObject *object)
     class->update (object);
 }
 
-GPtrArray *
-gthree_object_get_object_buffers (GthreeObject *object)
+void
+gthree_object_fill_render_list (GthreeObject   *object,
+                                GthreeRenderList *list)
 {
   GthreeObjectClass *class = GTHREE_OBJECT_GET_CLASS(object);
 
-  if (class->get_object_buffers)
-    return class->get_object_buffers (object);
-
-  return NULL;
+  if (class->fill_render_list)
+    return class->fill_render_list (object, list);
 }
 
 void

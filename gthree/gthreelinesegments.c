@@ -4,7 +4,6 @@
 #include "gthreelinesegments.h"
 #include "gthreemultimaterial.h"
 #include "gthreebasicmaterial.h"
-#include "gthreegeometrygroupprivate.h"
 #include "gthreeobjectprivate.h"
 #include "gthreeprivate.h"
 
@@ -22,8 +21,6 @@ enum {
 
   N_PROPS
 };
-
-static GQuark q_color;
 
 static GParamSpec *obj_props[N_PROPS] = { NULL, };
 
@@ -54,8 +51,6 @@ gthree_line_segments_finalize (GObject *obj)
   g_clear_object (&priv->geometry);
   g_clear_object (&priv->material);
 
-  g_clear_pointer (&priv->object_buffers, g_ptr_array_unref);
-
   G_OBJECT_CLASS (gthree_line_segments_parent_class)->finalize (obj);
 }
 
@@ -72,33 +67,14 @@ gthree_line_segments_update (GthreeObject *object)
   //material.attributes && clearCustomAttributes( material );
 }
 
-static GPtrArray *
-gthree_line_segments_get_object_buffers (GthreeObject *object)
+static void
+gthree_line_segments_fill_render_list (GthreeObject   *object,
+                                       GthreeRenderList *list)
 {
   GthreeLineSegments *line_segments = GTHREE_LINE_SEGMENTS (object);
   GthreeLineSegmentsPrivate *priv = gthree_line_segments_get_instance_private (line_segments);
 
-  if (priv->object_buffers != NULL)
-    {
-      GthreeBuffer *buffer = NULL;
-
-      if (priv->object_buffers->len > 0)
-        {
-          GthreeObjectBuffer *object_buffer = g_ptr_array_index (priv->object_buffers, 0);
-          buffer = object_buffer->buffer;
-        }
-
-      /* We assume all are valid as long as some buffer is realized */
-      if (buffer == NULL && buffer->realized)
-        return priv->object_buffers;
-
-      g_ptr_array_unref (priv->object_buffers);
-      priv->object_buffers = NULL;
-    }
-
-  priv->object_buffers = gthree_geometry_create_buffers (priv->geometry, priv->material, object);
-
-  return priv->object_buffers;
+  gthree_geometry_fill_render_list (priv->geometry, list, priv->material, object);
 }
 
 static gboolean
@@ -117,22 +93,6 @@ gthree_line_segments_in_frustum (GthreeObject *object,
                                     &sphere);
 
   return graphene_frustum_intersects_sphere (frustum, &sphere);
-}
-
-static gboolean
-gthree_line_segments_real_has_attribute_data (GthreeObject *object,
-                                              GQuark        attribute)
-{
-  GthreeLineSegments *line_segments = GTHREE_LINE_SEGMENTS (object);
-  GthreeLineSegmentsPrivate *priv = gthree_line_segments_get_instance_private (line_segments);
-
-  if (!priv->geometry)
-    return FALSE;
-
-  if (attribute == q_color)
-    return gthree_geometry_get_n_colors (priv->geometry) > 0 || gthree_geometry_get_n_faces (priv->geometry);
-
-  return FALSE;
 }
 
 static void
@@ -197,9 +157,8 @@ gthree_line_segments_class_init (GthreeLineSegmentsClass *klass)
   gobject_class->finalize = gthree_line_segments_finalize;
 
   object_class->in_frustum = gthree_line_segments_in_frustum;
-  object_class->has_attribute_data = gthree_line_segments_real_has_attribute_data;
   object_class->update = gthree_line_segments_update;
-  object_class->get_object_buffers = gthree_line_segments_get_object_buffers;
+  object_class->fill_render_list = gthree_line_segments_fill_render_list;
 
   obj_props[PROP_GEOMETRY] =
     g_param_spec_object ("geometry", "Geometry", "Geometry",
@@ -211,7 +170,4 @@ gthree_line_segments_class_init (GthreeLineSegmentsClass *klass)
                          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, N_PROPS, obj_props);
-
-#define INIT_QUARK(name) q_##name = g_quark_from_static_string (#name)
-  INIT_QUARK(color);
 }

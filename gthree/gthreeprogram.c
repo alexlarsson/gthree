@@ -110,15 +110,10 @@ generate_defines (GString *out, GPtrArray *defines)
 }
 
 static void
-cache_attribute_locations (GHashTable *attributes, GLuint program, char **identifiers)
+cache_attribute_location (GHashTable *attributes, GLuint program, char *identifier)
 {
-  int i;
-
-  for (i = 0; identifiers[i] != NULL; i++)
-    {
-      int location = glGetAttribLocation (program, identifiers[i]);
-      g_hash_table_insert (attributes, GINT_TO_POINTER (g_quark_from_string (identifiers[i])), GINT_TO_POINTER (location));
-    }
+  int location = glGetAttribLocation (program, identifier);
+  g_hash_table_insert (attributes, GINT_TO_POINTER (g_quark_from_string (identifier)), GINT_TO_POINTER (location));
 }
 
 GthreeProgram *
@@ -473,43 +468,6 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters)
 
   g_ptr_array_free (identifiers, FALSE);
 
-  // cache attributes locations
-
-  identifiers = g_ptr_array_new ();
-
-  {
-    int i;
-    char *s[] =  {
-      "position", "normal", "uv", "uv2", "tangent", "color",
-      "skinIndex", "skinWeight", "lineDistance"
-    };
-
-    for (i = 0; i < G_N_ELEMENTS (s); i++)
-      g_ptr_array_add (identifiers, s[i]);
-  }
-
-#ifdef TODO
-  for ( var i = 0; i < parameters.maxMorphTargets; i ++ ) {
-    identifiers.push( "morphTarget" + i );
-  }
-
-  for ( var i = 0; i < parameters.maxMorphNormals; i ++ ) {
-
-    identifiers.push( "morphNormal" + i );
-
-  }
-
-  for ( var a in attributes ) {
-    identifiers.push( a );
-  }
-#endif
-
-  g_ptr_array_add (identifiers, NULL);
-
-  cache_attribute_locations (priv->attribute_locations, gl_program, (char **)identifiers->pdata);
-
-  g_ptr_array_free (identifiers, FALSE);
-
   priv->gl_program = gl_program;
 
   return program;
@@ -521,7 +479,6 @@ gthree_program_init (GthreeProgram *program)
   GthreeProgramPrivate *priv = gthree_program_get_instance_private (program);
 
   priv->uniform_locations = g_hash_table_new (g_direct_hash, g_direct_equal);
-  priv->attribute_locations = g_hash_table_new (g_direct_hash, g_direct_equal);
 }
 
 static void

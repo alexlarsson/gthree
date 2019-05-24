@@ -3,7 +3,6 @@
 
 #include <gthree/gthreeobject.h>
 #include <gthree/gthreelight.h>
-#include <gthree/gthreebufferprivate.h>
 #include <gthree/gthreegeometry.h>
 
 struct _GthreeLightSetup
@@ -62,14 +61,12 @@ void     gthree_texture_set_parameters (guint texture_type,
                                         GthreeTexture *texture,
                                         gboolean is_image_power_of_two);
 
-GPtrArray *gthree_geometry_create_buffers  (GthreeGeometry *geometry,
-                                            GthreeMaterial *material,
-                                            GthreeObject   *object);
-void gthree_geometry_update                (GthreeGeometry *geometry,
-                                            GthreeMaterial *material);
-void gthree_geometry_add_buffers_to_object (GthreeGeometry *geometry,
-                                            GthreeMaterial *material,
-                                            GthreeObject   *object);
+void gthree_geometry_update           (GthreeGeometry   *geometry,
+                                       GthreeMaterial   *material);
+void gthree_geometry_fill_render_list (GthreeGeometry   *geometry,
+                                       GthreeRenderList *list,
+                                       GthreeMaterial   *material,
+                                       GthreeObject     *object);
 
 void   gthree_light_setup (GthreeLight       *light,
                            GthreeLightSetup *light_setup);

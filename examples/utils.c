@@ -67,7 +67,7 @@ examples_load_model (const char *name)
     g_error ("can't load model %s: %s", name, error->message);
 
   textures = g_file_new_for_uri ("resources:///org/gnome/gthree-examples/textures");
-  loader = gthree_loader_new_from_json (g_bytes_get_data (bytes, NULL), NULL, &error);
+  loader = NULL;//gthree_loader_new_from_json (g_bytes_get_data (bytes, NULL), NULL, &error);
   if (loader == NULL)
     g_error ("can't parse json: %s", error->message);
   g_bytes_unref (bytes);

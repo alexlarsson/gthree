@@ -43,10 +43,8 @@ typedef struct {
   void (* removed_child)        (GthreeObject          *object,
                                  GthreeObject          *child);
 
-  gboolean (*has_attribute_data) (GthreeObject                *object,
-                                  GQuark                       attribute);
-
-  GPtrArray *(* get_object_buffers) (GthreeObject          *object);
+  void (* fill_render_list)      (GthreeObject          *object,
+                                  GthreeRenderList      *list);
 } GthreeObjectClass;
 
 GType gthree_object_get_type (void) G_GNUC_CONST;
