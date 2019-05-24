@@ -38,7 +38,7 @@ gthree_attribute_array_new   (GthreeAttributeType   type,
 
   g_assert (type < 8);
 
-  array = g_malloc (sizeof (GthreeAttributeArray) + attribute_type_size[type] * len);
+  array = g_malloc0 (sizeof (GthreeAttributeArray) + attribute_type_size[type] * len);
   array->ref_count = 1;
   array->type = type;
   array->count = count;
