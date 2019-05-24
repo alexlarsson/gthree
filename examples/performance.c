@@ -22,9 +22,9 @@ init_scene (void)
   graphene_euler_t rot;
   int i;
 
-  geometry = examples_load_model ("Suzanne.js");
+  geometry = examples_load_geometry ("Suzanne.js");
 
-  gthree_geometry_compute_vertex_normals (geometry, FALSE);
+  gthree_geometry_compute_vertex_normals (geometry);
 
   material = gthree_normal_material_new ();
   gthree_normal_material_set_shading_type (material, GTHREE_SHADING_SMOOTH);

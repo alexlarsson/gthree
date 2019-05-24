@@ -1,7 +1,7 @@
 #include <gthree/gthree.h>
 
 GdkPixbuf *examples_load_pixbuf (char *file);
-GthreeGeometry *examples_load_model (const char *name);
+GthreeGeometry *examples_load_geometry (const char *name);
 void examples_load_cube_pixbufs (char *dir,
                                  GdkPixbuf *pixbufs[6]);
 

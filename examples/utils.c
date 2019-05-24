@@ -52,13 +52,11 @@ examples_load_cube_pixbufs (char *dir,
 }
 
 GthreeGeometry *
-examples_load_model (const char *name)
+examples_load_geometry (const char *name)
 {
-  GthreeLoader *loader;
   GthreeGeometry *geometry;
   char *file;
-  GFile *textures;
-  GError *error;
+  GError *error = NULL;
   GBytes *bytes;
 
   file = g_build_filename ("/org/gnome/gthree-examples/models/", name, NULL);
@@ -66,16 +64,11 @@ examples_load_model (const char *name)
   if (bytes == NULL)
     g_error ("can't load model %s: %s", name, error->message);
 
-  textures = g_file_new_for_uri ("resources:///org/gnome/gthree-examples/textures");
-  loader = NULL;//gthree_loader_new_from_json (g_bytes_get_data (bytes, NULL), NULL, &error);
-  if (loader == NULL)
+  geometry = gthree_load_geometry_from_json (g_bytes_get_data (bytes, NULL), &error);
+  if (geometry == NULL)
     g_error ("can't parse json: %s", error->message);
-  g_bytes_unref (bytes);
-  g_object_unref (textures);
 
-  geometry = g_object_ref (gthree_loader_get_geometry (loader));
-  g_object_unref (loader);
+  g_bytes_unref (bytes);
 
   return geometry;
 }
-

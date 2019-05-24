@@ -34,144 +34,12 @@ gthree_loader_class_init (GthreeLoaderClass *klass)
   G_OBJECT_CLASS (klass)->finalize = gthree_loader_finalize;
 }
 
-/* GVariant has no float type, we store ieee 32bit float as 32bit ints */
-#define G_VARIANT_TYPE_FLOAT_AS_UINT32 G_VARIANT_TYPE_UINT32
-
-GVariant *
-gthree_loader_convert_json_to_variant (JsonNode *root, GError **error)
-{
-  JsonArray *vertices, *faces, *uvs, *normals, *colors;
-  JsonObject *root_obj;
-  GVariantBuilder builder;
-  GVariant *variant = NULL;
-  double scale;
-
-  if (!JSON_NODE_HOLDS_OBJECT(root))
-    {
-      g_set_error (error, GTHREE_LOADER_ERROR, GTHREE_LOADER_ERROR_FAIL, "no root object");
-      return NULL;
-    }
-
-  root_obj = json_node_get_object (root);
-
-  g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
-
-  scale = 1.0;
-  if (json_object_has_member (root_obj, "scale"))
-    scale = json_object_get_double_member (root_obj, "scale");
-  g_variant_builder_add (&builder, "{sv}", "scale", g_variant_new_double (scale));
-
-  uvs = json_object_get_array_member (root_obj, "uvs");
-  if (uvs != NULL)
-    {
-      GVariantBuilder uv_builder;
-      int n_uvs, i;
-
-      g_variant_builder_init (&uv_builder, G_VARIANT_TYPE("aau"));
-
-      n_uvs = json_array_get_length (uvs);
-      for (i = 0; i < n_uvs; i++)
-        {
-          JsonArray *uvN = json_array_get_array_element (uvs, i);
-          int j, len = json_array_get_length (uvN);
-          float *data = g_new (float, len);
-
-          for (j = 0; j < len; j++)
-            data[j] = json_array_get_double_element (uvN, j);
-
-          g_variant_builder_add_value (&uv_builder, g_variant_new_fixed_array (G_VARIANT_TYPE_FLOAT_AS_UINT32, data, len, sizeof(float)));
-          g_free (data);
-        }
-
-      g_variant_builder_add (&builder, "{sv}", "uvs",
-                             g_variant_builder_end (&uv_builder));
-    }
-
-  vertices = json_object_get_array_member (root_obj, "vertices");
-  if (vertices != NULL)
-    {
-      float *data;
-      int len, i;
-
-      len = json_array_get_length (vertices);
-      data = g_new (float, len);
-
-      for (i = 0; i < len; i++)
-        data[i] = json_array_get_double_element (vertices, i);
-
-      g_variant_builder_add (&builder, "{sv}", "vertices",
-                             g_variant_new_fixed_array (G_VARIANT_TYPE_FLOAT_AS_UINT32, data, len, sizeof(float)));
-
-      g_free (data);
-    }
-
-  normals = json_object_get_array_member (root_obj, "normals");
-  if (normals != NULL)
-    {
-      float *data;
-      int len, i;
-
-      len = json_array_get_length (normals);
-      data = g_new (float, len);
-
-      for (i = 0; i < len; i++)
-        data[i] = json_array_get_double_element (normals, i);
-
-      g_variant_builder_add (&builder, "{sv}", "normals",
-                             g_variant_new_fixed_array (G_VARIANT_TYPE_FLOAT_AS_UINT32, data, len, sizeof(float)));
-
-      g_free (data);
-    }
-
-  colors = json_object_get_array_member (root_obj, "colors");
-  if (colors != NULL)
-    {
-      float *data;
-      int len, i;
-
-      len = json_array_get_length (colors);
-      data = g_new (float, len);
-
-      for (i = 0; i < len; i++)
-        data[i] = json_array_get_double_element (colors, i);
-
-      g_variant_builder_add (&builder, "{sv}", "colors",
-                             g_variant_new_fixed_array (G_VARIANT_TYPE_FLOAT_AS_UINT32, data, len, sizeof(float)));
-
-      g_free (data);
-    }
-
-  faces = json_object_get_array_member (root_obj, "faces");
-  if (faces != NULL)
-    {
-      guint32 *data;
-      int len, i;
-
-      len = json_array_get_length (faces);
-      data = g_new (guint32, len);
-
-      for (i = 0; i < len; i++)
-        data[i] = (guint32)json_array_get_int_element (faces, i);
-
-      g_variant_builder_add (&builder, "{sv}", "faces",
-                             g_variant_new_fixed_array (G_VARIANT_TYPE_UINT32, data, len, sizeof(guint32)));
-
-      g_free (data);
-    }
-
-  variant = g_variant_builder_end (&builder);
-
-  g_variant_builder_clear (&builder);
-
-  return variant;
-}
 
 GthreeLoader *
 gthree_loader_new_from_json (const char *data, GFile *texture_path, GError **error)
 {
   JsonParser *parser;
   GthreeLoader *loader = NULL;
-  GVariant *variant;
 
   parser = json_parser_new ();
 
@@ -181,296 +49,40 @@ gthree_loader_new_from_json (const char *data, GFile *texture_path, GError **err
       return NULL;
     }
 
-  variant = gthree_loader_convert_json_to_variant (json_parser_get_root (parser), error);
-  g_object_unref (parser);
-
-  if (variant == NULL)
-    return NULL;
-
-  loader = gthree_loader_new_from_variant (variant, texture_path, error);
-  g_variant_unref (variant);
-
-  return loader;
-}
-
-#define FACE_QUAD_MASK (1<<0)
-#define FACE_MATERIAL_MASK (1<<1)
-#define FACE_UV_MASK (1<<2)
-#define FACE_VERTEX_UV_MASK (1<<3)
-#define FACE_NORMAL_MASK (1<<4)
-#define FACE_VERTEX_NORMAL_MASK (1<<5)
-#define FACE_COLOR_MASK (1<<6)
-#define FACE_VERTEX_COLOR_MASK (1<<7)
-
-#define MAX_UVS 2
-
-GthreeLoader *
-gthree_loader_new_from_variant (GVariant *value, GFile *texture_path, GError **error)
-{
-  GthreeLoader *loader;
-  GVariantIter *iter;
-  GthreeGeometry *geometry;
-  GVariant *var;
-  GthreeLoaderPrivate *priv;
-  int n_uvs = 0;
-  const float *uvs[MAX_UVS];
-  gsize uvs_len[MAX_UVS];
-  const float *colors = NULL;
-  gsize colors_len = 0;
-  const float *normals = NULL;
-  gsize normals_len = 0;
-  gdouble scale = 1.0;
-
-  geometry = gthree_geometry_new ();
-
-  g_variant_lookup (value, "scale", "d", &scale);
-
-  if (g_variant_lookup (value, "uvs", "aau", &iter))
-    {
-      GVariant *uvN;
-
-      while ((uvN = g_variant_iter_next_value (iter)) != NULL)
-        {
-          if (n_uvs < MAX_UVS)
-            {
-              uvs[n_uvs] = g_variant_get_fixed_array (uvN,
-                                                      &uvs_len[n_uvs],
-                                                      sizeof (float));
-              if (uvs_len[n_uvs] > 0)
-                n_uvs++;
-            }
-        }
-
-      g_variant_iter_free (iter);
-    }
-
-  if ((var = g_variant_lookup_value (value, "normals", G_VARIANT_TYPE ("au"))) != NULL)
-    normals = g_variant_get_fixed_array (var, &normals_len,
-                                         sizeof (float));
-
-  if ((var = g_variant_lookup_value (value, "colors", G_VARIANT_TYPE ("au"))) != NULL)
-    colors = g_variant_get_fixed_array (var, &colors_len,
-                                         sizeof (float));
-
-  if (g_variant_lookup (value, "vertices", "au", &iter))
-    {
-      float x, y, z;
-      graphene_vec3_t v;
-
-      while (g_variant_iter_loop (iter, "u", &x) &&
-             g_variant_iter_loop (iter, "u", &y) &&
-             g_variant_iter_loop (iter, "u", &z))
-        {
-          graphene_vec3_init (&v, x * scale, y * scale, z * scale);
-          gthree_geometry_add_vertex (geometry, &v);
-        }
-      g_variant_iter_free (iter);
-    }
-
-  if (g_variant_lookup (value, "faces", "au", &iter))
-    {
-      guint32 face_type;
-
-      while (g_variant_iter_loop (iter, "u", &face_type))
-        {
-          int face1, face2;
-          guint32 a, b, c, d;
-          gboolean is_quad = (face_type & FACE_QUAD_MASK);
-
-          g_variant_iter_loop (iter, "u", &a);
-          g_variant_iter_loop (iter, "u", &b);
-          g_variant_iter_loop (iter, "u", &c);
-          if (is_quad)
-            {
-              g_variant_iter_loop (iter, "u", &d);
-
-              face1 = gthree_geometry_add_face (geometry, a, b, d);
-              face2 = gthree_geometry_add_face (geometry, b, c, d);
-            }
-          else
-            {
-              face1 = gthree_geometry_add_face (geometry, a, b, c);
-              face2 = -1;
-            }
-
-          if (face_type & FACE_MATERIAL_MASK)
-            {
-              guint32 index;
-
-              g_variant_iter_loop (iter, "u", &index);
-              gthree_geometry_face_set_material_index (geometry, face1, index);
-              if (face2 >= 0)
-                gthree_geometry_face_set_material_index (geometry, face2, index);
-            }
-
-          // Ignore FACE_UV_MASK, not suppored anymore
-
-          if (face_type & FACE_VERTEX_UV_MASK)
-            {
-              int layer, j;
-
-              for (layer = 0; layer < n_uvs; layer++)
-                {
-                  graphene_vec2_t vec[4];
-                  guint32 index;
-                  int vec_len = is_quad ? 4 : 3;
-
-                  for (j = 0; j < vec_len; j++)
-                    {
-                      float u,v;
-
-                      g_variant_iter_loop (iter, "u", &index);
-                      u = uvs[layer][index * 2];
-                      v = uvs[layer][index * 2 + 1];
-                      graphene_vec2_init (&vec[j], u, v);
-                    }
-
-                  if (is_quad)
-                    {
-                      gthree_geometry_set_uv_n (geometry, layer, face1 * 3    , &vec[0]);
-                      gthree_geometry_set_uv_n (geometry, layer, face1 * 3 + 1, &vec[1]);
-                      gthree_geometry_set_uv_n (geometry, layer, face1 * 3 + 2, &vec[3]);
-                      gthree_geometry_set_uv_n (geometry, layer, face2 * 3   ,  &vec[1]);
-                      gthree_geometry_set_uv_n (geometry, layer, face2 * 3 + 1, &vec[2]);
-                      gthree_geometry_set_uv_n (geometry, layer, face2 * 3 + 2, &vec[3]);
-                    }
-                  else
-                    {
-                      gthree_geometry_set_uv_n (geometry, layer, face1 * 3    , &vec[0]);
-                      gthree_geometry_set_uv_n (geometry, layer, face1 * 3 + 1, &vec[1]);
-                      gthree_geometry_set_uv_n (geometry, layer, face1 * 3 + 2, &vec[2]);
-                    }
-                }
-            }
-
-          if (face_type & FACE_NORMAL_MASK)
-            {
-              graphene_vec3_t vec;
-              guint32 index;
-
-              g_variant_iter_loop (iter, "u", &index);
-              index *= 3;
-
-              if (index + 2 < normals_len)
-                {
-                  graphene_vec3_init (&vec, normals[index], normals[index+1], normals[index+2]);
-                  gthree_geometry_face_set_normal (geometry, face1, &vec);
-                  if (face2 >= 0)
-                    gthree_geometry_face_set_normal (geometry, face2, &vec);
-                }
-            }
-
-          if (face_type & FACE_VERTEX_NORMAL_MASK)
-            {
-              graphene_vec3_t vec[4];
-              int i;
-              int vec_len = is_quad ? 4 : 3;
-              guint32 index, max;
-
-              max = 0;
-              for (i = 0; i < vec_len; i++)
-                {
-                  g_variant_iter_loop (iter, "u", &index);
-                  index *= 3;
-                  max = MAX (max, index);
-                  if (index + 2 < normals_len)
-                    graphene_vec3_init (&vec[i], normals[index], normals[index+1], normals[index+2]);
-                }
-
-              if (max + 2 < normals_len)
-                {
-                  if (is_quad)
-                    {
-                      gthree_geometry_face_set_vertex_normals (geometry, face1, &vec[0], &vec[1], &vec[3]);
-                      gthree_geometry_face_set_vertex_normals (geometry, face2, &vec[1], &vec[2], &vec[3]);
-                    }
-                  else
-                    {
-                      gthree_geometry_face_set_vertex_normals (geometry, face1, &vec[0], &vec[1], &vec[2]);
-                    }
-                }
-            }
-
-          if (face_type & FACE_COLOR_MASK)
-            {
-              GdkRGBA rgba;
-              guint32 index;
-
-              g_variant_iter_loop (iter, "u", &index);
-              index *= 3;
-
-              if (index + 2 < colors_len)
-                {
-                  rgba.red = colors[index];
-                  rgba.green = colors[index+1];
-                  rgba.blue = colors[index+2];
-                  rgba.alpha = 1.0;
-                  gthree_geometry_face_set_color (geometry, face1, &rgba);
-                  if (face2 >= 0)
-                    gthree_geometry_face_set_color (geometry, face2, &rgba);
-                }
-            }
-
-          if (face_type & FACE_VERTEX_COLOR_MASK)
-            {
-              GdkRGBA rgba[4];
-              int i;
-              int rgba_len = is_quad ? 4 : 3;
-              guint32 index, max;
-
-              max = 0;
-              for (i = 0; i < rgba_len; i++)
-                {
-                  g_variant_iter_loop (iter, "u", &index);
-                  index *= 3;
-                  max = MAX (max, index);
-                  if (index + 2 < colors_len)
-                    {
-                      rgba[i].red = colors[index];
-                      rgba[i].green = colors[index+1];
-                      rgba[i].blue = colors[index+2];
-                      rgba[i].alpha = 1.0;
-                    }
-                }
-
-              if (max + 2 < normals_len)
-                {
-                  if (is_quad)
-                    {
-                      gthree_geometry_face_set_vertex_colors (geometry, face1, &rgba[0], &rgba[1], &rgba[3]);
-                      gthree_geometry_face_set_vertex_colors (geometry, face2, &rgba[1], &rgba[2], &rgba[3]);
-                    }
-                  else
-                    {
-                      gthree_geometry_face_set_vertex_colors (geometry, face1, &rgba[0], &rgba[1], &rgba[2]);
-                    }
-                }
-            }
-        }
-      g_variant_iter_free (iter);
-    }
-
-  gthree_geometry_compute_face_normals (geometry);
-
-  loader = g_object_new (gthree_loader_get_type (), NULL);
-  priv = gthree_loader_get_instance_private (loader);
-  priv->geometry = geometry;
-
   return loader;
 }
 
 GthreeGeometry *
-gthree_loader_get_geometry (GthreeLoader *loader)
+gthree_load_geometry_from_json (const char *data, GError **error)
 {
-  GthreeLoaderPrivate *priv = gthree_loader_get_instance_private (loader);
+  g_autoptr(JsonParser) parser = json_parser_new ();
+  JsonNode *root;
+  JsonObject *root_obj, *metadata;
 
-  return priv->geometry;
-}
+  if (!json_parser_load_from_data (parser, data, -1, error))
+    return NULL;
 
-GList *
-gthree_loader_get_materials (GthreeLoader *loader)
-{
-  GthreeLoaderPrivate *priv = gthree_loader_get_instance_private (loader);
+  root = json_parser_get_root (parser);
+  if (!JSON_NODE_HOLDS_OBJECT(root))
+    {
+      g_set_error (error, GTHREE_LOADER_ERROR, GTHREE_LOADER_ERROR_FAIL, "no root object");
+      return NULL;
+    }
 
-  return priv->materials;
+  root_obj = json_node_get_object (root);
+
+  if (!json_object_has_member (root_obj, "metadata"))
+    {
+      g_set_error (error, GTHREE_LOADER_ERROR, GTHREE_LOADER_ERROR_FAIL, "not a thee.js json file (no metadata)");
+      return NULL;
+    }
+  metadata = json_object_get_object_member (root_obj, "metadata");
+  if (!json_object_has_member (metadata, "type") ||
+      g_strcmp0 (json_object_get_string_member (metadata, "type"), "BufferGeometry"))
+    {
+      g_set_error (error, GTHREE_LOADER_ERROR, GTHREE_LOADER_ERROR_FAIL, "not a BufferGeometry file");
+      return NULL;
+    }
+
+  return gthree_geometry_parse_json (root_obj);
 }

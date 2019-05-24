@@ -44,7 +44,7 @@ init_scene (void)
 
   scene = gthree_scene_new ();
 
-  marine_geometry = examples_load_model ("marine.js");
+  marine_geometry = examples_load_geometry ("marine.js");
 
   marine = gthree_mesh_new (marine_geometry, GTHREE_MATERIAL (material_texture));
   gthree_object_set_position (GTHREE_OBJECT (marine),
@@ -55,7 +55,7 @@ init_scene (void)
 
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (marine));
 
-  knight_geometry = examples_load_model ("knight.js");
+  knight_geometry = examples_load_geometry ("knight.js");
 
   knight = gthree_mesh_new (knight_geometry, GTHREE_MATERIAL (material_phong));
   gthree_object_set_position (GTHREE_OBJECT (knight),

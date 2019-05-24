@@ -40,10 +40,8 @@ GQuark gthree_loader_error_quark (void);
 GType gthree_loader_get_type (void) G_GNUC_CONST;
 
 GthreeLoader *gthree_loader_new_from_json (const char *data, GFile *texture_path, GError **error);
-GthreeLoader *gthree_loader_new_from_variant (GVariant *value, GFile *texture_path, GError **error);
 
-GthreeGeometry *gthree_loader_get_geometry  (GthreeLoader *loader);
-GList *         gthree_loader_get_materials (GthreeLoader *loader);
+GthreeGeometry *gthree_load_geometry_from_json (const char *data, GError **error);
 
 G_END_DECLS
 

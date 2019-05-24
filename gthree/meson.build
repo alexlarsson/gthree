@@ -12,7 +12,7 @@ gthree_sources = [
     'gthreelight.c',
     'gthreelinebasicmaterial.c',
     'gthreelinesegments.c',
-#    'gthreeloader.c',
+    'gthreeloader.c',
     'gthreematerial.c',
     'gthreemesh.c',
     'gthreemultimaterial.c',
@@ -106,8 +106,8 @@ gthree_cflags = [
 
 gthree_inc = include_directories('.')
 
-gthree_deps = [glib_dep, gobject_dep, graphene_dep, gtk_dep]
-gthree_private_deps = [epoxy_dep, json_glib_dep, libm]
+gthree_deps = [glib_dep, gobject_dep, graphene_dep, gtk_dep, json_glib_dep]
+gthree_private_deps = [epoxy_dep, libm]
 
 libgthree = shared_library('gthree-1',
                            sources: gthree_sources + gthree_marshalers + gthree_typebuiltins + gthree_resources,
@@ -126,19 +126,19 @@ libgthree_dep = declare_dependency(sources: gthree_dep_sources,
                                    include_directories: [gthree_inc, root_inc],
                                    dependencies: gthree_deps)
 
-#if not meson.is_cross_build() and get_option('introspection')
-#  gnome.generate_gir(libgthree,
-#                     sources: gthree_sources + gthree_headers + gthree_marshalers,
-#                     namespace: 'Gthree',
-#                     nsversion: gthree_api_version,
-#                     identifier_prefix: 'Gthree',
-#                     symbol_prefix: 'gthree',
-#                     export_packages: 'gthree',
-#                     includes: [ 'GObject-2.0' ],
-#                     install: true,
-#                     extra_args: [
-#                       '--quiet',
-#                       '--c-include=gthree/gthree.h',
-#                       '-DGTHREE_COMPILATION',
-#                     ])
-#endif
+if not meson.is_cross_build() and get_option('introspection')
+  gnome.generate_gir(libgthree,
+                     sources: gthree_sources + gthree_headers + gthree_marshalers,
+                     namespace: 'Gthree',
+                     nsversion: gthree_api_version,
+                     identifier_prefix: 'Gthree',
+                     symbol_prefix: 'gthree',
+                     export_packages: 'gthree',
+                     includes: [ 'GObject-2.0' ],
+                     install: true,
+                     extra_args: [
+                       '--quiet',
+                       '--c-include=gthree/gthree.h',
+                       '-DGTHREE_COMPILATION',
+                     ])
+endif
