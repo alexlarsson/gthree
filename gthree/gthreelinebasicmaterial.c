@@ -22,9 +22,6 @@ G_DEFINE_TYPE_WITH_PRIVATE (GthreeLineBasicMaterial, gthree_line_basic_material,
 static void
 gthree_line_basic_material_finalize (GObject *obj)
 {
-  GthreeLineBasicMaterial *line_basic = GTHREE_LINE_BASIC_MATERIAL (obj);
-  GthreeLineBasicMaterialPrivate *priv = gthree_line_basic_material_get_instance_private (line_basic);
-
   G_OBJECT_CLASS (gthree_line_basic_material_parent_class)->finalize (obj);
 }
 
@@ -32,9 +29,6 @@ static void
 gthree_line_basic_material_real_set_params (GthreeMaterial *material,
                                        GthreeProgramParameters *params)
 {
-  GthreeLineBasicMaterial *line_basic = GTHREE_LINE_BASIC_MATERIAL (material);
-  GthreeLineBasicMaterialPrivate *priv = gthree_line_basic_material_get_instance_private (line_basic);
-
   GTHREE_MATERIAL_CLASS (gthree_line_basic_material_parent_class)->set_params (material, params);
 }
 
