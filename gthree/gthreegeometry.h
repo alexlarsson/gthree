@@ -25,6 +25,8 @@ struct _GthreeGeometry {
   GObject parent;
 };
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeGeometry, g_object_unref)
+
 typedef struct {
   GObjectClass parent_class;
 
