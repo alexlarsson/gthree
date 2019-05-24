@@ -46,36 +46,43 @@ face_normals (GthreeMesh *object, float size, GdkRGBA *color, float width)
 {
   GthreeGeometry *geo, *geometry;
   GthreeMaterial *material;
-  const graphene_vec3_t *vertices;
+  GthreeAttribute *position, *normal;
+  GthreeAttribute *a_position;
+  int vertex_index = 0;
+  int n_vertices;
   int i;
 
-  g_object_get (object, "geometry", &geometry, NULL);
+  geometry = gthree_mesh_get_geometry (object);
+
+  position = gthree_geometry_get_position (geometry);
+  normal = gthree_geometry_get_normal (geometry);
+
+  n_vertices = gthree_attribute_get_count (position);
 
   geo = gthree_geometry_new ();
 
   material = GTHREE_MATERIAL (gthree_line_basic_material_new ());
   gthree_line_basic_material_set_color (GTHREE_LINE_BASIC_MATERIAL (material), color);
+  gthree_material_set_wireframe_line_width (material, width);
 
-  vertices = gthree_geometry_get_vertices (geometry);
-  for (i = 0; i < gthree_geometry_get_n_faces (geometry); i++)
+  a_position = gthree_attribute_new ("position", GTHREE_ATTRIBUTE_TYPE_FLOAT, n_vertices * 2, 3, FALSE);
+  gthree_geometry_add_attribute (geo, a_position);
+
+  for (i = 0; i < n_vertices; i++)
     {
-      int a = gthree_geometry_face_get_a (geometry, i);
-      int b = gthree_geometry_face_get_b (geometry, i);
-      int c = gthree_geometry_face_get_c (geometry, i);
-      graphene_vec3_t v, v2;
+      graphene_point3d_t *p, *n;
+      graphene_vec3_t pv, nv, p2v;
 
-      graphene_vec3_init (&v, 0, 0, 0);
-      graphene_vec3_add (&vertices[a], &v, &v);
-      graphene_vec3_add (&vertices[b], &v, &v);
-      graphene_vec3_add (&vertices[c], &v, &v);
-      graphene_vec3_scale (&v, 1.0/3, &v);
+      p = gthree_attribute_peek_point3d_at (position, i);
+      n = gthree_attribute_peek_point3d_at (normal, i);
 
-      graphene_vec3_init_from_vec3 (&v2, gthree_geometry_face_get_normal (geometry, i));
-      graphene_vec3_scale (&v2, size, &v2);
-      graphene_vec3_add (&v, &v2, &v2);
+      graphene_point3d_to_vec3 (p, &pv);
+      graphene_point3d_to_vec3 (n, &nv);
+      graphene_vec3_scale (&nv, size, &nv);
+      graphene_vec3_add (&pv, &nv, &p2v);
 
-      gthree_geometry_add_vertex (geo, &v);
-      gthree_geometry_add_vertex (geo, &v2);
+      gthree_attribute_set_vec3 (a_position, vertex_index++, &pv);
+      gthree_attribute_set_vec3 (a_position, vertex_index++, &p2v);
     }
 
   g_object_unref (geometry);
