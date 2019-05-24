@@ -1403,3 +1403,115 @@ gthree_attribute_get_gl_bytes_per_element (GthreeAttribute *attribute)
 {
   return attribute_type_size[attribute->array->type];
 }
+
+
+static struct {
+  char *name;
+  GthreeAttributeType type;
+} attribute_type_names[] = {
+  { "Int8Array", GTHREE_ATTRIBUTE_TYPE_INT8},
+  { "Uint8Array", GTHREE_ATTRIBUTE_TYPE_UINT8},
+  { "Int16Array", GTHREE_ATTRIBUTE_TYPE_INT16},
+  { "Uint16Array", GTHREE_ATTRIBUTE_TYPE_UINT16},
+  { "Int132rray", GTHREE_ATTRIBUTE_TYPE_INT32},
+  { "Uint132rray", GTHREE_ATTRIBUTE_TYPE_UINT32},
+  { "Float32Array", GTHREE_ATTRIBUTE_TYPE_FLOAT},
+  { "Float64Array", GTHREE_ATTRIBUTE_TYPE_DOUBLE},
+};
+
+GthreeAttribute *
+gthree_attribute_parse_json (JsonObject *attr,
+                             const char *name)
+{
+  gint64 item_size;
+  const gchar *typename;
+  int type = -1;
+  g_autoptr(GthreeAttribute) attribute = NULL;
+  JsonArray *array;
+  gboolean normalized = FALSE;
+  int i, len;
+
+  item_size = json_object_get_int_member (attr, "itemSize");
+
+  typename = json_object_get_string_member (attr, "type");
+  for (i = 0; i < G_N_ELEMENTS(attribute_type_names); i++)
+    {
+      if (strcmp (typename, attribute_type_names[i].name) == 0)
+        {
+          type = attribute_type_names[i].type;
+          break;
+        }
+    }
+  g_assert (type != -1);
+
+  item_size = json_object_get_int_member (attr, "itemSize");
+  if (json_object_has_member (attr, "normalized"))
+    normalized = json_object_get_boolean_member (attr, "normalized");
+
+  array = json_object_get_array_member (attr, "array");
+  len = json_array_get_length (array);
+
+
+  attribute = gthree_attribute_new (name, type, len / item_size, item_size, normalized);
+
+  switch (type)
+    {
+    case GTHREE_ATTRIBUTE_TYPE_INT8:
+      {
+        gint8 *p = gthree_attribute_peek_int8 (attribute);
+        for (i = 0; i < len; i++)
+          p[i] = json_array_get_int_element (array, i);
+        break;
+      }
+    case GTHREE_ATTRIBUTE_TYPE_UINT8:
+      {
+        guint8 *p = gthree_attribute_peek_uint8 (attribute);
+        for (i = 0; i < len; i++)
+          p[i] = json_array_get_int_element (array, i);
+        break;
+      }
+    case GTHREE_ATTRIBUTE_TYPE_INT16:
+      {
+        gint16 *p = gthree_attribute_peek_int16 (attribute);
+        for (i = 0; i < len; i++)
+          p[i] = json_array_get_int_element (array, i);
+        break;
+      }
+    case GTHREE_ATTRIBUTE_TYPE_UINT16:
+      {
+        guint16 *p = gthree_attribute_peek_uint16 (attribute);
+        for (i = 0; i < len; i++)
+          p[i] = json_array_get_int_element (array, i);
+        break;
+      }
+    case GTHREE_ATTRIBUTE_TYPE_INT32:
+      {
+        gint32 *p = gthree_attribute_peek_int32 (attribute);
+        for (i = 0; i < len; i++)
+          p[i] = json_array_get_int_element (array, i);
+        break;
+      }
+    case GTHREE_ATTRIBUTE_TYPE_UINT32:
+      {
+        guint32 *p = gthree_attribute_peek_uint32 (attribute);
+        for (i = 0; i < len; i++)
+          p[i] = json_array_get_int_element (array, i);
+        break;
+      }
+    case GTHREE_ATTRIBUTE_TYPE_FLOAT:
+      {
+        float *p = gthree_attribute_peek_float (attribute);
+        for (i = 0; i < len; i++)
+          p[i] = json_array_get_double_element (array, i);
+        break;
+      }
+    case GTHREE_ATTRIBUTE_TYPE_DOUBLE:
+      {
+        double *p = gthree_attribute_peek_double (attribute);
+        for (i = 0; i < len; i++)
+          p[i] = json_array_get_double_element (array, i);
+        break;
+      }
+    }
+  return g_steal_pointer (&attribute);
+}

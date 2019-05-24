@@ -9,6 +9,7 @@
 
 #include <gdk/gdk.h>
 #include <gthree/gthreeobject.h>
+#include <json-glib/json-glib.h>
 
 G_BEGIN_DECLS
 
@@ -36,6 +37,9 @@ typedef struct {
 } GthreeGeometryGroup;
 
 GthreeGeometry *gthree_geometry_new ();
+
+GthreeGeometry *gthree_geometry_parse_json (JsonObject *object);
+
 GType gthree_geometry_get_type (void) G_GNUC_CONST;
 
 GthreeAttribute *        gthree_geometry_add_attribute          (GthreeGeometry          *geometry,

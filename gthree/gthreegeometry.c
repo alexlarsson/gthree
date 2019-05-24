@@ -491,3 +491,110 @@ gthree_geometry_fill_render_list (GthreeGeometry   *geometry,
       gthree_render_list_push (list, object, geometry, resolved_material, NULL);
     }
 }
+
+graphene_point3d_t *
+parse_point3 (JsonArray *array,
+              graphene_point3d_t *point)
+{
+  point->x = json_array_get_double_element (array, 0);
+  point->y = json_array_get_double_element (array, 1);
+  point->z = json_array_get_double_element (array, 2);
+  return point;
+}
+
+graphene_sphere_t *
+parse_sphere (JsonObject *obj,
+              graphene_sphere_t *sphere)
+{
+  double radius = json_object_get_double_member (obj, "radius");
+  JsonArray *centerj = json_object_get_array_member (obj, "center");
+  graphene_point3d_t center;
+
+  parse_point3 (centerj, &center);
+
+  return graphene_sphere_init (sphere, &center, radius);
+}
+
+GthreeGeometry *
+gthree_geometry_parse_json (JsonObject *root)
+{
+  JsonObject *data, *attributes = NULL;
+  JsonArray *groups = NULL;
+  JsonObject *index_j = NULL;
+  g_autoptr(GthreeGeometry) geometry = NULL;
+  GthreeGeometryPrivate *priv;
+
+  geometry = gthree_geometry_new ();
+  priv = gthree_geometry_get_instance_private (geometry);
+
+  if (json_object_has_member (root, "isInstancedBufferGeometry"))
+    g_error ("instanced buffers not supported");
+
+  data = json_object_get_object_member (root, "data");
+
+  if (json_object_has_member (data, "index"))
+    index_j = json_object_get_object_member (data, "index");
+
+  if (index_j != NULL)
+    {
+      g_autoptr(GthreeAttribute) index = gthree_attribute_parse_json (index_j, "index");
+      gthree_geometry_set_index (geometry, index);
+    }
+
+  if (json_object_has_member (data, "attributes"))
+    {
+      g_autoptr(GList) members = NULL;
+      GList *l;
+
+      attributes = json_object_get_object_member (data, "attributes");
+
+      if (attributes != NULL)
+        members = json_object_get_members (attributes);
+
+      for (l = members; l != NULL; l = l->next)
+        {
+          const char *name = l->data;
+          JsonObject *attribute_j = json_object_get_object_member (attributes, name);
+          g_autoptr(GthreeAttribute) attribute = gthree_attribute_parse_json (attribute_j, name);
+          gthree_geometry_add_attribute (geometry, attribute);
+        }
+    }
+
+  // TODO: Handle json.data.morphAttributes
+
+  if (json_object_has_member (data, "groups"))
+    groups = json_object_get_array_member (data, "groups");
+  else if (json_object_has_member (data, "drawcalls"))
+    groups = json_object_get_array_member (data, "drawcalls");
+  else if (json_object_has_member (data, "offsets"))
+    groups = json_object_get_array_member (data, "offsets");
+
+  if (groups)
+    {
+      guint len = json_array_get_length (groups);
+      guint i;
+
+      for (i = 0; i < len; i++)
+        {
+          JsonObject *group = json_array_get_object_element  (groups, i);
+          gint64 start = json_object_get_int_member (group, "start");
+          gint64 count = json_object_get_int_member (group, "count");
+          gint64 material_index = json_object_get_int_member (group, "materialIndex");
+
+          gthree_geometry_add_group (geometry, start, count, material_index);
+
+        }
+    }
+
+  if (json_object_has_member (data, "boundingSphere"))
+    {
+      JsonObject *bs = json_object_get_object_member (data, "boundingSphere");
+
+      parse_sphere (bs, &priv->bounding_sphere);
+      priv->bounding_sphere_set = TRUE;
+    }
+
+  // TODO parse root.name
+
+  return g_steal_pointer (&geometry);
+}
