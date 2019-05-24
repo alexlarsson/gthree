@@ -219,6 +219,9 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters)
       if (parameters->vertex_colors)
         g_string_append (vertex, "#define USE_COLOR\n");
 
+      if (parameters->flat_shading)
+        g_string_append (vertex, "#define FLAT_SHADED\n");
+
       if (parameters->normal_map)
         g_string_append (vertex, "#define USE_NORMALMAP\n");
       if (parameters->specular_map)
@@ -300,8 +303,6 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters)
       g_string_append_printf (fragment, "precision %s float;\n", precision_to_string (parameters->precision));
       g_string_append_printf (fragment, "precision %s int;\n", precision_to_string (parameters->precision));
 
-      //TODO      ( parameters.bumpMap || parameters.normalMap ) ? "#extension GL_OES_standard_derivatives : enable" : "",
-
       if (defines)
         generate_defines (fragment, defines);
 
@@ -349,6 +350,9 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters)
 
       if (parameters->vertex_colors)
         g_string_append (fragment, "#define USE_COLOR\n");
+
+      if (parameters->flat_shading)
+        g_string_append (fragment, "#define FLAT_SHADED\n");
 
       if (parameters->metal)
         g_string_append (fragment, "#define METAL\n");

@@ -49,4 +49,9 @@ uniform vec3 ambientLightColor;
 #endif
 
 varying vec3 vViewPosition;
-varying vec3 vNormal;
+
+#ifndef FLAT_SHADED
+
+	varying vec3 vNormal;
+
+#endif

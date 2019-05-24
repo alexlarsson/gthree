@@ -529,8 +529,9 @@ static GthreeUniformsDefinition phong_uniforms[] = {
 static const char *phong_vertex_shader =
   "#define PHONG\n"
   "varying vec3 vViewPosition;\n"
-  "varying vec3 vNormal;\n"
-
+  "#ifndef FLAT_SHADED\n"
+  "	varying vec3 vNormal;\n"
+  "#endif\n"
   "#include \"/org/gnome/gthree/shader_chunks/common.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/map_pars_vertex.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/lightmap_pars_vertex.glsl\"\n"
@@ -553,7 +554,9 @@ static const char *phong_vertex_shader =
   "#include \"/org/gnome/gthree/shader_chunks/skinnormal_vertex.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/defaultnormal_vertex.glsl\"\n"
 
+  "#ifndef FLAT_SHADED\n"
   "     vNormal = normalize( transformedNormal );\n"
+  "#endif\n"
 
   "#include \"/org/gnome/gthree/shader_chunks/morphtarget_vertex.glsl\"\n"
   "#include \"/org/gnome/gthree/shader_chunks/skinning_vertex.glsl\"\n"

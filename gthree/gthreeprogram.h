@@ -44,6 +44,7 @@ typedef struct {
   guint wrap_around : 1;
   guint double_sided : 1;
   guint flip_sided : 1;
+  guint flat_shading : 1;
 
   guint unused : 12;
 

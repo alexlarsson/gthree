@@ -80,6 +80,9 @@ gthree_phong_material_real_set_params (GthreeMaterial *material,
 
   params->wrap_around = priv->wrap_around;
   params->metal = priv->metal;
+
+  params->flat_shading = gthree_basic_material_get_shading_type (GTHREE_BASIC_MATERIAL (material)) == GTHREE_SHADING_FLAT;
+
 }
 
 static void
