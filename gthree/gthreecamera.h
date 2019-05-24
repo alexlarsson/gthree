@@ -21,6 +21,8 @@ struct _GthreeCamera {
   GthreeObject parent;
 };
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeCamera, g_object_unref)
+
 typedef struct {
   GthreeObjectClass parent_class;
 

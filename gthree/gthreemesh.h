@@ -22,6 +22,8 @@ typedef struct {
   GthreeObject parent;
 } GthreeMesh;
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeMesh, g_object_unref)
+
 typedef struct {
   GthreeObjectClass parent_class;
 

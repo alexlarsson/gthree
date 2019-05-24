@@ -25,6 +25,8 @@ struct _GthreeTexture {
   GthreeResource parent;
 };
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeTexture, g_object_unref)
+
 typedef struct {
   GthreeResourceClass parent_class;
 

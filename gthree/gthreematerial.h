@@ -28,6 +28,8 @@ struct _GthreeMaterial {
   GthreeShader *shader;
 };
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeMaterial, g_object_unref)
+
 typedef struct {
   GObjectClass parent_class;
 

@@ -26,6 +26,8 @@ typedef struct {
   GInitiallyUnowned parent;
 } GthreeObject;
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeObject, g_object_unref)
+
 typedef struct {
   GInitiallyUnownedClass parent_class;
 

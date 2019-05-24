@@ -21,6 +21,8 @@ struct _GthreeMultiMaterial {
   GthreeMaterial parent;
 };
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeMultiMaterial, g_object_unref)
+
 typedef struct {
   GthreeMaterialClass parent_class;
 

@@ -20,6 +20,8 @@ typedef struct {
   GObject parent;
 } GthreeShader;
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeShader, g_object_unref)
+
 typedef struct {
   GObjectClass parent_class;
 
