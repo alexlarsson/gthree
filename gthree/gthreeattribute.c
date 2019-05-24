@@ -903,6 +903,12 @@ gthree_attribute_get_array (GthreeAttribute *attribute)
 }
 
 void
+gthree_attribute_set_needs_update (GthreeAttribute *attribute)
+{
+  attribute->dirty = TRUE;
+}
+
+void
 gthree_attribute_set_array (GthreeAttribute      *attribute,
                             GthreeAttributeArray *array)
 {
