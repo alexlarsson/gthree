@@ -237,6 +237,15 @@ gthree_attribute_array_peek_point3d   (GthreeAttributeArray *array)
   return (graphene_point3d_t*)&array->data[0];
 }
 
+graphene_point3d_t *
+gthree_attribute_array_peek_point3d_at (GthreeAttributeArray *array,
+                                        int index)
+{
+  g_assert (index < array->count);
+
+  return gthree_attribute_array_peek_point3d (array) + index;
+}
+
 float *
 gthree_attribute_array_peek_float_at (GthreeAttributeArray *array,
                                       int index)
@@ -1159,6 +1168,15 @@ gthree_attribute_peek_point3d (GthreeAttribute *attribute)
 {
   if (attribute->array)
     return gthree_attribute_array_peek_point3d (attribute->array);
+  return NULL;
+}
+
+graphene_point3d_t *
+gthree_attribute_peek_point3d_at (GthreeAttribute *attribute,
+                                  int              index)
+{
+  if (attribute->array)
+    return gthree_attribute_array_peek_point3d_at (attribute->array, index);
   return NULL;
 }
 
