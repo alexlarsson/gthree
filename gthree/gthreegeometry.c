@@ -369,75 +369,127 @@ gthree_geometry_set_bounding_sphere  (GthreeGeometry          *geometry,
 }
 
 void
-gthree_geometry_compute_vertex_normals (GthreeGeometry *geometry,
-                                        gboolean area_weighted)
+gthree_geometry_normalize_normals (GthreeGeometry *geometry)
 {
-  g_warning ("gthree_geometry_compute_vertex_normals");
-#if 0
-  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
-  GthreeFace *face;
-  const graphene_vec3_t *vertices;
-  graphene_vec3_t *vertex_normals;
-  int i, n_faces, n_vertices;
+  GthreeAttribute *normal;
+  int i, vertex_count;
+  graphene_vec3_t n;
+  graphene_point3d_t *r;
 
-  n_faces = gthree_geometry_get_n_faces (geometry);
-  n_vertices = gthree_geometry_get_n_vertices (geometry);
-  vertices = gthree_geometry_get_vertices (geometry);
-  vertex_normals = g_new0 (graphene_vec3_t, n_vertices);
+  normal = gthree_geometry_get_normal (geometry);
+  if (normal == NULL)
+    return;
 
-  if (area_weighted)
+  vertex_count = gthree_attribute_get_count (normal);
+
+  // non-indexed elements (unconnected triangle soup)
+  for (i = 0; i < vertex_count; i ++)
     {
-      for (i = 0; i < n_faces; i++)
+      graphene_point3d_to_vec3 (gthree_attribute_peek_point3d_at (normal, i), &n);
+      graphene_vec3_normalize (&n, &n);
+      r = gthree_attribute_peek_point3d_at (normal, i);
+      r->x += graphene_vec3_get_x (&n);
+      r->y += graphene_vec3_get_y (&n);
+      r->z += graphene_vec3_get_z (&n);
+    }
+}
+
+void
+gthree_geometry_compute_vertex_normals (GthreeGeometry *geometry)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+  GthreeAttribute *position;
+  GthreeAttribute *normal;
+  int i, vertex_count;
+  int vA, vB, vC;
+  graphene_vec3_t pA, pB, pC, cb, ab;
+  graphene_point3d_t *nA, *nB, *nC;
+
+  position = gthree_geometry_get_position (geometry);
+  if (position == NULL)
+    return;
+
+  vertex_count = gthree_attribute_get_count (position);
+
+  normal = gthree_geometry_get_normal (geometry);
+  if (normal == NULL)
+    {
+      normal = gthree_attribute_new ("normal", GTHREE_ATTRIBUTE_TYPE_FLOAT, vertex_count, 3, FALSE);
+      gthree_geometry_add_attribute (geometry, normal);
+      g_object_unref (normal); // Its owned by geometry anyway
+    }
+  else
+    {
+      // reset existing normals to zero
+      for (i = 0; i < vertex_count; i++)
+        gthree_attribute_set_xyz (normal, i, 0, 0, 0);
+    }
+
+  if (priv->index)
+    {
+      int index_count = gthree_attribute_get_count (priv->index);
+      for (i = 0; i < index_count; i += 3 )
         {
-          face = &g_array_index (priv->faces, GthreeFace, i);
-          const graphene_vec3_t *va, *vb, *vc;
-          graphene_vec3_t cb, ab;
+          vA = gthree_attribute_get_uint (priv->index, i + 0);
+          vB = gthree_attribute_get_uint (priv->index, i + 1);
+          vC = gthree_attribute_get_uint (priv->index, i + 2);
 
-          // vertex normals weighted by triangle areas
-          // http://www.iquilezles.org/www/articles/normals/normals.htm
+          graphene_point3d_to_vec3 (gthree_attribute_peek_point3d_at (position, vA), &pA);
+          graphene_point3d_to_vec3 (gthree_attribute_peek_point3d_at (position, vB), &pB);
+          graphene_point3d_to_vec3 (gthree_attribute_peek_point3d_at (position, vC), &pC);
 
-          va = &vertices[face->a];
-          vb = &vertices[face->b];
-          vc = &vertices[face->c];
-
-          graphene_vec3_subtract (vc, vb, &cb);
-          graphene_vec3_subtract (va, vb, &ab);
+          graphene_vec3_subtract (&pC, &pB, &cb);
+          graphene_vec3_subtract (&pA, &pB, &ab);
           graphene_vec3_cross (&cb, &ab, &cb);
 
-          graphene_vec3_add (&vertex_normals[face->a], &cb, &vertex_normals[face->a]);
-          graphene_vec3_add (&vertex_normals[face->b], &cb, &vertex_normals[face->b]);
-          graphene_vec3_add (&vertex_normals[face->c], &cb, &vertex_normals[face->c]);
+          nA = gthree_attribute_peek_point3d_at (normal, vA);
+          nA->x += graphene_vec3_get_x (&cb);
+          nA->y += graphene_vec3_get_y (&cb);
+          nA->z += graphene_vec3_get_z (&cb);
+
+          nB = gthree_attribute_peek_point3d_at (normal, vB);
+          nB->x += graphene_vec3_get_x (&cb);
+          nB->y += graphene_vec3_get_y (&cb);
+          nB->z += graphene_vec3_get_z (&cb);
+
+          nC = gthree_attribute_peek_point3d_at (normal, vC);
+          nC->x += graphene_vec3_get_x (&cb);
+          nC->y += graphene_vec3_get_y (&cb);
+          nC->z += graphene_vec3_get_z (&cb);
         }
     }
   else
     {
-      for (i = 0; i < n_faces; i++)
+      // non-indexed elements (unconnected triangle soup)
+      for (i = 0; i < vertex_count; i += 3)
         {
-          face = &g_array_index (priv->faces, GthreeFace, i);
+          graphene_point3d_to_vec3 (gthree_attribute_peek_point3d_at (position, i + 0), &pA);
+          graphene_point3d_to_vec3 (gthree_attribute_peek_point3d_at (position, i + 1), &pB);
+          graphene_point3d_to_vec3 (gthree_attribute_peek_point3d_at (position, i + 2), &pC);
 
-          graphene_vec3_add (&vertex_normals[face->a], &face->normal, &vertex_normals[face->a]);
-          graphene_vec3_add (&vertex_normals[face->b], &face->normal, &vertex_normals[face->b]);
-          graphene_vec3_add (&vertex_normals[face->c], &face->normal, &vertex_normals[face->c]);
+          graphene_vec3_subtract (&pC, &pB, &cb);
+          graphene_vec3_subtract (&pA, &pB, &ab);
+          graphene_vec3_cross (&cb, &ab, &cb);
+
+          nA = gthree_attribute_peek_point3d_at (normal, i + 0);
+          nA->x += graphene_vec3_get_x (&cb);
+          nA->y += graphene_vec3_get_y (&cb);
+          nA->z += graphene_vec3_get_z (&cb);
+
+          nB = gthree_attribute_peek_point3d_at (normal, i + 1);
+          nB->x += graphene_vec3_get_x (&cb);
+          nB->y += graphene_vec3_get_y (&cb);
+          nB->z += graphene_vec3_get_z (&cb);
+
+          nC = gthree_attribute_peek_point3d_at (normal, i + 2);
+          nC->x += graphene_vec3_get_x (&cb);
+          nC->y += graphene_vec3_get_y (&cb);
+          nC->z += graphene_vec3_get_z (&cb);
         }
     }
 
-  for (i = 0; i < n_vertices; i++)
-    graphene_vec3_normalize (&vertex_normals[i], &vertex_normals[i]);
-
-  for (i = 0; i < n_faces; i++)
-    {
-      face = &g_array_index (priv->faces, GthreeFace, i);
-
-      if (face->vertex_normals == NULL)
-        face->vertex_normals = g_new (graphene_vec3_t, 3);
-
-      face->vertex_normals[0] = vertex_normals[face->a];
-      face->vertex_normals[1] = vertex_normals[face->b];
-      face->vertex_normals[2] = vertex_normals[face->c];
-    }
-
-  g_free (vertex_normals);
-#endif
+  gthree_geometry_normalize_normals (geometry);
+  gthree_attribute_set_needs_update (normal);
 }
 
 void
