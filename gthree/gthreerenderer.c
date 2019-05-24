@@ -1454,13 +1454,11 @@ render_item (GthreeRenderer *renderer,
           */
         }
     }
-  /*
   else if (GTHREE_IS_LINE_SEGMENTS (object))
     {
       set_line_width (renderer, gthree_material_get_wireframe_line_width (material));
       draw_mode = GL_LINES;
     }
-  */
 
   if (index)
     {
