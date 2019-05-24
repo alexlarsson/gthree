@@ -233,6 +233,23 @@ gthree_geometry_get_position_count (GthreeGeometry *geometry)
   return 0;
 }
 
+// I.e. number of indexes if indexed, and nr of positions otherwise
+int
+gthree_geometry_get_vertex_count (GthreeGeometry *geometry)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+  GthreeAttribute *position;
+
+  if (priv->index)
+    return gthree_attribute_get_count (priv->index);
+
+  position = gthree_geometry_get_position (geometry);
+  if (position)
+    return gthree_attribute_get_count (position);
+
+  return 0;
+}
+
 GthreeAttribute *
 gthree_geometry_get_normal (GthreeGeometry  *geometry)
 {

@@ -47,6 +47,7 @@ GthreeAttribute *        gthree_geometry_get_attribute          (GthreeGeometry 
                                                                  GthreeAttributeName      name);
 GthreeAttribute *        gthree_geometry_get_position           (GthreeGeometry          *geometry);
 int                      gthree_geometry_get_position_count     (GthreeGeometry          *geometry);
+int                      gthree_geometry_get_vertex_count       (GthreeGeometry          *geometry);
 GthreeAttribute *        gthree_geometry_get_normal             (GthreeGeometry          *geometry);
 GthreeAttribute *        gthree_geometry_get_color              (GthreeGeometry          *geometry);
 GthreeAttribute *        gthree_geometry_get_uv                 (GthreeGeometry          *geometry);
