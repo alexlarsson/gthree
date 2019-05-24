@@ -101,36 +101,9 @@ gthree_shader_material_needs_lights (GthreeMaterial *material)
 }
 
 static gboolean
-gthree_shader_material_needs_uv (GthreeMaterial *material)
-{
-  return TRUE;
-}
-
-static GthreeShadingType
-gthree_shader_material_needs_normals (GthreeMaterial *material)
-{
-  GthreeShaderMaterial *shader = GTHREE_SHADER_MATERIAL (material);
-  GthreeShaderMaterialPrivate *priv = gthree_shader_material_get_instance_private (shader);
-
-  if (priv->shading_type == GTHREE_SHADING_SMOOTH)
-    return GTHREE_SHADING_SMOOTH;
-
-  return GTHREE_SHADING_FLAT;
-}
-
-static gboolean
 gthree_shader_material_needs_camera_pos (GthreeMaterial *material)
 {
   return TRUE;
-}
-
-static GthreeColorType
-gthree_shader_material_needs_colors  (GthreeMaterial *material)
-{
-  GthreeShaderMaterial *shader = GTHREE_SHADER_MATERIAL (material);
-  GthreeShaderMaterialPrivate *priv = gthree_shader_material_get_instance_private (shader);
-
-  return priv->vertex_colors;
 }
 
 static void
@@ -239,10 +212,7 @@ gthree_shader_material_class_init (GthreeShaderMaterialClass *klass)
   material_class->set_uniforms = gthree_shader_material_real_set_uniforms;
   material_class->needs_lights = gthree_shader_material_needs_lights;
   material_class->needs_view_matrix = gthree_shader_material_needs_view_matrix;
-  material_class->needs_uv = gthree_shader_material_needs_uv;
-  material_class->needs_normals = gthree_shader_material_needs_normals;
   material_class->needs_camera_pos = gthree_shader_material_needs_camera_pos;
-  material_class->needs_colors = gthree_shader_material_needs_colors;
 
   obj_props[PROP_SHADER] =
     g_param_spec_object ("shader", "Shader", "Shader",

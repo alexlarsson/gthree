@@ -149,47 +149,12 @@ gthree_basic_material_real_set_uniforms (GthreeMaterial *material,
 }
 
 static gboolean
-gthree_basic_material_needs_uv (GthreeMaterial *material)
-{
-  GthreeBasicMaterial *basic = GTHREE_BASIC_MATERIAL (material);
-  GthreeBasicMaterialPrivate *priv = gthree_basic_material_get_instance_private (basic);
-
-  if (priv->map != NULL
-      /* TODO:  || material.lightMap ||
-         material.bumpMap ||
-         material.normalMap ||
-         material.specularMap ||
-         material.alphaMap */)
-    return TRUE;
-
-  return FALSE;
-}
-
-static GthreeShadingType
-gthree_basic_material_needs_normals (GthreeMaterial *material)
-{
-  GthreeBasicMaterial *basic = GTHREE_BASIC_MATERIAL (material);
-  GthreeBasicMaterialPrivate *priv = gthree_basic_material_get_instance_private (basic);
-
-  return priv->env_map != NULL ? GTHREE_SHADING_FLAT : GTHREE_SHADING_NONE;
-}
-
-static gboolean
 gthree_basic_material_needs_camera_pos (GthreeMaterial *material)
 {
   GthreeBasicMaterial *basic = GTHREE_BASIC_MATERIAL (material);
   GthreeBasicMaterialPrivate *priv = gthree_basic_material_get_instance_private (basic);
 
   return priv->env_map != NULL;
-}
-
-static GthreeColorType
-gthree_basic_material_needs_colors  (GthreeMaterial *material)
-{
-  GthreeBasicMaterial *basic = GTHREE_BASIC_MATERIAL (material);
-  GthreeBasicMaterialPrivate *priv = gthree_basic_material_get_instance_private (basic);
-
-  return priv->vertex_colors;
 }
 
 static void
@@ -291,10 +256,7 @@ gthree_basic_material_class_init (GthreeBasicMaterialClass *klass)
 
   material_class->set_params = gthree_basic_material_real_set_params;
   material_class->set_uniforms = gthree_basic_material_real_set_uniforms;
-  material_class->needs_uv = gthree_basic_material_needs_uv;
-  material_class->needs_normals = gthree_basic_material_needs_normals;
   material_class->needs_camera_pos = gthree_basic_material_needs_camera_pos;
-  material_class->needs_colors = gthree_basic_material_needs_colors;
 
   obj_props[PROP_COLOR] =
     g_param_spec_boxed ("color", "Color", "Color",

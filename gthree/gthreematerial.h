@@ -50,9 +50,6 @@ typedef struct {
   gboolean           (*needs_view_matrix) (GthreeMaterial *material);
   gboolean           (*needs_camera_pos) (GthreeMaterial *material);
   gboolean           (*needs_lights)  (GthreeMaterial *material);
-  gboolean           (*needs_uv)      (GthreeMaterial *material);
-  GthreeShadingType  (*needs_normals) (GthreeMaterial *material);
-  GthreeColorType    (*needs_colors)  (GthreeMaterial *material);
 
 } GthreeMaterialClass;
 
@@ -119,10 +116,7 @@ void              gthree_material_set_needs_update         (GthreeMaterial      
                                                             gboolean                 needs_update);
 gboolean          gthree_material_needs_camera_pos         (GthreeMaterial          *material);
 gboolean          gthree_material_needs_view_matrix        (GthreeMaterial          *material);
-gboolean          gthree_material_needs_uv                 (GthreeMaterial          *material);
 gboolean          gthree_material_needs_lights             (GthreeMaterial          *material);
-GthreeShadingType gthree_material_needs_normals            (GthreeMaterial          *material);
-GthreeColorType   gthree_material_needs_colors             (GthreeMaterial          *material);
 
 G_END_DECLS
 

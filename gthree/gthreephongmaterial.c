@@ -146,15 +146,6 @@ gthree_phong_material_needs_lights (GthreeMaterial *material)
   return TRUE;
 }
 
-static GthreeShadingType
-gthree_phong_material_needs_normals (GthreeMaterial *material)
-{
-  if (gthree_basic_material_get_shading_type (GTHREE_BASIC_MATERIAL (material)) == GTHREE_SHADING_SMOOTH)
-    return GTHREE_SHADING_SMOOTH;
-
-  return GTHREE_SHADING_FLAT;
-}
-
 static void
 gthree_phong_material_class_init (GthreePhongMaterialClass *klass)
 {
@@ -165,7 +156,6 @@ gthree_phong_material_class_init (GthreePhongMaterialClass *klass)
   GTHREE_MATERIAL_CLASS(klass)->needs_camera_pos = gthree_phong_material_needs_camera_pos;
   GTHREE_MATERIAL_CLASS(klass)->needs_view_matrix = gthree_phong_material_needs_view_matrix;
   GTHREE_MATERIAL_CLASS(klass)->needs_lights = gthree_phong_material_needs_lights;
-  GTHREE_MATERIAL_CLASS(klass)->needs_normals = gthree_phong_material_needs_normals;
 }
 
 const GdkRGBA *

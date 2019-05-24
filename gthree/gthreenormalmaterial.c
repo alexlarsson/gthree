@@ -58,15 +58,6 @@ gthree_normal_material_real_set_uniforms (GthreeMaterial *material,
   GTHREE_MATERIAL_CLASS (gthree_normal_material_parent_class)->set_uniforms (material, uniforms, camera);
 }
 
-static GthreeShadingType
-gthree_normal_material_needs_normals (GthreeMaterial *material)
-{
-  GthreeNormalMaterial *normal = GTHREE_NORMAL_MATERIAL (material);
-  GthreeNormalMaterialPrivate *priv = gthree_normal_material_get_instance_private (normal);
-
-  return priv->shading_type;
-}
-
 static void
 gthree_normal_material_class_init (GthreeNormalMaterialClass *klass)
 {
@@ -74,7 +65,6 @@ gthree_normal_material_class_init (GthreeNormalMaterialClass *klass)
   GTHREE_MATERIAL_CLASS(klass)->get_shader = gthree_normal_material_real_get_shader;
   GTHREE_MATERIAL_CLASS(klass)->set_params = gthree_normal_material_real_set_params;
   GTHREE_MATERIAL_CLASS(klass)->set_uniforms = gthree_normal_material_real_set_uniforms;
-  GTHREE_MATERIAL_CLASS(klass)->needs_normals = gthree_normal_material_needs_normals;
 }
 
 GthreeShadingType

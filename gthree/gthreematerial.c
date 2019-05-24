@@ -158,17 +158,6 @@ gthree_material_needs_view_matrix (GthreeMaterial *material)
 }
 
 gboolean
-gthree_material_needs_uv (GthreeMaterial *material)
-{
-  GthreeMaterialClass *class = GTHREE_MATERIAL_GET_CLASS(material);
-
-  if (class->needs_uv)
-    return class->needs_uv (material);
-
-  return FALSE;
-}
-
-gboolean
 gthree_material_needs_lights (GthreeMaterial *material)
 {
   GthreeMaterialClass *class = GTHREE_MATERIAL_GET_CLASS(material);
@@ -177,28 +166,6 @@ gthree_material_needs_lights (GthreeMaterial *material)
     return class->needs_lights (material);
 
   return FALSE;
-}
-
-GthreeShadingType
-gthree_material_needs_normals (GthreeMaterial *material)
-{
-  GthreeMaterialClass *class = GTHREE_MATERIAL_GET_CLASS(material);
-
-  if (class->needs_normals)
-    return class->needs_normals (material);
-
-  return GTHREE_SHADING_NONE;
-}
-
-GthreeColorType
-gthree_material_needs_colors  (GthreeMaterial *material)
-{
-  GthreeMaterialClass *class = GTHREE_MATERIAL_GET_CLASS(material);
-
-  if (class->needs_colors)
-    return class->needs_colors (material);
-
-  return GTHREE_COLOR_NONE;
 }
 
 static void

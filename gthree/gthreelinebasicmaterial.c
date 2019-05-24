@@ -49,25 +49,7 @@ gthree_line_basic_material_real_set_uniforms (GthreeMaterial *material,
 }
 
 static gboolean
-gthree_line_basic_material_needs_uv (GthreeMaterial *material)
-{
-  return FALSE;
-}
-
-static GthreeShadingType
-gthree_line_basic_material_needs_normals (GthreeMaterial *material)
-{
-  return FALSE;
-}
-
-static gboolean
 gthree_line_basic_material_needs_camera_pos (GthreeMaterial *material)
-{
-  return FALSE;
-}
-
-static GthreeColorType
-gthree_line_basic_material_needs_colors (GthreeMaterial *material)
 {
   return FALSE;
 }
@@ -123,10 +105,7 @@ gthree_line_basic_material_class_init (GthreeLineBasicMaterialClass *klass)
 
   material_class->set_params = gthree_line_basic_material_real_set_params;
   material_class->set_uniforms = gthree_line_basic_material_real_set_uniforms;
-  material_class->needs_uv = gthree_line_basic_material_needs_uv;
-  material_class->needs_normals = gthree_line_basic_material_needs_normals;
   material_class->needs_camera_pos = gthree_line_basic_material_needs_camera_pos;
-  material_class->needs_colors = gthree_line_basic_material_needs_colors;
 
   obj_props[PROP_COLOR] =
     g_param_spec_boxed ("color", "Color", "Color",
