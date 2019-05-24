@@ -18,7 +18,7 @@ typedef struct {
   GthreeObject *object;
   GthreeGeometry *geometry;
   GthreeMaterial *material;
-  GthreeGroup *group;
+  GthreeGeometryGroup *group;
   float z;
 } GthreeRenderListItem;
 
@@ -1355,7 +1355,7 @@ render_item (GthreeRenderer *renderer,
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
   GthreeGeometry *geometry = item->geometry;
-  GthreeGroup *group = item->group;
+  GthreeGeometryGroup *group = item->group;
   GthreeObject *object = item->object;
   GthreeProgram *program = set_program (renderer, camera, lights, fog, material, object);
   GthreeAttribute *position, *index;
@@ -1893,7 +1893,7 @@ gthree_render_list_push (GthreeRenderList *list,
                          GthreeObject *object,
                          GthreeGeometry *geometry,
                          GthreeMaterial *material,
-                         GthreeGroup *group)
+                         GthreeGeometryGroup *group)
 {
   GthreeRenderListItem item = { object, geometry, material, group, list->current_z };
   int index = list->items->len;

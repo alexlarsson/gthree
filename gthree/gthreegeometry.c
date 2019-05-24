@@ -39,7 +39,7 @@ gthree_geometry_init (GthreeGeometry *geometry)
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
 
   priv->attributes = g_ptr_array_new_with_free_func ((GDestroyNotify)drop_attribute);
-  priv->groups = g_array_new (FALSE, TRUE, sizeof (GthreeGroup));
+  priv->groups = g_array_new (FALSE, TRUE, sizeof (GthreeGeometryGroup));
 
   priv->draw_range_start = 0;
   priv->draw_range_count = -1;
@@ -263,7 +263,7 @@ gthree_geometry_add_group (GthreeGeometry  *geometry,
                            int material_index)
 {
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
-  GthreeGroup group = { start, count, material_index };
+  GthreeGeometryGroup group = { start, count, material_index };
 
   g_array_append_val (priv->groups, group);
 }
@@ -283,20 +283,20 @@ gthree_geometry_get_n_groups (GthreeGeometry  *geometry)
   return priv->groups->len;
 }
 
-GthreeGroup *
+GthreeGeometryGroup *
 gthree_geometry_get_group (GthreeGeometry  *geometry, int index)
 {
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
   g_assert (index < priv->groups->len);
 
-  return &g_array_index (priv->groups, GthreeGroup, index);
+  return &g_array_index (priv->groups, GthreeGeometryGroup, index);
 }
 
-GthreeGroup *
+GthreeGeometryGroup *
 gthree_geometry_peek_groups (GthreeGeometry  *geometry)
 {
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
-  return (GthreeGroup *)priv->groups->data;
+  return (GthreeGeometryGroup *)priv->groups->data;
 }
 
 int
@@ -478,7 +478,7 @@ gthree_geometry_fill_render_list (GthreeGeometry   *geometry,
     {
       for (i = 0; i < priv->groups->len; i++)
         {
-          GthreeGroup *group = &g_array_index (priv->groups, GthreeGroup, i);
+          GthreeGeometryGroup *group = &g_array_index (priv->groups, GthreeGeometryGroup, i);
 
           resolved_material = gthree_material_resolve (material, group->material_index);
           if (resolved_material)

@@ -33,7 +33,7 @@ typedef struct {
   int start;
   int count;
   int material_index;
-} GthreeGroup;
+} GthreeGeometryGroup;
 
 GthreeGeometry *gthree_geometry_new ();
 GType gthree_geometry_get_type (void) G_GNUC_CONST;
@@ -60,9 +60,9 @@ void                     gthree_geometry_add_group              (GthreeGeometry 
                                                                  int                      material_index);
 void                     gthree_geometry_clear_groups           (GthreeGeometry          *geometry);
 int                      gthree_geometry_get_n_groups           (GthreeGeometry          *geometry);
-GthreeGroup *            gthree_geometry_get_group              (GthreeGeometry          *geometry,
+GthreeGeometryGroup *    gthree_geometry_get_group              (GthreeGeometry          *geometry,
                                                                  int                      index);
-GthreeGroup *            gthree_geometry_peek_groups            (GthreeGeometry          *geometry);
+GthreeGeometryGroup *    gthree_geometry_peek_groups            (GthreeGeometry          *geometry);
 int                      gthree_geometry_get_draw_range_start   (GthreeGeometry          *geometry);
 int                      gthree_geometry_get_draw_range_count   (GthreeGeometry          *geometry);
 void                     gthree_geometry_set_draw_range         (GthreeGeometry          *geometry,

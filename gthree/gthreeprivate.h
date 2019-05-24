@@ -43,7 +43,7 @@ void gthree_render_list_push (GthreeRenderList *list,
                               GthreeObject *object,
                               GthreeGeometry *geometry,
                               GthreeMaterial *material,
-                              GthreeGroup *group);
+                              GthreeGeometryGroup *group);
 void gthree_render_list_sort (GthreeRenderList *list);
 
 
