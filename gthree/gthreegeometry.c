@@ -66,8 +66,6 @@ gthree_geometry_finalize (GObject *obj)
 static void
 gthree_geometry_class_init (GthreeGeometryClass *klass)
 {
-  GthreeResourceClass *resource_class = GTHREE_RESOURCE_CLASS (klass);
-
   G_OBJECT_CLASS (klass)->finalize = gthree_geometry_finalize;
 }
 
