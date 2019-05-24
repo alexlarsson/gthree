@@ -216,7 +216,7 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters)
         g_string_append (vertex, "#define USE_LIGHTMAP\n");
       if (parameters->bump_map)
         g_string_append (vertex, "#define USE_BUMPMAP\n");
-      if (parameters->vertex_colors != GTHREE_COLOR_NONE)
+      if (parameters->vertex_colors)
         g_string_append (vertex, "#define USE_COLOR\n");
 
       if (parameters->normal_map)
@@ -347,7 +347,7 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters)
       if (parameters->alpha_map)
         g_string_append (fragment, "#define USE_ALPHAMAP\n");
 
-      if (parameters->vertex_colors != GTHREE_COLOR_NONE)
+      if (parameters->vertex_colors)
         g_string_append (fragment, "#define USE_COLOR\n");
 
       if (parameters->metal)

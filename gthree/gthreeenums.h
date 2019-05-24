@@ -37,12 +37,6 @@ typedef enum {
 } GthreeShadingType;
 
 typedef enum {
-  GTHREE_COLOR_NONE,
-  GTHREE_COLOR_FACE,
-  GTHREE_COLOR_VERTEX,
-} GthreeColorType;
-
-typedef enum {
   GTHREE_PRECISION_LOW,
   GTHREE_PRECISION_MEDIUM,
   GTHREE_PRECISION_HIGH,

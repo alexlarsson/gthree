@@ -8,7 +8,7 @@ typedef struct {
   GthreeShader *shader;
 
   GthreeShadingType shading_type;
-  GthreeColorType vertex_colors;
+  gboolean vertex_colors;
 
   gboolean use_lights;
   gboolean skinning;
@@ -49,7 +49,7 @@ gthree_shader_material_init (GthreeShaderMaterial *shader)
 {
   GthreeShaderMaterialPrivate *priv = gthree_shader_material_get_instance_private (shader);
 
-  priv->vertex_colors = GTHREE_COLOR_NONE;
+  priv->vertex_colors = FALSE;
   priv->shading_type = GTHREE_SHADING_SMOOTH;
   priv->use_lights = FALSE;
 }
@@ -152,7 +152,7 @@ gthree_shader_material_set_property (GObject *obj,
       break;
 
     case PROP_VERTEX_COLORS:
-      gthree_shader_material_set_vertex_colors (shader, g_value_get_enum (value));
+      gthree_shader_material_set_vertex_colors (shader, g_value_get_boolean (value));
       break;
 
     case PROP_USE_LIGHTS:
@@ -184,7 +184,7 @@ gthree_shader_material_get_property (GObject *obj,
       break;
 
     case PROP_VERTEX_COLORS:
-      g_value_set_enum (value, priv->vertex_colors);
+      g_value_set_boolean (value, priv->vertex_colors);
       break;
 
     case PROP_USE_LIGHTS:
@@ -224,10 +224,9 @@ gthree_shader_material_class_init (GthreeShaderMaterialClass *klass)
                        GTHREE_SHADING_SMOOTH,
                        G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   obj_props[PROP_VERTEX_COLORS] =
-    g_param_spec_enum ("vertex-colors", "Vertex Colors", "Vertex Colors",
-                       GTHREE_TYPE_COLOR_TYPE,
-                       GTHREE_COLOR_NONE,
-                       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+    g_param_spec_boolean ("vertex-colors", "Vertex Colors", "Vertex Colors",
+                          FALSE,
+                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   obj_props[PROP_USE_LIGHTS] =
     g_param_spec_boolean ("use-lights", "Use Lights", "Use Lights",
                           FALSE,
@@ -267,21 +266,22 @@ gthree_shader_material_set_shading_type (GthreeShaderMaterial *shader,
 
 void
 gthree_shader_material_set_vertex_colors (GthreeShaderMaterial *shader,
-                                          GthreeColorType       color_type)
+                                          gboolean  vertex_colors)
 {
   GthreeShaderMaterialPrivate *priv = gthree_shader_material_get_instance_private (shader);
 
-  if (priv->vertex_colors == color_type)
+  vertex_colors = !!vertex_colors;
+  if (priv->vertex_colors == vertex_colors)
     return;
 
-  priv->vertex_colors = color_type;
+  priv->vertex_colors = vertex_colors;
 
   gthree_material_set_needs_update (GTHREE_MATERIAL (shader), TRUE);
 
   g_object_notify_by_pspec (G_OBJECT (shader), obj_props[PROP_VERTEX_COLORS]);
 }
 
-GthreeColorType
+gboolean
 gthree_shader_material_get_vertex_colors (GthreeShaderMaterial *shader)
 {
   GthreeShaderMaterialPrivate *priv = gthree_shader_material_get_instance_private (shader);

@@ -34,8 +34,8 @@ const GdkRGBA *   gthree_basic_material_get_color         (GthreeBasicMaterial *
 void              gthree_basic_material_set_color         (GthreeBasicMaterial *basic,
                                                            const GdkRGBA       *color);
 void              gthree_basic_material_set_vertex_colors (GthreeBasicMaterial *basic,
-                                                           GthreeColorType      color_type);
-GthreeColorType   gthree_basic_material_get_vertex_colors (GthreeBasicMaterial *basic);
+                                                           gboolean             vertex_colors);
+gboolean          gthree_basic_material_get_vertex_colors (GthreeBasicMaterial *basic);
 void              gthree_basic_material_set_map           (GthreeBasicMaterial *basic,
                                                            GthreeTexture       *texture);
 GthreeTexture  *  gthree_basic_material_get_map           (GthreeBasicMaterial *basic);

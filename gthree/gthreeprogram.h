@@ -36,7 +36,7 @@ typedef struct {
   guint specular_map : 1;
   guint alpha_map : 1;
   guint bump_map : 1;
-  guint vertex_colors : 2; /* GthreeColorType  */
+  guint vertex_colors : 1;
   guint fog : 1;
   guint use_fog : 1;
   guint fog_exp : 1;

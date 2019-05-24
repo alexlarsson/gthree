@@ -35,8 +35,8 @@ GthreeShadingType gthree_shader_material_get_shading_type  (GthreeShaderMaterial
 void              gthree_shader_material_set_shading_type  (GthreeShaderMaterial *shader,
                                                             GthreeShadingType     shading_type);
 void              gthree_shader_material_set_vertex_colors (GthreeShaderMaterial *shader,
-                                                            GthreeColorType       color_type);
-GthreeColorType   gthree_shader_material_get_vertex_colors (GthreeShaderMaterial *shader);
+                                                            gboolean              vertex_color);
+gboolean          gthree_shader_material_get_vertex_colors (GthreeShaderMaterial *shader);
 void              gthree_shader_material_set_use_lights    (GthreeShaderMaterial *shader,
                                                             gboolean              use_lights);
 gboolean          gthree_shader_material_get_use_lights    (GthreeShaderMaterial *shader);

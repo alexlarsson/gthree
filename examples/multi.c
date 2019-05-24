@@ -29,7 +29,7 @@ init_scene (void)
   texture = gthree_texture_new (crate_pixbuf);
 
   material = gthree_basic_material_new ();
-  gthree_basic_material_set_vertex_colors (material, GTHREE_COLOR_NONE);
+  gthree_basic_material_set_vertex_colors (material, FALSE);
   gthree_basic_material_set_map (material, texture);
 
   scene = gthree_scene_new ();

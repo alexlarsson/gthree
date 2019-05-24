@@ -31,7 +31,7 @@ init_scene (void)
   material_wireframe = gthree_basic_material_new ();
   gthree_material_set_is_wireframe (GTHREE_MATERIAL (material_wireframe), TRUE);
   gthree_basic_material_set_color (material_wireframe, &yellow);
-  gthree_basic_material_set_vertex_colors (material_wireframe, GTHREE_COLOR_NONE);
+  gthree_basic_material_set_vertex_colors (material_wireframe, FALSE);
 
   material_phong = gthree_phong_material_new ();
   gthree_phong_material_set_ambient_color (material_phong, &red);
@@ -39,7 +39,7 @@ init_scene (void)
   gthree_phong_material_set_specular_color (material_phong, &white);
 
   material_texture = gthree_basic_material_new ();
-  gthree_basic_material_set_vertex_colors (material_texture, GTHREE_COLOR_NONE);
+  gthree_basic_material_set_vertex_colors (material_texture, FALSE);
   gthree_basic_material_set_map (material_texture, texture);
 
   scene = gthree_scene_new ();
