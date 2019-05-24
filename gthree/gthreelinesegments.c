@@ -47,7 +47,6 @@ gthree_line_segments_finalize (GObject *obj)
   GthreeLineSegments *line_segments = GTHREE_LINE_SEGMENTS (obj);
   GthreeLineSegmentsPrivate *priv = gthree_line_segments_get_instance_private (line_segments);
 
-  gthree_resource_unuse (GTHREE_RESOURCE (priv->geometry));
   g_clear_object (&priv->geometry);
   g_clear_object (&priv->material);
 
@@ -103,14 +102,11 @@ gthree_line_segments_set_property (GObject *obj,
 {
   GthreeLineSegments *line_segments = GTHREE_LINE_SEGMENTS (obj);
   GthreeLineSegmentsPrivate *priv = gthree_line_segments_get_instance_private (line_segments);
-  GthreeGeometry *geometry;
 
   switch (prop_id)
     {
     case PROP_GEOMETRY:
-      geometry = g_value_get_object (value);
-      gthree_resource_use (GTHREE_RESOURCE (geometry));
-      g_set_object (&priv->geometry, geometry);
+      g_set_object (&priv->geometry, g_value_get_object (value));
       break;
 
     case PROP_MATERIAL:

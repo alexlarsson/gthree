@@ -24,9 +24,7 @@ typedef struct {
   gint draw_range_count;
 } GthreeGeometryPrivate;
 
-static void gthree_geometry_real_unrealize (GthreeResource *resource);
-
-G_DEFINE_TYPE_WITH_PRIVATE (GthreeGeometry, gthree_geometry, GTHREE_TYPE_RESOURCE);
+G_DEFINE_TYPE_WITH_PRIVATE (GthreeGeometry, gthree_geometry, G_TYPE_OBJECT);
 
 static void
 drop_attribute (GthreeAttribute *attribute)
@@ -70,15 +68,7 @@ gthree_geometry_class_init (GthreeGeometryClass *klass)
 {
   GthreeResourceClass *resource_class = GTHREE_RESOURCE_CLASS (klass);
 
-  resource_class->unrealize = gthree_geometry_real_unrealize;
-
   G_OBJECT_CLASS (klass)->finalize = gthree_geometry_finalize;
-}
-
-static void
-gthree_geometry_real_unrealize (GthreeResource *resource)
-{
-  //GthreeGeometry *geometry = GTHREE_GEOMETRY (resource);
 }
 
 GthreeGeometry *

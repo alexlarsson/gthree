@@ -46,7 +46,6 @@ gthree_mesh_finalize (GObject *obj)
   GthreeMesh *mesh = GTHREE_MESH (obj);
   GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
 
-  gthree_resource_unuse (GTHREE_RESOURCE (priv->geometry));
   g_clear_object (&priv->geometry);
   g_clear_object (&priv->material);
 
@@ -102,14 +101,11 @@ gthree_mesh_set_property (GObject *obj,
 {
   GthreeMesh *mesh = GTHREE_MESH (obj);
   GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
-  GthreeGeometry *geometry;
 
   switch (prop_id)
     {
     case PROP_GEOMETRY:
-      geometry = g_value_get_object (value);
-      gthree_resource_use (GTHREE_RESOURCE (geometry));
-      g_set_object (&priv->geometry, geometry);
+      g_set_object (&priv->geometry, g_value_get_object (value));
       break;
 
     case PROP_MATERIAL:

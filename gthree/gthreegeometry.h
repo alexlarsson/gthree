@@ -9,7 +9,6 @@
 
 #include <gdk/gdk.h>
 #include <gthree/gthreeobject.h>
-#include <gthree/gthreeresource.h>
 
 G_BEGIN_DECLS
 
@@ -22,11 +21,11 @@ G_BEGIN_DECLS
                                                                GTHREE_TYPE_GEOMETRY))
 
 struct _GthreeGeometry {
-  GthreeResource parent;
+  GObject parent;
 };
 
 typedef struct {
-  GthreeResourceClass parent_class;
+  GObjectClass parent_class;
 
 } GthreeGeometryClass;
 
