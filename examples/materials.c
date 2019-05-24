@@ -10,8 +10,8 @@ static GthreeScene *scene;
 static GthreePerspectiveCamera *camera;
 static GthreeMesh *particle_light;
 
-static GthreeMaterial *materials[14] = { NULL };
-static GthreeGeometry *geometries[14] = { NULL };
+static GthreeMaterial *materials[16] = { NULL };
+static GthreeGeometry *geometries[16] = { NULL };
 static int n_materials = 0;
 static int anim_material1, anim_material2;
 
@@ -81,17 +81,16 @@ init_scene (void)
                               graphene_point3d_init (&pos, 0, 200, 2000));
 
   material_lambert = gthree_lambert_material_new ();
-  gthree_material_set_is_transparent (GTHREE_MATERIAL (material_lambert), TRUE);
-  gthree_basic_material_set_map (GTHREE_BASIC_MATERIAL (material_lambert), texture);
+  gthree_basic_material_set_color (GTHREE_BASIC_MATERIAL (material_lambert), &light_grey);
   geometries[n_materials] = geometry;
   materials[n_materials++] = GTHREE_MATERIAL (material_lambert);
 
-  material_lambert = gthree_lambert_material_new ();
-  gthree_basic_material_set_color (GTHREE_BASIC_MATERIAL (material_lambert), &light_grey);
-  gthree_basic_material_set_shading_type (GTHREE_BASIC_MATERIAL (material_lambert),
+  material_phong = gthree_phong_material_new ();
+  gthree_basic_material_set_color (GTHREE_BASIC_MATERIAL (material_phong), &light_grey);
+  gthree_basic_material_set_shading_type (GTHREE_BASIC_MATERIAL (material_phong),
                                           GTHREE_SHADING_FLAT);
   geometries[n_materials] = geometry;
-  materials[n_materials++] = GTHREE_MATERIAL (material_lambert);
+  materials[n_materials++] = GTHREE_MATERIAL (material_phong);
 
   material_phong = gthree_phong_material_new ();
   gthree_basic_material_set_color (GTHREE_BASIC_MATERIAL (material_phong), &light_grey);
@@ -102,6 +101,22 @@ init_scene (void)
                                           GTHREE_SHADING_FLAT);
   geometries[n_materials] = geometry;
   materials[n_materials++] = GTHREE_MATERIAL (material_phong);
+
+  material_phong = gthree_phong_material_new ();
+  gthree_basic_material_set_color (GTHREE_BASIC_MATERIAL (material_phong), &light_grey);
+  gthree_phong_material_set_ambient_color (material_phong, &very_dark_grey);
+  gthree_phong_material_set_specular_color (material_phong, &dark_green);
+  gthree_phong_material_set_shininess (material_phong, 30);
+  gthree_basic_material_set_shading_type (GTHREE_BASIC_MATERIAL (material_phong),
+                                          GTHREE_SHADING_SMOOTH);
+  geometries[n_materials] = geometry;
+  materials[n_materials++] = GTHREE_MATERIAL (material_phong);
+
+  material_lambert = gthree_lambert_material_new ();
+  gthree_material_set_is_transparent (GTHREE_MATERIAL (material_lambert), TRUE);
+  gthree_basic_material_set_map (GTHREE_BASIC_MATERIAL (material_lambert), texture);
+  geometries[n_materials] = geometry;
+  materials[n_materials++] = GTHREE_MATERIAL (material_lambert);
 
   material_normal = gthree_normal_material_new ();
   geometries[n_materials] = geometry;
@@ -120,13 +135,6 @@ init_scene (void)
   gthree_material_set_blend_mode (GTHREE_MATERIAL (material_basic), GTHREE_BLEND_SUBTRACTIVE, 0, 0 , 0);
   geometries[n_materials] = geometry;
   materials[n_materials++] = GTHREE_MATERIAL (material_basic);
-
-  material_lambert = gthree_lambert_material_new ();
-  gthree_basic_material_set_color (GTHREE_BASIC_MATERIAL (material_lambert), &light_grey);
-  gthree_basic_material_set_shading_type (GTHREE_BASIC_MATERIAL (material_lambert),
-                                          GTHREE_SHADING_SMOOTH);
-  geometries[n_materials] = geometry;
-  materials[n_materials++] = GTHREE_MATERIAL (material_lambert);
 
   material_phong = gthree_phong_material_new ();
   gthree_basic_material_set_color (GTHREE_BASIC_MATERIAL (material_phong), &light_grey);
