@@ -1284,54 +1284,29 @@ setup_vertex_attributes (GthreeRenderer *renderer,
             {
               gboolean normalized = gthree_attribute_get_normalized (geometry_attribute);
               int size = gthree_attribute_get_item_size (geometry_attribute);
+              int offset = gthree_attribute_get_item_offset (geometry_attribute);
+              int stride = gthree_attribute_get_stride (geometry_attribute);
 
               int buffer = gthree_attribute_get_gl_buffer (geometry_attribute);
               int type = gthree_attribute_get_gl_type (geometry_attribute);
-              //int bytes_per_element = gthree_attribute_get_gl_bytes_per_element (geometry_attribute);
+              int bytes_per_element = gthree_attribute_get_gl_bytes_per_element (geometry_attribute);
 
               /*
-              if ( geometryAttribute.isInterleavedBufferAttribute )
+                if ( geometryAttribute.isInstancedBufferAttribute )
                 {
-                  var data = geometryAttribute.data;
-                  var stride = data.stride;
-                  var offset = geometryAttribute.offset;
-
-                  if ( data && data.isInstancedInterleavedBuffer )
-                    {
-                      state.enableAttributeAndDivisor( programAttribute, data.meshPerAttribute );
-                      if ( geometry.maxInstancedCount === undefined )
-                        {
-                          geometry.maxInstancedCount = data.meshPerAttribute * data.count;
-                        }
-                    }
-                  else
-                    {
-                      state.enableAttribute( programAttribute );
-                    }
-
-                  _gl.bindBuffer( _gl.ARRAY_BUFFER, buffer );
-                  _gl.vertexAttribPointer( programAttribute, size, type, normalized, stride * bytesPerElement, offset * bytesPerElement );
+                state.enableAttributeAndDivisor( programAttribute, geometryAttribute.meshPerAttribute );
+                if ( geometry.maxInstancedCount === undefined )
+                {
+                geometry.maxInstancedCount = geometryAttribute.meshPerAttribute * geometryAttribute.count;
                 }
-              else
+                }
+                else
               */
-                {
-                  /*
-                  if ( geometryAttribute.isInstancedBufferAttribute )
-                    {
-                      state.enableAttributeAndDivisor( programAttribute, geometryAttribute.meshPerAttribute );
-                      if ( geometry.maxInstancedCount === undefined )
-                        {
-                          geometry.maxInstancedCount = geometryAttribute.meshPerAttribute * geometryAttribute.count;
-                        }
-                    }
-                  else
-                  */
-                    {
-                      enable_attribute (renderer, program_attribute);
-                    }
-                    glBindBuffer (GL_ARRAY_BUFFER, buffer);
-                    glVertexAttribPointer (program_attribute, size, type, normalized, 0, 0 );
-                }
+              {
+                enable_attribute (renderer, program_attribute);
+              }
+              glBindBuffer (GL_ARRAY_BUFFER, buffer);
+              glVertexAttribPointer (program_attribute, size, type, normalized, stride * bytes_per_element, GINT_TO_POINTER (offset));
             }
           else
             {

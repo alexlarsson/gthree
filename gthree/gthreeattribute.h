@@ -236,6 +236,7 @@ void                  gthree_attribute_set_array          (GthreeAttribute      
 void                  gthree_attribute_set_needs_update   (GthreeAttribute      *attribute);
 int                   gthree_attribute_get_count          (GthreeAttribute      *attribute);
 GthreeAttributeType   gthree_attribute_get_attribute_type (GthreeAttribute      *attribute);
+int                   gthree_attribute_get_stride         (GthreeAttribute      *attribute);
 int                   gthree_attribute_get_item_size      (GthreeAttribute      *attribute);
 int                   gthree_attribute_get_item_offset    (GthreeAttribute      *attribute);
 gboolean              gthree_attribute_get_normalized     (GthreeAttribute      *attribute);
