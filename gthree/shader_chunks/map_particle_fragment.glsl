@@ -1,5 +1,7 @@
 #ifdef USE_MAP
 
-	gl_FragColor = gl_FragColor * texture2D( map, vec2( gl_PointCoord.x, 1.0 - gl_PointCoord.y ) );
+	vec2 uv = ( uvTransform * vec3( gl_PointCoord.x, 1.0 - gl_PointCoord.y, 1 ) ).xy;
+	vec4 mapTexel = texture2D( map, uv );
+	diffuseColor *= mapTexelToLinear( mapTexel );
 
 #endif
