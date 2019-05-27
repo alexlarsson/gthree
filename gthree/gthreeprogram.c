@@ -81,18 +81,6 @@ create_shader (int type, const char *code)
 }
 
 static void
-cache_uniform_locations (GHashTable *uniforms, GLuint program, char **identifiers)
-{
-  int i;
-
-  for (i = 0; identifiers[i] != NULL; i++)
-    {
-      int location = glGetUniformLocation (program, identifiers[i]);
-      g_hash_table_insert (uniforms, GINT_TO_POINTER (g_quark_from_string (identifiers[i])), GINT_TO_POINTER (location));
-    }
-}
-
-static void
 generate_defines (GString *out, GPtrArray *defines)
 {
   int i;
@@ -110,10 +98,251 @@ generate_defines (GString *out, GPtrArray *defines)
 }
 
 static void
-cache_attribute_location (GHashTable *attributes, GLuint program, char *identifier)
+get_uniform_locations (GthreeProgram *program)
 {
-  int location = glGetAttribLocation (program, identifier);
-  g_hash_table_insert (attributes, GINT_TO_POINTER (g_quark_from_string (identifier)), GINT_TO_POINTER (location));
+  GthreeProgramPrivate *priv = gthree_program_get_instance_private (program);
+  GLint n, i, max_len;
+  char *buffer;
+
+  priv->uniform_locations = g_hash_table_new (g_direct_hash, g_direct_equal);
+
+  glGetProgramiv (priv->gl_program,  GL_ACTIVE_UNIFORM_MAX_LENGTH,  &max_len);
+  buffer = g_alloca (max_len + 1);
+
+  n = 0;
+  glGetProgramiv (priv->gl_program,  GL_ACTIVE_UNIFORMS,  &n);
+  for (i = 0; i < n; i++)
+    {
+      GLint size;
+      GLenum type;
+      int location;
+
+      glGetActiveUniform(priv->gl_program,  i,  max_len,  NULL,
+                         &size, &type, buffer);
+
+      location = glGetUniformLocation (priv->gl_program, buffer);
+      g_hash_table_insert (priv->uniform_locations,
+                           GINT_TO_POINTER (g_quark_from_string (buffer)), GINT_TO_POINTER (location));
+    }
+}
+
+static void
+string_replace (GString *string,
+                const gchar *find,
+                const gchar *replace)
+{
+  const gchar *at;
+  gssize pos;
+
+  at = strstr (string->str, find);
+  while (at != NULL)
+    {
+      pos = at - string->str;
+      g_string_erase (string, pos, strlen (find));
+      g_string_insert (string, pos, replace);
+
+      at = strstr (string->str, find);
+    }
+}
+
+static void
+string_replace_i (GString *string,
+                  const gchar *find,
+                  int i)
+{
+  g_autofree char *str = g_strdup_printf ("%d", i);
+  string_replace (string, find, str);
+}
+
+
+static void
+replace_light_nums (GString *str, GthreeProgramParameters *parameters)
+{
+  string_replace_i (str, "NUM_DIR_LIGHTS", parameters->num_dir_lights);
+  string_replace_i (str, "NUM_SPOT_LIGHTS", parameters->num_spot_lights);
+  string_replace_i (str, "NUM_RECT_AREA_LIGHTS", parameters->num_rect_area_lights);
+  string_replace_i (str, "NUM_POINT_LIGHTS", parameters->num_point_lights);
+  string_replace_i (str, "NUM_HEMI_LIGHTS", parameters->num_hemi_lights);
+}
+
+static void
+replace_clipping_plane_nums (GString *str, GthreeProgramParameters *parameters)
+{
+  string_replace_i (str, "NUM_CLIPPING_PLANES", parameters->num_clipping_planes);
+  string_replace_i (str, "UNION_CLIPPING_PLANES", parameters->num_clipping_planes - parameters->num_clip_intersection);
+}
+
+
+static gboolean
+unroll_replace_cb (const GMatchInfo *info,
+                   GString          *res,
+                   gpointer          data)
+{
+  g_autofree gchar *start_s = g_match_info_fetch (info, 0);
+  g_autofree gchar *end_s = g_match_info_fetch (info, 1);
+  g_autofree gchar *snippet = g_match_info_fetch (info, 2);
+  int start, end, i;
+
+  start = atoi (start_s);
+  end = atoi (end_s);
+
+  for (i = start; i < end; i++)
+    {
+      g_autoptr(GString) s = g_string_new (snippet);
+      g_autofree char *i_s = g_strdup_printf ("[ %d ]", i);
+
+      string_replace (s, "[ i ]", i_s);
+      g_string_append (res, s->str);
+    }
+
+  return FALSE;
+}
+
+static char *
+unroll_loops (GString *str)
+{
+  g_autoptr(GRegex) regex = g_regex_new ("#pragma unroll_loop[\\s]+?for \\( int i \\= (\\d+)\\; i < (\\d+)\\; i \\+\\+ \\) \\{([\\s\\S]+?)(?=\\})\\}", 0, 0, NULL);
+
+  return g_regex_replace_eval (regex, str->str, str->len, 0, 0, unroll_replace_cb, NULL, NULL);
+}
+
+static void
+parse_include (char *file,
+               GString *s)
+{
+  GBytes *bytes;
+  char *end;
+  g_autofree char *full_path = NULL;
+
+  while (*file != '<' && *file != 0)
+    file++;
+
+  if (*file == 0)
+    {
+      g_warning ("No initial \" in include");
+      return;
+    }
+
+  file++;
+
+  end = file;
+  while (*end != '>' && *end != 0)
+    end++;
+
+  if (*end == 0)
+    {
+      g_warning ("No final \" in include");
+      return;
+    }
+
+  *end = 0;
+
+  full_path = g_strconcat ("/org/gnome/gthree/shader_chunks/", file, ".glsl", NULL);
+  bytes = g_resources_lookup_data (full_path, 0, NULL);
+  if (bytes == NULL)
+    {
+      g_warning ("shader snipped %s not found", file);
+      return;
+    }
+
+  g_string_append_printf (s, "// Include: %s\n", file);
+  g_string_append_len (s,
+                        g_bytes_get_data (bytes, NULL),
+                        g_bytes_get_size (bytes));
+  g_string_append_c (s, '\n');
+  g_bytes_unref (bytes);
+}
+
+static char *
+parse_text_with_includes (const char *text)
+{
+  GString *s;
+  char **lines;
+  int i;
+
+  s = g_string_new ("");
+
+  lines = g_strsplit (text, "\n", -1);
+  for (i = 0; lines[i] != NULL; i++)
+    {
+      char *line = lines[i];
+      while (g_ascii_isspace (*line))
+        line++;
+      if (g_str_has_prefix (line, "#include"))
+        parse_include (lines[i] + strlen ("#include"), s);
+      else
+        {
+          g_string_append (s, lines[i]);
+          g_string_append_c (s, '\n');
+        }
+    }
+
+  g_strfreev (lines);
+
+  return g_string_free (s, FALSE);
+}
+
+static void
+get_encoding_components (GthreeEncodingFormat encoding,
+                         const char **type,
+                         const char **args)
+{
+  switch ( encoding ) {
+  case GTHREE_ENCODING_FORMAT_LINEAR:
+    *type = "Linear";
+    *args = "( value )";
+    break;
+  case GTHREE_ENCODING_FORMAT_SRGB:
+    *type = "sRGB";
+    *args = "( value )";
+    break;
+  case GTHREE_ENCODING_FORMAT_RGBE:
+    *type = "RGBE";
+    *args = "( value )";
+    break;
+  case GTHREE_ENCODING_FORMAT_RGBM7:
+    *type = "RGBM";
+    *args = "( value, 7.0 )";
+    break;
+  case GTHREE_ENCODING_FORMAT_RGBM16:
+    *type = "RGBM";
+    *args = "( value, 16.0 )";
+    break;
+  case GTHREE_ENCODING_FORMAT_RGBD:
+    *type = "RGBD";
+    *args = "( value, 256.0 )";
+    break;
+  case GTHREE_ENCODING_FORMAT_GAMMA:
+    *type = "Gamma";
+    *args = "( value, float( GAMMA_FACTOR ) )";
+    break;
+  default:
+    g_assert_not_reached ();
+  }
+}
+
+static void
+get_texel_decoding_function (GString *shader,
+                             const char *function_name,
+                             GthreeEncodingFormat encoding)
+{
+  const char *type, *args;
+  get_encoding_components (encoding, &type, &args);
+  g_string_append_printf (shader,
+                          "vec4 %s( vec4 value ) { return %sToLinear%s; }\n",
+                          function_name, type, args);
+}
+
+static void
+get_texel_encoding_function (GString *shader,
+                             const char *function_name,
+                             GthreeEncodingFormat encoding)
+{
+  const char *type, *args;
+  get_encoding_components (encoding, &type, &args);
+  g_string_append_printf (shader,
+                          "vec4 %s( vec4 value ) { return LinearTo%s%s; }\n",
+                          function_name, type, args);
 }
 
 GthreeProgram *
@@ -122,16 +351,21 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters)
   GthreeProgram *program;
   GthreeProgramPrivate *priv;
   GPtrArray *defines;
-  GthreeUniforms *uniforms;
   const char *vertex_shader, *fragment_shader;
   char *index0AttributeName;
-  //char *shadowMapTypeDefine;
+  const char *shadow_map_type_define;
+  const char *env_map_type_define;
+  const char *env_map_mode_define;
+  const char *env_map_blending_define;
+  float gamma_factor_define;
   GLuint gl_program;
   GString *vertex, *fragment;
+  g_autofree char *vertex_unrolled = NULL;
+  g_autofree char *fragment_unrolled = NULL;
+  g_autofree char *vertex_expanded = NULL;
+  g_autofree char *fragment_expanded = NULL;
   GLuint glVertexShader, glFragmentShader;
   GLint status;
-  GPtrArray *identifiers;
-  GList *uniform_list, *l;
 
   program = g_object_new (gthree_program_get_type (),
                           NULL);
@@ -142,7 +376,6 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters)
 
   //var attributes = material.attributes;
   defines = gthree_shader_get_defines (shader);
-  uniforms = gthree_shader_get_uniforms (shader);
   vertex_shader = gthree_shader_get_vertex_shader_text (shader);
   fragment_shader = gthree_shader_get_fragment_shader_text (shader);
 
@@ -156,8 +389,7 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters)
   }
 #endif
 
-  //shadowMapTypeDefine = "SHADOWMAP_TYPE_BASIC";
-
+  shadow_map_type_define = "SHADOWMAP_TYPE_BASIC";
 #if TODO
   if (parameters.shadowMapType === THREE.PCFShadowMap) {
     shadowMapTypeDefine = "SHADOWMAP_TYPE_PCF";
@@ -166,13 +398,55 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters)
   }
 #endif
 
+  env_map_type_define = "ENVMAP_TYPE_CUBE";
+  env_map_mode_define = "ENVMAP_MODE_REFLECTION";
+  env_map_blending_define = "ENVMAP_BLENDING_MULTIPLY";
+
+#if TODO
+  if ( parameters.envMap ) {
+		switch ( material.envMap.mapping ) {
+			case CubeReflectionMapping:
+			case CubeRefractionMapping:
+				envMapTypeDefine = 'ENVMAP_TYPE_CUBE';
+				break;
+			case CubeUVReflectionMapping:
+			case CubeUVRefractionMapping:
+				envMapTypeDefine = 'ENVMAP_TYPE_CUBE_UV';
+				break;
+			case EquirectangularReflectionMapping:
+			case EquirectangularRefractionMapping:
+				envMapTypeDefine = 'ENVMAP_TYPE_EQUIREC';
+				break;
+			case SphericalReflectionMapping:
+				envMapTypeDefine = 'ENVMAP_TYPE_SPHERE';
+				break;
+		}
+		switch ( material.envMap.mapping ) {
+			case CubeRefractionMapping:
+			case EquirectangularRefractionMapping:
+				envMapModeDefine = 'ENVMAP_MODE_REFRACTION';
+				break;
+		}
+
+		switch ( material.combine ) {
+			case MultiplyOperation:
+				envMapBlendingDefine = 'ENVMAP_BLENDING_MULTIPLY';
+				break;
+			case MixOperation:
+				envMapBlendingDefine = 'ENVMAP_BLENDING_MIX';
+				break;
+			case AddOperation:
+				envMapBlendingDefine = 'ENVMAP_BLENDING_ADD';
+				break;
+		}
+	}
+#endif
+
+  gamma_factor_define = /*TODO: ( renderer.gammaFactor > 0 ) ? renderer.gammaFactor : */ 1.0;
+
   // console.log( "building new program " );
 
-  //
-
-
   gl_program = glCreateProgram ();
-
 
   vertex = g_string_new ("");
   fragment = g_string_new ("");
@@ -183,78 +457,90 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters)
       g_string_append_printf (vertex, "precision %s float;\n", precision_to_string (parameters->precision));
       g_string_append_printf (vertex, "precision %s int;\n", precision_to_string (parameters->precision));
 
+#if TODO
+      //"#define SHADER_NAME " + shader.name,
+#endif
+
       if (defines)
         generate_defines (vertex, defines);
 
       if (parameters->supports_vertex_textures)
         g_string_append (vertex, "#define VERTEX_TEXTURES\n");
 
-      //_this.gammaInput ? "#define GAMMA_INPUT" : "",
-      //_this.gammaOutput ? "#define GAMMA_OUTPUT" : "",
+      g_string_append_printf (vertex, "#define GAMMA_FACTOR %f\n", gamma_factor_define);
 
       g_string_append_printf (vertex,
-                              "#define MAX_DIR_LIGHTS %d\n"
-                              "#define MAX_POINT_LIGHTS %d\n"
-                              "#define MAX_SPOT_LIGHTS %d\n"
-                              "#define MAX_HEMI_LIGHTS %d\n",
-                              parameters->max_dir_lights,
-                              parameters->max_point_lights,
-                              parameters->max_spot_lights,
-                              parameters->max_hemi_lights);
-
-      g_string_append_printf (vertex,
-                              "#define MAX_SHADOWS %d\n"
                               "#define MAX_BONES %d\n",
-                              parameters->max_shadows,
                               parameters->max_bones);
+
 
       if (parameters->map)
         g_string_append (vertex, "#define USE_MAP\n");
       if (parameters->env_map)
-        g_string_append (vertex, "#define USE_ENVMAP\n");
+        {
+          g_string_append_printf (vertex,
+                                  "#define USE_ENVMAP\n"
+                                  "#define %s\n", env_map_mode_define);
+        }
       if (parameters->light_map)
         g_string_append (vertex, "#define USE_LIGHTMAP\n");
+      if (parameters->ao_map)
+        g_string_append (vertex, "#define USE_AOMAP\n");
+      if (parameters->emissive_map)
+        g_string_append (vertex, "#define USE_EMISSIVEMAP\n");
       if (parameters->bump_map)
         g_string_append (vertex, "#define USE_BUMPMAP\n");
+      if (parameters->normal_map)
+        g_string_append (vertex, "#define USE_NORMALMAP\n");
+      if (parameters->normal_map && parameters->object_space_normal_map)
+        g_string_append (vertex, "#define OBJECTSPACE_NORMALMAP\n");
+      if (parameters->displacement_map && parameters->supports_vertex_textures)
+        g_string_append (vertex, "#define USE_DISPLACEMENTMAP\n");
+      if (parameters->specular_map)
+        g_string_append (vertex, "#define USE_SPECULARMAP\n");
+      if (parameters->roughness_map)
+        g_string_append (vertex, "#define USE_ROUGHNESSMAP\n");
+      if (parameters->metalness_map)
+        g_string_append (vertex, "#define USE_METALNESSMAP\n");
+      if (parameters->alpha_map)
+        g_string_append (vertex, "#define USE_ALPHAMAP\n");
+
+      if (parameters->vertex_tangents)
+        g_string_append (vertex, "#define USE_TANGENT\n");
       if (parameters->vertex_colors)
         g_string_append (vertex, "#define USE_COLOR\n");
 
       if (parameters->flat_shading)
         g_string_append (vertex, "#define FLAT_SHADED\n");
 
-      if (parameters->normal_map)
-        g_string_append (vertex, "#define USE_NORMALMAP\n");
-      if (parameters->specular_map)
-        g_string_append (vertex, "#define USE_SPECULARMAP\n");
-      if (parameters->alpha_map)
-        g_string_append (vertex, "#define USE_ALPHAMAP\n");
+      if (parameters->skinning)
+        g_string_append (vertex, "#define USE_SKINNING\n");
+      if (parameters->use_vertex_texture)
+        g_string_append (vertex, "#define BONE_TEXTURE\n");
 
-      if (parameters->wrap_around)
-        g_string_append (vertex, "#define WRAP_AROUND\n");
-
-#if TODO
-        parameters.skinning ? "#define USE_SKINNING" : "",
-        parameters.useVertexTexture ? "#define BONE_TEXTURE" : "",
-
-        parameters.morphTargets ? "#define USE_MORPHTARGETS" : "",
-        parameters.morphNormals ? "#define USE_MORPHNORMALS" : "",
-#endif
+      if (parameters->morph_targets)
+        g_string_append (vertex, "#define USE_MORPHTARGETS\n");
+      if (parameters->morph_normals && !parameters->flat_shading)
+        g_string_append (vertex, "#define USE_MORPHNORMALS\n");
 
       if (parameters->double_sided)
         g_string_append (vertex, "#define DOUBLE_SIDED\n");
       if (parameters->flip_sided)
         g_string_append (vertex, "#define FLIP_SIDED\n");
 
-#ifdef TODO
-      parameters.shadowMapEnabled ? "#define USE_SHADOWMAP" : "",
-        parameters.shadowMapEnabled ? "#define " + shadowMapTypeDefine : "",
-        parameters.shadowMapDebug ? "#define SHADOWMAP_DEBUG" : "",
-        parameters.shadowMapCascade ? "#define SHADOWMAP_CASCADE" : "",
+      if (parameters->shadow_map_enabled)
+        g_string_append_printf (vertex,
+                                "#define USE_SHADOWMAP\n"
+                                "#define %s\n",
+                                shadow_map_type_define);
 
-        parameters.sizeAttenuation ? "#define USE_SIZEATTENUATION" : "",
+      if (parameters->size_attenuation)
+        g_string_append (vertex, "#define USE_SIZEATTENUATION\n");
 
-        parameters.logarithmicDepthBuffer ? "#define USE_LOGDEPTHBUF" : "",
-        //_this._glExtensionFragDepth ? "#define USE_LOGDEPTHBUF_EXT" : "",
+      if (parameters->logarithmic_depth_buffer)
+        g_string_append (vertex, "#define USE_LOGDEPTHBUF\n");
+#if TODO
+      // parameters.logarithmicDepthBuffer && ( capabilities.isWebGL2 || extensions.get( 'EXT_frag_depth' ) ) ? '#define USE_LOGDEPTHBUF_EXT' : '',
 #endif
 
         g_string_append (vertex,
@@ -268,7 +554,10 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters)
                          "attribute vec3 position;\n"
                          "attribute vec3 normal;\n"
                          "attribute vec2 uv;\n"
-                         "attribute vec2 uv2;\n"
+
+                         "#ifdef USE_TANGENT\n"
+                         "	attribute vec4 tangent;\n"
+                         "#endif\n"
 
                          "#ifdef USE_COLOR\n"
                          "	attribute vec3 color;\n"
@@ -292,6 +581,7 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters)
                          "		attribute vec3 morphTarget7;\n"
                          "	#endif\n"
                          "#endif\n"
+
                          "#ifdef USE_SKINNING\n"
                          "	attribute vec4 skinIndex;\n"
                          "	attribute vec4 skinWeight;\n"
@@ -303,93 +593,135 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters)
       g_string_append_printf (fragment, "precision %s float;\n", precision_to_string (parameters->precision));
       g_string_append_printf (fragment, "precision %s int;\n", precision_to_string (parameters->precision));
 
+#if TODO
+      //"#define SHADER_NAME " + shader.name,
+#endif
+
       if (defines)
         generate_defines (fragment, defines);
 
-      g_string_append_printf (fragment,
-                              "#define MAX_DIR_LIGHTS %d\n"
-                              "#define MAX_POINT_LIGHTS %d\n"
-                              "#define MAX_SPOT_LIGHTS %d\n"
-                              "#define MAX_HEMI_LIGHTS %d\n",
-                              parameters->max_dir_lights,
-                              parameters->max_point_lights,
-                              parameters->max_spot_lights,
-                              parameters->max_hemi_lights);
-
-      g_string_append_printf (vertex,
-                              "#define MAX_SHADOWS %d\n",
-                              parameters->max_shadows);
-
-      if (parameters->alpha_test != 0)
-        g_string_append_printf (vertex,
-                                "#define ALPHATEST %f\n",
-                                parameters->alpha_test);
-
-      //_this.gammaInput ? "#define GAMMA_INPUT" : "",
-      //_this.gammaOutput ? "#define GAMMA_OUTPUT" : "",
-
-      if (parameters->use_fog && parameters->fog)
-        g_string_append (fragment, "#define USE_FOG\n");
-      if (parameters->use_fog && parameters->fog_exp)
-        g_string_append (fragment, "#define FOG_EXP2\n");
+      g_string_append_printf (fragment, "#define GAMMA_FACTOR %f\n", gamma_factor_define);
 
       if (parameters->map)
         g_string_append (fragment, "#define USE_MAP\n");
+      if (parameters->matcap)
+        g_string_append (fragment, "#define USE_MATCAP\n");
       if (parameters->env_map)
-        g_string_append (fragment, "#define USE_ENVMAP\n");
+        {
+          g_string_append_printf (fragment,
+                                  "#define USE_ENVMAP\n"
+                                  "#define %s\n"
+                                  "#define %s\n"
+                                  "#define %s\n",
+                                  env_map_type_define, env_map_mode_define, env_map_blending_define);
+        }
       if (parameters->light_map)
         g_string_append (fragment, "#define USE_LIGHTMAP\n");
+      if (parameters->ao_map)
+        g_string_append (fragment, "#define USE_AOMAP\n");
+      if (parameters->emissive_map)
+        g_string_append (fragment, "#define USE_EMISSIVEMAP\n");
       if (parameters->bump_map)
         g_string_append (fragment, "#define USE_BUMPMAP\n");
       if (parameters->normal_map)
         g_string_append (fragment, "#define USE_NORMALMAP\n");
+      if (parameters->normal_map && parameters->object_space_normal_map)
+        g_string_append (fragment, "#define OBJECTSPACE_NORMALMAP\n");
       if (parameters->specular_map)
         g_string_append (fragment, "#define USE_SPECULARMAP\n");
+      if (parameters->roughness_map)
+        g_string_append (fragment, "#define USE_ROUGHNESSMAP\n");
+      if (parameters->metalness_map)
+        g_string_append (fragment, "#define USE_METALNESSMAP\n");
       if (parameters->alpha_map)
         g_string_append (fragment, "#define USE_ALPHAMAP\n");
 
+      if (parameters->vertex_tangents)
+        g_string_append (fragment, "#define USE_TANGENT\n");
       if (parameters->vertex_colors)
         g_string_append (fragment, "#define USE_COLOR\n");
+
+      if (parameters->gradient_map)
+        g_string_append (fragment, "#define USE_GRADIENTMAP\n");
 
       if (parameters->flat_shading)
         g_string_append (fragment, "#define FLAT_SHADED\n");
 
-      if (parameters->metal)
-        g_string_append (fragment, "#define METAL\n");
-      if (parameters->wrap_around)
-        g_string_append (fragment, "#define WRAP_AROUND\n");
       if (parameters->double_sided)
         g_string_append (fragment, "#define DOUBLE_SIDED\n");
       if (parameters->flip_sided)
         g_string_append (fragment, "#define FLIP_SIDED\n");
 
-#ifdef TODO
-      parameters.shadowMapEnabled ? "#define USE_SHADOWMAP" : "",
-        parameters.shadowMapEnabled ? "#define " + shadowMapTypeDefine : "",
-        parameters.shadowMapDebug ? "#define SHADOWMAP_DEBUG" : "",
-        parameters.shadowMapCascade ? "#define SHADOWMAP_CASCADE" : "",
+      if (parameters->shadow_map_enabled)
+        g_string_append_printf (fragment,
+                                "#define USE_SHADOWMAP\n"
+                                "#define %s\n",
+                                shadow_map_type_define);
 
-        parameters.logarithmicDepthBuffer ? "#define USE_LOGDEPTHBUF" : "",
-        //_this._glExtensionFragDepth ? "#define USE_LOGDEPTHBUF_EXT" : "",
+      if (parameters->premultiplied_alpha)
+        g_string_append (fragment, "#define PREMULTIPLIED_ALPHA\n");
+
+      if (parameters->physically_correct_lights)
+        g_string_append (fragment, "#define PHYSICALLY_CORRECT_LIGHTS\n");
+
+      if (parameters->logarithmic_depth_buffer)
+        g_string_append (fragment, "#define USE_LOGDEPTHBUF\n");
+#if TODO
+      // parameters.logarithmicDepthBuffer && ( capabilities.isWebGL2 || extensions.get( 'EXT_frag_depth' ) ) ? '#define USE_LOGDEPTHBUF_EXT' : '',
+
+      parameters.envMap && ( capabilities.isWebGL2 || extensions.get( 'EXT_shader_texture_lod' ) ) ? '#define TEXTURE_LOD_EXT' : '',
 #endif
+
         g_string_append (fragment,
                          "uniform mat4 viewMatrix;\n"
                          "uniform vec3 cameraPosition;\n");
+#if TODO
+      // ( parameters.toneMapping !== NoToneMapping ) ? '#define TONE_MAPPING' : '',
+      // ( parameters.toneMapping !== NoToneMapping ) ? ShaderChunk[ 'tonemapping_pars_fragment' ] : '', // this code is required here because it is used by the toneMapping() function defined below
+      // ( parameters.toneMapping !== NoToneMapping ) ? getToneMappingFunction( 'toneMapping', parameters.toneMapping ) : '',
+#endif
+
+      if (parameters->dithering)
+        g_string_append (fragment, "#define DITHERING\n");
+
+      // this code is required here because it is used by the  various encoding/decoding function defined below
+      g_string_append (fragment, "#include <encodings_pars_fragment>\n");
+
+      get_texel_decoding_function (fragment, "mapTexelToLinear", parameters->map_encoding);
+      get_texel_decoding_function (fragment, "mapcapTexelToLinear", parameters->matcap_encoding);
+      get_texel_decoding_function (fragment, "envMapTexelToLinear", parameters->env_map_encoding);
+      get_texel_decoding_function (fragment, "emissiveMapTexelToLinear", parameters->emissive_map_encoding);
+      get_texel_encoding_function (fragment, "linearToOutputTexel", parameters->output_encoding);
+
+#if TODO
+      // parameters.depthPacking ? '#define DEPTH_PACKING ' + material.depthPacking : '',
+#endif
   }
 
   g_string_append (vertex, vertex_shader);
-  g_string_append (fragment, fragment_shader);
+  replace_light_nums (vertex, parameters);
+  replace_clipping_plane_nums (vertex, parameters);
 
-  if (0)
+  g_string_append (fragment, fragment_shader);
+  replace_light_nums (fragment, parameters);
+  replace_clipping_plane_nums (fragment, parameters);
+
+  vertex_unrolled = unroll_loops (vertex);
+  fragment_unrolled = unroll_loops (fragment);
+
+  vertex_expanded = parse_text_with_includes (vertex_unrolled);
+  fragment_expanded = parse_text_with_includes (fragment_unrolled);
+
+if (0)
     {
       g_print ("************ VERTEX *******************************************************\n%s\n",
-               vertex->str);
+               vertex_expanded);
       g_print ("************ FRAGMENT *******************************************************\n%s\n",
-               fragment->str);
+               fragment_expanded);
     }
 
-  glVertexShader = create_shader (GL_VERTEX_SHADER, vertex->str);
-  glFragmentShader = create_shader (GL_FRAGMENT_SHADER, fragment->str);
+  glVertexShader = create_shader (GL_VERTEX_SHADER, vertex_expanded);
+  glFragmentShader = create_shader (GL_FRAGMENT_SHADER, fragment_expanded);
 
   g_string_free (vertex, TRUE);
   g_string_free (fragment, TRUE);
@@ -427,51 +759,6 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters)
   glDeleteShader (glVertexShader);
   glDeleteShader (glFragmentShader);
 
-  // cache uniform locations
-
-  identifiers = g_ptr_array_new ();
-
-  {
-    int i;
-    char *s[] =  {
-      "viewMatrix", "modelViewMatrix", "projectionMatrix", "normalMatrix",
-      "modelMatrix", "cameraPosition", "morphTargetInfluences", "bindMatrix",
-      "bindMatrixInverse"
-    };
-
-    for (i = 0; i < G_N_ELEMENTS (s); i++)
-      g_ptr_array_add (identifiers, s[i]);
-  }
-
-  if (parameters->use_vertex_texture)
-    {
-      g_ptr_array_add (identifiers, "boneTexture");
-      g_ptr_array_add (identifiers, "boneTextureWidth");
-      g_ptr_array_add (identifiers, "boneTextureHeight");
-    }
-  else
-    {
-      g_ptr_array_add (identifiers, "boneGlobalMatrices");
-    }
-
-#if TODO
-  if ( parameters.logarithmicDepthBuffer ) {
-    identifiers.push('logDepthBufFC');
-  }
-#endif
-
-  uniform_list = gthree_uniforms_get_all (uniforms);
-
-  for (l = uniform_list; l != NULL; l = l->next)
-    g_ptr_array_add (identifiers, (char *)gthree_uniform_get_name (l->data));
-
-  g_list_free (uniform_list);
-  g_ptr_array_add (identifiers, NULL);
-
-  cache_uniform_locations (priv->uniform_locations, gl_program, (char **)identifiers->pdata);
-
-  g_ptr_array_free (identifiers, FALSE);
-
   priv->gl_program = gl_program;
 
   return program;
@@ -480,9 +767,7 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters)
 static void
 gthree_program_init (GthreeProgram *program)
 {
-  GthreeProgramPrivate *priv = gthree_program_get_instance_private (program);
 
-  priv->uniform_locations = g_hash_table_new (g_direct_hash, g_direct_equal);
 }
 
 static void
@@ -528,6 +813,9 @@ gthree_program_lookup_uniform_location (GthreeProgram *program,
 {
   GthreeProgramPrivate *priv = gthree_program_get_instance_private (program);
   gpointer location;
+
+  if (priv->uniform_locations == NULL)
+    get_uniform_locations (program);
 
   if (g_hash_table_lookup_extended (priv->uniform_locations,
                                     GINT_TO_POINTER (uniform), NULL, &location))
@@ -583,9 +871,12 @@ gthree_program_get_attribute_locations (GthreeProgram *program)
         {
           GLint size;
           GLenum type;
+          int location;
 
           glGetActiveAttrib (priv->gl_program,  i,  max_len,  NULL,  &size,  &type,  buffer);
-          cache_attribute_location (priv->attribute_locations, priv->gl_program, buffer);
+          location = glGetAttribLocation (priv->gl_program, buffer);
+          g_hash_table_insert (priv->attribute_locations,
+                               GINT_TO_POINTER (g_quark_from_string (buffer)), GINT_TO_POINTER (location));
         }
     }
 

@@ -62,7 +62,7 @@ gthree_lambert_material_real_set_params (GthreeMaterial *material,
 
   GTHREE_MATERIAL_CLASS (gthree_lambert_material_parent_class)->set_params (material, params);
 
-  params->wrap_around = priv->wrap_around;
+  //TODO: params->wrap_around = priv->wrap_around;
 }
 
 static void

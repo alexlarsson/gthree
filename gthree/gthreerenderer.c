@@ -630,6 +630,13 @@ project_object (GthreeRenderer *renderer,
     project_object (renderer, scene, child, camera);
 }
 
+static GthreeEncodingFormat
+get_texture_encoding_from_map (void/* map, gammaOverrideLinear*/) {
+  /* TODO */
+  return GTHREE_ENCODING_FORMAT_LINEAR;
+
+}
+
 static GthreeProgram *
 init_material (GthreeRenderer *renderer,
                GthreeMaterial *material,
@@ -658,6 +665,7 @@ init_material (GthreeRenderer *renderer,
 
   parameters.precision = GTHREE_PRECISION_HIGH;
   parameters.supports_vertex_textures = priv->supports_vertex_textures;
+  parameters.output_encoding = get_texture_encoding_from_map (/* ( ! currentRenderTarget ) ? null : currentRenderTarget.texture, renderer.gammaOutput*/ );
 
   gthree_material_set_params (material, &parameters);
   for (l = lights; l != NULL; l = l->next)

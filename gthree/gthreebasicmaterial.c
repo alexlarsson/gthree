@@ -2,6 +2,7 @@
 
 #include "gthreebasicmaterial.h"
 #include "gthreetypebuiltins.h"
+#include "gthreecubetexture.h"
 
 typedef struct {
   GdkRGBA color;
@@ -90,17 +91,52 @@ gthree_basic_material_real_set_uniforms (GthreeMaterial *material,
   if (uni != NULL)
     gthree_uniform_set_color (uni, &priv->color);
 
+  //TODO: from refreshUniformsCommon 
+  uni = gthree_uniforms_lookup_from_string (uniforms, "emissive");
+
   uni = gthree_uniforms_lookup_from_string (uniforms, "map");
   if (uni != NULL)
     gthree_uniform_set_texture (uni, priv->map);
 
-  /* uv repeat and offset setting priorities
-   * 1. color map
-   * 2. specular map
-   * 3. normal map
-   * 4. bump map
-   * 5. alpha map
-   */
+  //TODO: from refreshUniformsCommon 
+  uni = gthree_uniforms_lookup_from_string (uniforms, "alphaMap");
+
+  //TODO: from refreshUniformsCommon 
+  uni = gthree_uniforms_lookup_from_string (uniforms, "specularMap");
+
+  if (priv->env_map)
+    {
+      uni = gthree_uniforms_lookup_from_string (uniforms, "envMap");
+      if (uni != NULL)
+        gthree_uniform_set_texture (uni, priv->env_map);
+
+      uni = gthree_uniforms_lookup_from_string (uniforms, "flipEnvMap");
+      if (uni != NULL)
+        gthree_uniform_set_float (uni, GTHREE_IS_CUBE_TEXTURE (priv->env_map) ? -1 : 1);
+
+      //TODO: from refreshUniformsCommon 
+      uni = gthree_uniforms_lookup_from_string (uniforms, "reflectivity");
+
+      //TODO: from refreshUniformsCommon 
+      uni = gthree_uniforms_lookup_from_string (uniforms, "refractionRatio");
+    }
+
+  //TODO: from refreshUniformsCommon 
+  uni = gthree_uniforms_lookup_from_string (uniforms, "lightMap");
+  uni = gthree_uniforms_lookup_from_string (uniforms, "lightMapIntensity");
+
+  //TODO: from refreshUniformsCommon 
+  uni = gthree_uniforms_lookup_from_string (uniforms, "aoMap");
+  uni = gthree_uniforms_lookup_from_string (uniforms, "aoMapIntensity");
+
+  // uv repeat and offset setting priorities
+  // 1. color map
+  // 2. specular map
+  // 3. normal map
+  // 4. bump map
+  // 5. alpha map
+  // 6. emissive map
+
   scale_map = NULL;
   if (priv->map != NULL)
     scale_map = priv->map;
@@ -108,44 +144,15 @@ gthree_basic_material_real_set_uniforms (GthreeMaterial *material,
 
   if (scale_map != NULL)
     {
-      const graphene_vec2_t *repeat = gthree_texture_get_repeat (scale_map);
-      const graphene_vec2_t *offset = gthree_texture_get_offset (scale_map);
-      graphene_vec4_t offset_repeat;
+      /* TODO: from refreshUniformsCommon
+      if ( uvScaleMap.matrixAutoUpdate === true ) {
+        uvScaleMap.updateMatrix();
+      }
+      */
 
-      graphene_vec4_init (&offset_repeat,
-                          graphene_vec2_get_x (offset),
-                          graphene_vec2_get_y (offset),
-                          graphene_vec2_get_x (repeat),
-                          graphene_vec2_get_y (repeat));
-
-      uni = gthree_uniforms_lookup_from_string (uniforms, "offsetRepeat");
-      if (uni != NULL)
-        gthree_uniform_set_vec4 (uni, &offset_repeat);
+      //TODO: from refreshUniformsCommon
+      uni = gthree_uniforms_lookup_from_string (uniforms, "uvTransform");
     }
-
-  uni = gthree_uniforms_lookup_from_string (uniforms, "envMap");
-  if (uni != NULL)
-    gthree_uniform_set_texture (uni, priv->env_map);
-
-  uni = gthree_uniforms_lookup_from_string (uniforms, "useRefract");
-  if (uni != NULL)
-    gthree_uniform_set_int (uni,
-                            priv->env_map && gthree_texture_get_mapping (priv->env_map) == GTHREE_MAPPING_CUBE_REFRACTION);
-
-  uni = gthree_uniforms_lookup_from_string (uniforms, "flipEnvMap");
-  if (uni != NULL)
-    gthree_uniform_set_float (uni, (TRUE /* TODO: material.envMap instanceof THREE.WebGLRenderTargetCube */) ? 1 : -1);
-
-  uni = gthree_uniforms_lookup_from_string (uniforms, "combine");
-  if (uni != NULL)
-    gthree_uniform_set_int (uni, priv->combine);
-
-  uni = gthree_uniforms_lookup_from_string (uniforms, "refractionRatio");
-  if (uni != NULL)
-    gthree_uniform_set_float (uni, priv->refraction_ratio);
-
-
-  // TODO: More from refreshUniformsCommon
 }
 
 static gboolean

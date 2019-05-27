@@ -100,7 +100,7 @@ static void
 gthree_directional_light_real_set_params (GthreeLight *light,
 					  GthreeProgramParameters *params)
 {
-  params->max_dir_lights++;
+  params->num_dir_lights++;
   
   GTHREE_LIGHT_CLASS (gthree_directional_light_parent_class)->set_params (light, params);
 }

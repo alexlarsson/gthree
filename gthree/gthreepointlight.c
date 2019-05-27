@@ -47,7 +47,7 @@ static void
 gthree_point_light_real_set_params (GthreeLight *light,
                                     GthreeProgramParameters *params)
 {
-  params->max_point_lights++;
+  params->num_point_lights++;
 
   GTHREE_LIGHT_CLASS (gthree_point_light_parent_class)->set_params (light, params);
 }
