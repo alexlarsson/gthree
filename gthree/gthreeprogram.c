@@ -178,9 +178,9 @@ unroll_replace_cb (const GMatchInfo *info,
                    GString          *res,
                    gpointer          data)
 {
-  g_autofree gchar *start_s = g_match_info_fetch (info, 0);
-  g_autofree gchar *end_s = g_match_info_fetch (info, 1);
-  g_autofree gchar *snippet = g_match_info_fetch (info, 2);
+  g_autofree gchar *start_s = g_match_info_fetch (info, 1);
+  g_autofree gchar *end_s = g_match_info_fetch (info, 2);
+  g_autofree gchar *snippet = g_match_info_fetch (info, 3);
   int start, end, i;
 
   start = atoi (start_s);
