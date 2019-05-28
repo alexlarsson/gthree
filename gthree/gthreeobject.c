@@ -503,7 +503,7 @@ gthree_object_add_child (GthreeObject              *object,
 {
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
   GthreeObjectPrivate *child_priv = gthree_object_get_instance_private (child);
-  GthreeObject *last_child, *parent;
+  GthreeObject *last_child;
   GObject *obj;
 
   g_return_if_fail (GTHREE_IS_OBJECT (object));
@@ -556,17 +556,6 @@ gthree_object_add_child (GthreeObject              *object,
 
   g_signal_emit (child, object_signals[PARENT_SET], 0, NULL);
 
-  for (parent = object; parent != NULL; parent = PRIV(parent)->parent)
-    {
-      GthreeObjectClass *class = GTHREE_OBJECT_GET_CLASS(parent);
-
-      if (class->added_child)
-        {
-          class->added_child (parent, child);
-          break;
-        }
-    }
-
   g_object_thaw_notify (obj);
 }
 
@@ -576,7 +565,7 @@ gthree_object_remove_child (GthreeObject                 *object,
 {
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
   GthreeObjectPrivate *child_priv = gthree_object_get_instance_private (child);
-  GthreeObject *prev_sibling, *next_sibling, *parent;
+  GthreeObject *prev_sibling, *next_sibling;
   GObject *obj;
 
   g_return_if_fail (GTHREE_IS_OBJECT (object));
@@ -614,17 +603,6 @@ gthree_object_remove_child (GthreeObject                 *object,
   g_signal_emit (child, object_signals[PARENT_SET], 0, object);
 
   g_object_thaw_notify (obj);
-
-  for (parent = object; parent != NULL; parent = PRIV(parent)->parent)
-    {
-      GthreeObjectClass *class = GTHREE_OBJECT_GET_CLASS(parent);
-
-      if (class->removed_child)
-        {
-          class->removed_child (parent, child);
-          break;
-        }
-    }
 
   /* remove the reference we acquired in gthree_object_add_child() */
   g_object_unref (child);

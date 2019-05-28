@@ -7,8 +7,6 @@
 #include "gthreeobjectprivate.h"
 
 typedef struct {
-  gint context_count;
-  GList *lights;
   GdkRGBA bg_color;
   gboolean bg_color_is_set;
   GthreeTexture *bg_texture;
@@ -39,9 +37,6 @@ gthree_scene_finalize (GObject *obj)
 {
   GthreeScene *scene = GTHREE_SCENE (obj);
   GthreeScenePrivate *priv = gthree_scene_get_instance_private (scene);
-
-  // These should all have been freed during dispose
-  g_assert (priv->lights == NULL);
 
   if (priv->bg_texture)
     {
@@ -99,40 +94,6 @@ gthree_scene_set_background_texture (GthreeScene   *scene,
   priv->bg_texture = texture;
 }
 
-static void
-gthree_scene_added_child (GthreeObject *scene_obj,
-                          GthreeObject *child)
-{
-  GthreeScene *scene = GTHREE_SCENE (scene_obj);
-  GthreeScenePrivate *priv = gthree_scene_get_instance_private (scene);
-  GthreeObjectIter iter;
-  GthreeObject *grand_child;
-
-  if (GTHREE_IS_LIGHT (child))
-    priv->lights = g_list_prepend (priv->lights, child);
-
-  gthree_object_iter_init (&iter, child);
-  while (gthree_object_iter_next (&iter, &grand_child))
-    gthree_scene_added_child (scene_obj, grand_child);
-}
-
-static void
-gthree_scene_removed_child (GthreeObject *scene_obj,
-                           GthreeObject *child)
-{
-  GthreeScene *scene = GTHREE_SCENE (scene_obj);
-  GthreeScenePrivate *priv = gthree_scene_get_instance_private (scene);
-  GthreeObjectIter iter;
-  GthreeObject *grand_child;
-
-  if (GTHREE_IS_LIGHT (child))
-    priv->lights = g_list_remove (priv->lights, child);
-
-  gthree_object_iter_init (&iter, child);
-  while (gthree_object_iter_next (&iter, &grand_child))
-    gthree_scene_removed_child (scene_obj, grand_child);
-}
-
 GthreeMaterial *
 gthree_scene_get_override_material (GthreeScene *scene)
 {
@@ -140,19 +101,8 @@ gthree_scene_get_override_material (GthreeScene *scene)
   return NULL;
 }
 
-GList *
-gthree_scene_get_lights (GthreeScene *scene)
-{
-  GthreeScenePrivate *priv = gthree_scene_get_instance_private (scene);
-
-  return priv->lights;
-}
-
 static void
 gthree_scene_class_init (GthreeSceneClass *klass)
 {
   G_OBJECT_CLASS (klass)->finalize = gthree_scene_finalize;
-
-  GTHREE_OBJECT_CLASS (klass)->added_child = gthree_scene_added_child;
-  GTHREE_OBJECT_CLASS (klass)->removed_child = gthree_scene_removed_child;
 }

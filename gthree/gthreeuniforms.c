@@ -210,6 +210,18 @@ gthree_uniforms_set_vec4 (GthreeUniforms  *uniforms,
 }
 
 void
+gthree_uniforms_set_vec3 (GthreeUniforms  *uniforms,
+                          const char      *name,
+                          graphene_vec3_t *value)
+{
+  GthreeUniform *uni;
+
+  uni = gthree_uniforms_lookup_from_string (uniforms, name);
+  if (uni)
+    gthree_uniform_set_vec3 (uni, value);
+}
+
+void
 gthree_uniforms_set_texture (GthreeUniforms  *uniforms,
                              const char      *name,
                              GthreeTexture   *value)
@@ -460,6 +472,16 @@ gthree_uniform_set_vec4 (GthreeUniform *uniform,
 }
 
 void
+gthree_uniform_set_vec3 (GthreeUniform *uniform,
+                         graphene_vec3_t *value)
+{
+  g_return_if_fail (uniform->type == GTHREE_UNIFORM_TYPE_VECTOR3);
+  uniform->value.floats[0] = graphene_vec3_get_x (value);
+  uniform->value.floats[1] = graphene_vec3_get_y (value);
+  uniform->value.floats[2] = graphene_vec3_get_z (value);
+}
+
+void
 gthree_uniform_set_texture (GthreeUniform *uniform,
                             GthreeTexture *value)
 {
@@ -557,7 +579,6 @@ static float fp98 = 0.98;
 static float fp00025 = 0.00025;
 static GdkRGBA grey = { 0.9333333333333333, 0.9333333333333333, 0.9333333333333333, 1.0 };
 static GdkRGBA white = { 1, 1, 1, 1.0 };
-static float default_offset_repeat[4] = { 0, 0, 1, 1 };
 static float onev2[2] = { 1, 1 };
 static float halfv2[2] = { 0.5, 0.5 };
 static float one_matrix3[9] = { 1, 0, 0,

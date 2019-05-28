@@ -5,35 +5,21 @@
 #include <gthree/gthreelight.h>
 #include <gthree/gthreegeometry.h>
 
+/* Each hash maps to a specific program (e.g. one with some set of lights), not a particular set of uniform values (like positions/colors/etc) */
+typedef struct {
+  guint8 num_directional;
+  guint8 num_point;
+} GthreeLightSetupHash;
+
 struct _GthreeLightSetup
 {
   GdkRGBA ambient;
 
-  int dir_len;
-  int dir_count;
-  GArray *dir_colors;
-  GArray *dir_positions;
+  /* Uniforms */
+  GPtrArray *directional;
+  GPtrArray *point;
 
-  int point_len;
-  int point_count;
-  GArray *point_colors;
-  GArray *point_positions;
-  GArray *point_distances;
-
-  int spot_len;
-  int spot_count;
-  GArray *spot_colors;
-  GArray *spot_positions;
-  GArray *spot_distances;
-  GArray *spot_directions;
-  GArray *spot_angles_cos;
-  GArray *spot_exponents;
-
-  int hemi_len;
-  int hemi_count;
-  GArray *hemi_sky_colors;
-  GArray *hemi_ground_colors;
-  GArray *hemi_positions;
+  GthreeLightSetupHash hash;
 };
 
 GthreeRenderList *gthree_render_list_new ();
@@ -68,8 +54,12 @@ void gthree_geometry_fill_render_list (GthreeGeometry   *geometry,
                                        GthreeMaterial   *material,
                                        GthreeObject     *object);
 
-void   gthree_light_setup (GthreeLight       *light,
-                           GthreeLightSetup *light_setup);
+gboolean gthree_light_setup_hash_equal (GthreeLightSetupHash *a,
+                                        GthreeLightSetupHash *b);
+
+void gthree_light_setup  (GthreeLight   *light,
+                          GthreeCamera  *camera,
+                          GthreeLightSetup *setup);
 
 graphene_matrix_t *gthree_camera_get_projection_matrix_for_write (GthreeCamera *camera);
 

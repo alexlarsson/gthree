@@ -7,6 +7,7 @@
 
 #include <gthree/gthreeobject.h>
 #include <gthree/gthreeprogram.h>
+#include <gthree/gthreecamera.h>
 #include <gdk/gdk.h>
 
 G_BEGIN_DECLS
@@ -27,9 +28,8 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeLight, g_object_unref)
 typedef struct {
   GthreeObjectClass parent_class;
 
-  void          (*set_params) (GthreeLight *light,
-                               GthreeProgramParameters *params);
   void          (*setup) (GthreeLight *light,
+                          GthreeCamera *camera,
                           GthreeLightSetup *light_setup);
 } GthreeLightClass;
 
@@ -37,22 +37,12 @@ GType gthree_light_get_type (void) G_GNUC_CONST;
 
 GthreeLight *gthree_light_new (void);
 
-gboolean       gthree_light_get_is_visible     (GthreeLight   *light);
-void           gthree_light_set_is_visible     (GthreeLight   *light,
-                                                gboolean       visible);
-gboolean       gthree_light_get_is_only_shadow (GthreeLight   *light);
-void           gthree_light_set_is_only_shadow (GthreeLight   *light,
-                                                gboolean       only_shadow);
-gboolean       gthree_light_get_casts_shadow   (GthreeLight   *light);
-void           gthree_light_set_casts_shadow   (GthreeLight   *light,
-                                                gboolean       casts_shadow);
 const GdkRGBA *gthree_light_get_color          (GthreeLight   *light);
 void           gthree_light_set_color          (GthreeLight   *light,
                                                 const GdkRGBA *color);
-void           gthree_light_set_params         (GthreeLight   *light,
-                                                GthreeProgramParameters *params);
-void           gthree_light_setup              (GthreeLight   *light,
-                                                GthreeLightSetup *setup);
+float          gthree_light_get_intensity      (GthreeLight   *light);
+void           gthree_light_set_intensity      (GthreeLight   *light,
+                                                float          intensity);
 
 G_END_DECLS
 

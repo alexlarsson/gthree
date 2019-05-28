@@ -40,10 +40,6 @@ typedef struct {
   void (* update)               (GthreeObject          *object);
   void (* destroy)              (GthreeObject          *object);
 
-  void (* added_child)          (GthreeObject          *object,
-                                 GthreeObject          *child);
-  void (* removed_child)        (GthreeObject          *object,
-                                 GthreeObject          *child);
 
   void (* fill_render_list)      (GthreeObject          *object,
                                   GthreeRenderList      *list);
