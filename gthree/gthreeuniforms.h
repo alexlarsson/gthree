@@ -42,6 +42,7 @@ typedef enum {
   GTHREE_UNIFORM_TYPE_MATRIX4_ARRAY,
   GTHREE_UNIFORM_TYPE_TEXTURE,
   GTHREE_UNIFORM_TYPE_TEXTURE_ARRAY,
+  GTHREE_UNIFORM_TYPE_UNIFORMS_ARRAY,
 } GthreeUniformType;
 
 typedef struct _GthreeUniform GthreeUniform;
@@ -104,6 +105,9 @@ void            gthree_uniforms_set_texture        (GthreeUniforms  *uniforms,
 void            gthree_uniforms_set_color          (GthreeUniforms  *uniforms,
                                                     const char      *name,
                                                     GdkRGBA         *color);
+void            gthree_uniforms_set_uarray         (GthreeUniforms   *uniforms,
+                                                    const char      *name,
+                                                    GPtrArray       *uarray);
 
 void        gthree_uniform_set_location     (GthreeUniform   *uniform,
                                              int              location);
@@ -125,6 +129,10 @@ void        gthree_uniform_set_texture      (GthreeUniform   *uniform,
                                              GthreeTexture   *value);
 void        gthree_uniform_set_color        (GthreeUniform   *uniform,
                                              GdkRGBA         *color);
+void        gthree_uniform_set_uarray       (GthreeUniform   *uniform,
+                                             GPtrArray       *uarray);
+GPtrArray  *gthree_uniform_get_uarray       (GthreeUniform   *uniform);
+GthreeUniformType gthree_uniform_get_type   (GthreeUniform   *uniform);
 const char *gthree_uniform_get_name         (GthreeUniform   *uniform);
 GQuark      gthree_uniform_get_qname        (GthreeUniform   *uniform);
 void        gthree_uniform_load             (GthreeUniform   *uniform,

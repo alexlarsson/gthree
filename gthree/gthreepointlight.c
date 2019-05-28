@@ -86,7 +86,7 @@ gthree_point_light_real_setup (GthreeLight *light,
   GthreePointLightPrivate *priv = gthree_point_light_get_instance_private (point);
   GdkRGBA color = *gthree_light_get_color (light);
   float intensity = gthree_light_get_intensity (light);
-  graphene_vec4_t light_pos, target_pos;
+  graphene_vec4_t light_pos;
   graphene_vec3_t light_pos3;
   const graphene_matrix_t *view_matrix = gthree_camera_get_world_inverse_matrix (camera);
 
@@ -104,7 +104,6 @@ gthree_point_light_real_setup (GthreeLight *light,
   gthree_uniforms_set_vec3 (priv->uniforms, "position", &light_pos3);
   gthree_uniforms_set_float (priv->uniforms, "distance", priv->distance);
   gthree_uniforms_set_float (priv->uniforms, "decay", priv->decay);
-
 
   gthree_uniforms_set_int (priv->uniforms, "shadow", 0);
 #ifdef TODO

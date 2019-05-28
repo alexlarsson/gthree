@@ -245,6 +245,17 @@ gthree_uniforms_set_color (GthreeUniforms  *uniforms,
     gthree_uniform_set_color (uni, color);
 }
 
+void
+gthree_uniforms_set_uarray (GthreeUniforms  *uniforms,
+                            const char      *name,
+                            GPtrArray       *value)
+{
+  GthreeUniform *uni;
+
+  uni = gthree_uniforms_lookup_from_string (uniforms, name);
+  if (uni)
+    gthree_uniform_set_uarray (uni, value);
+}
 
 GthreeUniform *
 gthree_uniform_newq (GQuark name, GthreeUniformType type)
@@ -269,6 +280,12 @@ GQuark
 gthree_uniform_get_qname (GthreeUniform *uniform)
 {
   return uniform->name;
+}
+
+GthreeUniformType
+gthree_uniform_get_type (GthreeUniform *uniform)
+{
+  return uniform->type;
 }
 
 
@@ -306,6 +323,7 @@ gthree_uniform_free (GthreeUniform *uniform)
       g_clear_object (&uniform->value.texture);
       break;
     case GTHREE_UNIFORM_TYPE_TEXTURE_ARRAY:
+    case GTHREE_UNIFORM_TYPE_UNIFORMS_ARRAY:
       if (uniform->value.ptr_array)
         g_ptr_array_unref (uniform->value.ptr_array);
       break;
@@ -381,6 +399,17 @@ gthree_uniform_clone (GthreeUniform *uniform)
           // TODO: ref? duplicate?
           // TODO: Copy free func?
           memcpy (clone->value.ptr_array->pdata, uniform->value.ptr_array->pdata, len * sizeof (gpointer));
+        }
+      break;
+    case GTHREE_UNIFORM_TYPE_UNIFORMS_ARRAY:
+      if (uniform->value.ptr_array)
+        {
+          guint i, len = uniform->value.ptr_array->len;
+          clone->value.ptr_array = g_ptr_array_new_with_free_func (g_object_unref);
+
+          for (i = 0; i < len; i++)
+            g_ptr_array_add (clone->value.ptr_array,
+                             g_object_ref (g_ptr_array_index (uniform->value.ptr_array, i)));
         }
       break;
     case GTHREE_UNIFORM_TYPE_MATRIX3:
@@ -496,6 +525,30 @@ gthree_uniform_set_texture (GthreeUniform *uniform,
 }
 
 void
+gthree_uniform_set_uarray (GthreeUniform *uniform,
+                           GPtrArray *value)
+{
+  g_return_if_fail (uniform->type == GTHREE_UNIFORM_TYPE_UNIFORMS_ARRAY);
+  int i;
+
+  if (uniform->value.ptr_array == NULL)
+    uniform->value.ptr_array = g_ptr_array_new_with_free_func (g_object_unref);
+
+  g_ptr_array_set_size (uniform->value.ptr_array, 0);
+
+  for (i = 0; i < value->len; i++)
+    g_ptr_array_add (uniform->value.ptr_array, g_object_ref (g_ptr_array_index (value, i)));
+}
+
+GPtrArray *
+gthree_uniform_get_uarray (GthreeUniform *uniform)
+{
+  g_return_val_if_fail (uniform->type == GTHREE_UNIFORM_TYPE_UNIFORMS_ARRAY, NULL);
+
+  return uniform->value.ptr_array;
+}
+
+void
 gthree_uniform_load (GthreeUniform *uniform,
                      GthreeRenderer *renderer)
 {
@@ -559,6 +612,17 @@ gthree_uniform_load (GthreeUniform *uniform,
     case GTHREE_UNIFORM_TYPE_TEXTURE:
       if (uniform->value.texture)
         gthree_texture_load (uniform->value.texture, gthree_renderer_allocate_texture_unit (renderer));
+      break;
+    case GTHREE_UNIFORM_TYPE_UNIFORMS_ARRAY:
+      if (uniform->value.ptr_array)
+        {
+          int i;
+          for (i = 0; i < uniform->value.ptr_array->len; i++)
+            {
+              GthreeUniforms *child_unis = g_ptr_array_index (uniform->value.ptr_array, i);
+              gthree_uniforms_load (child_unis, renderer);
+            }
+        }
       break;
     case GTHREE_UNIFORM_TYPE_VEC2_ARRAY:
     case GTHREE_UNIFORM_TYPE_VEC3_ARRAY:
@@ -670,101 +734,80 @@ static GthreeUniformsDefinition fog_lib[] = {
   {"fogColor", GTHREE_UNIFORM_TYPE_COLOR, &white }
 };
 
-/*
-	lights: {
-
-		ambientLightColor: { value: [] },
-
-		lightProbe: { value: [] },
-
-		directionalLights: { value: [], properties: {
-			direction: {},
-			color: {},
-
-			shadow: {},
-			shadowBias: {},
-			shadowRadius: {},
-			shadowMapSize: {}
-		} },
-
-		directionalShadowMap: { value: [] },
-		directionalShadowMatrix: { value: [] },
-
-		spotLights: { value: [], properties: {
-			color: {},
-			position: {},
-			direction: {},
-			distance: {},
-			coneCos: {},
-			penumbraCos: {},
-			decay: {},
-
-			shadow: {},
-			shadowBias: {},
-			shadowRadius: {},
-			shadowMapSize: {}
-		} },
-
-		spotShadowMap: { value: [] },
-		spotShadowMatrix: { value: [] },
-
-		pointLights: { value: [], properties: {
-			color: {},
-			position: {},
-			decay: {},
-			distance: {},
-
-			shadow: {},
-			shadowBias: {},
-			shadowRadius: {},
-			shadowMapSize: {},
-			shadowCameraNear: {},
-			shadowCameraFar: {}
-		} },
-
-		pointShadowMap: { value: [] },
-		pointShadowMatrix: { value: [] },
-
-		hemisphereLights: { value: [], properties: {
-			direction: {},
-			skyColor: {},
-			groundColor: {}
-		} },
-
-		// TODO (abelnation): RectAreaLight BRDF data needs to be moved from example to main src
-		rectAreaLights: { value: [], properties: {
-			color: {},
-			position: {},
-			width: {},
-			height: {}
-		} }
-
-	},
-
-*/
-
 /* TODO: Convert this to the structures above */
 static GthreeUniforms *lights;
 static GthreeUniformsDefinition lights_lib[] = {
   {"ambientLightColor", GTHREE_UNIFORM_TYPE_COLOR, NULL},
 
-  {"directionalLightDirection", GTHREE_UNIFORM_TYPE_FLOAT3_ARRAY, NULL},
-  {"directionalLightColor", GTHREE_UNIFORM_TYPE_FLOAT3_ARRAY, NULL},
+#ifdef TODO
+  lightProbe: { value: [] },
+#endif
 
-  {"hemisphereLightDirection", GTHREE_UNIFORM_TYPE_FLOAT3_ARRAY, NULL},
-  {"hemisphereLightSkyColor", GTHREE_UNIFORM_TYPE_FLOAT3_ARRAY, NULL},
-  {"hemisphereLightGroundColor", GTHREE_UNIFORM_TYPE_FLOAT3_ARRAY, NULL},
+  {"directionalLights", GTHREE_UNIFORM_TYPE_UNIFORMS_ARRAY, NULL},
+  /*
+    properties: {
+      direction: {},
+      color: {},
+      shadow: {},
+      shadowBias: {},
+      shadowRadius: {},
+      shadowMapSize: {}
+      }
+  */
 
-  {"pointLightColor", GTHREE_UNIFORM_TYPE_FLOAT3_ARRAY, NULL},
-  {"pointLightPosition", GTHREE_UNIFORM_TYPE_FLOAT3_ARRAY, NULL},
-  {"pointLightDistance", GTHREE_UNIFORM_TYPE_FLOAT_ARRAY, NULL},
+  {"pointLights", GTHREE_UNIFORM_TYPE_UNIFORMS_ARRAY, NULL},
+  /*
+     properties: {
+       color: {},
+       position: {},
+       decay: {},
+       distance: {},
 
-  {"spotLightColor", GTHREE_UNIFORM_TYPE_FLOAT3_ARRAY, NULL},
-  {"spotLightPosition", GTHREE_UNIFORM_TYPE_FLOAT3_ARRAY, NULL},
-  {"spotLightDirection", GTHREE_UNIFORM_TYPE_FLOAT3_ARRAY, NULL},
-  {"spotLightDistance", GTHREE_UNIFORM_TYPE_FLOAT_ARRAY, NULL},
-  {"spotLightAngleCos", GTHREE_UNIFORM_TYPE_FLOAT_ARRAY, NULL},
-  {"spotLightExponent", GTHREE_UNIFORM_TYPE_FLOAT_ARRAY, NULL}
+       shadow: {},
+       shadowBias: {},
+       shadowRadius: {},
+       shadowMapSize: {},
+       shadowCameraNear: {},
+       shadowCameraFar: {}
+       }
+  */
+
+/*
+  lightProbe: { value: [] },
+  directionalShadowMap: { value: [] },
+  directionalShadowMatrix: { value: [] },
+  spotLights: { value: [], properties: {
+    color: {},
+    position: {},
+    direction: {},
+    distance: {},
+    coneCos: {},
+    penumbraCos: {},
+    decay: {},
+    shadow: {},
+    shadowBias: {},
+    shadowRadius: {},
+    shadowMapSize: {}
+  } },
+  spotShadowMap: { value: [] },
+  spotShadowMatrix: { value: [] },
+  pointShadowMap: { value: [] },
+  pointShadowMatrix: { value: [] },
+  hemisphereLights: { value: [], properties: {
+    direction: {},
+    skyColor: {},
+    groundColor: {}
+  } },
+  // TODO (abelnation): RectAreaLight BRDF data needs to be moved from example to main src
+  rectAreaLights: { value: [], properties: {
+    color: {},
+    position: {},
+    width: {},
+    height: {}
+  } }
+  },
+*/
+
 };
 
 static GthreeUniforms *points;

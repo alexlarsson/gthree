@@ -692,8 +692,6 @@ init_material (GthreeRenderer *renderer,
     }
 #endif
 
-  gthree_shader_update_uniform_locations_for_program (shader, program);
-
   m_uniforms = gthree_shader_get_uniforms (shader);
 
   priv->current_light_hash = priv->light_setup.hash;
@@ -701,8 +699,11 @@ init_material (GthreeRenderer *renderer,
     {
       gthree_uniforms_set_color (m_uniforms, "ambientLightColor", &priv->light_setup.ambient);
 
-      // TODO: Add priv->light_setup.points and priv->light_setup.directional
+      gthree_uniforms_set_uarray (m_uniforms, "directionalLights", priv->light_setup.directional);
+      gthree_uniforms_set_uarray (m_uniforms, "pointLights", priv->light_setup.point);
     }
+
+  gthree_shader_update_uniform_locations_for_program (shader, program);
 
   return NULL;
 }
@@ -871,7 +872,15 @@ set_program (GthreeRenderer *renderer,
 
 #endif
       if (camera != priv->current_camera)
-        priv->current_camera = camera;
+        {
+          priv->current_camera = camera;
+
+          // lighting uniforms depend on the camera so enforce an update
+          // now, in case this material supports lights - or later, when
+          // the next material that does gets activated:
+          refreshMaterial = TRUE;		// set to true on material change
+          refreshLights = TRUE;		// remains set until update done
+        }
 
       // load material specific uniforms
       // (shader material also gets them for the sake of genericity)

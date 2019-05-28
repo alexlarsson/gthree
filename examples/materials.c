@@ -8,7 +8,7 @@
 
 static GthreeScene *scene;
 static GthreePerspectiveCamera *camera;
-static GthreeMesh *particle_light;
+static GthreePointLight *point_light;
 
 static GthreeMaterial *materials[16] = { NULL };
 static GthreeGeometry *geometries[16] = { NULL };
@@ -80,7 +80,6 @@ init_scene (void)
   GthreeLambertMaterial *material_lambert;
   GthreePhongMaterial *material_phong;
   GthreeAmbientLight *ambient_light;
-  GthreePointLight *point_light;
   GthreeDirectionalLight *directional_light;
   GthreeTexture *texture;
   GdkPixbuf *pixbuf;
@@ -88,6 +87,7 @@ init_scene (void)
   int i, n_faces;
   graphene_point3d_t pos = { 0, 0, 0};
   graphene_euler_t euler;
+  GthreeMesh *particle_light;
 
   scene = gthree_scene_new ();
 
@@ -263,11 +263,11 @@ init_scene (void)
   material_light = gthree_basic_material_new ();
   gthree_basic_material_set_color (material_light, &white);
 
-  particle_light = gthree_mesh_new (geometry_light, GTHREE_MATERIAL (material_light));
-  gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (particle_light));
-
   point_light = gthree_point_light_new (&white, 1, 0);
-  gthree_object_add_child (GTHREE_OBJECT (particle_light), GTHREE_OBJECT (point_light));
+  gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (point_light));
+
+  particle_light = gthree_mesh_new (geometry_light, GTHREE_MATERIAL (material_light));
+  gthree_object_add_child (GTHREE_OBJECT (point_light), GTHREE_OBJECT (particle_light));
 
   directional_light = gthree_directional_light_new (&white, 0.125);
   gthree_object_set_position (GTHREE_OBJECT (directional_light),
@@ -326,7 +326,7 @@ tick (GtkWidget     *widget,
       gthree_phong_material_set_emissive_color (GTHREE_PHONG_MATERIAL (materials[anim_material2]), &color);
     }
 
-  gthree_object_set_position (GTHREE_OBJECT (particle_light),
+  gthree_object_set_position (GTHREE_OBJECT (point_light),
                               graphene_point3d_init (&pos,
                                                      sin (angle * 7) * 300,
                                                      cos (angle * 5) * 400,

@@ -709,7 +709,7 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters)
   vertex_expanded = parse_text_with_includes (vertex_unrolled);
   fragment_expanded = parse_text_with_includes (fragment_unrolled);
 
-if (0)
+  if (0)
     {
       g_print ("************ VERTEX *******************************************************\n%s\n",
                vertex_expanded);

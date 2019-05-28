@@ -178,7 +178,7 @@ gthree_shader_update_uniform_locations_for_program (GthreeShader *shader,
                                                     GthreeProgram *program)
 {
   GthreeShaderPrivate *priv = gthree_shader_get_instance_private (shader);
-  GList *unis, *l;
+  GList *unis, *l, *ll;
 
   unis = gthree_uniforms_get_all (priv->uniforms);
   for (l = unis; l != NULL; l = l->next)
@@ -186,8 +186,42 @@ gthree_shader_update_uniform_locations_for_program (GthreeShader *shader,
       GthreeUniform *uni = l->data;
       gint location;
 
-      location = gthree_program_lookup_uniform_location (program, gthree_uniform_get_qname (uni));
-      gthree_uniform_set_location (uni, location);
+      if (gthree_uniform_get_type (uni) == GTHREE_UNIFORM_TYPE_UNIFORMS_ARRAY)
+        {
+          GPtrArray *uarray = gthree_uniform_get_uarray (uni);
+          int i;
+
+          for (i = 0; uarray && i < uarray->len; i++)
+            {
+              GthreeUniforms *child_unis = g_ptr_array_index (uarray, i);
+              GList *child_unis_list;
+              const char *child_name;
+              g_autofree char *full_name = NULL;
+
+              if (child_unis == NULL)
+                continue;
+
+              child_unis_list = gthree_uniforms_get_all (child_unis);
+
+              for (ll = child_unis_list; ll != NULL; ll = ll->next)
+                {
+                  GthreeUniform *child_uni = ll->data;
+
+                  child_name = gthree_uniform_get_name (child_uni);
+
+                  full_name = g_strdup_printf ("%s[%d].%s",
+                                               gthree_uniform_get_name (uni), i, child_name);
+
+                  location = gthree_program_lookup_uniform_location_from_string (program, full_name);
+                  gthree_uniform_set_location (child_uni, location);
+                }
+            }
+        }
+      else
+        {
+          location = gthree_program_lookup_uniform_location (program, gthree_uniform_get_qname (uni));
+          gthree_uniform_set_location (uni, location);
+        }
     }
   g_list_free (unis);
 }
