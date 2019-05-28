@@ -4,11 +4,8 @@
 #include "gthreelambertmaterial.h"
 
 typedef struct {
-  GdkRGBA ambient;
   GdkRGBA emissive;
 
-  gboolean wrap_around;
-  graphene_vec3_t wrap_rgb;
 } GthreeLambertMaterialPrivate;
 
 
@@ -29,11 +26,6 @@ static void
 gthree_lambert_material_init (GthreeLambertMaterial *lambert)
 {
   GthreeLambertMaterialPrivate *priv = gthree_lambert_material_get_instance_private (lambert);
-
-  priv->ambient.red = 1.0;
-  priv->ambient.green = 1.0;
-  priv->ambient.blue = 1.0;
-  priv->ambient.alpha = 1.0;
 
   priv->emissive.red = 0.0;
   priv->emissive.green = 0.0;
@@ -61,8 +53,6 @@ gthree_lambert_material_real_set_params (GthreeMaterial *material,
   GthreeLambertMaterialPrivate *priv = gthree_lambert_material_get_instance_private (lambert);
 
   GTHREE_MATERIAL_CLASS (gthree_lambert_material_parent_class)->set_params (material, params);
-
-  //TODO: params->wrap_around = priv->wrap_around;
 }
 
 static void
@@ -76,30 +66,9 @@ gthree_lambert_material_real_set_uniforms (GthreeMaterial *material,
 
   GTHREE_MATERIAL_CLASS (gthree_lambert_material_parent_class)->set_uniforms (material, uniforms, camera);
 
-#if TODO
-  if ( _this.gammaInput )
-    {
-      uniforms.ambient.value.copyGammaToLinear( material.ambient );
-      uniforms.emissive.value.copyGammaToLinear( material.emissive );
-    }
-  else
-#endif
-    {
-      uni = gthree_uniforms_lookup_from_string (uniforms, "ambient");
-      if (uni != NULL)
-        gthree_uniform_set_color (uni, &priv->ambient);
-
-      uni = gthree_uniforms_lookup_from_string (uniforms, "emissive");
-      if (uni != NULL)
-        gthree_uniform_set_color (uni, &priv->emissive);
-    }
-
-#if TODO
-  if (priv->wrap_around )
-    {
-      uniforms.wrapRGB.value.copy( material.wrapRGB );
-    }
-#endif
+  uni = gthree_uniforms_lookup_from_string (uniforms, "emissive");
+  if (uni != NULL)
+    gthree_uniform_set_color (uni, &priv->emissive);
 }
 
 static gboolean
@@ -123,25 +92,6 @@ gthree_lambert_material_class_init (GthreeLambertMaterialClass *klass)
   GTHREE_MATERIAL_CLASS(klass)->set_uniforms = gthree_lambert_material_real_set_uniforms;
   GTHREE_MATERIAL_CLASS(klass)->needs_view_matrix = gthree_lambert_material_needs_view_matrix;
   GTHREE_MATERIAL_CLASS(klass)->needs_lights = gthree_lambert_material_needs_lights;
-}
-
-const GdkRGBA *
-gthree_lambert_material_get_ambient_color (GthreeLambertMaterial *lambert)
-{
-  GthreeLambertMaterialPrivate *priv = gthree_lambert_material_get_instance_private (lambert);
-
-  return &priv->ambient;
-}
-
-void
-gthree_lambert_material_set_ambient_color (GthreeLambertMaterial *lambert,
-                                           const GdkRGBA *color)
-{
-  GthreeLambertMaterialPrivate *priv = gthree_lambert_material_get_instance_private (lambert);
-
-  priv->ambient = *color;
-
-  gthree_material_set_needs_update (GTHREE_MATERIAL (lambert), TRUE);
 }
 
 const GdkRGBA *

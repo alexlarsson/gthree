@@ -28,12 +28,10 @@ init_scene (void)
 
   material = gthree_lambert_material_new ();
   gthree_basic_material_set_color (GTHREE_BASIC_MATERIAL (material), &white);
-  gthree_lambert_material_set_ambient_color (material, &light_grey);
   gthree_basic_material_set_env_map (GTHREE_BASIC_MATERIAL (material), GTHREE_TEXTURE (reflectionCube));
 
   material2 = gthree_lambert_material_new ();
   gthree_basic_material_set_color (GTHREE_BASIC_MATERIAL (material2), &yellow);
-  gthree_lambert_material_set_ambient_color (material2, &white);
   gthree_basic_material_set_refraction_ratio (GTHREE_BASIC_MATERIAL (material2), 0.99);
   gthree_basic_material_set_env_map (GTHREE_BASIC_MATERIAL (material2), GTHREE_TEXTURE (refractionCube));
 

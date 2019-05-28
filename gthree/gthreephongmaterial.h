@@ -33,9 +33,6 @@ GType gthree_phong_material_get_type (void) G_GNUC_CONST;
 float           gthree_phong_material_get_shininess      (GthreePhongMaterial *phong);
 void            gthree_phong_material_set_shininess      (GthreePhongMaterial *phong,
                                                           float                shininess);
-const GdkRGBA * gthree_phong_material_get_ambient_color  (GthreePhongMaterial *phong);
-void            gthree_phong_material_set_ambient_color  (GthreePhongMaterial *phong,
-                                                          const GdkRGBA       *color);
 const GdkRGBA * gthree_phong_material_get_emissive_color (GthreePhongMaterial *phong);
 void            gthree_phong_material_set_emissive_color (GthreePhongMaterial *phong,
                                                           const GdkRGBA       *color);

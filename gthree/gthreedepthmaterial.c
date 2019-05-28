@@ -44,6 +44,9 @@ static void
 gthree_depth_material_real_set_params (GthreeMaterial *material,
                                        GthreeProgramParameters *params)
 {
+
+  params->depth_packing = TRUE;
+
   GTHREE_MATERIAL_CLASS (gthree_depth_material_parent_class)->set_params (material, params);
 }
 
@@ -56,13 +59,6 @@ gthree_depth_material_real_set_uniforms (GthreeMaterial *material,
 
   GTHREE_MATERIAL_CLASS (gthree_depth_material_parent_class)->set_uniforms (material, uniforms, camera);
 
-  uni = gthree_uniforms_lookup_from_string (uniforms, "mNear");
-  if (uni != NULL)
-    gthree_uniform_set_float (uni, gthree_camera_get_near (camera));
-
-  uni = gthree_uniforms_lookup_from_string (uniforms, "mFar");
-  if (uni != NULL)
-    gthree_uniform_set_float (uni, gthree_camera_get_far (camera));
 }
 
 static void

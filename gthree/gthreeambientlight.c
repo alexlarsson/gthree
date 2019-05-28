@@ -9,7 +9,7 @@ G_DEFINE_TYPE (GthreeAmbientLight, gthree_ambient_light, GTHREE_TYPE_LIGHT)
 GthreeAmbientLight *
 gthree_ambient_light_new (const GdkRGBA *color)
 {
-  return g_object_new (GTHREE_TYPE_LIGHT,
+  return g_object_new (GTHREE_TYPE_AMBIENT_LIGHT,
                        "color", color,
                        NULL);
 }

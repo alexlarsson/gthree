@@ -4,15 +4,9 @@
 #include "gthreephongmaterial.h"
 
 typedef struct {
-  GdkRGBA ambient;
   GdkRGBA emissive;
   GdkRGBA specular;
   float shininess;
-
-  gboolean metal;
-
-  gboolean wrap_around;
-  graphene_vec3_t wrap_rgb;
 } GthreePhongMaterialPrivate;
 
 
@@ -34,11 +28,6 @@ gthree_phong_material_init (GthreePhongMaterial *phong)
 {
   GthreePhongMaterialPrivate *priv = gthree_phong_material_get_instance_private (phong);
 
-  priv->ambient.red = 1.0;
-  priv->ambient.green = 1.0;
-  priv->ambient.blue = 1.0;
-  priv->ambient.alpha = 1.0;
-
   priv->emissive.red = 0.0;
   priv->emissive.green = 0.0;
   priv->emissive.blue = 0.0;
@@ -50,8 +39,6 @@ gthree_phong_material_init (GthreePhongMaterial *phong)
   priv->specular.alpha = 1.0;
 
   priv->shininess = 30;
-
-  priv->metal = FALSE;
 }
 
 static void
@@ -78,11 +65,8 @@ gthree_phong_material_real_set_params (GthreeMaterial *material,
 
   GTHREE_MATERIAL_CLASS (gthree_phong_material_parent_class)->set_params (material, params);
 
-  //params->wrap_around = priv->wrap_around;
-  //params->metal = priv->metal;
-
+  // This is only supported in phong
   params->flat_shading = gthree_basic_material_get_shading_type (GTHREE_BASIC_MATERIAL (material)) == GTHREE_SHADING_FLAT;
-
 }
 
 static void
@@ -98,37 +82,15 @@ gthree_phong_material_real_set_uniforms (GthreeMaterial *material,
 
   uni = gthree_uniforms_lookup_from_string (uniforms, "shininess");
   if (uni != NULL)
-    gthree_uniform_set_float (uni, priv->shininess);
+    gthree_uniform_set_float (uni, MAX (priv->shininess, 1e-4 )); // to prevent pow( 0.0, 0.0 )
 
-#if TODO
-  if ( _this.gammaInput )
-    {
-      uniforms.ambient.value.copyGammaToLinear( material.ambient );
-      uniforms.emissive.value.copyGammaToLinear( material.emissive );
-      uniforms.specular.value.copyGammaToLinear( material.specular );
-    }
-  else
-#endif
-    {
-      uni = gthree_uniforms_lookup_from_string (uniforms, "ambient");
-      if (uni != NULL)
-        gthree_uniform_set_color (uni, &priv->ambient);
+  uni = gthree_uniforms_lookup_from_string (uniforms, "emissive");
+  if (uni != NULL)
+    gthree_uniform_set_color (uni, &priv->emissive);
 
-      uni = gthree_uniforms_lookup_from_string (uniforms, "emissive");
-      if (uni != NULL)
-        gthree_uniform_set_color (uni, &priv->emissive);
-
-      uni = gthree_uniforms_lookup_from_string (uniforms, "specular");
-      if (uni != NULL)
-        gthree_uniform_set_color (uni, &priv->specular);
-    }
-
-#if TODO
-  if (priv->wrap_around )
-    {
-      uniforms.wrapRGB.value.copy( material.wrapRGB );
-    }
-#endif
+  uni = gthree_uniforms_lookup_from_string (uniforms, "specular");
+  if (uni != NULL)
+    gthree_uniform_set_color (uni, &priv->specular);
 }
 
 static gboolean
@@ -159,25 +121,6 @@ gthree_phong_material_class_init (GthreePhongMaterialClass *klass)
   GTHREE_MATERIAL_CLASS(klass)->needs_camera_pos = gthree_phong_material_needs_camera_pos;
   GTHREE_MATERIAL_CLASS(klass)->needs_view_matrix = gthree_phong_material_needs_view_matrix;
   GTHREE_MATERIAL_CLASS(klass)->needs_lights = gthree_phong_material_needs_lights;
-}
-
-const GdkRGBA *
-gthree_phong_material_get_ambient_color (GthreePhongMaterial *phong)
-{
-  GthreePhongMaterialPrivate *priv = gthree_phong_material_get_instance_private (phong);
-
-  return &priv->ambient;
-}
-
-void
-gthree_phong_material_set_ambient_color (GthreePhongMaterial *phong,
-                                         const GdkRGBA *color)
-{
-  GthreePhongMaterialPrivate *priv = gthree_phong_material_get_instance_private (phong);
-
-  priv->ambient = *color;
-
-  gthree_material_set_needs_update (GTHREE_MATERIAL (phong), TRUE);
 }
 
 const GdkRGBA *

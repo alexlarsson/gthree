@@ -73,6 +73,8 @@ gthree_basic_material_real_set_params (GthreeMaterial *material,
 
   params->map = priv->map != NULL;
   params->env_map = priv->env_map != NULL;
+  if (params->env_map)
+    params->env_map_mode = gthree_texture_get_mapping (priv->env_map);
 }
 
 static void
@@ -114,11 +116,13 @@ gthree_basic_material_real_set_uniforms (GthreeMaterial *material,
       if (uni != NULL)
         gthree_uniform_set_float (uni, GTHREE_IS_CUBE_TEXTURE (priv->env_map) ? -1 : 1);
 
-      //TODO: from refreshUniformsCommon 
       uni = gthree_uniforms_lookup_from_string (uniforms, "reflectivity");
+      if (uni != NULL)
+        gthree_uniform_set_float (uni, priv->reflectivity);
 
-      //TODO: from refreshUniformsCommon 
       uni = gthree_uniforms_lookup_from_string (uniforms, "refractionRatio");
+      if (uni != NULL)
+        gthree_uniform_set_float (uni, priv->refraction_ratio);
     }
 
   //TODO: from refreshUniformsCommon 

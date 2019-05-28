@@ -34,7 +34,7 @@ typedef struct {
   guint matcap : 1;
   guint matcap_encoding : 3;
   guint env_map : 1;
-  guint env_map_mode : 1;
+  guint env_map_mode : 3;
   guint env_map_encoding : 3;
   guint light_map : 1;
   guint ao_map : 1;

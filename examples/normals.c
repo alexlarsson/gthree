@@ -35,7 +35,6 @@ green_object (int num)
   material = GTHREE_MATERIAL (gthree_lambert_material_new ());
   gthree_basic_material_set_color (GTHREE_BASIC_MATERIAL (material), &green);
   gthree_material_set_side (GTHREE_MATERIAL (material), GTHREE_SIDE_DOUBLE);
-  gthree_lambert_material_set_ambient_color (GTHREE_LAMBERT_MATERIAL (material), &green);
   gthree_lambert_material_set_emissive_color (GTHREE_LAMBERT_MATERIAL (material), &green);
 
   return GTHREE_OBJECT (gthree_mesh_new (geo, material));

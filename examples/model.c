@@ -34,7 +34,7 @@ init_scene (void)
   gthree_basic_material_set_vertex_colors (material_wireframe, FALSE);
 
   material_phong = gthree_phong_material_new ();
-  gthree_phong_material_set_ambient_color (material_phong, &red);
+  gthree_basic_material_set_color (material_wireframe, &red);
   gthree_phong_material_set_emissive_color (material_phong, &grey);
   gthree_phong_material_set_specular_color (material_phong, &white);
 

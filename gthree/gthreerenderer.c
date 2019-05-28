@@ -617,6 +617,7 @@ init_material (GthreeRenderer *renderer,
   parameters.supports_vertex_textures = priv->supports_vertex_textures;
   parameters.output_encoding = get_texture_encoding_from_map (/* ( ! currentRenderTarget ) ? null : currentRenderTarget.texture, renderer.gammaOutput*/ );
 
+  gthree_material_set_params (material, &parameters);
   parameters.num_dir_lights = priv->light_setup.directional->len;
   parameters.num_point_lights = priv->light_setup.point->len;
 
@@ -769,7 +770,7 @@ setup_lights (GthreeRenderer *renderer, GthreeCamera *camera)
     {
       GthreeLight *light = l->data;
 
-      gthree_light_setup (light, camera, &priv->light_setup);
+      gthree_light_setup (light, camera, setup);
     }
 
   setup->hash.num_directional = setup->directional->len;

@@ -402,32 +402,29 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters)
   env_map_mode_define = "ENVMAP_MODE_REFLECTION";
   env_map_blending_define = "ENVMAP_BLENDING_MULTIPLY";
 
+  if (parameters->env_map)
+    {
+      switch (parameters->env_map_mode)
+        {
+        case GTHREE_MAPPING_CUBE_REFLECTION:
+        case GTHREE_MAPPING_CUBE_REFRACTION:
+          env_map_type_define = "ENVMAP_TYPE_CUBE";
+          break;
+          break;
+        case GTHREE_MAPPING_SPHERICAL_REFLECTION:
+        case GTHREE_MAPPING_SPHERICAL_REFRACTION:
+          env_map_type_define = "ENVMAP_TYPE_SPHERE";
+          break;
+        }
+      switch (parameters->env_map_mode)
+        {
+        case GTHREE_MAPPING_CUBE_REFRACTION:
+          env_map_mode_define = "ENVMAP_MODE_REFRACTION";
+        }
+    }
+
 #if TODO
   if ( parameters.envMap ) {
-		switch ( material.envMap.mapping ) {
-			case CubeReflectionMapping:
-			case CubeRefractionMapping:
-				envMapTypeDefine = 'ENVMAP_TYPE_CUBE';
-				break;
-			case CubeUVReflectionMapping:
-			case CubeUVRefractionMapping:
-				envMapTypeDefine = 'ENVMAP_TYPE_CUBE_UV';
-				break;
-			case EquirectangularReflectionMapping:
-			case EquirectangularRefractionMapping:
-				envMapTypeDefine = 'ENVMAP_TYPE_EQUIREC';
-				break;
-			case SphericalReflectionMapping:
-				envMapTypeDefine = 'ENVMAP_TYPE_SPHERE';
-				break;
-		}
-		switch ( material.envMap.mapping ) {
-			case CubeRefractionMapping:
-			case EquirectangularRefractionMapping:
-				envMapModeDefine = 'ENVMAP_MODE_REFRACTION';
-				break;
-		}
-
 		switch ( material.combine ) {
 			case MultiplyOperation:
 				envMapBlendingDefine = 'ENVMAP_BLENDING_MULTIPLY';
@@ -693,9 +690,9 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters)
       get_texel_decoding_function (fragment, "emissiveMapTexelToLinear", parameters->emissive_map_encoding);
       get_texel_encoding_function (fragment, "linearToOutputTexel", parameters->output_encoding);
 
-#if TODO
-      // parameters.depthPacking ? '#define DEPTH_PACKING ' + material.depthPacking : '',
-#endif
+      // TODO: Just supports one (basic) format for now
+      if (parameters->depth_packing)
+        g_string_append_printf (fragment, "#define DEPTH_PACKING 3200\n");
   }
 
   g_string_append (vertex, vertex_shader);

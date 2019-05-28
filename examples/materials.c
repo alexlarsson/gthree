@@ -37,9 +37,31 @@ generate_texture()
     {
       for (x = 0; x < width; x++)
         {
-          pixels[y * rowstride + x * 4 + 0] = 255;
-          pixels[y * rowstride + x * 4 + 1] = 255;
-          pixels[y * rowstride + x * 4 + 2] = 255;
+          if (x < 128 && y < 128)
+            {
+              pixels[y * rowstride + x * 4 + 0] = 255;
+              pixels[y * rowstride + x * 4 + 1] = 0;
+              pixels[y * rowstride + x * 4 + 2] = 0;
+            }
+          else if (x >= 128 && y < 128)
+            {
+              pixels[y * rowstride + x * 4 + 0] = 0;
+              pixels[y * rowstride + x * 4 + 1] = 255;
+              pixels[y * rowstride + x * 4 + 2] = 0;
+            }
+          else if (x < 128 && y >= 128)
+            {
+              pixels[y * rowstride + x * 4 + 0] = 0;
+              pixels[y * rowstride + x * 4 + 1] = 0;
+              pixels[y * rowstride + x * 4 + 2] = 255;
+            }
+          else
+            {
+              pixels[y * rowstride + x * 4 + 0] = 255;
+              pixels[y * rowstride + x * 4 + 1] = 255;
+              pixels[y * rowstride + x * 4 + 2] = 0;
+            }
+
           pixels[y * rowstride + x * 4 + 3] = x ^ (x == 0 ? y + 1 : y);
         }
     }
@@ -94,7 +116,6 @@ init_scene (void)
 
   material_phong = gthree_phong_material_new ();
   gthree_basic_material_set_color (GTHREE_BASIC_MATERIAL (material_phong), &light_grey);
-  gthree_phong_material_set_ambient_color (material_phong, &very_dark_grey);
   gthree_phong_material_set_specular_color (material_phong, &dark_green);
   gthree_phong_material_set_shininess (material_phong, 30);
   gthree_basic_material_set_shading_type (GTHREE_BASIC_MATERIAL (material_phong),
@@ -104,7 +125,6 @@ init_scene (void)
 
   material_phong = gthree_phong_material_new ();
   gthree_basic_material_set_color (GTHREE_BASIC_MATERIAL (material_phong), &light_grey);
-  gthree_phong_material_set_ambient_color (material_phong, &very_dark_grey);
   gthree_phong_material_set_specular_color (material_phong, &dark_green);
   gthree_phong_material_set_shininess (material_phong, 30);
   gthree_basic_material_set_shading_type (GTHREE_BASIC_MATERIAL (material_phong),
@@ -138,7 +158,6 @@ init_scene (void)
 
   material_phong = gthree_phong_material_new ();
   gthree_basic_material_set_color (GTHREE_BASIC_MATERIAL (material_phong), &light_grey);
-  gthree_phong_material_set_ambient_color (material_phong, &very_dark_grey);
   gthree_phong_material_set_specular_color (material_phong, &dark_green);
   gthree_phong_material_set_shininess (material_phong, 30);
   gthree_basic_material_set_shading_type (GTHREE_BASIC_MATERIAL (material_phong),
@@ -169,14 +188,12 @@ init_scene (void)
   gthree_basic_material_set_shading_type (GTHREE_BASIC_MATERIAL (material_lambert),
                                           GTHREE_SHADING_SMOOTH);
   gthree_lambert_material_set_emissive_color(material_lambert, &red);
-  gthree_lambert_material_set_ambient_color(material_lambert, &black);
   anim_material1 = n_materials;
   geometries[n_materials] = geometry;
   materials[n_materials++] = GTHREE_MATERIAL (material_lambert);
 
   material_phong = gthree_phong_material_new ();
   gthree_basic_material_set_color (GTHREE_BASIC_MATERIAL (material_phong), &black);
-  gthree_phong_material_set_ambient_color (material_phong, &black);
   gthree_phong_material_set_specular_color (material_phong, &medium_grey);
   gthree_phong_material_set_emissive_color(material_phong, &red);
   gthree_phong_material_set_shininess (material_phong, 10);
