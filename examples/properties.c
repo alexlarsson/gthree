@@ -10,8 +10,11 @@
 #define N_OBJECT_TYPES 4
 #define N_MATERIALS 3
 
-GthreeObject *objects[N_OBJECT_TYPES * N_MATERIALS];
+GthreeObject *objects[N_OBJECT_TYPES];
 GthreeMaterial *materials[N_MATERIALS];
+GthreeMaterial *current_material;
+GtkWidget *property_pane;
+
 
 GthreeAmbientLight *ambient_light;
 GthreeDirectionalLight *directional_light;
@@ -43,13 +46,13 @@ sample_material (int num)
   switch (num)
     {
     case 0:
-      return GTHREE_MATERIAL (gthree_mesh_basic_material_new ());
+      return GTHREE_MATERIAL (gthree_mesh_phong_material_new ());
       break;
     case 1:
       return GTHREE_MATERIAL (gthree_mesh_lambert_material_new ());
       break;
     case 2:
-      return GTHREE_MATERIAL (gthree_mesh_phong_material_new ());
+      return GTHREE_MATERIAL (gthree_mesh_basic_material_new ());
       break;
     default:
       g_assert_not_reached ();
@@ -64,16 +67,16 @@ sample_object (int num, GthreeMaterial *material)
   switch (num)
     {
     case 0:
-      geo = gthree_geometry_new_sphere (20, 40, 10);
+      geo = gthree_geometry_new_sphere (60, 40, 10);
       break;
     case 1:
-      geo = gthree_geometry_new_torus_full (25, 12, 20, 30, 2 * G_PI);
+      geo = gthree_geometry_new_torus_full (40, 20, 20, 30, 2 * G_PI);
       break;
     case 2:
-      geo = gthree_geometry_new_box (40, 20, 30, 5, 5, 5);
+      geo = gthree_geometry_new_box (60, 40, 30, 5, 5, 5);
       break;
     case 3:
-      geo = gthree_geometry_new_cylinder_full (15, 30, 50, 15, 20, FALSE, 0, 2 * G_PI);
+      geo = gthree_geometry_new_cylinder_full (24, 40, 60, 15, 20, FALSE, 0, 2 * G_PI);
       break;
     default:
       g_assert_not_reached ();
@@ -118,21 +121,20 @@ init_scene (void)
 
 
   for (i = 0; i < N_MATERIALS; i++)
+    materials[i] = sample_material (i);
+  current_material = materials[0];
+
+  for (j = 0; j < N_OBJECT_TYPES; j++)
     {
-      materials[i] = sample_material (i);
+      GthreeObject * obj = sample_object (j, current_material);
 
-      for (j = 0; j < N_OBJECT_TYPES; j++)
-        {
-          GthreeObject * obj = sample_object (j, materials[i]);
+      objects[j] = obj;
 
-          objects[i * N_OBJECT_TYPES + j] = obj;
-
-          gthree_object_add_child (GTHREE_OBJECT (scene), obj);
-          gthree_object_set_position (obj, graphene_point3d_init (&pos,
-                                                                  j * 70 - 100,
-                                                                  - i * 70 + 80,
-                                                                  -30));
-        }
+      gthree_object_add_child (GTHREE_OBJECT (scene), obj);
+      gthree_object_set_position (obj, graphene_point3d_init (&pos,
+                                                              140 * (j - 1.5),
+                                                              0,
+                                                              0));
     }
 
   return scene;
@@ -184,10 +186,59 @@ resize_area (GthreeArea *area,
   gthree_perspective_camera_set_aspect (camera, (float)width / (float)(height));
 }
 
+static void
+update_property_pane (void)
+{
+  GtkWidget *hbox, *panel;
+  GList *children = gtk_container_get_children (GTK_CONTAINER (property_pane));
+  GList *l;
+
+  for (l = children; l != NULL; l = l->next)
+    gtk_widget_destroy (l->data);
+
+  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 8);
+  gtk_container_add (GTK_CONTAINER (property_pane), hbox);
+  gtk_widget_show (hbox);
+
+  panel = property_editor_widget_new (G_OBJECT (current_material),
+                                      g_type_name_from_instance ((gpointer)current_material) + strlen ("Gthree"));
+  gtk_container_add (GTK_CONTAINER (hbox), panel);
+
+  panel = property_editor_widget_new (G_OBJECT (ambient_light),
+                                      g_type_name_from_instance ((gpointer)ambient_light) + strlen ("Gthree"));
+  gtk_container_add (GTK_CONTAINER (hbox), panel);
+
+  panel = property_editor_widget_new (G_OBJECT (point_light),
+                                      g_type_name_from_instance ((gpointer)point_light) + strlen ("Gthree"));
+  gtk_container_add (GTK_CONTAINER (hbox), panel);
+
+  panel = property_editor_widget_new (G_OBJECT (directional_light),
+                                      g_type_name_from_instance ((gpointer)directional_light) + strlen ("Gthree"));
+  gtk_container_add (GTK_CONTAINER (hbox), panel);
+
+  gtk_widget_show_all (property_pane);
+}
+
+static void
+material_combo_changed (GtkComboBox *combo_box)
+{
+  gint i, mat;
+
+  mat = gtk_combo_box_get_active (combo_box);
+  current_material = materials[mat];
+
+  for (i = 0; i < N_OBJECT_TYPES; i++)
+    {
+      GthreeObject * obj = objects[i];
+
+      gthree_mesh_set_material (GTHREE_MESH (obj), current_material);
+    }
+}
+
 int
 main (int argc, char *argv[])
 {
-  GtkWidget *window, *box, *hbox, *button, *area, *hbox2, *sw, *panel;
+  GtkWidget *window, *box, *hbox, *button, *area, *sw, *combo;
   GthreeScene *scene;
   GthreePerspectiveCamera *camera;
   graphene_point3d_t pos;
@@ -227,34 +278,23 @@ main (int argc, char *argv[])
 
   gtk_widget_add_tick_callback (GTK_WIDGET (area), tick, area, NULL);
 
+  combo = gtk_combo_box_text_new ();
+  for (i = 0; i < N_MATERIALS; i++)
+    gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), g_type_name_from_instance ((gpointer)materials[i]));
+
+  gtk_combo_box_set_active (GTK_COMBO_BOX (combo), 0);
+
+  g_signal_connect (combo, "changed", (GCallback)material_combo_changed, NULL);
+
+  gtk_widget_show (combo);
+  gtk_container_add (GTK_CONTAINER (box), combo);
+
   sw = gtk_scrolled_window_new (NULL, NULL);
+  gtk_scrolled_window_set_min_content_height (GTK_SCROLLED_WINDOW (sw), 300);
   gtk_container_add (GTK_CONTAINER (box), sw);
   gtk_widget_show (sw);
 
-  gtk_scrolled_window_set_min_content_height (GTK_SCROLLED_WINDOW (sw), 300);
-
-  hbox2 = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 8);
-  gtk_container_add (GTK_CONTAINER (sw), hbox2);
-  gtk_widget_show (hbox2);
-
-  for (i = 0; i < N_MATERIALS; i++)
-    {
-      panel = property_editor_widget_new (G_OBJECT (materials[i]),
-                                          g_type_name_from_instance ((gpointer)materials[i]) + strlen ("Gthree"));
-      gtk_container_add (GTK_CONTAINER (hbox2), panel);
-    }
-
-  panel = property_editor_widget_new (G_OBJECT (ambient_light),
-                                      g_type_name_from_instance ((gpointer)ambient_light) + strlen ("Gthree"));
-  gtk_container_add (GTK_CONTAINER (hbox2), panel);
-
-  panel = property_editor_widget_new (G_OBJECT (point_light),
-                                      g_type_name_from_instance ((gpointer)point_light) + strlen ("Gthree"));
-  gtk_container_add (GTK_CONTAINER (hbox2), panel);
-
-  panel = property_editor_widget_new (G_OBJECT (directional_light),
-                                      g_type_name_from_instance ((gpointer)directional_light) + strlen ("Gthree"));
-  gtk_container_add (GTK_CONTAINER (hbox2), panel);
+  property_pane = sw;
 
   button = gtk_button_new_with_label ("Quit");
   gtk_widget_set_hexpand (button, TRUE);
@@ -263,6 +303,8 @@ main (int argc, char *argv[])
   gtk_widget_show (button);
 
   gtk_widget_show (window);
+
+  update_property_pane ();
 
   gtk_main ();
 
