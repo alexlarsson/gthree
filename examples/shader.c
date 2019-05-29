@@ -7,11 +7,11 @@
 #include "utils.h"
 
 GthreeScene *scene;
-GthreeBasicMaterial *material_simple;
-GthreeBasicMaterial *material_texture;
-GthreeBasicMaterial *material_face_color;
-GthreeBasicMaterial *material_vertex_color;
-GthreeBasicMaterial *material_wireframe;
+GthreeMeshBasicMaterial *material_simple;
+GthreeMeshBasicMaterial *material_texture;
+GthreeMeshBasicMaterial *material_face_color;
+GthreeMeshBasicMaterial *material_vertex_color;
+GthreeMeshBasicMaterial *material_wireframe;
 GthreeMultiMaterial *multi_material;
 GthreeMesh *mesh;
 double rot = 0;

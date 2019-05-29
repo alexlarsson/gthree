@@ -15,7 +15,7 @@ float pointer_x, pointer_y;
 GthreeScene *
 init_scene (void)
 {
-  GthreeNormalMaterial *material;
+  GthreeMeshNormalMaterial *material;
   GthreeGeometry *geometry;
   GthreeMesh *mesh;
   graphene_point3d_t pos, scale;
@@ -26,8 +26,8 @@ init_scene (void)
 
   gthree_geometry_compute_vertex_normals (geometry);
 
-  material = gthree_normal_material_new ();
-  gthree_normal_material_set_shading_type (material, GTHREE_SHADING_SMOOTH);
+  material = gthree_mesh_normal_material_new ();
+  gthree_mesh_normal_material_set_shading_type (material, GTHREE_SHADING_SMOOTH);
 
   scene = gthree_scene_new ();
 

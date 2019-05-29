@@ -44,48 +44,48 @@ static GthreeObject *
 gtk_logo (void)
 {
   GthreeMultiMaterial *multi_material;
-  GthreeLambertMaterial *material;
+  GthreeMeshLambertMaterial *material;
   GthreeObject *cube, *ball, *tube;
-  GthreePhongMaterial *ball_material;
+  GthreeMeshPhongMaterial *ball_material;
   graphene_point3d_t p;
   graphene_euler_t e;
 
   multi_material = gthree_multi_material_new ();
 
-  material = gthree_lambert_material_new ();
-  gthree_basic_material_set_color (GTHREE_BASIC_MATERIAL (material), &red);
+  material = gthree_mesh_lambert_material_new ();
+  gthree_mesh_basic_material_set_color (GTHREE_BASIC_MATERIAL (material), &red);
   gthree_material_set_side (GTHREE_MATERIAL (material), GTHREE_SIDE_DOUBLE);
   gthree_material_set_is_transparent (GTHREE_MATERIAL (material), TRUE);
   gthree_material_set_opacity (GTHREE_MATERIAL (material), 0.75);
-  gthree_lambert_material_set_emissive_color (GTHREE_LAMBERT_MATERIAL (material), &red);
+  gthree_mesh_lambert_material_set_emissive_color (GTHREE_LAMBERT_MATERIAL (material), &red);
   gthree_multi_material_set_index (multi_material, 0, GTHREE_MATERIAL (material));
   gthree_multi_material_set_index (multi_material, 1, GTHREE_MATERIAL (material));
   g_object_unref (material);
 
-  material = gthree_lambert_material_new ();
-  gthree_basic_material_set_color (GTHREE_BASIC_MATERIAL (material), &green);
+  material = gthree_mesh_lambert_material_new ();
+  gthree_mesh_basic_material_set_color (GTHREE_BASIC_MATERIAL (material), &green);
   gthree_material_set_side (GTHREE_MATERIAL (material), GTHREE_SIDE_DOUBLE);
   gthree_material_set_is_transparent (GTHREE_MATERIAL (material), TRUE);
   gthree_material_set_opacity (GTHREE_MATERIAL (material), 0.75);
-  gthree_lambert_material_set_emissive_color (GTHREE_LAMBERT_MATERIAL (material), &green);
+  gthree_mesh_lambert_material_set_emissive_color (GTHREE_LAMBERT_MATERIAL (material), &green);
   gthree_multi_material_set_index (multi_material, 2, GTHREE_MATERIAL (material));
   gthree_multi_material_set_index (multi_material, 3, GTHREE_MATERIAL (material));
   g_object_unref (material);
 
-  material = gthree_lambert_material_new ();
-  gthree_basic_material_set_color (GTHREE_BASIC_MATERIAL (material), &blue);
+  material = gthree_mesh_lambert_material_new ();
+  gthree_mesh_basic_material_set_color (GTHREE_BASIC_MATERIAL (material), &blue);
   gthree_material_set_side (GTHREE_MATERIAL (material), GTHREE_SIDE_DOUBLE);
   gthree_material_set_is_transparent (GTHREE_MATERIAL (material), TRUE);
   gthree_material_set_opacity (GTHREE_MATERIAL (material), 0.75);
-  gthree_lambert_material_set_emissive_color (GTHREE_LAMBERT_MATERIAL (material), &blue);
+  gthree_mesh_lambert_material_set_emissive_color (GTHREE_LAMBERT_MATERIAL (material), &blue);
   gthree_multi_material_set_index (multi_material, 4, GTHREE_MATERIAL (material));
   gthree_multi_material_set_index (multi_material, 5, GTHREE_MATERIAL (material));
   g_object_unref (material);
 
   cube = new_cube (GTHREE_MATERIAL (multi_material));
 
-  ball_material = gthree_phong_material_new ();
-  gthree_phong_material_set_emissive_color (ball_material, &white);
+  ball_material = gthree_mesh_phong_material_new ();
+  gthree_mesh_phong_material_set_emissive_color (ball_material, &white);
 
   ball = new_ball (GTHREE_MATERIAL (ball_material));
   gthree_object_set_position (ball, graphene_point3d_init (&p, 30, 30, 30));

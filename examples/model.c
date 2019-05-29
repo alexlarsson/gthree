@@ -15,8 +15,8 @@ GthreeScene *
 init_scene (void)
 {
   GthreeGeometry *marine_geometry, *knight_geometry;
-  GthreeBasicMaterial *material_wireframe, *material_texture;
-  GthreePhongMaterial *material_phong;
+  GthreeMeshBasicMaterial *material_wireframe, *material_texture;
+  GthreeMeshPhongMaterial *material_phong;
   GthreeTexture *texture;
   GdkPixbuf *pixbuf;
   GthreeAmbientLight *ambient_light;
@@ -28,19 +28,19 @@ init_scene (void)
 
   texture = gthree_texture_new (pixbuf);
 
-  material_wireframe = gthree_basic_material_new ();
+  material_wireframe = gthree_mesh_basic_material_new ();
   gthree_mesh_material_set_is_wireframe (GTHREE_MESH_MATERIAL (material_wireframe), TRUE);
-  gthree_basic_material_set_color (material_wireframe, &yellow);
-  gthree_basic_material_set_vertex_colors (material_wireframe, FALSE);
+  gthree_mesh_basic_material_set_color (material_wireframe, &yellow);
+  gthree_mesh_basic_material_set_vertex_colors (material_wireframe, FALSE);
 
-  material_phong = gthree_phong_material_new ();
-  gthree_basic_material_set_color (material_wireframe, &red);
-  gthree_phong_material_set_emissive_color (material_phong, &grey);
-  gthree_phong_material_set_specular_color (material_phong, &white);
+  material_phong = gthree_mesh_phong_material_new ();
+  gthree_mesh_basic_material_set_color (material_wireframe, &red);
+  gthree_mesh_phong_material_set_emissive_color (material_phong, &grey);
+  gthree_mesh_phong_material_set_specular_color (material_phong, &white);
 
-  material_texture = gthree_basic_material_new ();
-  gthree_basic_material_set_vertex_colors (material_texture, FALSE);
-  gthree_basic_material_set_map (material_texture, texture);
+  material_texture = gthree_mesh_basic_material_new ();
+  gthree_mesh_basic_material_set_vertex_colors (material_texture, FALSE);
+  gthree_mesh_basic_material_set_map (material_texture, texture);
 
   scene = gthree_scene_new ();
 

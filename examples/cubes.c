@@ -7,10 +7,10 @@
 #include "utils.h"
 
 GthreeScene *scene;
-GthreeBasicMaterial *material_simple;
-GthreeBasicMaterial *material_texture;
-GthreeBasicMaterial *material_vertex_color;
-GthreeBasicMaterial *material_wireframe;
+GthreeMeshBasicMaterial *material_simple;
+GthreeMeshBasicMaterial *material_texture;
+GthreeMeshBasicMaterial *material_vertex_color;
+GthreeMeshBasicMaterial *material_wireframe;
 GthreeMultiMaterial *multi_material;
 GthreeMesh *mesh;
 double rot = 0;
@@ -139,21 +139,21 @@ init_scene (void)
 
   texture = gthree_texture_new (crate_pixbuf);
 
-  material_simple = gthree_basic_material_new ();
-  gthree_basic_material_set_color (material_simple, &cyan);
-  gthree_basic_material_set_vertex_colors (material_simple, FALSE);
+  material_simple = gthree_mesh_basic_material_new ();
+  gthree_mesh_basic_material_set_color (material_simple, &cyan);
+  gthree_mesh_basic_material_set_vertex_colors (material_simple, FALSE);
 
-  material_vertex_color = gthree_basic_material_new ();
-  gthree_basic_material_set_vertex_colors (material_vertex_color, TRUE);
+  material_vertex_color = gthree_mesh_basic_material_new ();
+  gthree_mesh_basic_material_set_vertex_colors (material_vertex_color, TRUE);
 
-  material_wireframe = gthree_basic_material_new ();
+  material_wireframe = gthree_mesh_basic_material_new ();
   gthree_mesh_material_set_is_wireframe (GTHREE_MESH_MATERIAL (material_wireframe), TRUE);
-  gthree_basic_material_set_color (material_wireframe, &yellow);
-  gthree_basic_material_set_vertex_colors (material_wireframe, FALSE);
+  gthree_mesh_basic_material_set_color (material_wireframe, &yellow);
+  gthree_mesh_basic_material_set_vertex_colors (material_wireframe, FALSE);
 
-  material_texture = gthree_basic_material_new ();
-  gthree_basic_material_set_vertex_colors (material_texture, FALSE);
-  gthree_basic_material_set_map (material_texture, texture);
+  material_texture = gthree_mesh_basic_material_new ();
+  gthree_mesh_basic_material_set_vertex_colors (material_texture, FALSE);
+  gthree_mesh_basic_material_set_map (material_texture, texture);
 
   scene = gthree_scene_new ();
 

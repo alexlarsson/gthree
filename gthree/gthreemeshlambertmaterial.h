@@ -5,33 +5,33 @@
 #error "Only <gthree/gthree.h> can be included directly."
 #endif
 
-#include <gthree/gthreebasicmaterial.h>
+#include <gthree/gthreemeshbasicmaterial.h>
 #include <gthree/gthreetexture.h>
 
 G_BEGIN_DECLS
 
 
-#define GTHREE_TYPE_LAMBERT_MATERIAL      (gthree_lambert_material_get_type ())
+#define GTHREE_TYPE_LAMBERT_MATERIAL      (gthree_mesh_lambert_material_get_type ())
 #define GTHREE_LAMBERT_MATERIAL(inst)     (G_TYPE_CHECK_INSTANCE_CAST ((inst), \
                                                                      GTHREE_TYPE_LAMBERT_MATERIAL, \
-                                                                     GthreeLambertMaterial))
+                                                                     GthreeMeshLambertMaterial))
 #define GTHREE_IS_LAMBERT_MATERIAL(inst)  (G_TYPE_CHECK_INSTANCE_TYPE ((inst), \
                                                                      GTHREE_TYPE_LAMBERT_MATERIAL))
 
-struct _GthreeLambertMaterial {
-  GthreeBasicMaterial parent;
+struct _GthreeMeshLambertMaterial {
+  GthreeMeshBasicMaterial parent;
 };
 
 typedef struct {
-  GthreeBasicMaterialClass parent_class;
+  GthreeMeshBasicMaterialClass parent_class;
 
-} GthreeLambertMaterialClass;
+} GthreeMeshLambertMaterialClass;
 
-GthreeLambertMaterial *gthree_lambert_material_new ();
-GType gthree_lambert_material_get_type (void) G_GNUC_CONST;
+GthreeMeshLambertMaterial *gthree_mesh_lambert_material_new ();
+GType gthree_mesh_lambert_material_get_type (void) G_GNUC_CONST;
 
-const GdkRGBA * gthree_lambert_material_get_emissive_color(GthreeLambertMaterial *lambert);
-void            gthree_lambert_material_set_emissive_color(GthreeLambertMaterial *lambert,
+const GdkRGBA * gthree_mesh_lambert_material_get_emissive_color(GthreeMeshLambertMaterial *lambert);
+void            gthree_mesh_lambert_material_set_emissive_color(GthreeMeshLambertMaterial *lambert,
                                                            const GdkRGBA       *color);
 
 G_END_DECLS

@@ -19,7 +19,7 @@ GthreeScene *
 init_scene (void)
 {
   GdkPixbuf *crate_pixbuf;
-  GthreeBasicMaterial *material;
+  GthreeMeshBasicMaterial *material;
   GthreeGeometry *geometry;
   GthreeTexture *texture;
   graphene_point3d_t pos = { 0, 0, 0};
@@ -28,9 +28,9 @@ init_scene (void)
 
   texture = gthree_texture_new (crate_pixbuf);
 
-  material = gthree_basic_material_new ();
-  gthree_basic_material_set_vertex_colors (material, FALSE);
-  gthree_basic_material_set_map (material, texture);
+  material = gthree_mesh_basic_material_new ();
+  gthree_mesh_basic_material_set_vertex_colors (material, FALSE);
+  gthree_mesh_basic_material_set_map (material, texture);
 
   scene = gthree_scene_new ();
 

@@ -3,7 +3,7 @@
 
 #include "gthreemesh.h"
 #include "gthreemultimaterial.h"
-#include "gthreebasicmaterial.h"
+#include "gthreemeshbasicmaterial.h"
 #include "gthreeobjectprivate.h"
 #include "gthreeprivate.h"
 

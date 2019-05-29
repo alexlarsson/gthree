@@ -10,28 +10,28 @@
 G_BEGIN_DECLS
 
 
-#define GTHREE_TYPE_NORMAL_MATERIAL      (gthree_normal_material_get_type ())
+#define GTHREE_TYPE_NORMAL_MATERIAL      (gthree_mesh_normal_material_get_type ())
 #define GTHREE_NORMAL_MATERIAL(inst)     (G_TYPE_CHECK_INSTANCE_CAST ((inst), \
                                                                      GTHREE_TYPE_NORMAL_MATERIAL, \
-                                                                     GthreeNormalMaterial))
+                                                                     GthreeMeshNormalMaterial))
 #define GTHREE_IS_NORMAL_MATERIAL(inst)  (G_TYPE_CHECK_INSTANCE_TYPE ((inst), \
                                                                      GTHREE_TYPE_NORMAL_MATERIAL))
 
-struct _GthreeNormalMaterial {
+struct _GthreeMeshNormalMaterial {
   GthreeMeshMaterial parent;
 };
 
 typedef struct {
   GthreeMeshMaterialClass parent_class;
 
-} GthreeNormalMaterialClass;
+} GthreeMeshNormalMaterialClass;
 
-GType gthree_normal_material_get_type (void) G_GNUC_CONST;
+GType gthree_mesh_normal_material_get_type (void) G_GNUC_CONST;
 
-GthreeNormalMaterial *gthree_normal_material_new ();
+GthreeMeshNormalMaterial *gthree_mesh_normal_material_new ();
 
-GthreeShadingType gthree_normal_material_get_shading_type  (GthreeNormalMaterial *normal);
-void              gthree_normal_material_set_shading_type  (GthreeNormalMaterial *normal,
+GthreeShadingType gthree_mesh_normal_material_get_shading_type  (GthreeMeshNormalMaterial *normal);
+void              gthree_mesh_normal_material_set_shading_type  (GthreeMeshNormalMaterial *normal,
                                                            GthreeShadingType    shading_type);
 
 G_END_DECLS

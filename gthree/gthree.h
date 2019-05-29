@@ -11,7 +11,7 @@
 #include <gthree/gthreeattribute.h>
 #include <gthree/gthreearea.h>
 #include <gthree/gthreemeshmaterial.h>
-#include <gthree/gthreebasicmaterial.h>
+#include <gthree/gthreemeshbasicmaterial.h>
 #include <gthree/gthreecamera.h>
 #include <gthree/gthreeperspectivecamera.h>
 #include <gthree/gthreegeometry.h>
@@ -30,10 +30,10 @@
 #include <gthree/gthreeambientlight.h>
 #include <gthree/gthreepointlight.h>
 #include <gthree/gthreedirectionallight.h>
-#include <gthree/gthreelambertmaterial.h>
-#include <gthree/gthreephongmaterial.h>
-#include <gthree/gthreenormalmaterial.h>
-#include <gthree/gthreedepthmaterial.h>
+#include <gthree/gthreemeshlambertmaterial.h>
+#include <gthree/gthreemeshphongmaterial.h>
+#include <gthree/gthreemeshnormalmaterial.h>
+#include <gthree/gthreemeshdepthmaterial.h>
 #include <gthree/gthreeshadermaterial.h>
 #include <gthree/gthreeprimitives.h>
 
