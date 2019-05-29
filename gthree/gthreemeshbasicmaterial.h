@@ -42,6 +42,9 @@ GthreeTexture  *  gthree_mesh_basic_material_get_env_map          (GthreeMeshBas
 float             gthree_mesh_basic_material_get_refraction_ratio (GthreeMeshBasicMaterial *basic);
 void              gthree_mesh_basic_material_set_refraction_ratio (GthreeMeshBasicMaterial *basic,
                                                                    float                    ratio);
+float             gthree_mesh_basic_material_get_reflectivity     (GthreeMeshBasicMaterial *basic);
+void              gthree_mesh_basic_material_set_reflectivity     (GthreeMeshBasicMaterial *basic,
+                                                                   float                    reflectivity);
 GthreeOperation   gthree_mesh_basic_material_get_combine          (GthreeMeshBasicMaterial *basic);
 void              gthree_mesh_basic_material_set_combine          (GthreeMeshBasicMaterial *basic,
                                                                    GthreeOperation          combine);

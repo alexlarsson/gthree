@@ -25,6 +25,7 @@ enum {
   PROP_ENV_MAP,
   PROP_MAP,
   PROP_COMBINE,
+  PROP_REFLECTIVITY,
   PROP_REFRACTION_RATIO,
 
   N_PROPS
@@ -178,6 +179,10 @@ gthree_mesh_basic_material_set_property (GObject *obj,
       gthree_mesh_basic_material_set_refraction_ratio (basic, g_value_get_float (value));
       break;
 
+    case PROP_REFLECTIVITY:
+      gthree_mesh_basic_material_set_refraction_ratio (basic, g_value_get_float (value));
+      break;
+
     case PROP_MAP:
       gthree_mesh_basic_material_set_map (basic, g_value_get_object (value));
       break;
@@ -212,6 +217,10 @@ gthree_mesh_basic_material_get_property (GObject *obj,
 
     case PROP_REFRACTION_RATIO:
       g_value_set_float (value, priv->refraction_ratio);
+      break;
+
+    case PROP_REFLECTIVITY:
+      g_value_set_float (value, priv->reflectivity);
       break;
 
     case PROP_MAP:
@@ -257,6 +266,10 @@ gthree_mesh_basic_material_class_init (GthreeMeshBasicMaterialClass *klass)
   obj_props[PROP_REFRACTION_RATIO] =
     g_param_spec_float ("refraction-ratio", "Refraction Ratio", "Refraction Ratio",
                         0.f, 1.f, 0.98f,
+                        G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_REFLECTIVITY] =
+    g_param_spec_float ("reflectivity", "Reflectivity", "Reflectivity",
+                        0.f, 1.f, 1.0f,
                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   obj_props[PROP_MAP] =
     g_param_spec_object ("map", "Map", "Map",
@@ -331,6 +344,27 @@ gthree_mesh_basic_material_set_refraction_ratio (GthreeMeshBasicMaterial *basic,
   GthreeMeshBasicMaterialPrivate *priv = gthree_mesh_basic_material_get_instance_private (basic);
 
   priv->refraction_ratio = ratio;
+
+  gthree_material_set_needs_update (GTHREE_MATERIAL (basic), TRUE);
+
+  g_object_notify_by_pspec (G_OBJECT (basic), obj_props[PROP_REFRACTION_RATIO]);
+}
+
+float
+gthree_mesh_basic_material_get_reflectivity (GthreeMeshBasicMaterial *basic)
+{
+  GthreeMeshBasicMaterialPrivate *priv = gthree_mesh_basic_material_get_instance_private (basic);
+
+  return priv->reflectivity;
+}
+
+void
+gthree_mesh_basic_material_set_reflectivity (GthreeMeshBasicMaterial *basic,
+                                             float  reflectivity)
+{
+  GthreeMeshBasicMaterialPrivate *priv = gthree_mesh_basic_material_get_instance_private (basic);
+
+  priv->reflectivity = reflectivity;
 
   gthree_material_set_needs_update (GTHREE_MATERIAL (basic), TRUE);
 

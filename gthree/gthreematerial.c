@@ -33,6 +33,8 @@ G_DEFINE_TYPE_WITH_PRIVATE (GthreeMaterial, gthree_material, G_TYPE_OBJECT);
 enum {
   PROP_0,
 
+  PROP_TRANSPARENT,
+  PROP_OPACITY,
   PROP_VERTEX_COLORS,
 
   N_PROPS
@@ -92,6 +94,14 @@ gthree_material_set_property (GObject *obj,
       gthree_material_set_vertex_colors (material, g_value_get_boolean (value));
       break;
 
+    case PROP_TRANSPARENT:
+      gthree_material_set_is_transparent (material, g_value_get_boolean (value));
+      break;
+
+    case PROP_OPACITY:
+      gthree_material_set_opacity (material, g_value_get_boolean (value));
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
     }
@@ -110,6 +120,14 @@ gthree_material_get_property (GObject *obj,
     {
     case PROP_VERTEX_COLORS:
       g_value_set_boolean (value, priv->vertex_colors);
+      break;
+
+    case PROP_TRANSPARENT:
+      g_value_set_boolean (value, priv->transparent);
+      break;
+
+    case PROP_OPACITY:
+      g_value_set_float (value, priv->opacity);
       break;
 
     default:
@@ -220,6 +238,14 @@ gthree_material_class_init (GthreeMaterialClass *klass)
   GTHREE_MATERIAL_CLASS(klass)->set_params = gthree_material_real_set_params;
   GTHREE_MATERIAL_CLASS(klass)->set_uniforms = gthree_material_real_set_uniforms;
 
+  obj_props[PROP_TRANSPARENT] =
+    g_param_spec_boolean ("transparent", "Transparent", "Transparent",
+                          FALSE,
+                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_OPACITY] =
+    g_param_spec_float ("opacity", "Opacity", "Opacity",
+                        0.f, 1.f, 1.0f,
+                        G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   obj_props[PROP_VERTEX_COLORS] =
     g_param_spec_boolean ("vertex-colors", "Vertex Colors", "Vertex Colors",
                           FALSE,
