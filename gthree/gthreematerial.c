@@ -99,7 +99,7 @@ gthree_material_set_property (GObject *obj,
       break;
 
     case PROP_OPACITY:
-      gthree_material_set_opacity (material, g_value_get_boolean (value));
+      gthree_material_set_opacity (material, g_value_get_float (value));
       break;
 
     default:
