@@ -17,8 +17,6 @@ typedef struct {
   gboolean vertex_colors;
   GthreeOperation combine;
 
-  gboolean skinning;
-  gboolean morphTargets;
   gboolean fog;
 } GthreeBasicMaterialPrivate;
 
@@ -38,7 +36,7 @@ enum {
 
 static GParamSpec *obj_props[N_PROPS] = { NULL, };
 
-G_DEFINE_TYPE_WITH_PRIVATE (GthreeBasicMaterial, gthree_basic_material, GTHREE_TYPE_MATERIAL)
+G_DEFINE_TYPE_WITH_PRIVATE (GthreeBasicMaterial, gthree_basic_material, GTHREE_TYPE_MESH_MATERIAL)
 
 static void
 gthree_basic_material_finalize (GObject *obj)

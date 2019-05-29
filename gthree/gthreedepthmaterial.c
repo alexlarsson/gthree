@@ -9,7 +9,7 @@ typedef struct {
 } GthreeDepthMaterialPrivate;
 
 
-G_DEFINE_TYPE_WITH_PRIVATE (GthreeDepthMaterial, gthree_depth_material, GTHREE_TYPE_MATERIAL);
+G_DEFINE_TYPE_WITH_PRIVATE (GthreeDepthMaterial, gthree_depth_material, GTHREE_TYPE_MESH_MATERIAL);
 
 GthreeDepthMaterial *
 gthree_depth_material_new ()

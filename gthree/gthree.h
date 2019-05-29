@@ -10,6 +10,7 @@
 #include <gthree/gthreeenums.h>
 #include <gthree/gthreeattribute.h>
 #include <gthree/gthreearea.h>
+#include <gthree/gthreemeshmaterial.h>
 #include <gthree/gthreebasicmaterial.h>
 #include <gthree/gthreecamera.h>
 #include <gthree/gthreeperspectivecamera.h>

@@ -61,12 +61,6 @@ void              gthree_material_set_is_visible           (GthreeMaterial      
 gboolean          gthree_material_get_is_transparent       (GthreeMaterial          *material);
 void              gthree_material_set_is_transparent       (GthreeMaterial          *material,
                                                             gboolean                 is_transparent);
-gboolean          gthree_material_get_is_wireframe         (GthreeMaterial          *material);
-void              gthree_material_set_is_wireframe         (GthreeMaterial          *material,
-                                                            gboolean                 is_wireframe);
-float             gthree_material_get_wireframe_line_width (GthreeMaterial          *material);
-void              gthree_material_set_wireframe_line_width (GthreeMaterial          *material,
-                                                            float                    line_width);
 float             gthree_material_get_opacity              (GthreeMaterial          *material);
 void              gthree_material_set_opacity              (GthreeMaterial          *material,
                                                             float                    opacity);

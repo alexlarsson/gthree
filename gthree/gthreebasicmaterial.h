@@ -5,7 +5,7 @@
 #error "Only <gthree/gthree.h> can be included directly."
 #endif
 
-#include <gthree/gthreematerial.h>
+#include <gthree/gthreemeshmaterial.h>
 #include <gthree/gthreetexture.h>
 
 G_BEGIN_DECLS
@@ -19,11 +19,11 @@ G_BEGIN_DECLS
                                                                      GTHREE_TYPE_BASIC_MATERIAL))
 
 struct _GthreeBasicMaterial {
-  GthreeMaterial parent;
+  GthreeMeshMaterial parent;
 };
 
 typedef struct {
-  GthreeMaterialClass parent_class;
+  GthreeMeshMaterialClass parent_class;
 
 } GthreeBasicMaterialClass;
 

@@ -8,8 +8,6 @@ typedef struct {
   gboolean transparent;
   float opacity;
   gboolean visible;
-  gboolean wireframe;
-  float wireframe_line_width;
   GthreeBlendMode blend_mode;
   guint blend_equation;
   guint blend_src_factor;
@@ -65,9 +63,6 @@ gthree_material_init (GthreeMaterial *material)
   priv->polygon_offset_units = 0;
   priv->alpha_test = 0;
   priv->side = GTHREE_SIDE_FRONT;
-
-  priv->wireframe = FALSE;
-  priv->wireframe_line_width = 1;
 
   priv->properties.light_hash.num_point = -1; // Ensure we fill it once
 }
@@ -197,42 +192,6 @@ gthree_material_set_is_visible (GthreeMaterial *material,
 
   priv->visible = !!visible;
 
-  priv->needs_update = TRUE;
-}
-
-gboolean
-gthree_material_get_is_wireframe (GthreeMaterial *material)
-{
-  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
-
-  return priv->wireframe;
-}
-
-void
-gthree_material_set_is_wireframe (GthreeMaterial *material,
-                                  gboolean wireframe)
-{
-  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
-
-  priv->wireframe = wireframe;
-  priv->needs_update = TRUE;
-}
-
-float
-gthree_material_get_wireframe_line_width (GthreeMaterial *material)
-{
-  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
-
-  return priv->wireframe_line_width;
-}
-
-void
-gthree_material_set_wireframe_line_width (GthreeMaterial *material,
-                                          float line_width)
-{
-  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
-
-  priv->wireframe_line_width = line_width;
   priv->needs_update = TRUE;
 }
 

@@ -5,11 +5,13 @@
 
 typedef struct {
   GdkRGBA color;
+  float line_width;
 } GthreeLineBasicMaterialPrivate;
 
 enum {
   PROP_0,
 
+  PROP_LINE_WIDTH,
   PROP_COLOR,
 
   N_PROPS
@@ -68,6 +70,10 @@ gthree_line_basic_material_set_property (GObject *obj,
       gthree_line_basic_material_set_color (line_basic, g_value_get_boxed (value));
       break;
 
+    case PROP_LINE_WIDTH:
+      gthree_line_basic_material_set_line_width (line_basic, g_value_get_float (value));
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
     }
@@ -75,9 +81,9 @@ gthree_line_basic_material_set_property (GObject *obj,
 
 static void
 gthree_line_basic_material_get_property (GObject *obj,
-                                    guint prop_id,
-                                    GValue *value,
-                                    GParamSpec *pspec)
+                                         guint prop_id,
+                                         GValue *value,
+                                         GParamSpec *pspec)
 {
   GthreeLineBasicMaterial *line_basic = GTHREE_LINE_BASIC_MATERIAL (obj);
   GthreeLineBasicMaterialPrivate *priv = gthree_line_basic_material_get_instance_private (line_basic);
@@ -86,6 +92,10 @@ gthree_line_basic_material_get_property (GObject *obj,
     {
     case PROP_COLOR:
       g_value_set_boxed (value, &priv->color);
+      break;
+
+    case PROP_LINE_WIDTH:
+      g_value_set_float (value, priv->line_width);
       break;
 
     default:
@@ -111,6 +121,10 @@ gthree_line_basic_material_class_init (GthreeLineBasicMaterialClass *klass)
     g_param_spec_boxed ("color", "Color", "Color",
                         GDK_TYPE_RGBA,
                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_LINE_WIDTH] =
+    g_param_spec_float ("line-width", "Line width", "Line width",
+                        0.f, 100.f, 1.0f,
+                        G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, N_PROPS, obj_props);
 }
@@ -124,6 +138,8 @@ gthree_line_basic_material_init (GthreeLineBasicMaterial *line_basic)
   priv->color.green = 1.0;
   priv->color.blue = 1.0;
   priv->color.alpha = 1.0;
+
+  priv->line_width = 1.0;
 }
 
 GthreeLineBasicMaterial *
@@ -150,6 +166,30 @@ gthree_line_basic_material_set_color (GthreeLineBasicMaterial *line_basic,
     return;
 
   priv->color = *color;
+
+  gthree_material_set_needs_update (GTHREE_MATERIAL (line_basic), TRUE);
+
+  g_object_notify_by_pspec (G_OBJECT (line_basic), obj_props[PROP_COLOR]);
+}
+
+float
+gthree_line_basic_material_get_line_width (GthreeLineBasicMaterial *line_basic)
+{
+  GthreeLineBasicMaterialPrivate *priv = gthree_line_basic_material_get_instance_private (line_basic);
+
+  return priv->line_width;
+}
+
+void
+gthree_line_basic_material_set_line_width (GthreeLineBasicMaterial *line_basic,
+                                           float line_width)
+{
+  GthreeLineBasicMaterialPrivate *priv = gthree_line_basic_material_get_instance_private (line_basic);
+
+  if (priv->line_width == line_width)
+    return;
+
+  priv->line_width = line_width;
 
   gthree_material_set_needs_update (GTHREE_MATERIAL (line_basic), TRUE);
 

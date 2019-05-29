@@ -174,7 +174,7 @@ init_scene (void)
   materials[n_materials++] = GTHREE_MATERIAL (material_normal);
 
   material_basic = gthree_basic_material_new ();
-  gthree_material_set_is_wireframe (GTHREE_MATERIAL (material_basic), TRUE);
+  gthree_mesh_material_set_is_wireframe (GTHREE_MESH_MATERIAL (material_basic), TRUE);
   gthree_basic_material_set_color (material_basic, &orange);
   geometries[n_materials] = geometry;
   materials[n_materials++] = GTHREE_MATERIAL (material_basic);
@@ -227,7 +227,7 @@ init_scene (void)
                                             40, 1, 40);
 
   material_wireframe = gthree_basic_material_new ();
-  gthree_material_set_is_wireframe (GTHREE_MATERIAL (material_wireframe), TRUE);
+  gthree_mesh_material_set_is_wireframe (GTHREE_MESH_MATERIAL (material_wireframe), TRUE);
   gthree_basic_material_set_color (material_wireframe, &grey);
 
   floor = gthree_mesh_new (floor_geometry, GTHREE_MATERIAL (material_wireframe));

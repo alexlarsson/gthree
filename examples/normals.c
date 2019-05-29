@@ -62,7 +62,7 @@ face_normals (GthreeMesh *object, float size, GdkRGBA *color, float width)
 
   material = GTHREE_MATERIAL (gthree_line_basic_material_new ());
   gthree_line_basic_material_set_color (GTHREE_LINE_BASIC_MATERIAL (material), color);
-  gthree_material_set_wireframe_line_width (material, width);
+  gthree_line_basic_material_set_line_width (GTHREE_LINE_BASIC_MATERIAL (material), width);
 
   a_position = gthree_attribute_new ("position", GTHREE_ATTRIBUTE_TYPE_FLOAT, n_vertices * 2, 3, FALSE);
   gthree_geometry_add_attribute (geo, a_position);

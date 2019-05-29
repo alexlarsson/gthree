@@ -8,7 +8,7 @@ typedef struct {
 } GthreeNormalMaterialPrivate;
 
 
-G_DEFINE_TYPE_WITH_PRIVATE (GthreeNormalMaterial, gthree_normal_material, GTHREE_TYPE_MATERIAL);
+G_DEFINE_TYPE_WITH_PRIVATE (GthreeNormalMaterial, gthree_normal_material, GTHREE_TYPE_MESH_MATERIAL);
 
 GthreeNormalMaterial *
 gthree_normal_material_new ()

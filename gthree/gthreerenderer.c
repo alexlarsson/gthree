@@ -11,6 +11,7 @@
 #include "gthreeobjectprivate.h"
 #include "gthreecubetexture.h"
 #include "gthreeshadermaterial.h"
+#include "gthreelinebasicmaterial.h"
 #include "gthreeprimitives.h"
 #include "gthreeattribute.h"
 
@@ -1148,14 +1149,18 @@ render_item (GthreeRenderer *renderer,
   GthreeObject *object = item->object;
   GthreeProgram *program;
   GthreeAttribute *position, *index;
-  gboolean update_buffers = false;
-  gboolean wireframe = gthree_material_get_is_wireframe (material);
+  gboolean update_buffers = FALSE;
+  gboolean wireframe = FALSE;
   int data_count;
   int range_factor, range_start, range_count, group_start, group_count, draw_start, draw_end, draw_count;
   int draw_mode = GL_TRIANGLES;
 
   if (!gthree_material_get_is_visible (material))
     return;
+
+  if (GTHREE_IS_MESH_MATERIAL (material) &&
+      gthree_mesh_material_get_is_wireframe (GTHREE_MESH_MATERIAL (material)))
+    wireframe = TRUE;
 
   program = set_program (renderer, camera, lights, fog, material, object);
 
@@ -1173,7 +1178,7 @@ render_item (GthreeRenderer *renderer,
   position = gthree_geometry_get_position (geometry);
   range_factor = 1;
 
-  if (gthree_material_get_is_wireframe (material))
+  if (wireframe)
     {
       index = gthree_geometry_get_wireframe_index (geometry);
       gthree_attribute_update (index, GL_ELEMENT_ARRAY_BUFFER);
@@ -1219,7 +1224,7 @@ render_item (GthreeRenderer *renderer,
       if (wireframe)
         {
           // wireframe
-          set_line_width (renderer, gthree_material_get_wireframe_line_width (material));
+          set_line_width (renderer, gthree_mesh_material_get_wireframe_line_width (GTHREE_MESH_MATERIAL (material)));
           draw_mode = GL_LINES;
         }
       else
@@ -1247,7 +1252,10 @@ render_item (GthreeRenderer *renderer,
     }
   else if (GTHREE_IS_LINE_SEGMENTS (object))
     {
-      set_line_width (renderer, gthree_material_get_wireframe_line_width (material));
+      float width = 1.0;
+      if (GTHREE_IS_LINE_BASIC_MATERIAL (material))
+        width = gthree_line_basic_material_get_line_width (GTHREE_LINE_BASIC_MATERIAL (material));
+      set_line_width (renderer, width);
       draw_mode = GL_LINES;
     }
 

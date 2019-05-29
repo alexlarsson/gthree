@@ -34,7 +34,7 @@ static GQuark q_color;
 static GQuark q_uv;
 static GQuark q_uv2;
 
-G_DEFINE_TYPE_WITH_PRIVATE (GthreeShaderMaterial, gthree_shader_material, GTHREE_TYPE_MATERIAL)
+G_DEFINE_TYPE_WITH_PRIVATE (GthreeShaderMaterial, gthree_shader_material, GTHREE_TYPE_MESH_MATERIAL)
 
 GthreeShaderMaterial *
 gthree_shader_material_new (GthreeShader *shader)

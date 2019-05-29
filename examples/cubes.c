@@ -147,7 +147,7 @@ init_scene (void)
   gthree_basic_material_set_vertex_colors (material_vertex_color, TRUE);
 
   material_wireframe = gthree_basic_material_new ();
-  gthree_material_set_is_wireframe (GTHREE_MATERIAL (material_wireframe), TRUE);
+  gthree_mesh_material_set_is_wireframe (GTHREE_MESH_MATERIAL (material_wireframe), TRUE);
   gthree_basic_material_set_color (material_wireframe, &yellow);
   gthree_basic_material_set_vertex_colors (material_wireframe, FALSE);
 

@@ -31,9 +31,12 @@ GType gthree_line_basic_material_get_type (void) G_GNUC_CONST;
 
 GthreeLineBasicMaterial *gthree_line_basic_material_new ();
 
-const GdkRGBA *gthree_line_basic_material_get_color (GthreeLineBasicMaterial *line_basic);
-void           gthree_line_basic_material_set_color (GthreeLineBasicMaterial *line_basic,
-                                                     const GdkRGBA           *color);
+const GdkRGBA *gthree_line_basic_material_get_color      (GthreeLineBasicMaterial *line_basic);
+void           gthree_line_basic_material_set_color      (GthreeLineBasicMaterial *line_basic,
+                                                          const GdkRGBA           *color);
+float          gthree_line_basic_material_get_line_width (GthreeLineBasicMaterial *line_basic);
+void           gthree_line_basic_material_set_line_width (GthreeLineBasicMaterial *line_basic,
+                                                          float                    line_width);
 
 G_END_DECLS
 
