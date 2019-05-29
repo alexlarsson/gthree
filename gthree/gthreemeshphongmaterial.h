@@ -30,16 +30,15 @@ typedef struct {
 GthreeMeshPhongMaterial *gthree_mesh_phong_material_new ();
 GType gthree_mesh_phong_material_get_type (void) G_GNUC_CONST;
 
-float           gthree_mesh_phong_material_get_shininess      (GthreeMeshPhongMaterial *phong);
-void            gthree_mesh_phong_material_set_shininess      (GthreeMeshPhongMaterial *phong,
-                                                          float                shininess);
-const GdkRGBA * gthree_mesh_phong_material_get_emissive_color (GthreeMeshPhongMaterial *phong);
-void            gthree_mesh_phong_material_set_emissive_color (GthreeMeshPhongMaterial *phong,
-                                                          const GdkRGBA       *color);
-const GdkRGBA * gthree_mesh_phong_material_get_specular_color (GthreeMeshPhongMaterial *phong);
-void            gthree_mesh_phong_material_set_specular_color (GthreeMeshPhongMaterial *phong,
-                                                          const GdkRGBA       *color);
-
+float          gthree_mesh_phong_material_get_shininess      (GthreeMeshPhongMaterial *phong);
+void           gthree_mesh_phong_material_set_shininess      (GthreeMeshPhongMaterial *phong,
+                                                              float                    shininess);
+const GdkRGBA *gthree_mesh_phong_material_get_emissive_color (GthreeMeshPhongMaterial *phong);
+void           gthree_mesh_phong_material_set_emissive_color (GthreeMeshPhongMaterial *phong,
+                                                              const GdkRGBA           *color);
+const GdkRGBA *gthree_mesh_phong_material_get_specular_color (GthreeMeshPhongMaterial *phong);
+void           gthree_mesh_phong_material_set_specular_color (GthreeMeshPhongMaterial *phong,
+                                                              const GdkRGBA           *color);
 
 G_END_DECLS
 

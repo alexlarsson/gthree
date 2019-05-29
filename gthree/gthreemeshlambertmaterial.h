@@ -30,9 +30,9 @@ typedef struct {
 GthreeMeshLambertMaterial *gthree_mesh_lambert_material_new ();
 GType gthree_mesh_lambert_material_get_type (void) G_GNUC_CONST;
 
-const GdkRGBA * gthree_mesh_lambert_material_get_emissive_color(GthreeMeshLambertMaterial *lambert);
-void            gthree_mesh_lambert_material_set_emissive_color(GthreeMeshLambertMaterial *lambert,
-                                                           const GdkRGBA       *color);
+const GdkRGBA *gthree_mesh_lambert_material_get_emissive_color (GthreeMeshLambertMaterial *lambert);
+void           gthree_mesh_lambert_material_set_emissive_color (GthreeMeshLambertMaterial *lambert,
+                                                                const GdkRGBA             *color);
 
 G_END_DECLS
 

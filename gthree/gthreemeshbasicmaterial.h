@@ -30,27 +30,27 @@ typedef struct {
 GthreeMeshBasicMaterial *gthree_mesh_basic_material_new ();
 GType gthree_mesh_basic_material_get_type (void) G_GNUC_CONST;
 
-const GdkRGBA *   gthree_mesh_basic_material_get_color         (GthreeMeshBasicMaterial *basic);
-void              gthree_mesh_basic_material_set_color         (GthreeMeshBasicMaterial *basic,
-                                                           const GdkRGBA       *color);
-void              gthree_mesh_basic_material_set_vertex_colors (GthreeMeshBasicMaterial *basic,
-                                                           gboolean             vertex_colors);
-gboolean          gthree_mesh_basic_material_get_vertex_colors (GthreeMeshBasicMaterial *basic);
-void              gthree_mesh_basic_material_set_map           (GthreeMeshBasicMaterial *basic,
-                                                           GthreeTexture       *texture);
-GthreeTexture  *  gthree_mesh_basic_material_get_map           (GthreeMeshBasicMaterial *basic);
-void              gthree_mesh_basic_material_set_env_map       (GthreeMeshBasicMaterial *basic,
-                                                           GthreeTexture       *texture);
-GthreeTexture  *  gthree_mesh_basic_material_get_env_map       (GthreeMeshBasicMaterial *basic);
-GthreeShadingType gthree_mesh_basic_material_get_shading_type  (GthreeMeshBasicMaterial *basic);
-void              gthree_mesh_basic_material_set_shading_type  (GthreeMeshBasicMaterial *basic,
-                                                           GthreeShadingType    shading_type);
+const GdkRGBA *   gthree_mesh_basic_material_get_color            (GthreeMeshBasicMaterial *basic);
+void              gthree_mesh_basic_material_set_color            (GthreeMeshBasicMaterial *basic,
+                                                                   const GdkRGBA           *color);
+void              gthree_mesh_basic_material_set_vertex_colors    (GthreeMeshBasicMaterial *basic,
+                                                                   gboolean                 vertex_colors);
+gboolean          gthree_mesh_basic_material_get_vertex_colors    (GthreeMeshBasicMaterial *basic);
+void              gthree_mesh_basic_material_set_map              (GthreeMeshBasicMaterial *basic,
+                                                                   GthreeTexture           *texture);
+GthreeTexture  *  gthree_mesh_basic_material_get_map              (GthreeMeshBasicMaterial *basic);
+void              gthree_mesh_basic_material_set_env_map          (GthreeMeshBasicMaterial *basic,
+                                                                   GthreeTexture           *texture);
+GthreeTexture  *  gthree_mesh_basic_material_get_env_map          (GthreeMeshBasicMaterial *basic);
+GthreeShadingType gthree_mesh_basic_material_get_shading_type     (GthreeMeshBasicMaterial *basic);
+void              gthree_mesh_basic_material_set_shading_type     (GthreeMeshBasicMaterial *basic,
+                                                                   GthreeShadingType        shading_type);
 float             gthree_mesh_basic_material_get_refraction_ratio (GthreeMeshBasicMaterial *basic);
 void              gthree_mesh_basic_material_set_refraction_ratio (GthreeMeshBasicMaterial *basic,
-                                                              float                ratio);
-GthreeOperation   gthree_mesh_basic_material_get_combine       (GthreeMeshBasicMaterial *basic);
-void              gthree_mesh_basic_material_set_combine       (GthreeMeshBasicMaterial *basic,
-                                                           GthreeOperation      combine);
+                                                                   float                    ratio);
+GthreeOperation   gthree_mesh_basic_material_get_combine          (GthreeMeshBasicMaterial *basic);
+void              gthree_mesh_basic_material_set_combine          (GthreeMeshBasicMaterial *basic,
+                                                                   GthreeOperation          combine);
 
 G_END_DECLS
 

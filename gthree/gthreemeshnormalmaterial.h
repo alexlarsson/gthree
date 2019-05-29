@@ -30,9 +30,9 @@ GType gthree_mesh_normal_material_get_type (void) G_GNUC_CONST;
 
 GthreeMeshNormalMaterial *gthree_mesh_normal_material_new ();
 
-GthreeShadingType gthree_mesh_normal_material_get_shading_type  (GthreeMeshNormalMaterial *normal);
-void              gthree_mesh_normal_material_set_shading_type  (GthreeMeshNormalMaterial *normal,
-                                                           GthreeShadingType    shading_type);
+GthreeShadingType gthree_mesh_normal_material_get_shading_type (GthreeMeshNormalMaterial *normal);
+void              gthree_mesh_normal_material_set_shading_type (GthreeMeshNormalMaterial *normal,
+                                                                GthreeShadingType         shading_type);
 
 G_END_DECLS
 

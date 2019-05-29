@@ -29,10 +29,9 @@ typedef struct {
 GthreeMeshDepthMaterial *gthree_mesh_depth_material_new ();
 GType gthree_mesh_depth_material_get_type (void) G_GNUC_CONST;
 
-GthreeShadingType gthree_mesh_depth_material_get_shading_type  (GthreeMeshDepthMaterial *depth);
-void              gthree_mesh_depth_material_set_shading_type  (GthreeMeshDepthMaterial *depth,
-                                                           GthreeShadingType    shading_type);
-
+GthreeShadingType gthree_mesh_depth_material_get_shading_type (GthreeMeshDepthMaterial *depth);
+void              gthree_mesh_depth_material_set_shading_type (GthreeMeshDepthMaterial *depth,
+                                                               GthreeShadingType        shading_type);
 
 G_END_DECLS
 
