@@ -60,9 +60,6 @@ static void
 gthree_phong_material_real_set_params (GthreeMaterial *material,
                                        GthreeProgramParameters *params)
 {
-  GthreePhongMaterial *phong = GTHREE_PHONG_MATERIAL (material);
-  GthreePhongMaterialPrivate *priv = gthree_phong_material_get_instance_private (phong);
-
   GTHREE_MATERIAL_CLASS (gthree_phong_material_parent_class)->set_params (material, params);
 
   // This is only supported in phong

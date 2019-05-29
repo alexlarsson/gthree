@@ -171,6 +171,10 @@ gthree_light_set_color (GthreeLight *light,
   g_object_notify_by_pspec (G_OBJECT (light), obj_props[PROP_COLOR]);
 }
 
+/* This is called once per active light in the scene after projection, but before rendering.
+ * It needs to set the uniforms for the light, which are later synced to the individual
+ * material light uniforms as necessary.
+ */
 void
 gthree_light_setup (GthreeLight *light,
                     GthreeCamera  *camera,

@@ -56,7 +56,6 @@ typedef struct {
 
   guint used_texture_units;
 
-  GthreeLightSetupHash current_light_hash;
   GthreeLightSetup light_setup;
   GList *lights;
 
@@ -157,7 +156,6 @@ gthree_renderer_init (GthreeRenderer *renderer)
   priv->sort_objects = TRUE;
   priv->width = 1;
   priv->height = 1;
-  priv->current_light_hash.num_point = -1; // Invalid, to trigger initial setup
 
   priv->light_setup.directional = g_ptr_array_new ();
   priv->light_setup.point = g_ptr_array_new ();
@@ -594,6 +592,17 @@ get_texture_encoding_from_map (void/* map, gammaOverrideLinear*/) {
 
 }
 
+static void
+material_apply_light_setup (GthreeUniforms *m_uniforms,
+                            GthreeLightSetup *light_setup,
+                            gboolean update_only)
+{
+  gthree_uniforms_set_color (m_uniforms, "ambientLightColor", &light_setup->ambient);
+
+  gthree_uniforms_set_uarray (m_uniforms, "directionalLights", light_setup->directional, update_only);
+  gthree_uniforms_set_uarray (m_uniforms, "pointLights", light_setup->point, update_only);
+}
+
 static GthreeProgram *
 init_material (GthreeRenderer *renderer,
                GthreeMaterial *material,
@@ -606,6 +615,7 @@ init_material (GthreeRenderer *renderer,
   GthreeShader *shader;
   GthreeProgramParameters parameters = {0};
   GthreeUniforms *m_uniforms;
+  GthreeMaterialProperties *material_properties = gthree_material_get_properties (material);
 
   shader = gthree_material_get_shader (material);
 
@@ -655,8 +665,8 @@ init_material (GthreeRenderer *renderer,
 #endif
 
   program = gthree_program_cache_get (priv->program_cache, shader, &parameters);
-  g_clear_object (&material->program);
-  material->program = program;
+  g_clear_object (&material_properties->program);
+  material_properties->program = program;
 
   // TODO: thee.js uses the lightstate current_hash and other stuff to avoid some stuff here?
   // I think it caches the material uniforms we calculate here and avoid reloading if switching to a new program?
@@ -694,14 +704,11 @@ init_material (GthreeRenderer *renderer,
 
   m_uniforms = gthree_shader_get_uniforms (shader);
 
-  priv->current_light_hash = priv->light_setup.hash;
-  if (priv->lights)
-    {
-      gthree_uniforms_set_color (m_uniforms, "ambientLightColor", &priv->light_setup.ambient);
+  // store the light setup it was created for
+  material_properties->light_hash = priv->light_setup.hash;
 
-      gthree_uniforms_set_uarray (m_uniforms, "directionalLights", priv->light_setup.directional);
-      gthree_uniforms_set_uarray (m_uniforms, "pointLights", priv->light_setup.point);
-    }
+  if (priv->lights)
+    material_apply_light_setup (m_uniforms, &priv->light_setup, FALSE);
 
   gthree_shader_update_uniform_locations_for_program (shader, program);
 
@@ -821,13 +828,16 @@ set_program (GthreeRenderer *renderer,
   GthreeProgram *program;
   GthreeShader *shader;
   GthreeUniforms *m_uniforms;
+  GthreeMaterialProperties *material_properties = gthree_material_get_properties (material);
   int location;
 
   priv->used_texture_units = 0;
 
+  /* Maybe the light state (e.g. nr of lights) changed sinze we last initialized the material, even if the
+     material didn't change */
   if (!gthree_material_get_needs_update (material))
     {
-      if (!gthree_light_setup_hash_equal (&priv->current_light_hash, &priv->light_setup.hash))
+      if (!gthree_light_setup_hash_equal (&material_properties->light_hash, &priv->light_setup.hash))
         gthree_material_set_needs_update (material, TRUE);
     }
 
@@ -837,7 +847,7 @@ set_program (GthreeRenderer *renderer,
       gthree_material_set_needs_update (material, FALSE);
     }
 
-  program = material->program;
+  program = material_properties->program;
   shader = gthree_material_get_shader (material);
   m_uniforms = gthree_shader_get_uniforms (shader);
 
@@ -878,7 +888,7 @@ set_program (GthreeRenderer *renderer,
           // lighting uniforms depend on the camera so enforce an update
           // now, in case this material supports lights - or later, when
           // the next material that does gets activated:
-          refreshMaterial = TRUE;		// set to true on material change
+          refreshMaterial = TRUE;	// set to true on material change
           refreshLights = TRUE;		// remains set until update done
         }
 
@@ -958,6 +968,19 @@ set_program (GthreeRenderer *renderer,
 
   if ( refreshMaterial )
     {
+      if (gthree_material_needs_lights (material))
+        {
+          mark_uniforms_lights_needs_update (m_uniforms, refreshLights);
+          if (refreshLights)
+            {
+              /* We marked the uniforms so they are uploaded, but we also need to sync
+               * the actual values from the light uniforms into the material uniforms
+               * (these are note the same because the location differs for each instance)
+               */
+              material_apply_light_setup (m_uniforms, &priv->light_setup, TRUE);
+            }
+        }
+
       gthree_material_set_uniforms (material, m_uniforms, camera);
 
 #if TODO
@@ -966,10 +989,6 @@ set_program (GthreeRenderer *renderer,
         refreshUniformsFog( m_uniforms, fog );
 #endif
 
-      if (gthree_material_needs_lights (material))
-        {
-          mark_uniforms_lights_needs_update (m_uniforms, refreshLights);
-        }
 
       // refresh single material specific uniforms
 
@@ -1127,7 +1146,7 @@ render_item (GthreeRenderer *renderer,
   GthreeGeometry *geometry = item->geometry;
   GthreeGeometryGroup *group = item->group;
   GthreeObject *object = item->object;
-  GthreeProgram *program = set_program (renderer, camera, lights, fog, material, object);
+  GthreeProgram *program;
   GthreeAttribute *position, *index;
   gboolean update_buffers = false;
   gboolean wireframe = gthree_material_get_is_wireframe (material);
@@ -1137,6 +1156,8 @@ render_item (GthreeRenderer *renderer,
 
   if (!gthree_material_get_is_visible (material))
     return;
+
+  program = set_program (renderer, camera, lights, fog, material, object);
 
   if (geometry != priv->current_geometry_program_geometry ||
       program != priv->current_geometry_program_program ||

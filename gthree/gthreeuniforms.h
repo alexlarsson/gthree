@@ -72,6 +72,8 @@ GthreeUniforms *gthree_get_uniforms_from_library (const char *name);
 GthreeUniforms *gthree_uniforms_clone              (GthreeUniforms  *uniforms);
 void            gthree_uniforms_merge              (GthreeUniforms  *uniforms,
                                                     GthreeUniforms  *source);
+void            gthree_uniforms_copy_values        (GthreeUniforms *uniforms,
+                                                    GthreeUniforms *source);
 void            gthree_uniforms_add                (GthreeUniforms  *uniforms,
                                                     GthreeUniform   *uniform);
 void            gthree_uniforms_load               (GthreeUniforms  *uniforms,
@@ -107,12 +109,15 @@ void            gthree_uniforms_set_color          (GthreeUniforms  *uniforms,
                                                     GdkRGBA         *color);
 void            gthree_uniforms_set_uarray         (GthreeUniforms   *uniforms,
                                                     const char      *name,
-                                                    GPtrArray       *uarray);
+                                                    GPtrArray       *uarray,
+                                                    gboolean         update_existing);
 
 void        gthree_uniform_set_location     (GthreeUniform   *uniform,
                                              int              location);
 void        gthree_uniform_set_needs_update (GthreeUniform   *uniform,
                                              gboolean         needs_update);
+void        gthree_uniform_copy_value       (GthreeUniform   *uniform,
+                                             GthreeUniform   *source);
 void        gthree_uniform_set_float        (GthreeUniform   *uniform,
                                              double           value);
 void        gthree_uniform_set_float_array  (GthreeUniform   *uniform,
@@ -130,7 +135,8 @@ void        gthree_uniform_set_texture      (GthreeUniform   *uniform,
 void        gthree_uniform_set_color        (GthreeUniform   *uniform,
                                              GdkRGBA         *color);
 void        gthree_uniform_set_uarray       (GthreeUniform   *uniform,
-                                             GPtrArray       *uarray);
+                                             GPtrArray       *uarray,
+                                             gboolean         update_existing);
 GPtrArray  *gthree_uniform_get_uarray       (GthreeUniform   *uniform);
 GthreeUniformType gthree_uniform_get_type   (GthreeUniform   *uniform);
 const char *gthree_uniform_get_name         (GthreeUniform   *uniform);

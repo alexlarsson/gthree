@@ -22,6 +22,13 @@ struct _GthreeLightSetup
   GthreeLightSetupHash hash;
 };
 
+/* Keep track of what state the material is wired up for */
+struct _GthreeMaterialProperties
+{
+  GthreeProgram *program;
+  GthreeLightSetupHash light_hash;
+} ;
+
 GthreeRenderList *gthree_render_list_new ();
 void gthree_render_list_free (GthreeRenderList *list);
 void gthree_render_list_init (GthreeRenderList *list);
@@ -60,6 +67,8 @@ gboolean gthree_light_setup_hash_equal (GthreeLightSetupHash *a,
 void gthree_light_setup  (GthreeLight   *light,
                           GthreeCamera  *camera,
                           GthreeLightSetup *setup);
+
+GthreeMaterialProperties *gthree_material_get_properties (GthreeMaterial  *material);
 
 graphene_matrix_t *gthree_camera_get_projection_matrix_for_write (GthreeCamera *camera);
 

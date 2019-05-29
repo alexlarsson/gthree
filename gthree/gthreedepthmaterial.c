@@ -55,8 +55,6 @@ gthree_depth_material_real_set_uniforms (GthreeMaterial *material,
                                          GthreeUniforms *uniforms,
                                          GthreeCamera *camera)
 {
-  GthreeUniform *uni;
-
   GTHREE_MATERIAL_CLASS (gthree_depth_material_parent_class)->set_uniforms (material, uniforms, camera);
 
 }

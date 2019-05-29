@@ -22,10 +22,6 @@ G_BEGIN_DECLS
 
 struct _GthreeMaterial {
   GObject parent;
-
-  // TODO: hide
-  GthreeProgram *program;
-  GthreeShader *shader;
 };
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeMaterial, g_object_unref)

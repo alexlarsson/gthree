@@ -248,14 +248,37 @@ gthree_uniforms_set_color (GthreeUniforms  *uniforms,
 void
 gthree_uniforms_set_uarray (GthreeUniforms  *uniforms,
                             const char      *name,
-                            GPtrArray       *value)
+                            GPtrArray       *value,
+                            gboolean         update_existing)
 {
   GthreeUniform *uni;
 
   uni = gthree_uniforms_lookup_from_string (uniforms, name);
   if (uni)
-    gthree_uniform_set_uarray (uni, value);
+    gthree_uniform_set_uarray (uni, value, update_existing);
 }
+
+void
+gthree_uniforms_copy_values (GthreeUniforms *uniforms,
+                             GthreeUniforms *source)
+{
+  GthreeUniformsPrivate *priv = gthree_uniforms_get_instance_private (uniforms);
+  GthreeUniformsPrivate *source_priv = gthree_uniforms_get_instance_private (source);
+  GHashTableIter iter;
+  GthreeUniform *src_uniform;
+
+  g_hash_table_iter_init (&iter, source_priv->hash);
+  while (g_hash_table_iter_next (&iter, NULL, (gpointer *)&src_uniform))
+    {
+      GthreeUniform *dst_uniform = g_hash_table_lookup (priv->hash, GINT_TO_POINTER (src_uniform->name));
+
+      if (dst_uniform == NULL)
+        g_warning ("gthree_uniforms_copy_values, dst has no %s uniform", gthree_uniform_get_name (src_uniform));
+      else
+        gthree_uniform_copy_value (dst_uniform, src_uniform);
+    }
+}
+
 
 GthreeUniform *
 gthree_uniform_newq (GQuark name, GthreeUniformType type)
@@ -357,6 +380,83 @@ gthree_uniform_set_needs_update (GthreeUniform *uniform,
   uniform->needs_update = needs_update;
 }
 
+void
+gthree_uniform_copy_value (GthreeUniform   *uniform,
+                           GthreeUniform   *source)
+{
+  g_assert (uniform->type == source->type);
+
+  uniform->value = source->value;
+
+  switch (uniform->type)
+    {
+    case GTHREE_UNIFORM_TYPE_INT_ARRAY:
+    case GTHREE_UNIFORM_TYPE_INT3_ARRAY:
+    case GTHREE_UNIFORM_TYPE_FLOAT_ARRAY:
+    case GTHREE_UNIFORM_TYPE_FLOAT2_ARRAY:
+    case GTHREE_UNIFORM_TYPE_FLOAT3_ARRAY:
+    case GTHREE_UNIFORM_TYPE_FLOAT4_ARRAY:
+    case GTHREE_UNIFORM_TYPE_VEC2_ARRAY:
+    case GTHREE_UNIFORM_TYPE_VEC3_ARRAY:
+    case GTHREE_UNIFORM_TYPE_VEC4_ARRAY:
+    case GTHREE_UNIFORM_TYPE_MATRIX3_ARRAY:
+    case GTHREE_UNIFORM_TYPE_MATRIX4_ARRAY:
+      if (uniform->value.array)
+        {
+          gsize elem_size = g_array_get_element_size (uniform->value.array);
+          guint len = uniform->value.array->len;
+          uniform->value.array =
+            g_array_sized_new (FALSE, FALSE, elem_size, len);
+          g_array_set_size (uniform->value.array, len);
+          memcpy (uniform->value.array->data, source->value.array->data, len * elem_size);
+        }
+      break;
+    case GTHREE_UNIFORM_TYPE_TEXTURE:
+      if (uniform->value.texture)
+        g_object_ref (uniform->value.texture);
+      break;
+    case GTHREE_UNIFORM_TYPE_TEXTURE_ARRAY:
+      if (uniform->value.ptr_array)
+        {
+          guint len = uniform->value.ptr_array->len;
+          uniform->value.ptr_array = g_ptr_array_sized_new (len);
+          // TODO: ref? duplicate?
+          // TODO: Copy free func?
+          memcpy (source->value.ptr_array->pdata, uniform->value.ptr_array->pdata, len * sizeof (gpointer));
+        }
+      break;
+    case GTHREE_UNIFORM_TYPE_UNIFORMS_ARRAY:
+      if (uniform->value.ptr_array)
+        {
+          guint i, len = uniform->value.ptr_array->len;
+          uniform->value.ptr_array = g_ptr_array_new_with_free_func (g_object_unref);
+
+          /* Deep clone */
+          for (i = 0; i < len; i++)
+            g_ptr_array_add (uniform->value.ptr_array,
+                             gthree_uniform_clone (g_ptr_array_index (source->value.ptr_array, i)));
+        }
+      break;
+    case GTHREE_UNIFORM_TYPE_MATRIX3:
+      uniform->value.more_floats = g_memdup (uniform->value.more_floats, sizeof (float) * 9);
+      break;
+    case GTHREE_UNIFORM_TYPE_MATRIX4:
+      uniform->value.more_floats = g_memdup (uniform->value.more_floats, sizeof (float) * 16);
+      break;
+    case GTHREE_UNIFORM_TYPE_INT:
+    case GTHREE_UNIFORM_TYPE_FLOAT:
+    case GTHREE_UNIFORM_TYPE_FLOAT2:
+    case GTHREE_UNIFORM_TYPE_FLOAT3:
+    case GTHREE_UNIFORM_TYPE_FLOAT4:
+    case GTHREE_UNIFORM_TYPE_VECTOR2:
+    case GTHREE_UNIFORM_TYPE_VECTOR3:
+    case GTHREE_UNIFORM_TYPE_VECTOR4:
+    case GTHREE_UNIFORM_TYPE_COLOR:
+      /* Do nothing */
+      break;
+    }
+}
+
 static GthreeUniform *
 gthree_uniform_clone (GthreeUniform *uniform)
 {
@@ -407,9 +507,10 @@ gthree_uniform_clone (GthreeUniform *uniform)
           guint i, len = uniform->value.ptr_array->len;
           clone->value.ptr_array = g_ptr_array_new_with_free_func (g_object_unref);
 
+          /* Deep clone */
           for (i = 0; i < len; i++)
             g_ptr_array_add (clone->value.ptr_array,
-                             g_object_ref (g_ptr_array_index (uniform->value.ptr_array, i)));
+                             gthree_uniform_clone (g_ptr_array_index (uniform->value.ptr_array, i)));
         }
       break;
     case GTHREE_UNIFORM_TYPE_MATRIX3:
@@ -526,7 +627,8 @@ gthree_uniform_set_texture (GthreeUniform *uniform,
 
 void
 gthree_uniform_set_uarray (GthreeUniform *uniform,
-                           GPtrArray *value)
+                           GPtrArray     *value,
+                           gboolean       update_existing)
 {
   g_return_if_fail (uniform->type == GTHREE_UNIFORM_TYPE_UNIFORMS_ARRAY);
   int i;
@@ -534,10 +636,28 @@ gthree_uniform_set_uarray (GthreeUniform *uniform,
   if (uniform->value.ptr_array == NULL)
     uniform->value.ptr_array = g_ptr_array_new_with_free_func (g_object_unref);
 
-  g_ptr_array_set_size (uniform->value.ptr_array, 0);
+  if (update_existing)
+    {
+      g_assert (uniform->value.ptr_array->len == value->len); // You should always update with the same size
+      for (i = 0; i < value->len; i++)
+        {
+          GthreeUniforms *src = g_ptr_array_index (value, i);
+          GthreeUniforms *dst = g_ptr_array_index (uniform->value.ptr_array, i);
 
-  for (i = 0; i < value->len; i++)
-    g_ptr_array_add (uniform->value.ptr_array, g_object_ref (g_ptr_array_index (value, i)));
+          gthree_uniforms_copy_values (dst, src);
+        }
+    }
+  else
+    {
+      /* Start from scratch */
+      g_ptr_array_set_size (uniform->value.ptr_array, 0);
+
+      for (i = 0; i < value->len; i++)
+        {
+          GthreeUniforms *src = g_ptr_array_index (value, i);
+          g_ptr_array_add (uniform->value.ptr_array, gthree_uniforms_clone (src));
+        }
+    }
 }
 
 GPtrArray *

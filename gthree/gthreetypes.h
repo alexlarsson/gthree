@@ -25,7 +25,7 @@ typedef struct _GthreeGeometry GthreeGeometry;
 typedef struct _GthreeAttribute GthreeAttribute;
 typedef struct _GthreeAttributeArray GthreeAttributeArray;
 typedef struct _GthreeRenderList GthreeRenderList;
+typedef struct _GthreeMaterialProperties GthreeMaterialProperties;
 typedef int GthreeAttributeName;
-
 
 #endif /* __GTHREE_TYPES_H__ */

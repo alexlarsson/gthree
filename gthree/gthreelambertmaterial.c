@@ -49,9 +49,6 @@ static void
 gthree_lambert_material_real_set_params (GthreeMaterial *material,
                                        GthreeProgramParameters *params)
 {
-  GthreeLambertMaterial *lambert = GTHREE_LAMBERT_MATERIAL (material);
-  GthreeLambertMaterialPrivate *priv = gthree_lambert_material_get_instance_private (lambert);
-
   GTHREE_MATERIAL_CLASS (gthree_lambert_material_parent_class)->set_params (material, params);
 }
 

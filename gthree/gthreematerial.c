@@ -2,6 +2,7 @@
 #include <epoxy/gl.h>
 
 #include "gthreematerial.h"
+#include "gthreeprivate.h"
 
 typedef struct {
   gboolean transparent;
@@ -23,6 +24,9 @@ typedef struct {
 
   GthreeShader *shader;
   gboolean needs_update;
+
+  /* modified by the renderer to track state */
+  GthreeMaterialProperties properties;
 } GthreeMaterialPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeMaterial, gthree_material, G_TYPE_OBJECT);
@@ -64,6 +68,8 @@ gthree_material_init (GthreeMaterial *material)
 
   priv->wireframe = FALSE;
   priv->wireframe_line_width = 1;
+
+  priv->properties.light_hash.num_point = -1; // Ensure we fill it once
 }
 
 
@@ -71,10 +77,9 @@ static void
 gthree_material_finalize (GObject *obj)
 {
   GthreeMaterial *material = GTHREE_MATERIAL (obj);
-  //GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
 
-  g_clear_object (&material->program);
-  g_clear_object (&material->shader);
+  g_clear_object (&priv->properties.program);
 
   G_OBJECT_CLASS (gthree_material_parent_class)->finalize (obj);
 }
@@ -452,4 +457,11 @@ gthree_material_load_default_attribute (GthreeMaterial       *material,
 
   if (class->load_default_attribute)
     class->load_default_attribute (material, attribute_location, attribute);
+}
+
+GthreeMaterialProperties *
+gthree_material_get_properties (GthreeMaterial  *material)
+{
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+  return &priv->properties;
 }
