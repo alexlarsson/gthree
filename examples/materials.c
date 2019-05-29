@@ -103,7 +103,7 @@ init_scene (void)
                               graphene_point3d_init (&pos, 0, 200, 2000));
 
   material_lambert = gthree_mesh_lambert_material_new ();
-  gthree_mesh_basic_material_set_color (GTHREE_BASIC_MATERIAL (material_lambert), &light_grey);
+  gthree_mesh_lambert_material_set_color (material_lambert, &light_grey);
   geometries[n_materials] = geometry;
   materials[n_materials++] = GTHREE_MATERIAL (material_lambert);
 
@@ -134,7 +134,7 @@ init_scene (void)
 
   material_lambert = gthree_mesh_lambert_material_new ();
   gthree_material_set_is_transparent (GTHREE_MATERIAL (material_lambert), TRUE);
-  gthree_mesh_basic_material_set_map (GTHREE_BASIC_MATERIAL (material_lambert), texture);
+  gthree_mesh_lambert_material_set_map (material_lambert, texture);
   geometries[n_materials] = geometry;
   materials[n_materials++] = GTHREE_MATERIAL (material_lambert);
 
@@ -184,10 +184,8 @@ init_scene (void)
   materials[n_materials++] = GTHREE_MATERIAL (material_depth);
 
   material_lambert = gthree_mesh_lambert_material_new ();
-  gthree_mesh_basic_material_set_color (GTHREE_BASIC_MATERIAL (material_lambert), &medium_grey);
-  gthree_mesh_basic_material_set_shading_type (GTHREE_BASIC_MATERIAL (material_lambert),
-                                          GTHREE_SHADING_SMOOTH);
-  gthree_mesh_lambert_material_set_emissive_color(material_lambert, &red);
+  gthree_mesh_lambert_material_set_color (material_lambert, &medium_grey);
+  gthree_mesh_lambert_material_set_emissive_color (material_lambert, &red);
   anim_material1 = n_materials;
   geometries[n_materials] = geometry;
   materials[n_materials++] = GTHREE_MATERIAL (material_lambert);

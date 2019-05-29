@@ -19,20 +19,38 @@ G_BEGIN_DECLS
                                                                      GTHREE_TYPE_LAMBERT_MATERIAL))
 
 struct _GthreeMeshLambertMaterial {
-  GthreeMeshBasicMaterial parent;
+  GthreeMeshMaterial parent;
 };
 
 typedef struct {
-  GthreeMeshBasicMaterialClass parent_class;
+  GthreeMeshMaterialClass parent_class;
 
 } GthreeMeshLambertMaterialClass;
 
 GthreeMeshLambertMaterial *gthree_mesh_lambert_material_new ();
 GType gthree_mesh_lambert_material_get_type (void) G_GNUC_CONST;
 
-const GdkRGBA *gthree_mesh_lambert_material_get_emissive_color (GthreeMeshLambertMaterial *lambert);
-void           gthree_mesh_lambert_material_set_emissive_color (GthreeMeshLambertMaterial *lambert,
-                                                                const GdkRGBA             *color);
+const GdkRGBA * gthree_mesh_lambert_material_get_emissive_color   (GthreeMeshLambertMaterial *lambert);
+void            gthree_mesh_lambert_material_set_emissive_color   (GthreeMeshLambertMaterial *lambert,
+                                                                   const GdkRGBA             *color);
+const GdkRGBA * gthree_mesh_lambert_material_get_color            (GthreeMeshLambertMaterial *lambert);
+void            gthree_mesh_lambert_material_set_color            (GthreeMeshLambertMaterial *lambert,
+                                                                   const GdkRGBA             *color);
+float           gthree_mesh_lambert_material_get_refraction_ratio (GthreeMeshLambertMaterial *lambert);
+void            gthree_mesh_lambert_material_set_refraction_ratio (GthreeMeshLambertMaterial *lambert,
+                                                                   float                      ratio);
+float           gthree_mesh_lambert_material_get_reflectivity     (GthreeMeshLambertMaterial *lambert);
+void            gthree_mesh_lambert_material_set_reflectivity     (GthreeMeshLambertMaterial *lambert,
+                                                                   float                      reflectivity);
+void            gthree_mesh_lambert_material_set_map              (GthreeMeshLambertMaterial *lambert,
+                                                                   GthreeTexture             *texture);
+GthreeTexture * gthree_mesh_lambert_material_get_map              (GthreeMeshLambertMaterial *lambert);
+void            gthree_mesh_lambert_material_set_env_map          (GthreeMeshLambertMaterial *lambert,
+                                                                   GthreeTexture             *texture);
+GthreeTexture * gthree_mesh_lambert_material_get_env_map          (GthreeMeshLambertMaterial *lambert);
+void            gthree_mesh_lambert_material_set_combine          (GthreeMeshLambertMaterial *lambert,
+                                                                   GthreeOperation            combine);
+GthreeOperation gthree_mesh_lambert_material_get_combine          (GthreeMeshLambertMaterial *lambert);
 
 G_END_DECLS
 
