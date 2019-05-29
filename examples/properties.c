@@ -76,7 +76,7 @@ sample_object (int num, GthreeMaterial *material)
       geo = gthree_geometry_new_torus_full (40, 20, 20, 30, 2 * G_PI);
       break;
     case 2:
-      geo = gthree_geometry_new_box (60, 40, 30, 5, 5, 5);
+      geo = gthree_geometry_new_box (60, 40, 80, 5, 5, 5);
       break;
     case 3:
       geo = gthree_geometry_new_cylinder_full (24, 40, 60, 15, 20, FALSE, 0, 2 * G_PI);
