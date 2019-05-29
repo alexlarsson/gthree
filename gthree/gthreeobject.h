@@ -86,6 +86,8 @@ void                         gthree_object_get_model_view_matrix_floats (GthreeO
 void                         gthree_object_get_normal_matrix3_floats    (GthreeObject                *object,
                                                                          float                       *dest);
 gboolean                     gthree_object_get_visible                  (GthreeObject                *object);
+void                         gthree_object_set_visible                  (GthreeObject                *object,
+                                                                         gboolean                     visible);
 gboolean                     gthree_object_get_is_frustum_culled        (GthreeObject                *object);
 gboolean                     gthree_object_is_in_frustum                (GthreeObject                *object,
                                                                          const graphene_frustum_t    *frustum);

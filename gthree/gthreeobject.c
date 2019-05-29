@@ -55,6 +55,7 @@ enum
 {
   PROP_0,
 
+  PROP_VISIBLE,
   PROP_PARENT,
   PROP_FIRST_CHILD,
   PROP_LAST_CHILD,
@@ -160,12 +161,18 @@ gthree_object_finalize (GObject *obj)
 
 static void
 gthree_object_set_property (GObject *obj,
-                          guint prop_id,
-                          const GValue *value,
-                          GParamSpec *pspec)
+                            guint prop_id,
+                            const GValue *value,
+                            GParamSpec *pspec)
 {
+  GthreeObject *object = GTHREE_OBJECT (obj);
+
   switch (prop_id)
     {
+    case PROP_VISIBLE:
+      gthree_object_set_visible (object,  g_value_get_boolean (value));
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
     }
@@ -173,15 +180,19 @@ gthree_object_set_property (GObject *obj,
 
 static void
 gthree_object_get_property (GObject *obj,
-                          guint prop_id,
-                          GValue *value,
-                          GParamSpec *pspec)
+                            guint prop_id,
+                            GValue *value,
+                            GParamSpec *pspec)
 {
   GthreeObject *object = GTHREE_OBJECT (obj);
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
 
   switch (prop_id)
     {
+    case PROP_VISIBLE:
+      g_value_set_boolean (value, priv->visible);
+      break;
+
     case PROP_PARENT:
       g_value_set_object (value, priv->parent);
       break;
@@ -240,6 +251,10 @@ gthree_object_class_init (GthreeObjectClass *klass)
                   GTHREE_TYPE_OBJECT);
 
 
+  obj_props[PROP_VISIBLE] =
+    g_param_spec_boolean ("visible", "Visible", "Visible",
+                          TRUE,
+                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   obj_props[PROP_PARENT] =
     g_param_spec_object ("parent", "Parent", "Parent",
                          GTHREE_TYPE_OBJECT,
@@ -279,6 +294,20 @@ gthree_object_get_visible (GthreeObject *object)
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
 
   return priv->visible;
+}
+
+void
+gthree_object_set_visible (GthreeObject *object,
+                           gboolean visible)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  if (priv->visible == visible)
+    return;
+
+  priv->visible = visible;
+
+  g_object_notify_by_pspec (G_OBJECT (object), obj_props[PROP_VISIBLE]);
 }
 
 gboolean
