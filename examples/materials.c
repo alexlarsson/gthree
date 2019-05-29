@@ -108,27 +108,24 @@ init_scene (void)
   materials[n_materials++] = GTHREE_MATERIAL (material_lambert);
 
   material_phong = gthree_mesh_phong_material_new ();
-  gthree_mesh_basic_material_set_color (GTHREE_BASIC_MATERIAL (material_phong), &light_grey);
-  gthree_mesh_basic_material_set_shading_type (GTHREE_BASIC_MATERIAL (material_phong),
-                                          GTHREE_SHADING_FLAT);
+  gthree_mesh_phong_material_set_color (material_phong, &light_grey);
+  gthree_mesh_phong_material_set_shading_type (material_phong, GTHREE_SHADING_FLAT);
   geometries[n_materials] = geometry;
   materials[n_materials++] = GTHREE_MATERIAL (material_phong);
 
   material_phong = gthree_mesh_phong_material_new ();
-  gthree_mesh_basic_material_set_color (GTHREE_BASIC_MATERIAL (material_phong), &light_grey);
+  gthree_mesh_phong_material_set_color (material_phong, &light_grey);
   gthree_mesh_phong_material_set_specular_color (material_phong, &dark_green);
   gthree_mesh_phong_material_set_shininess (material_phong, 30);
-  gthree_mesh_basic_material_set_shading_type (GTHREE_BASIC_MATERIAL (material_phong),
-                                          GTHREE_SHADING_FLAT);
+  gthree_mesh_phong_material_set_shading_type (material_phong, GTHREE_SHADING_FLAT);
   geometries[n_materials] = geometry;
   materials[n_materials++] = GTHREE_MATERIAL (material_phong);
 
   material_phong = gthree_mesh_phong_material_new ();
-  gthree_mesh_basic_material_set_color (GTHREE_BASIC_MATERIAL (material_phong), &light_grey);
+  gthree_mesh_phong_material_set_color (material_phong, &light_grey);
   gthree_mesh_phong_material_set_specular_color (material_phong, &dark_green);
   gthree_mesh_phong_material_set_shininess (material_phong, 30);
-  gthree_mesh_basic_material_set_shading_type (GTHREE_BASIC_MATERIAL (material_phong),
-                                          GTHREE_SHADING_SMOOTH);
+  gthree_mesh_phong_material_set_shading_type (material_phong, GTHREE_SHADING_SMOOTH);
   geometries[n_materials] = geometry;
   materials[n_materials++] = GTHREE_MATERIAL (material_phong);
 
@@ -157,12 +154,11 @@ init_scene (void)
   materials[n_materials++] = GTHREE_MATERIAL (material_basic);
 
   material_phong = gthree_mesh_phong_material_new ();
-  gthree_mesh_basic_material_set_color (GTHREE_BASIC_MATERIAL (material_phong), &light_grey);
+  gthree_mesh_phong_material_set_color (material_phong, &light_grey);
   gthree_mesh_phong_material_set_specular_color (material_phong, &dark_green);
   gthree_mesh_phong_material_set_shininess (material_phong, 30);
-  gthree_mesh_basic_material_set_shading_type (GTHREE_BASIC_MATERIAL (material_phong),
-                                          GTHREE_SHADING_SMOOTH);
-  gthree_mesh_basic_material_set_map (GTHREE_BASIC_MATERIAL (material_phong), texture);
+  gthree_mesh_phong_material_set_shading_type (material_phong, GTHREE_SHADING_SMOOTH);
+  gthree_mesh_phong_material_set_map (material_phong, texture);
   gthree_material_set_is_transparent (GTHREE_MATERIAL (material_phong), TRUE);
   geometries[n_materials] = geometry;
   materials[n_materials++] = GTHREE_MATERIAL (material_phong);
@@ -191,12 +187,11 @@ init_scene (void)
   materials[n_materials++] = GTHREE_MATERIAL (material_lambert);
 
   material_phong = gthree_mesh_phong_material_new ();
-  gthree_mesh_basic_material_set_color (GTHREE_BASIC_MATERIAL (material_phong), &black);
+  gthree_mesh_phong_material_set_color (material_phong, &black);
   gthree_mesh_phong_material_set_specular_color (material_phong, &medium_grey);
   gthree_mesh_phong_material_set_emissive_color(material_phong, &red);
   gthree_mesh_phong_material_set_shininess (material_phong, 10);
-  gthree_mesh_basic_material_set_shading_type (GTHREE_BASIC_MATERIAL (material_phong),
-                                          GTHREE_SHADING_SMOOTH);
+  gthree_mesh_phong_material_set_shading_type (material_phong, GTHREE_SHADING_SMOOTH);
   gthree_material_set_is_transparent (GTHREE_MATERIAL (material_phong), TRUE);
   gthree_material_set_opacity (GTHREE_MATERIAL (material_phong), 0.9);
   anim_material2 = n_materials;

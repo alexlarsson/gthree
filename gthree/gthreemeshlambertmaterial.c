@@ -284,7 +284,7 @@ gthree_mesh_lambert_material_class_init (GthreeMeshLambertMaterialClass *klass)
                         GDK_TYPE_RGBA,
                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   obj_props[PROP_EMISSIVE_COLOR] =
-    g_param_spec_boxed ("emissive-color", "Emissive", "Emissive",
+    g_param_spec_boxed ("emissive-color", "Emissive Color", "Emissive",
                         GDK_TYPE_RGBA,
                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   obj_props[PROP_COMBINE] =

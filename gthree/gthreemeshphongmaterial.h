@@ -19,26 +19,48 @@ G_BEGIN_DECLS
                                                                      GTHREE_TYPE_PHONG_MATERIAL))
 
 struct _GthreeMeshPhongMaterial {
-  GthreeMeshBasicMaterial parent;
+  GthreeMeshMaterial parent;
 };
 
 typedef struct {
-  GthreeMeshBasicMaterialClass parent_class;
+  GthreeMeshMaterialClass parent_class;
 
 } GthreeMeshPhongMaterialClass;
 
 GthreeMeshPhongMaterial *gthree_mesh_phong_material_new ();
 GType gthree_mesh_phong_material_get_type (void) G_GNUC_CONST;
 
-float          gthree_mesh_phong_material_get_shininess      (GthreeMeshPhongMaterial *phong);
-void           gthree_mesh_phong_material_set_shininess      (GthreeMeshPhongMaterial *phong,
-                                                              float                    shininess);
-const GdkRGBA *gthree_mesh_phong_material_get_emissive_color (GthreeMeshPhongMaterial *phong);
-void           gthree_mesh_phong_material_set_emissive_color (GthreeMeshPhongMaterial *phong,
-                                                              const GdkRGBA           *color);
-const GdkRGBA *gthree_mesh_phong_material_get_specular_color (GthreeMeshPhongMaterial *phong);
-void           gthree_mesh_phong_material_set_specular_color (GthreeMeshPhongMaterial *phong,
-                                                              const GdkRGBA           *color);
+const GdkRGBA *   gthree_mesh_phong_material_get_color            (GthreeMeshPhongMaterial *phong);
+void              gthree_mesh_phong_material_set_color            (GthreeMeshPhongMaterial *phong,
+                                                                   const GdkRGBA           *color);
+const GdkRGBA *   gthree_mesh_phong_material_get_emissive_color   (GthreeMeshPhongMaterial *phong);
+void              gthree_mesh_phong_material_set_emissive_color   (GthreeMeshPhongMaterial *phong,
+                                                                   const GdkRGBA           *color);
+const GdkRGBA *   gthree_mesh_phong_material_get_specular_color   (GthreeMeshPhongMaterial *phong);
+void              gthree_mesh_phong_material_set_specular_color   (GthreeMeshPhongMaterial *phong,
+                                                                   const GdkRGBA           *color);
+float             gthree_mesh_phong_material_get_shininess        (GthreeMeshPhongMaterial *phong);
+void              gthree_mesh_phong_material_set_shininess        (GthreeMeshPhongMaterial *phong,
+                                                                   float                    shininess);
+void              gthree_mesh_phong_material_set_map              (GthreeMeshPhongMaterial *phong,
+                                                                   GthreeTexture           *texture);
+GthreeTexture *   gthree_mesh_phong_material_get_map              (GthreeMeshPhongMaterial *phong);
+void              gthree_mesh_phong_material_set_env_map          (GthreeMeshPhongMaterial *phong,
+                                                                   GthreeTexture           *texture);
+GthreeTexture *   gthree_mesh_phong_material_get_env_map          (GthreeMeshPhongMaterial *phong);
+float             gthree_mesh_phong_material_get_refraction_ratio (GthreeMeshPhongMaterial *phong);
+void              gthree_mesh_phong_material_set_refraction_ratio (GthreeMeshPhongMaterial *phong,
+                                                                   float                    ratio);
+float             gthree_mesh_phong_material_get_reflectivity     (GthreeMeshPhongMaterial *phong);
+void              gthree_mesh_phong_material_set_reflectivity     (GthreeMeshPhongMaterial *phong,
+                                                                   float                    reflectivity);
+void              gthree_mesh_phong_material_set_combine          (GthreeMeshPhongMaterial *phong,
+                                                                   GthreeOperation          combine);
+GthreeOperation   gthree_mesh_phong_material_get_combine          (GthreeMeshPhongMaterial *phong);
+GthreeShadingType gthree_mesh_phong_material_get_shading_type     (GthreeMeshPhongMaterial *phong);
+void              gthree_mesh_phong_material_set_shading_type     (GthreeMeshPhongMaterial *phong,
+                                                                   GthreeShadingType        shading_type);
+
 
 G_END_DECLS
 
