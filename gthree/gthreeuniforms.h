@@ -101,6 +101,9 @@ void            gthree_uniforms_set_vec4           (GthreeUniforms  *uniforms,
 void            gthree_uniforms_set_vec3           (GthreeUniforms  *uniforms,
                                                     const char      *name,
                                                     graphene_vec3_t *value);
+void            gthree_uniforms_set_vec2           (GthreeUniforms  *uniforms,
+                                                    const char      *name,
+                                                    graphene_vec2_t *value);
 void            gthree_uniforms_set_texture        (GthreeUniforms  *uniforms,
                                                     const char      *name,
                                                     GthreeTexture   *value);
@@ -126,6 +129,8 @@ void        gthree_uniform_set_float3_array (GthreeUniform   *uniform,
                                              GArray          *array);
 void        gthree_uniform_set_int          (GthreeUniform   *uniform,
                                              int              value);
+void        gthree_uniform_set_vec2         (GthreeUniform   *uniform,
+                                             graphene_vec2_t *value);
 void        gthree_uniform_set_vec3         (GthreeUniform   *uniform,
                                              graphene_vec3_t *value);
 void        gthree_uniform_set_vec4         (GthreeUniform   *uniform,

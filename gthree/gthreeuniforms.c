@@ -222,6 +222,18 @@ gthree_uniforms_set_vec3 (GthreeUniforms  *uniforms,
 }
 
 void
+gthree_uniforms_set_vec2 (GthreeUniforms  *uniforms,
+                          const char      *name,
+                          graphene_vec2_t *value)
+{
+  GthreeUniform *uni;
+
+  uni = gthree_uniforms_lookup_from_string (uniforms, name);
+  if (uni)
+    gthree_uniform_set_vec2 (uni, value);
+}
+
+void
 gthree_uniforms_set_texture (GthreeUniforms  *uniforms,
                              const char      *name,
                              GthreeTexture   *value)
@@ -609,6 +621,15 @@ gthree_uniform_set_vec3 (GthreeUniform *uniform,
   uniform->value.floats[0] = graphene_vec3_get_x (value);
   uniform->value.floats[1] = graphene_vec3_get_y (value);
   uniform->value.floats[2] = graphene_vec3_get_z (value);
+}
+
+void
+gthree_uniform_set_vec2 (GthreeUniform *uniform,
+                         graphene_vec2_t *value)
+{
+  g_return_if_fail (uniform->type == GTHREE_UNIFORM_TYPE_VECTOR2);
+  uniform->value.floats[0] = graphene_vec2_get_x (value);
+  uniform->value.floats[1] = graphene_vec2_get_y (value);
 }
 
 void
