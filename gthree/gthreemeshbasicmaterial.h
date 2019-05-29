@@ -39,9 +39,6 @@ GthreeTexture  *  gthree_mesh_basic_material_get_map              (GthreeMeshBas
 void              gthree_mesh_basic_material_set_env_map          (GthreeMeshBasicMaterial *basic,
                                                                    GthreeTexture           *texture);
 GthreeTexture  *  gthree_mesh_basic_material_get_env_map          (GthreeMeshBasicMaterial *basic);
-GthreeShadingType gthree_mesh_basic_material_get_shading_type     (GthreeMeshBasicMaterial *basic);
-void              gthree_mesh_basic_material_set_shading_type     (GthreeMeshBasicMaterial *basic,
-                                                                   GthreeShadingType        shading_type);
 float             gthree_mesh_basic_material_get_refraction_ratio (GthreeMeshBasicMaterial *basic);
 void              gthree_mesh_basic_material_set_refraction_ratio (GthreeMeshBasicMaterial *basic,
                                                                    float                    ratio);

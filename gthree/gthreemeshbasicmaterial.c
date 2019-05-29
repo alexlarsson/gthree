@@ -13,7 +13,6 @@ typedef struct {
   GthreeTexture *map;
   GthreeTexture *env_map;
 
-  GthreeShadingType shading_type;
   GthreeOperation combine;
 
   gboolean fog;
@@ -25,7 +24,6 @@ enum {
   PROP_COLOR,
   PROP_ENV_MAP,
   PROP_MAP,
-  PROP_SHADING_TYPE,
   PROP_COMBINE,
   PROP_REFRACTION_RATIO,
 
@@ -73,8 +71,8 @@ gthree_mesh_basic_material_real_set_params (GthreeMaterial *material,
 
 static void
 gthree_mesh_basic_material_real_set_uniforms (GthreeMaterial *material,
-                                         GthreeUniforms *uniforms,
-                                         GthreeCamera   *camera)
+                                              GthreeUniforms *uniforms,
+                                              GthreeCamera   *camera)
 {
   GthreeMeshBasicMaterial *basic = GTHREE_BASIC_MATERIAL (material);
   GthreeMeshBasicMaterialPrivate *priv = gthree_mesh_basic_material_get_instance_private (basic);
@@ -180,10 +178,6 @@ gthree_mesh_basic_material_set_property (GObject *obj,
       gthree_mesh_basic_material_set_refraction_ratio (basic, g_value_get_float (value));
       break;
 
-    case PROP_SHADING_TYPE:
-      gthree_mesh_basic_material_set_shading_type (basic, g_value_get_enum (value));
-      break;
-
     case PROP_MAP:
       gthree_mesh_basic_material_set_map (basic, g_value_get_object (value));
       break;
@@ -218,10 +212,6 @@ gthree_mesh_basic_material_get_property (GObject *obj,
 
     case PROP_REFRACTION_RATIO:
       g_value_set_float (value, priv->refraction_ratio);
-      break;
-
-    case PROP_SHADING_TYPE:
-      g_value_set_enum (value, priv->shading_type);
       break;
 
     case PROP_MAP:
@@ -264,11 +254,6 @@ gthree_mesh_basic_material_class_init (GthreeMeshBasicMaterialClass *klass)
                        GTHREE_TYPE_OPERATION,
                        GTHREE_OPERATION_MULTIPLY,
                        G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-  obj_props[PROP_SHADING_TYPE] =
-    g_param_spec_enum ("shading-type", "Shading Type", "Shading Type",
-                       GTHREE_TYPE_SHADING_TYPE,
-                       GTHREE_SHADING_SMOOTH,
-                       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   obj_props[PROP_REFRACTION_RATIO] =
     g_param_spec_float ("refraction-ratio", "Refraction Ratio", "Refraction Ratio",
                         0.f, 1.f, 0.98f,
@@ -296,7 +281,6 @@ gthree_mesh_basic_material_init (GthreeMeshBasicMaterial *basic)
   priv->color.alpha = 1.0;
 
   priv->combine = GTHREE_OPERATION_MULTIPLY;
-  priv->shading_type = GTHREE_SHADING_SMOOTH;
 
   priv->reflectivity = 1;
   priv->refraction_ratio = 0.98;
@@ -318,7 +302,7 @@ gthree_mesh_basic_material_get_color (GthreeMeshBasicMaterial *basic)
 
 void
 gthree_mesh_basic_material_set_color (GthreeMeshBasicMaterial *basic,
-                                 const GdkRGBA *color)
+                                      const GdkRGBA *color)
 {
   GthreeMeshBasicMaterialPrivate *priv = gthree_mesh_basic_material_get_instance_private (basic);
 
@@ -342,7 +326,7 @@ gthree_mesh_basic_material_get_refraction_ratio (GthreeMeshBasicMaterial *basic)
 
 void
 gthree_mesh_basic_material_set_refraction_ratio (GthreeMeshBasicMaterial *basic,
-                                            float                ratio)
+                                                 float                ratio)
 {
   GthreeMeshBasicMaterialPrivate *priv = gthree_mesh_basic_material_get_instance_private (basic);
 
@@ -353,33 +337,9 @@ gthree_mesh_basic_material_set_refraction_ratio (GthreeMeshBasicMaterial *basic,
   g_object_notify_by_pspec (G_OBJECT (basic), obj_props[PROP_REFRACTION_RATIO]);
 }
 
-GthreeShadingType
-gthree_mesh_basic_material_get_shading_type (GthreeMeshBasicMaterial *basic)
-{
-  GthreeMeshBasicMaterialPrivate *priv = gthree_mesh_basic_material_get_instance_private (basic);
-
-  return priv->shading_type;
-}
-
-void
-gthree_mesh_basic_material_set_shading_type (GthreeMeshBasicMaterial *basic,
-                                        GthreeShadingType    shading_type)
-{
-  GthreeMeshBasicMaterialPrivate *priv = gthree_mesh_basic_material_get_instance_private (basic);
-
-  if (priv->shading_type == shading_type)
-    return;
-
-  priv->shading_type = shading_type;
-
-  gthree_material_set_needs_update (GTHREE_MATERIAL (basic), TRUE);
-
-  g_object_notify_by_pspec (G_OBJECT (basic), obj_props[PROP_SHADING_TYPE]);
-}
-
 void
 gthree_mesh_basic_material_set_map (GthreeMeshBasicMaterial *basic,
-                               GthreeTexture *texture)
+                                    GthreeTexture *texture)
 {
   GthreeMeshBasicMaterialPrivate *priv = gthree_mesh_basic_material_get_instance_private (basic);
 
@@ -406,7 +366,7 @@ gthree_mesh_basic_material_get_map (GthreeMeshBasicMaterial *basic)
 
 void
 gthree_mesh_basic_material_set_env_map (GthreeMeshBasicMaterial *basic,
-                                   GthreeTexture *texture)
+                                        GthreeTexture *texture)
 {
   GthreeMeshBasicMaterialPrivate *priv = gthree_mesh_basic_material_get_instance_private (basic);
 
