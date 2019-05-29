@@ -552,7 +552,7 @@ gthree_geometry_new_torus_full (float radius,
                               tube * sin (v));
 
           gthree_attribute_set_vec3 (a_position, vertex_index, &vertex);
-          gthree_attribute_set_xy (a_uv, vertex_index, u, v);
+          gthree_attribute_set_xy (a_uv, vertex_index, i * 1.0 / tubularSegments, j * 1.0 / tubularSegments);
 
           graphene_vec3_init (&center, radius * cos (u), radius * sin (u), 0);
           graphene_vec3_subtract (&vertex, &center, &normal);
