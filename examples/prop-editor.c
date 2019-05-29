@@ -380,6 +380,9 @@ property_editor (GObject     *object,
       gtk_combo_box_text_append (GTK_COMBO_BOX_TEXT (prop_edit), "", "None");
       gtk_combo_box_text_append (GTK_COMBO_BOX_TEXT (prop_edit), "crate.gif", "Crate");
       gtk_combo_box_text_append (GTK_COMBO_BOX_TEXT (prop_edit), "disturb.jpg", "Disturb");
+      gtk_combo_box_text_append (GTK_COMBO_BOX_TEXT (prop_edit), "brick_bump.jpg", "Brick bump");
+      gtk_combo_box_text_append (GTK_COMBO_BOX_TEXT (prop_edit), "brick_diffuse.jpg", "Brick diffuse");
+      gtk_combo_box_text_append (GTK_COMBO_BOX_TEXT (prop_edit), "brick_roughness.jpg", "Brick roughness");
       gtk_combo_box_text_append (GTK_COMBO_BOX_TEXT (prop_edit), "cube/SwedishRoyalCastle", "CastleCube");
 
       gtk_combo_box_set_active (GTK_COMBO_BOX (prop_edit), 0);
