@@ -21,6 +21,7 @@ gthree_sources = [
     'gthreeobject.c',
     'gthreeperspectivecamera.c',
     'gthreemeshphongmaterial.c',
+    'gthreemeshstandardmaterial.c',
     'gthreepointlight.c',
     'gthreeprimitives.c',
     'gthreeprogram.c',

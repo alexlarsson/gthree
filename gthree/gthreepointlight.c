@@ -62,7 +62,7 @@ gthree_point_light_init (GthreePointLight *point)
   GthreePointLightPrivate *priv = gthree_point_light_get_instance_private (point);
 
   priv->distance = 0;
-  priv->decay = 2;
+  priv->decay = 1;
   priv->uniforms = gthree_uniforms_new_from_definitions (light_uniforms, G_N_ELEMENTS (light_uniforms));
 }
 
@@ -190,12 +190,12 @@ gthree_point_light_class_init (GthreePointLightClass *klass)
 
   obj_props[PROP_DISTANCE] =
     g_param_spec_float ("distance", "Distance", "Distance",
-                        -G_MAXFLOAT, G_MAXFLOAT, 0.f,
+                        0.0f, 10.0f, 0.f,
                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   obj_props[PROP_DECAY] =
     g_param_spec_float ("decay", "Decay", "Decay",
-                        -G_MAXFLOAT, G_MAXFLOAT, 0.f,
+                        0.5f, 3.0f, 1.0f,
                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, N_PROPS, obj_props);

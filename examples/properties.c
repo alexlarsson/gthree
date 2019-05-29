@@ -8,7 +8,7 @@
 #include "prop-editor.h"
 
 #define N_OBJECT_TYPES 4
-#define N_MATERIALS 3
+#define N_MATERIALS 4
 
 GthreeObject *objects[N_OBJECT_TYPES];
 GthreeMaterial *materials[N_MATERIALS];
@@ -46,12 +46,15 @@ sample_material (int num)
   switch (num)
     {
     case 0:
-      return GTHREE_MATERIAL (gthree_mesh_phong_material_new ());
+      return GTHREE_MATERIAL (gthree_mesh_standard_material_new ());
       break;
     case 1:
-      return GTHREE_MATERIAL (gthree_mesh_lambert_material_new ());
+      return GTHREE_MATERIAL (gthree_mesh_phong_material_new ());
       break;
     case 2:
+      return GTHREE_MATERIAL (gthree_mesh_lambert_material_new ());
+      break;
+    case 3:
       return GTHREE_MATERIAL (gthree_mesh_basic_material_new ());
       break;
     default:
@@ -233,6 +236,7 @@ material_combo_changed (GtkComboBox *combo_box)
 
       gthree_mesh_set_material (GTHREE_MESH (obj), current_material);
     }
+  update_property_pane ();
 }
 
 int

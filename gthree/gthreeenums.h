@@ -93,6 +93,11 @@ typedef enum {
   GTHREE_ENCODING_FORMAT_RGBD,
 } GthreeEncodingFormat;
 
+typedef enum {
+  GTHREE_NORMAL_MAP_TYPE_TANGENT_SPACE,
+  GTHREE_NORMAL_MAP_TYPE_OBJECT_SPACE,
+}  GthreeNormalMapType;
+
 G_END_DECLS
 
 #endif /* __GTHREE_ENUM_H__ */
