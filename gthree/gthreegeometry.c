@@ -493,8 +493,7 @@ gthree_geometry_compute_vertex_normals (GthreeGeometry *geometry)
 }
 
 void
-gthree_geometry_update (GthreeGeometry *geometry,
-                        GthreeMaterial *material)
+gthree_geometry_update (GthreeGeometry *geometry)
 {
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
   int i;

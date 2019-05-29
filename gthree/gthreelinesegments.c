@@ -61,7 +61,7 @@ gthree_line_segments_update (GthreeObject *object)
 
   //geometryGroup, customAttributesDirty, material;
 
-  gthree_geometry_update (priv->geometry, priv->material);
+  gthree_geometry_update (priv->geometry);
 
   //material.attributes && clearCustomAttributes( material );
 }

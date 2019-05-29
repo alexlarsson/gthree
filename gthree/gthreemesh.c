@@ -60,7 +60,7 @@ gthree_mesh_update (GthreeObject *object)
 
   //geometryGroup, customAttributesDirty, material;
 
-  gthree_geometry_update (priv->geometry, priv->material);
+  gthree_geometry_update (priv->geometry);
 
   //material.attributes && clearCustomAttributes( material );
 }
@@ -149,6 +149,18 @@ gthree_mesh_get_material (GthreeMesh *mesh)
   return priv->material;
 }
 
+void
+gthree_mesh_set_material (GthreeMesh *mesh,
+                          GthreeMaterial *material)
+{
+  GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
+
+  g_object_ref (material);
+  g_clear_object (&priv->material);
+  priv->material = material;
+}
+
+
 GthreeGeometry *
 gthree_mesh_get_geometry (GthreeMesh *mesh)
 {
@@ -178,7 +190,7 @@ gthree_mesh_class_init (GthreeMeshClass *klass)
   obj_props[PROP_MATERIAL] =
     g_param_spec_object ("material", "Material", "Material",
                          GTHREE_TYPE_MATERIAL,
-                         G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, N_PROPS, obj_props);
 }
