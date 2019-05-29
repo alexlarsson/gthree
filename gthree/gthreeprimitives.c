@@ -482,8 +482,8 @@ gthree_geometry_new_cylinder_full (float    radiusTop,
       for (x = 0; x < radialSegments; x++)
         {
           gthree_attribute_set_uint (a_index, index_index++, center);
-          gthree_attribute_set_uint (a_index, index_index++, x);
-          gthree_attribute_set_uint (a_index, index_index++, x+1);
+          gthree_attribute_set_uint (a_index, index_index++, (heightSegments) * (radialSegments + 1) + x + 1);
+          gthree_attribute_set_uint (a_index, index_index++, (heightSegments) * (radialSegments + 1) + x);
         }
     }
 
