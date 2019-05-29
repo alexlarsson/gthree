@@ -57,9 +57,9 @@ void              gthree_mesh_phong_material_set_reflectivity     (GthreeMeshPho
 void              gthree_mesh_phong_material_set_combine          (GthreeMeshPhongMaterial *phong,
                                                                    GthreeOperation          combine);
 GthreeOperation   gthree_mesh_phong_material_get_combine          (GthreeMeshPhongMaterial *phong);
-GthreeShadingType gthree_mesh_phong_material_get_shading_type     (GthreeMeshPhongMaterial *phong);
-void              gthree_mesh_phong_material_set_shading_type     (GthreeMeshPhongMaterial *phong,
-                                                                   GthreeShadingType        shading_type);
+gboolean          gthree_mesh_phong_material_get_flat_shading     (GthreeMeshPhongMaterial *phong);
+void              gthree_mesh_phong_material_set_flat_shading     (GthreeMeshPhongMaterial *phong,
+                                                                   gboolean                 flat_shading);
 
 
 G_END_DECLS

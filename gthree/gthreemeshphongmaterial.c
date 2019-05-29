@@ -13,7 +13,7 @@ typedef struct {
   float reflectivity;
   float refraction_ratio;
   GthreeOperation combine;
-  GthreeShadingType shading_type;
+  gboolean flat_shading;
 
   GthreeTexture *map;
   GthreeTexture *env_map;
@@ -33,7 +33,7 @@ enum {
   PROP_ENV_MAP,
   PROP_COMBINE,
   PROP_SHININESS,
-  PROP_SHADING_TYPE,
+  PROP_FLAT_SHADING,
 
   N_PROPS
 };
@@ -75,7 +75,7 @@ gthree_mesh_phong_material_init (GthreeMeshPhongMaterial *phong)
 
   priv->combine = GTHREE_OPERATION_MULTIPLY;
 
-  priv->shading_type = GTHREE_SHADING_SMOOTH;
+  priv->flat_shading = FALSE;
 
   priv->reflectivity = 1;
   priv->refraction_ratio = 0.98;
@@ -121,7 +121,7 @@ gthree_mesh_phong_material_real_set_params (GthreeMaterial *material,
   if (params->env_map)
     params->env_map_mode = gthree_texture_get_mapping (priv->env_map);
 
-  params->flat_shading = priv->shading_type == GTHREE_SHADING_FLAT;
+  params->flat_shading = priv->flat_shading;
 
   GTHREE_MATERIAL_CLASS (gthree_mesh_phong_material_parent_class)->set_params (material, params);
 }
@@ -241,8 +241,8 @@ gthree_mesh_phong_material_set_property (GObject *obj,
       gthree_mesh_phong_material_set_combine (phong, g_value_get_enum (value));
       break;
 
-    case PROP_SHADING_TYPE:
-      gthree_mesh_phong_material_set_shading_type (phong, g_value_get_enum (value));
+    case PROP_FLAT_SHADING:
+      gthree_mesh_phong_material_set_flat_shading (phong, g_value_get_boolean (value));
       break;
 
     default:
@@ -297,8 +297,8 @@ gthree_mesh_phong_material_get_property (GObject *obj,
       g_value_set_enum (value, priv->combine);
       break;
 
-    case PROP_SHADING_TYPE:
-      g_value_set_enum (value, priv->shading_type);
+    case PROP_FLAT_SHADING:
+      g_value_set_boolean (value, priv->flat_shading);
       break;
 
     default:
@@ -361,11 +361,10 @@ gthree_mesh_phong_material_class_init (GthreeMeshPhongMaterialClass *klass)
     g_param_spec_object ("env-map", "Env Map", "Env Map",
                          GTHREE_TYPE_TEXTURE,
                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-  obj_props[PROP_SHADING_TYPE] =
-    g_param_spec_enum ("shading-type", "Shading Type", "Shading Type",
-                       GTHREE_TYPE_SHADING_TYPE,
-                       GTHREE_SHADING_SMOOTH,
-                       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_FLAT_SHADING] =
+    g_param_spec_boolean ("flat-shading", "Flat shading", "Flat shading",
+                          FALSE,
+                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, N_PROPS, obj_props);
 }
@@ -426,28 +425,28 @@ gthree_mesh_phong_material_set_shininess (GthreeMeshPhongMaterial *phong,
   gthree_material_set_needs_update (GTHREE_MATERIAL (phong), TRUE);
 }
 
-GthreeShadingType
-gthree_mesh_phong_material_get_shading_type (GthreeMeshPhongMaterial *phong)
+gboolean
+gthree_mesh_phong_material_get_flat_shading (GthreeMeshPhongMaterial *phong)
 {
   GthreeMeshPhongMaterialPrivate *priv = gthree_mesh_phong_material_get_instance_private (phong);
 
-  return priv->shading_type;
+  return priv->flat_shading;
 }
 
 void
-gthree_mesh_phong_material_set_shading_type (GthreeMeshPhongMaterial *phong,
-                                             GthreeShadingType    shading_type)
+gthree_mesh_phong_material_set_flat_shading (GthreeMeshPhongMaterial *phong,
+                                             gboolean flat_shading)
 {
   GthreeMeshPhongMaterialPrivate *priv = gthree_mesh_phong_material_get_instance_private (phong);
 
-  if (priv->shading_type == shading_type)
+  if (priv->flat_shading == flat_shading)
     return;
 
-  priv->shading_type = shading_type;
+  priv->flat_shading = flat_shading;
 
   gthree_material_set_needs_update (GTHREE_MATERIAL (phong), TRUE);
 
-  g_object_notify_by_pspec (G_OBJECT (phong), obj_props[PROP_SHADING_TYPE]);
+  g_object_notify_by_pspec (G_OBJECT (phong), obj_props[PROP_FLAT_SHADING]);
 }
 
 float
