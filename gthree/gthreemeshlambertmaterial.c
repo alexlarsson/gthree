@@ -33,7 +33,7 @@ enum {
 
 static GParamSpec *obj_props[N_PROPS] = { NULL, };
 
-G_DEFINE_TYPE_WITH_PRIVATE (GthreeMeshLambertMaterial, gthree_mesh_lambert_material, GTHREE_TYPE_MATERIAL);
+G_DEFINE_TYPE_WITH_PRIVATE (GthreeMeshLambertMaterial, gthree_mesh_lambert_material, GTHREE_TYPE_MESH_MATERIAL);
 
 GthreeMeshLambertMaterial *
 gthree_mesh_lambert_material_new ()
