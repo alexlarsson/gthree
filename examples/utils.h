@@ -1,8 +1,8 @@
 #include <gthree/gthree.h>
 
-GdkPixbuf *examples_load_pixbuf (char *file);
+GdkPixbuf *examples_load_pixbuf (const char *file);
 GthreeGeometry *examples_load_geometry (const char *name);
-void examples_load_cube_pixbufs (char *dir,
+void examples_load_cube_pixbufs (const char *dir,
                                  GdkPixbuf *pixbufs[6]);
 
 extern GdkRGBA red;

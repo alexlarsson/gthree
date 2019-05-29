@@ -3,6 +3,7 @@ examples = [
   'envmap',
   'gtklogo',
   'materials',
+  'properties',
   'model',
   'multi',
   'normals',
@@ -20,6 +21,6 @@ example_resources = gnome.compile_resources('gthree-example-resources',
                                             c_name: 'gthree_example')
 
 foreach example_name : examples
-  executable(example_name, ['@0@.c'.format(example_name), 'utils.c'] + example_resources,
+  executable(example_name, ['@0@.c'.format(example_name), 'utils.c', 'prop-editor.c'] + example_resources,
              dependencies: [libgthree_dep, libm])
 endforeach

@@ -19,7 +19,7 @@ GdkRGBA dark_green = {0, 0.6, 0, 1.0};
 GdkRGBA orange = {1, 0.67, 0, 1.0};
 
 GdkPixbuf *
-examples_load_pixbuf (char *file)
+examples_load_pixbuf (const char *file)
 {
   GdkPixbuf *pixbuf;
   char *full;
@@ -36,7 +36,7 @@ examples_load_pixbuf (char *file)
 }
 
 void
-examples_load_cube_pixbufs (char *dir,
+examples_load_cube_pixbufs (const char *dir,
                             GdkPixbuf *pixbufs[6])
 {
   char *files[] = {"px.jpg", "nx.jpg",
