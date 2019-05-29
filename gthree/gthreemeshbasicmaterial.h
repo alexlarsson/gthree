@@ -33,9 +33,6 @@ GType gthree_mesh_basic_material_get_type (void) G_GNUC_CONST;
 const GdkRGBA *   gthree_mesh_basic_material_get_color            (GthreeMeshBasicMaterial *basic);
 void              gthree_mesh_basic_material_set_color            (GthreeMeshBasicMaterial *basic,
                                                                    const GdkRGBA           *color);
-void              gthree_mesh_basic_material_set_vertex_colors    (GthreeMeshBasicMaterial *basic,
-                                                                   gboolean                 vertex_colors);
-gboolean          gthree_mesh_basic_material_get_vertex_colors    (GthreeMeshBasicMaterial *basic);
 void              gthree_mesh_basic_material_set_map              (GthreeMeshBasicMaterial *basic,
                                                                    GthreeTexture           *texture);
 GthreeTexture  *  gthree_mesh_basic_material_get_map              (GthreeMeshBasicMaterial *basic);

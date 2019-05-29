@@ -19,6 +19,7 @@ typedef struct {
   gboolean depth_write;
   float alpha_test;
   GthreeSide side;
+  gboolean vertex_colors;
 
   GthreeShader *shader;
   gboolean needs_update;
@@ -29,17 +30,15 @@ typedef struct {
 
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeMaterial, gthree_material, G_TYPE_OBJECT);
 
-GthreeMaterial *
-gthree_material_new ()
-{
-  GthreeMaterial *material;
+enum {
+  PROP_0,
 
-  material = g_object_new (gthree_material_get_type (),
-                         NULL);
+  PROP_VERTEX_COLORS,
 
+  N_PROPS
+};
 
-  return material;
-}
+static GParamSpec *obj_props[N_PROPS] = { NULL, };
 
 static void
 gthree_material_init (GthreeMaterial *material)
@@ -57,6 +56,7 @@ gthree_material_init (GthreeMaterial *material)
   priv->blend_dst_factor = GL_ONE_MINUS_SRC_ALPHA;
   priv->depth_test = TRUE;
   priv->depth_write = TRUE;
+  priv->vertex_colors = FALSE;
 
   priv->polygon_offset = FALSE;
   priv->polygon_offset_factor = 0;
@@ -66,7 +66,6 @@ gthree_material_init (GthreeMaterial *material)
 
   priv->properties.light_hash.num_point = -1; // Ensure we fill it once
 }
-
 
 static void
 gthree_material_finalize (GObject *obj)
@@ -78,6 +77,46 @@ gthree_material_finalize (GObject *obj)
 
   G_OBJECT_CLASS (gthree_material_parent_class)->finalize (obj);
 }
+
+static void
+gthree_material_set_property (GObject *obj,
+                              guint prop_id,
+                              const GValue *value,
+                              GParamSpec *pspec)
+{
+  GthreeMaterial *material = GTHREE_MATERIAL (obj);
+
+  switch (prop_id)
+    {
+    case PROP_VERTEX_COLORS:
+      gthree_material_set_vertex_colors (material, g_value_get_boolean (value));
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
+    }
+}
+
+static void
+gthree_material_get_property (GObject *obj,
+                              guint prop_id,
+                              GValue *value,
+                                         GParamSpec *pspec)
+{
+  GthreeMaterial *material = GTHREE_MATERIAL (obj);
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  switch (prop_id)
+    {
+    case PROP_VERTEX_COLORS:
+      g_value_set_boolean (value, priv->vertex_colors);
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
+    }
+}
+
 
 GthreeMaterial *
 gthree_material_resolve (GthreeMaterial *material,
@@ -110,6 +149,7 @@ gthree_material_real_set_params (GthreeMaterial *material,
   params->double_sided = priv->side == GTHREE_SIDE_DOUBLE;
   params->flip_sided = priv->side == GTHREE_SIDE_BACK;
   params->alpha_test = priv->alpha_test;
+  params->vertex_colors = priv->vertex_colors;
 }
 
 void
@@ -171,9 +211,21 @@ gthree_material_needs_lights (GthreeMaterial *material)
 static void
 gthree_material_class_init (GthreeMaterialClass *klass)
 {
-  G_OBJECT_CLASS (klass)->finalize = gthree_material_finalize;
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+
+  gobject_class->set_property = gthree_material_set_property;
+  gobject_class->get_property = gthree_material_get_property;
+  gobject_class->finalize = gthree_material_finalize;
+
   GTHREE_MATERIAL_CLASS(klass)->set_params = gthree_material_real_set_params;
   GTHREE_MATERIAL_CLASS(klass)->set_uniforms = gthree_material_real_set_uniforms;
+
+  obj_props[PROP_VERTEX_COLORS] =
+    g_param_spec_boolean ("vertex-colors", "Vertex Colors", "Vertex Colors",
+                          FALSE,
+                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  g_object_class_install_properties (gobject_class, N_PROPS, obj_props);
 }
 
 gboolean
@@ -388,6 +440,31 @@ gthree_material_set_side (GthreeMaterial *material,
   priv->side = side;
 
   priv->needs_update = TRUE;
+}
+
+void
+gthree_material_set_vertex_colors (GthreeMaterial *material,
+                                   gboolean vertex_colors)
+{
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  vertex_colors = !!vertex_colors;
+  if (priv->vertex_colors == vertex_colors)
+    return;
+
+  priv->vertex_colors = vertex_colors;
+
+  gthree_material_set_needs_update (material, TRUE);
+
+  g_object_notify_by_pspec (G_OBJECT (material), obj_props[PROP_VERTEX_COLORS]);
+}
+
+gboolean
+gthree_material_get_vertex_colors (GthreeMaterial *material)
+{
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  return priv->vertex_colors;
 }
 
 GthreeShader *

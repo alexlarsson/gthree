@@ -53,8 +53,6 @@ typedef struct {
 
 GType gthree_material_get_type (void) G_GNUC_CONST;
 
-GthreeMaterial *gthree_material_new ();
-
 gboolean          gthree_material_get_is_visible           (GthreeMaterial          *material);
 void              gthree_material_set_is_visible           (GthreeMaterial          *material,
                                                             gboolean                 is_visible);
@@ -92,6 +90,9 @@ void              gthree_material_set_alpha_test           (GthreeMaterial      
 GthreeSide        gthree_material_get_side                 (GthreeMaterial          *material);
 void              gthree_material_set_side                 (GthreeMaterial          *material,
                                                             GthreeSide               side);
+void              gthree_material_set_vertex_colors        (GthreeMaterial          *material,
+                                                            gboolean                 vertex_colors);
+gboolean          gthree_material_get_vertex_colors        (GthreeMaterial         *material);
 GthreeShader *    gthree_material_get_shader               (GthreeMaterial          *material);
 GthreeMaterial *  gthree_material_resolve                  (GthreeMaterial          *material,
                                                             int                      index);

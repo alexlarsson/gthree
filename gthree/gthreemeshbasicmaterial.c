@@ -14,7 +14,6 @@ typedef struct {
   GthreeTexture *env_map;
 
   GthreeShadingType shading_type;
-  gboolean vertex_colors;
   GthreeOperation combine;
 
   gboolean fog;
@@ -27,7 +26,6 @@ enum {
   PROP_ENV_MAP,
   PROP_MAP,
   PROP_SHADING_TYPE,
-  PROP_VERTEX_COLORS,
   PROP_COMBINE,
   PROP_REFRACTION_RATIO,
 
@@ -60,14 +58,12 @@ gthree_mesh_basic_material_finalize (GObject *obj)
 
 static void
 gthree_mesh_basic_material_real_set_params (GthreeMaterial *material,
-                                       GthreeProgramParameters *params)
+                                            GthreeProgramParameters *params)
 {
   GthreeMeshBasicMaterial *basic = GTHREE_BASIC_MATERIAL (material);
   GthreeMeshBasicMaterialPrivate *priv = gthree_mesh_basic_material_get_instance_private (basic);
 
   GTHREE_MATERIAL_CLASS (gthree_mesh_basic_material_parent_class)->set_params (material, params);
-
-  params->vertex_colors = priv->vertex_colors;
 
   params->map = priv->map != NULL;
   params->env_map = priv->env_map != NULL;
@@ -168,9 +164,9 @@ gthree_mesh_basic_material_needs_camera_pos (GthreeMaterial *material)
 
 static void
 gthree_mesh_basic_material_set_property (GObject *obj,
-                                    guint prop_id,
-                                    const GValue *value,
-                                    GParamSpec *pspec)
+                                         guint prop_id,
+                                         const GValue *value,
+                                         GParamSpec *pspec)
 {
   GthreeMeshBasicMaterial *basic = GTHREE_BASIC_MATERIAL (obj);
 
@@ -196,10 +192,6 @@ gthree_mesh_basic_material_set_property (GObject *obj,
       gthree_mesh_basic_material_set_env_map (basic, g_value_get_object (value));
       break;
 
-    case PROP_VERTEX_COLORS:
-      gthree_mesh_basic_material_set_vertex_colors (basic, g_value_get_boolean (value));
-      break;
-
     case PROP_COMBINE:
       gthree_mesh_basic_material_set_combine (basic, g_value_get_enum (value));
       break;
@@ -211,9 +203,9 @@ gthree_mesh_basic_material_set_property (GObject *obj,
 
 static void
 gthree_mesh_basic_material_get_property (GObject *obj,
-                                    guint prop_id,
-                                    GValue *value,
-                                    GParamSpec *pspec)
+                                         guint prop_id,
+                                         GValue *value,
+                                         GParamSpec *pspec)
 {
   GthreeMeshBasicMaterial *basic = GTHREE_BASIC_MATERIAL (obj);
   GthreeMeshBasicMaterialPrivate *priv = gthree_mesh_basic_material_get_instance_private (basic);
@@ -238,10 +230,6 @@ gthree_mesh_basic_material_get_property (GObject *obj,
 
     case PROP_ENV_MAP:
       g_value_set_object (value, priv->env_map);
-      break;
-
-    case PROP_VERTEX_COLORS:
-      g_value_set_boolean (value, priv->vertex_colors);
       break;
 
     case PROP_COMBINE:
@@ -276,10 +264,6 @@ gthree_mesh_basic_material_class_init (GthreeMeshBasicMaterialClass *klass)
                        GTHREE_TYPE_OPERATION,
                        GTHREE_OPERATION_MULTIPLY,
                        G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-  obj_props[PROP_VERTEX_COLORS] =
-    g_param_spec_boolean ("vertex-colors", "Vertex Colors", "Vertex Colors",
-                          FALSE,
-                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   obj_props[PROP_SHADING_TYPE] =
     g_param_spec_enum ("shading-type", "Shading Type", "Shading Type",
                        GTHREE_TYPE_SHADING_TYPE,
@@ -312,7 +296,6 @@ gthree_mesh_basic_material_init (GthreeMeshBasicMaterial *basic)
   priv->color.alpha = 1.0;
 
   priv->combine = GTHREE_OPERATION_MULTIPLY;
-  priv->vertex_colors = FALSE;
   priv->shading_type = GTHREE_SHADING_SMOOTH;
 
   priv->reflectivity = 1;
@@ -449,33 +432,8 @@ gthree_mesh_basic_material_get_env_map (GthreeMeshBasicMaterial *basic)
 }
 
 void
-gthree_mesh_basic_material_set_vertex_colors (GthreeMeshBasicMaterial *basic,
-                                         gboolean vertex_colors)
-{
-  GthreeMeshBasicMaterialPrivate *priv = gthree_mesh_basic_material_get_instance_private (basic);
-
-  vertex_colors = !!vertex_colors;
-  if (priv->vertex_colors == vertex_colors)
-    return;
-
-  priv->vertex_colors = vertex_colors;
-
-  gthree_material_set_needs_update (GTHREE_MATERIAL (basic), TRUE);
-
-  g_object_notify_by_pspec (G_OBJECT (basic), obj_props[PROP_VERTEX_COLORS]);
-}
-
-gboolean
-gthree_mesh_basic_material_get_vertex_colors (GthreeMeshBasicMaterial *basic)
-{
-  GthreeMeshBasicMaterialPrivate *priv = gthree_mesh_basic_material_get_instance_private (basic);
-
-  return priv->vertex_colors;
-}
-
-void
 gthree_mesh_basic_material_set_combine (GthreeMeshBasicMaterial *basic,
-                                   GthreeOperation combine)
+                                        GthreeOperation combine)
 {
   GthreeMeshBasicMaterialPrivate *priv = gthree_mesh_basic_material_get_instance_private (basic);
 

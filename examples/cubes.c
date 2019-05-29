@@ -141,18 +141,18 @@ init_scene (void)
 
   material_simple = gthree_mesh_basic_material_new ();
   gthree_mesh_basic_material_set_color (material_simple, &cyan);
-  gthree_mesh_basic_material_set_vertex_colors (material_simple, FALSE);
+  gthree_material_set_vertex_colors (GTHREE_MATERIAL (material_simple), FALSE);
 
   material_vertex_color = gthree_mesh_basic_material_new ();
-  gthree_mesh_basic_material_set_vertex_colors (material_vertex_color, TRUE);
+  gthree_material_set_vertex_colors (GTHREE_MATERIAL (material_vertex_color), TRUE);
 
   material_wireframe = gthree_mesh_basic_material_new ();
   gthree_mesh_material_set_is_wireframe (GTHREE_MESH_MATERIAL (material_wireframe), TRUE);
   gthree_mesh_basic_material_set_color (material_wireframe, &yellow);
-  gthree_mesh_basic_material_set_vertex_colors (material_wireframe, FALSE);
+  gthree_material_set_vertex_colors (GTHREE_MATERIAL (material_wireframe), FALSE);
 
   material_texture = gthree_mesh_basic_material_new ();
-  gthree_mesh_basic_material_set_vertex_colors (material_texture, FALSE);
+  gthree_material_set_vertex_colors (GTHREE_MATERIAL (material_texture), FALSE);
   gthree_mesh_basic_material_set_map (material_texture, texture);
 
   scene = gthree_scene_new ();
