@@ -752,7 +752,12 @@ gthree_uniform_load (GthreeUniform *uniform,
       break;
     case GTHREE_UNIFORM_TYPE_TEXTURE:
       if (uniform->value.texture)
-        gthree_texture_load (uniform->value.texture, gthree_renderer_allocate_texture_unit (renderer));
+        {
+          int unit = gthree_renderer_allocate_texture_unit (renderer);
+          gthree_texture_load (uniform->value.texture, unit);
+          glUniform1i(uniform->location, unit);
+        }
+
       break;
     case GTHREE_UNIFORM_TYPE_UNIFORMS_ARRAY:
       if (uniform->value.ptr_array)
