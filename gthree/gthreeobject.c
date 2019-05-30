@@ -883,3 +883,20 @@ gthree_object_iter_destroy (GthreeObjectIter *iter)
       ri->age += 1;
     }
 }
+
+void
+gthree_object_print_tree (GthreeObject *object, int depth)
+{
+  GthreeObjectIter iter;
+  GthreeObject *child;
+  int i;
+
+  for (i = 0; i < depth; i++)
+    g_print ("  ");
+
+  g_print ("%s(%p)\n", g_type_name_from_instance (object), object);
+
+  gthree_object_iter_init (&iter, object);
+  while (gthree_object_iter_next (&iter, &child))
+    gthree_object_print_tree (child, depth + 1);
+}

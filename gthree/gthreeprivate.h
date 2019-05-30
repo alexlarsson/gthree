@@ -71,4 +71,6 @@ GthreeMaterialProperties *gthree_material_get_properties (GthreeMaterial  *mater
 
 graphene_matrix_t *gthree_camera_get_projection_matrix_for_write (GthreeCamera *camera);
 
+void gthree_object_print_tree (GthreeObject *object, int depth);
+
 #endif /* __GTHREE_PRIVATE_H__ */
