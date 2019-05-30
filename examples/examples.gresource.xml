@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gresources>
   <gresource prefix="/org/gnome/gthree-examples">
-    <file compressed="true">models/knight.js</file>
-    <file compressed="true">models/marine.js</file>
     <file compressed="true">models/Suzanne.js</file>
     <file compressed="true">models/RobotExpressive.glb</file>
     <file compressed="true">models/Soldier.glb</file>
@@ -12,7 +10,6 @@
     <file>textures/brick_roughness.jpg</file>
     <file>textures/crate.gif</file>
     <file>textures/disturb.jpg</file>
-    <file>textures/MarineCv2_color.jpg</file>
     <file>textures/cube/SwedishRoyalCastle/nx.jpg</file>
     <file>textures/cube/SwedishRoyalCastle/ny.jpg</file>
     <file>textures/cube/SwedishRoyalCastle/nz.jpg</file>
