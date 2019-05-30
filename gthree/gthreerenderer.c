@@ -1195,9 +1195,9 @@ render_item (GthreeRenderer *renderer,
   data_count = -1;
 
   if (index != NULL)
-    data_count = gthree_attribute_array_get_count (gthree_attribute_get_array (index));
+    data_count = gthree_attribute_get_count (index);
   else if (position != NULL)
-    data_count = gthree_attribute_array_get_count (gthree_attribute_get_array (position));
+    data_count = gthree_attribute_get_count (position);
 
   range_start = gthree_geometry_get_draw_range_start (geometry) * range_factor;
   range_count = gthree_geometry_get_draw_range_count (geometry) * range_factor;

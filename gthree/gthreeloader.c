@@ -25,24 +25,46 @@ G_DEFINE_QUARK (gthree-loader-error-quark, gthree_loader_error)
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeLoader, gthree_loader, G_TYPE_OBJECT)
 
 typedef struct {
-  GBytes *bytes;
   guint buffer;
   guint byte_offset;
+  GBytes *bytes;  /* combines buffer + byte offset/length +  the actual buffer GBytes */
   guint byte_length;
   guint byte_stride;
   guint target;
   // name
   // extensions
   // extras
+
+  /* Set later for reuse when we know the attribute type to user */
+  GthreeAttributeArray *array;
+
 } BufferView;
+
+typedef struct {
+  GthreeAttributeArray *array;
+  gboolean normalized;
+  int item_size;    // in array->type size units
+  int item_offset;  // in array->type size units
+  int count;
+} Accessor;
 
 typedef struct {
   GPtrArray *primitives;
 } Mesh;
 
 static void
+accessor_free (Accessor *accessor)
+{
+  if (accessor->array)
+    gthree_attribute_array_unref (accessor->array);
+  g_free (accessor);
+}
+
+static void
 buffer_view_free (BufferView *view)
 {
+  if (view->array)
+    gthree_attribute_array_unref (view->array);
   if (view->bytes)
     g_bytes_unref (view->bytes);
   g_free (view);
@@ -58,6 +80,7 @@ mesh_free (Mesh *mesh)
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (BufferView, buffer_view_free);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (Mesh, mesh_free);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (Accessor, accessor_free);
 
 static BufferView *
 buffer_view_new (GthreeLoader *loader, JsonObject *json, GError **error)
@@ -88,12 +111,12 @@ buffer_view_new (GthreeLoader *loader, JsonObject *json, GError **error)
   view->byte_length = json_object_get_int_member (json, "byteLength");
 
   view->byte_stride = 0;
-  if (json_object_has_member (json, "bufferStride"))
+  if (json_object_has_member (json, "byteStride"))
     view->byte_stride = json_object_get_int_member (json, "byteStride");
 
   view->target = 0;
   if (json_object_has_member (json, "target"))
-    view->byte_stride = json_object_get_int_member (json, "target");
+    view->target = json_object_get_int_member (json, "target");
 
   view->bytes = g_bytes_new_from_bytes (g_ptr_array_index (priv->buffers, view->buffer),
                                         view->byte_offset, view->byte_length);
@@ -109,7 +132,7 @@ gthree_loader_init (GthreeLoader *loader)
   priv->buffers = g_ptr_array_new_with_free_func ((GDestroyNotify)g_bytes_unref);
   priv->buffer_views = g_ptr_array_new_with_free_func ((GDestroyNotify)buffer_view_free);
   priv->images = g_ptr_array_new_with_free_func ((GDestroyNotify)g_object_unref);
-  priv->accessors = g_ptr_array_new_with_free_func ((GDestroyNotify)gthree_attribute_array_unref);
+  priv->accessors = g_ptr_array_new_with_free_func ((GDestroyNotify)accessor_free);
   priv->nodes = g_ptr_array_new_with_free_func ((GDestroyNotify)g_object_unref);
   priv->meshes = g_ptr_array_new_with_free_func ((GDestroyNotify)mesh_free);
   priv->scenes = g_ptr_array_new_with_free_func ((GDestroyNotify)g_object_unref);
@@ -350,13 +373,14 @@ parse_accessors (GthreeLoader *loader, JsonObject *root, GError **error)
   for (i = 0; i < len; i++)
     {
       JsonObject *accessor_j = json_array_get_object_element (accessors_j, i);
-      g_autoptr(GthreeAttributeArray) array = NULL;
       gint64 buffer_view = -1;
       gint64 byte_offset = 0;
       gint64 component_type, item_size, count;
       GthreeAttributeType attribute_type;
+      int attribute_type_size;
       const char *type = NULL;
       gboolean normalized = FALSE;
+      g_autoptr(Accessor) accessor = g_new0 (Accessor, 1);
 
       if (json_object_has_member (accessor_j, "bufferView"))
         buffer_view =  json_object_get_int_member (accessor_j, "bufferView");
@@ -371,8 +395,7 @@ parse_accessors (GthreeLoader *loader, JsonObject *root, GError **error)
       if (json_object_has_member (accessor_j, "sparse"))
         g_warning ("Ignoring sparse accessor");
 
-      if (normalized) // TODO: Research this, should we move the property to attribute array, or store elsewhere in the loader?
-        g_warning ("Ignoring normalized tag, because we can't store it on the attribute array");
+      accessor->normalized = normalized;
 
       switch (component_type)
         {
@@ -400,6 +423,7 @@ parse_accessors (GthreeLoader *loader, JsonObject *root, GError **error)
             return FALSE;
           }
         }
+      attribute_type_size = gthree_attribute_type_length (attribute_type);
 
       if (strcmp (type, "SCALAR") == 0)
         item_size = 1;
@@ -421,26 +445,66 @@ parse_accessors (GthreeLoader *loader, JsonObject *root, GError **error)
           return FALSE;
         }
 
-      // TODO: The above has multiple options for same count, so we throw away info. does this matter?
 
-      array = gthree_attribute_array_new (attribute_type, item_size * count, item_size);
-
-      if (buffer_view >= 0)
+      if (buffer_view < 0)
+        {
+          /* Empty array with the right type */
+          accessor->array = gthree_attribute_array_new (attribute_type, count, item_size);
+          accessor->item_size = item_size;
+          accessor->item_offset = 0;
+        }
+      else
         {
           BufferView *view;
+
           if (buffer_view >= priv->buffer_views->len)
             {
               g_set_error (error, GTHREE_LOADER_ERROR, GTHREE_LOADER_ERROR_FAIL, "No such buffer view %d", (int)buffer_view);
               return FALSE;
             }
+
           view = g_ptr_array_index (priv->buffer_views, buffer_view);
 
-          memcpy (gthree_attribute_array_peek_uint8 (array),
-                  g_bytes_get_data (view->bytes, NULL) + byte_offset,
-                  item_size * count * gthree_attribute_type_length (attribute_type));
+          if (view->array && gthree_attribute_array_get_attribute_type (view->array) == attribute_type)
+            {
+              /* We already have an array for this buffer view, and it matches the type, its either
+                 a pure re-use, or an interleaved array we can reuse. */
+              accessor->array = gthree_attribute_array_ref (view->array);
+              accessor->item_size = item_size;
+              accessor->item_offset = byte_offset / attribute_type_size;
+              accessor->count = count;
+            }
+          else
+            {
+              int item_size_in_shared_array;
+              int count_shared_array;
+
+              if (view->byte_stride == 0) // 0 == densely packed
+                item_size_in_shared_array = item_size;
+              else
+                item_size_in_shared_array = view->byte_stride / attribute_type_size;
+
+              count_shared_array = view->byte_length / (attribute_type_size * item_size_in_shared_array);
+
+
+              /* Create an array for the entire bufferview now that we know the type, then store
+                 that for later use and use a subset of it here. */
+
+              accessor->array = gthree_attribute_array_new (attribute_type, count_shared_array, item_size_in_shared_array);
+              accessor->item_size = item_size;
+              accessor->item_offset = byte_offset / attribute_type_size;
+              accessor->count = count;
+
+              memcpy (gthree_attribute_array_peek_uint8 (accessor->array),
+                      (char *)g_bytes_get_data (view->bytes, NULL),
+                      item_size_in_shared_array * count_shared_array * gthree_attribute_type_length (attribute_type));
+
+              if (view->array == NULL)
+                view->array = gthree_attribute_array_ref (accessor->array);
+            }
         }
 
-      g_ptr_array_add (priv->accessors, g_steal_pointer (&array));
+      g_ptr_array_add (priv->accessors, g_steal_pointer (&accessor));
     }
 
   return TRUE;
@@ -611,23 +675,30 @@ parse_meshes (GthreeLoader *loader, JsonObject *root, GError **error)
               const char *attr_name = l->data;
               gint64 accessor_index = json_object_get_int_member (attributes, attr_name);
               const char *gthree_name = gltl_attribute_name_to_gthree (attr_name);
-              GthreeAttributeArray *array = g_ptr_array_index (priv->accessors, accessor_index);
-              g_autoptr(GthreeAttribute) attribute = NULL;
-              gboolean normalized = FALSE;
+              Accessor *accessor = g_ptr_array_index (priv->accessors, accessor_index);
+              GthreeAttribute *attribute;
 
-              // TODO: Get normalized from the attribute array (was in accessors definition)
-              // TODO: How does this work with interleaved arrays? seems an attribute can't define an offset?
-              attribute = gthree_attribute_new_with_array (gthree_name, array, normalized);
+              attribute = gthree_attribute_new_with_array_interleaved (gthree_name,
+                                                                       accessor->array,
+                                                                       accessor->normalized,
+                                                                       accessor->item_size,
+                                                                       accessor->item_offset,
+                                                                       accessor->count);
               gthree_geometry_add_attribute (geometry, attribute);
             }
 
-          if (json_object_has_member (primitive, "index"))
+          if (json_object_has_member (primitive, "indices"))
             {
-              int index_index = json_object_get_int_member (primitive, "index");
+              int index_index = json_object_get_int_member (primitive, "indices");
               g_autoptr(GthreeAttribute) attribute = NULL;
-              GthreeAttributeArray *array = g_ptr_array_index (priv->accessors, index_index);
+              Accessor *accessor = g_ptr_array_index (priv->accessors, index_index);
 
-              attribute = gthree_attribute_new_with_array ("index", array, FALSE);
+              attribute = gthree_attribute_new_with_array_interleaved ("index",
+                                                                       accessor->array,
+                                                                       accessor->normalized,
+                                                                       accessor->item_size,
+                                                                       accessor->item_offset,
+                                                                       accessor->count);
               gthree_geometry_set_index (geometry, attribute);
             }
 

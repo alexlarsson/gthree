@@ -48,7 +48,6 @@ GthreeScene *gthree_loader_get_scene    (GthreeLoader *loader,
 GthreeLoader *gthree_loader_parse_gltf (GBytes *data, GFile *base_path, GError **error);
 
 GthreeGeometry *gthree_load_geometry_from_json (const char *data, GError **error);
-
 G_END_DECLS
 
 #endif /* __GTHREE_LOADER_H__ */

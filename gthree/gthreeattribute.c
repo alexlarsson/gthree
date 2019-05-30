@@ -11,6 +11,7 @@ struct _GthreeAttributeArray {
   int stride; /* in nr of type items */
   int count;  /* in nr of stride items */
   int version;
+  /* TODO: move this to per-array? it can be in different ranges when reusing arrays interleaved or stacked */
   int update_range_offset;
   int update_range_count;
   gboolean dynamic;
@@ -201,11 +202,13 @@ gthree_attribute_array_peek_uint8 (GthreeAttributeArray *array)
 
 guint8 *
 gthree_attribute_array_peek_uint8_at (GthreeAttributeArray *array,
-                                      int index)
+                                      int index,
+                                      int offset)
 {
-  g_assert (index < array->count);
+  int n = array->stride * index + offset;
+  g_assert (n < array->count * array->stride);
 
-  return gthree_attribute_array_peek_uint8 (array) + array->stride * index;
+  return gthree_attribute_array_peek_uint8 (array) + n;
 }
 
 gint8 *
@@ -217,11 +220,13 @@ gthree_attribute_array_peek_int8 (GthreeAttributeArray *array)
 
 gint8 *
 gthree_attribute_array_peek_int8_at (GthreeAttributeArray *array,
-                                     int index)
+                                     int index,
+                                     int offset)
 {
-  g_assert (index < array->count);
+  int n = array->stride * index + offset;
+  g_assert (n < array->count * array->stride);
 
-  return gthree_attribute_array_peek_int8 (array) + array->stride * index;
+  return gthree_attribute_array_peek_int8 (array) + n;
 }
 
 gint16 *
@@ -233,11 +238,13 @@ gthree_attribute_array_peek_int16 (GthreeAttributeArray *array)
 
 gint16 *
 gthree_attribute_array_peek_int16_at (GthreeAttributeArray *array,
-                                      int index)
+                                      int index,
+                                      int offset)
 {
-  g_assert (index < array->count);
+  int n = array->stride * index + offset;
+  g_assert (n < array->count * array->stride);
 
-  return gthree_attribute_array_peek_int16 (array) + array->stride * index;
+  return gthree_attribute_array_peek_int16 (array) + n;
 }
 
 guint16 *
@@ -249,11 +256,13 @@ gthree_attribute_array_peek_uint16 (GthreeAttributeArray *array)
 
 guint16 *
 gthree_attribute_array_peek_uint16_at (GthreeAttributeArray *array,
-                                       int index)
+                                       int index,
+                                       int offset)
 {
-  g_assert (index < array->count);
+  int n = array->stride * index + offset;
+  g_assert (n < array->count * array->stride);
 
-  return gthree_attribute_array_peek_uint16 (array) + array->stride * index;
+  return gthree_attribute_array_peek_uint16 (array) + n;
 }
 
 gint32 *
@@ -265,9 +274,11 @@ gthree_attribute_array_peek_int32 (GthreeAttributeArray *array)
 
 gint32 *
 gthree_attribute_array_peek_int32_at (GthreeAttributeArray *array,
-                                      int index)
+                                      int index,
+                                      int offset)
 {
-  g_assert (index < array->count);
+  int n = array->stride * index + offset;
+  g_assert (n < array->count * array->stride);
 
   return gthree_attribute_array_peek_int32 (array) + array->stride * index;
 }
@@ -281,11 +292,13 @@ gthree_attribute_array_peek_uint32 (GthreeAttributeArray *array)
 
 guint32 *
 gthree_attribute_array_peek_uint32_at (GthreeAttributeArray *array,
-                                      int index)
+                                      int index,
+                                      int offset)
 {
-  g_assert (index < array->count);
+  int n = array->stride * index + offset;
+  g_assert (n < array->count * array->stride);
 
-  return gthree_attribute_array_peek_uint32 (array) + array->stride * index;
+  return gthree_attribute_array_peek_uint32 (array) + n;
 }
 
 float *
@@ -299,27 +312,26 @@ graphene_point3d_t *
 gthree_attribute_array_peek_point3d   (GthreeAttributeArray *array)
 {
   g_assert (array->type == GTHREE_ATTRIBUTE_TYPE_FLOAT);
-  g_assert (array->stride == 3);
-  g_assert (sizeof (graphene_point3d_t) == 3 * sizeof (float));
   return (graphene_point3d_t*)&array->data[0];
 }
 
 graphene_point3d_t *
 gthree_attribute_array_peek_point3d_at (GthreeAttributeArray *array,
-                                        int index)
+                                        int index,
+                                        int offset)
 {
-  g_assert (index < array->count);
-
-  return gthree_attribute_array_peek_point3d (array) + index;
+  return (graphene_point3d_t *)gthree_attribute_array_peek_float_at (array, index, offset);
 }
 
 float *
 gthree_attribute_array_peek_float_at (GthreeAttributeArray *array,
-                                      int index)
+                                      int index,
+                                      int offset)
 {
-  g_assert (index < array->count);
+  int n = array->stride * index + offset;
+  g_assert (n < array->count * array->stride);
 
-  return gthree_attribute_array_peek_float (array) + array->stride * index;
+  return gthree_attribute_array_peek_float (array) + n;
 }
 
 double *
@@ -331,11 +343,13 @@ gthree_attribute_array_peek_double (GthreeAttributeArray *array)
 
 double *
 gthree_attribute_array_peek_double_at (GthreeAttributeArray *array,
-                                       int index)
+                                       int index,
+                                       int offset)
 {
-  g_assert (index < array->count);
+  int n = array->stride * index + offset;
+  g_assert (n < array->count * array->stride);
 
-  return gthree_attribute_array_peek_double (array) + array->stride * index;
+  return gthree_attribute_array_peek_double (array) + n;
 }
 
 
@@ -345,7 +359,7 @@ gthree_attribute_array_set_x (GthreeAttributeArray *array,
                               guint                 offset,
                               float                 x)
 {
-  float *p = gthree_attribute_array_peek_float_at (array, index) + offset;
+  float *p = gthree_attribute_array_peek_float_at (array, index, offset);
   p[0] = x;
 }
 
@@ -355,7 +369,7 @@ gthree_attribute_array_set_y (GthreeAttributeArray *array,
                               guint                 offset,
                               float                 y)
 {
-  float *p = gthree_attribute_array_peek_float_at (array, index) + offset;
+  float *p = gthree_attribute_array_peek_float_at (array, index, offset);
   p[1] = y;
 }
 
@@ -365,7 +379,7 @@ gthree_attribute_array_set_z (GthreeAttributeArray *array,
                               guint                 offset,
                               float                 z)
 {
-  float *p = gthree_attribute_array_peek_float_at (array, index) + offset;
+  float *p = gthree_attribute_array_peek_float_at (array, index, offset);
   p[2] = z;
 }
 
@@ -375,18 +389,18 @@ gthree_attribute_array_set_w (GthreeAttributeArray *array,
                               guint                 offset,
                               float                 w)
 {
-  float *p = gthree_attribute_array_peek_float_at (array, index) + offset;
+  float *p = gthree_attribute_array_peek_float_at (array, index, offset);
   p[3] = w;
 }
 
 void
 gthree_attribute_array_set_xy (GthreeAttributeArray *array,
-                                       guint                 index,
-                                       guint                 offset,
-                                       float                 x,
-                                       float                 y)
+                               guint                 index,
+                               guint                 offset,
+                               float                 x,
+                               float                 y)
 {
-  float *p = gthree_attribute_array_peek_float_at (array, index) + offset;
+  float *p = gthree_attribute_array_peek_float_at (array, index, offset);
   p[0] = x;
   p[1] = y;
 }
@@ -399,7 +413,7 @@ gthree_attribute_array_set_xyz (GthreeAttributeArray *array,
                                 float                 y,
                                 float                 z)
 {
-  float *p = gthree_attribute_array_peek_float_at (array, index) + offset;
+  float *p = gthree_attribute_array_peek_float_at (array, index, offset);
   p[0] = x;
   p[1] = y;
   p[2] = z;
@@ -414,7 +428,7 @@ gthree_attribute_array_set_xyzw (GthreeAttributeArray *array,
                                  float                 z,
                                  float                 w)
 {
-  float *p = gthree_attribute_array_peek_float_at (array, index) + offset;
+  float *p = gthree_attribute_array_peek_float_at (array, index, offset);
   p[0] = x;
   p[1] = y;
   p[2] = z;
@@ -500,7 +514,7 @@ gthree_attribute_array_set_uint8 (GthreeAttributeArray *array,
                                    guint                 offset,
                                    gint8                 value)
 {
-  guint8 *p = gthree_attribute_array_peek_uint8_at (array, index) + offset;
+  guint8 *p = gthree_attribute_array_peek_uint8_at (array, index, offset);
   *p = value;
 }
 
@@ -509,7 +523,7 @@ gthree_attribute_array_get_uint8 (GthreeAttributeArray *array,
                                   guint                 index,
                                   guint                 offset)
 {
-  guint8 *p = gthree_attribute_array_peek_uint8_at (array, index) + offset;
+  guint8 *p = gthree_attribute_array_peek_uint8_at (array, index, offset);
   return *p;
 }
 
@@ -519,7 +533,7 @@ gthree_attribute_array_set_uint16 (GthreeAttributeArray *array,
                                    guint                 offset,
                                    gint16                value)
 {
-  guint16 *p = gthree_attribute_array_peek_uint16_at (array, index) + offset;
+  guint16 *p = gthree_attribute_array_peek_uint16_at (array, index, offset);
   *p = value;
 }
 
@@ -528,7 +542,7 @@ gthree_attribute_array_get_uint16 (GthreeAttributeArray *array,
                                    guint                 index,
                                    guint                 offset)
 {
-  guint16 *p = gthree_attribute_array_peek_uint16_at (array, index) + offset;
+  guint16 *p = gthree_attribute_array_peek_uint16_at (array, index, offset);
   return *p;
 }
 
@@ -538,7 +552,7 @@ gthree_attribute_array_set_uint32 (GthreeAttributeArray *array,
                                    guint                 offset,
                                    guint32               value)
 {
-  guint32 *p = gthree_attribute_array_peek_uint32_at (array, index) + offset;
+  guint32 *p = gthree_attribute_array_peek_uint32_at (array, index, offset);
   *p = value;
 }
 
@@ -547,7 +561,7 @@ gthree_attribute_array_get_uint32 (GthreeAttributeArray *array,
                                   guint                 index,
                                   guint                 offset)
 {
-  guint32 *p = gthree_attribute_array_peek_uint32_at (array, index) + offset;
+  guint32 *p = gthree_attribute_array_peek_uint32_at (array, index, offset);
   return *p;
 }
 
@@ -578,6 +592,16 @@ gthree_attribute_array_get_uint (GthreeAttributeArray *array,
     return gthree_attribute_array_get_uint8 (array, index, offset);
 }
 
+void
+gthree_attribute_array_get_point3d (GthreeAttributeArray *array,
+                                    guint                 index,
+                                    guint                 offset,
+                                    graphene_point3d_t   *point)
+{
+  g_assert (array->type == GTHREE_ATTRIBUTE_TYPE_FLOAT);
+  *point = *(graphene_point3d_t *)((float *)&array->data[0] + offset);
+}
+
 static void
 gthree_attribute_array_copy_raw (GthreeAttributeArray *array,
                                   guint index,
@@ -591,9 +615,6 @@ gthree_attribute_array_copy_raw (GthreeAttributeArray *array,
   guint8 *src, *dst;
   gsize copy_len_bytes, dst_stride_bytes, source_stride_bytes;
   gsize element_size;
-
-  g_assert (index + n_items <= array->count);
-  g_assert (offset + n_elements <= array->stride);
 
   element_size = attribute_type_size[array->type];
   copy_len_bytes = n_elements * element_size;
@@ -634,10 +655,7 @@ gthree_attribute_array_copy_at (GthreeAttributeArray *array,
 
   g_assert (attribute_type_size[array->type] == attribute_type_size[source->type]);
 
-  g_assert (source_index + n_items <= source->count);
-  g_assert (source_offset + n_elements <= source->stride);
-
-  src = (guint8*)&source->data[0] + source_index * attribute_type_size[source->type] * source->stride + source_offset;
+  src = (guint8*)&source->data[0] +  attribute_type_size[source->type] * (source_index * source->stride + source_offset);
   src_stride = attribute_type_size[source->type] * source->stride;
 
   gthree_attribute_array_copy_raw (array, index, offset,
@@ -656,8 +674,6 @@ gthree_attribute_array_copy_float (GthreeAttributeArray *array,
                                    guint n_items)
 {
   g_assert (array->type == GTHREE_ATTRIBUTE_TYPE_FLOAT);
-  g_assert (index + n_items <= array->count);
-  g_assert (offset + n_elements <= array->stride);
 
   gthree_attribute_array_copy_raw (array, index, offset,
                                    source, source_stride,
@@ -675,8 +691,6 @@ gthree_attribute_array_copy_uint32 (GthreeAttributeArray *array,
                                     guint n_items)
 {
   g_assert (array->type == GTHREE_ATTRIBUTE_TYPE_UINT32);
-  g_assert (index + n_items <= array->count);
-  g_assert (offset + n_elements <= array->stride);
 
   gthree_attribute_array_copy_raw (array, index, offset,
                                    source, source_stride,
@@ -694,8 +708,6 @@ gthree_attribute_array_copy_uint16 (GthreeAttributeArray *array,
                                     guint n_items)
 {
   g_assert (array->type == GTHREE_ATTRIBUTE_TYPE_UINT16);
-  g_assert (index + n_items <= array->count);
-  g_assert (offset + n_elements <= array->stride);
 
   gthree_attribute_array_copy_raw (array, index, offset,
                                    source, source_stride,
@@ -788,7 +800,8 @@ struct _GthreeAttribute {
   GthreeAttributeName name;
   GthreeAttributeArray *array;
   int item_size;    /* typically same as array->stride, but not of interleaved */
-  int item_offset;  /* typically 0, but not of interleaved */
+  int item_offset;  /* typically 0, but not if interleaved or stacked */
+  int count;        /* May be smaller than the entire array if stacking */
   gboolean normalized;
 };
 
@@ -811,7 +824,8 @@ gthree_attribute_new_with_array_interleaved (const char *name,
                                              GthreeAttributeArray *array,
                                              gboolean normalized,
                                              int item_size,
-                                             int item_offset)
+                                             int item_offset,
+                                             int count)
 {
   GthreeAttribute *attr;
 
@@ -824,6 +838,7 @@ gthree_attribute_new_with_array_interleaved (const char *name,
   attr->normalized = normalized;
   attr->item_size = item_size;
   attr->item_offset = item_offset;
+  attr->count = count;
 
   return attr;
 }
@@ -833,7 +848,11 @@ gthree_attribute_new_with_array (const char *name,
                                  GthreeAttributeArray *array,
                                  gboolean normalized)
 {
-  return gthree_attribute_new_with_array_interleaved (name, array, normalized, array->stride, 0);
+  return gthree_attribute_new_with_array_interleaved (name, array,
+                                                      normalized,
+                                                      array->stride,
+                                                      0,
+                                                      array->count);
 }
 
 GthreeAttribute *
@@ -1065,7 +1084,7 @@ gthree_attribute_peek_uint8_at (GthreeAttribute *attribute,
                                 int              index)
 {
   if (attribute->array)
-    return gthree_attribute_array_peek_uint8_at (attribute->array, index);
+    return gthree_attribute_array_peek_uint8_at (attribute->array, index, attribute->item_offset);
   return NULL;
 }
 
@@ -1082,7 +1101,7 @@ gthree_attribute_peek_int8_at (GthreeAttribute *attribute,
                                int              index)
 {
   if (attribute->array)
-    return gthree_attribute_array_peek_int8_at (attribute->array, index);
+    return gthree_attribute_array_peek_int8_at (attribute->array, index, attribute->item_offset);
   return NULL;
 }
 
@@ -1099,7 +1118,7 @@ gthree_attribute_peek_int16_at (GthreeAttribute *attribute,
                                 int              index)
 {
   if (attribute->array)
-    return gthree_attribute_array_peek_int16_at (attribute->array, index);
+    return gthree_attribute_array_peek_int16_at (attribute->array, index, attribute->item_offset);
   return NULL;
 }
 
@@ -1116,7 +1135,7 @@ gthree_attribute_peek_uint16_at (GthreeAttribute *attribute,
                                   int             index)
 {
   if (attribute->array)
-    return gthree_attribute_array_peek_uint16_at (attribute->array, index);
+    return gthree_attribute_array_peek_uint16_at (attribute->array, index, attribute->item_offset);
   return NULL;
 }
 
@@ -1133,7 +1152,7 @@ gthree_attribute_peek_int32_at (GthreeAttribute *attribute,
                                 int              index)
 {
   if (attribute->array)
-    return gthree_attribute_array_peek_int32_at (attribute->array, index);
+    return gthree_attribute_array_peek_int32_at (attribute->array, index, attribute->item_offset);
   return NULL;
 }
 
@@ -1150,7 +1169,7 @@ gthree_attribute_peek_uint32_at (GthreeAttribute *attribute,
                                  int              index)
 {
   if (attribute->array)
-    return gthree_attribute_array_peek_uint32_at (attribute->array, index);
+    return gthree_attribute_array_peek_uint32_at (attribute->array, index, attribute->item_offset);
   return NULL;
 }
 
@@ -1167,7 +1186,7 @@ gthree_attribute_peek_float_at (GthreeAttribute *attribute,
                                 int              index)
 {
   if (attribute->array)
-    return gthree_attribute_array_peek_float_at (attribute->array, index);
+    return gthree_attribute_array_peek_float_at (attribute->array, index, attribute->item_offset);
   return NULL;
 }
 
@@ -1184,7 +1203,7 @@ gthree_attribute_peek_double_at (GthreeAttribute *attribute,
                                  int              index)
 {
   if (attribute->array)
-    return gthree_attribute_array_peek_double_at (attribute->array, index);
+    return gthree_attribute_array_peek_double_at (attribute->array, index, attribute->item_offset);
   return NULL;
 }
 
@@ -1201,7 +1220,7 @@ gthree_attribute_peek_point3d_at (GthreeAttribute *attribute,
                                   int              index)
 {
   if (attribute->array)
-    return gthree_attribute_array_peek_point3d_at (attribute->array, index);
+    return gthree_attribute_array_peek_point3d_at (attribute->array, index, attribute->item_offset);
   return NULL;
 }
 
@@ -1395,6 +1414,15 @@ gthree_attribute_get_uint (GthreeAttribute      *attribute,
   g_assert (attribute->array);
   return gthree_attribute_array_get_uint  (attribute->array, index, attribute->item_offset);
 }
+
+void
+gthree_attribute_get_point3d (GthreeAttribute      *attribute,
+                              guint                 index,
+                              graphene_point3d_t   *point)
+{
+  gthree_attribute_array_get_point3d (attribute->array, index, attribute->item_offset, point);
+}
+
 
 void
 gthree_attribute_update (GthreeAttribute *attribute, gint buffer_type)

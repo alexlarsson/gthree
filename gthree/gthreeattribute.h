@@ -35,31 +35,40 @@ int                   gthree_attribute_array_get_count          (GthreeAttribute
 int                   gthree_attribute_array_get_stride         (GthreeAttributeArray *array);
 guint8 *              gthree_attribute_array_peek_uint8         (GthreeAttributeArray *array);
 guint8 *              gthree_attribute_array_peek_uint8_at      (GthreeAttributeArray *array,
-                                                                 int                   index);
+                                                                 int                   index,
+                                                                 int                   offset);
 gint8 *               gthree_attribute_array_peek_int8          (GthreeAttributeArray *array);
 gint8 *               gthree_attribute_array_peek_int8_at       (GthreeAttributeArray *array,
-                                                                 int                   index);
+                                                                 int                   index,
+                                                                 int                   offset);
 gint16 *              gthree_attribute_array_peek_int16         (GthreeAttributeArray *array);
 gint16 *              gthree_attribute_array_peek_int16_at      (GthreeAttributeArray *array,
-                                                                 int                   index);
+                                                                 int                   index,
+                                                                 int                   offset);
 guint16 *             gthree_attribute_array_peek_uint16        (GthreeAttributeArray *array);
 guint16 *             gthree_attribute_array_peek_uint16_at     (GthreeAttributeArray *array,
-                                                                 int                   index);
+                                                                 int                   index,
+                                                                 int                   offset);
 gint32 *              gthree_attribute_array_peek_int32         (GthreeAttributeArray *array);
 gint32 *              gthree_attribute_array_peek_int32_at      (GthreeAttributeArray *array,
-                                                                 int                   index);
+                                                                 int                   index,
+                                                                 int                   offset);
 guint32 *             gthree_attribute_array_peek_uint32        (GthreeAttributeArray *array);
 guint32 *             gthree_attribute_array_peek_uint32_at     (GthreeAttributeArray *array,
-                                                                 int                   index);
+                                                                 int                   index,
+                                                                 int                   offset);
 float *               gthree_attribute_array_peek_float         (GthreeAttributeArray *array);
 float *               gthree_attribute_array_peek_float_at      (GthreeAttributeArray *array,
-                                                                 int                   index);
+                                                                 int                   index,
+                                                                 int                   offset);
 double *              gthree_attribute_array_peek_double        (GthreeAttributeArray *array);
 double *              gthree_attribute_array_peek_double_at     (GthreeAttributeArray *array,
-                                                                 int                   index);
+                                                                 int                   index,
+                                                                 int                   offset);
 graphene_point3d_t *  gthree_attribute_array_peek_point3d       (GthreeAttributeArray *array);
 graphene_point3d_t *  gthree_attribute_array_peek_point3d_at    (GthreeAttributeArray *array,
-                                                                 int                   index);
+                                                                 int                   index,
+                                                                 int                   offset);
 void                  gthree_attribute_array_copy_at            (GthreeAttributeArray *array,
                                                                  guint                 index,
                                                                  guint                 offset,
@@ -175,6 +184,10 @@ void                  gthree_attribute_array_set_uint           (GthreeAttribute
 guint                 gthree_attribute_array_get_uint           (GthreeAttributeArray *array,
                                                                  guint                 index,
                                                                  guint                 offset);
+void                  gthree_attribute_array_get_point3d        (GthreeAttributeArray *array,
+                                                                 guint                 index,
+                                                                 guint                 offset,
+                                                                 graphene_point3d_t   *point);
 
 
 /* Some pre-defined values for attribute names */
@@ -228,7 +241,8 @@ GthreeAttribute *gthree_attribute_new_with_array_interleaved (const char        
                                                               GthreeAttributeArray *array,
                                                               gboolean              normalized,
                                                               int                   item_size,
-                                                              int                   item_offset);
+                                                              int                   item_offset,
+                                                              int                   count);
 GthreeAttribute *gthree_attribute_parse_json                 (JsonObject           *root,
                                                               const char           *name);
 
@@ -345,6 +359,9 @@ void                  gthree_attribute_set_uint           (GthreeAttribute      
                                                            guint                 value);
 guint                 gthree_attribute_get_uint           (GthreeAttribute      *attribute,
                                                            guint                 index);
+void                  gthree_attribute_get_point3d        (GthreeAttribute      *attribute,
+                                                           guint                 index,
+                                                           graphene_point3d_t   *point);
 
 
 
