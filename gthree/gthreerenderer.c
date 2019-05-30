@@ -1121,7 +1121,7 @@ setup_vertex_attributes (GthreeRenderer *renderer,
                 enable_attribute (renderer, program_attribute);
               }
               glBindBuffer (GL_ARRAY_BUFFER, buffer);
-              glVertexAttribPointer (program_attribute, size, type, normalized, stride * bytes_per_element, GINT_TO_POINTER (offset));
+              glVertexAttribPointer (program_attribute, size, type, normalized, stride * bytes_per_element, GINT_TO_POINTER (offset * bytes_per_element));
             }
           else
             {
