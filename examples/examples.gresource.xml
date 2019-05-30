@@ -4,6 +4,8 @@
     <file compressed="true">models/knight.js</file>
     <file compressed="true">models/marine.js</file>
     <file compressed="true">models/Suzanne.js</file>
+    <file compressed="true">models/RobotExpressive.glb</file>
+    <file compressed="true">models/Soldier.glb</file>
     <file>textures/brick_bump.jpg</file>
     <file>textures/brick_diffuse.jpg</file>
     <file>textures/brick_roughness.jpg</file>
