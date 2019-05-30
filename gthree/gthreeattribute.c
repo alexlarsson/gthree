@@ -35,6 +35,12 @@ static int attribute_type_gl[] = {
    GL_BYTE
 };
 
+int
+gthree_attribute_type_length (GthreeAttributeType type)
+{
+  return attribute_type_size[type];
+}
+
 GthreeAttributeArray *
 gthree_attribute_array_new   (GthreeAttributeType   type,
                               int                   count,

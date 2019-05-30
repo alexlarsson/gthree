@@ -13,6 +13,8 @@
 
 G_BEGIN_DECLS
 
+int gthree_attribute_type_length (GthreeAttributeType type);
+
 GthreeAttributeArray *gthree_attribute_array_new                (GthreeAttributeType   type,
                                                                  int                   count,
                                                                  int                   stride);
