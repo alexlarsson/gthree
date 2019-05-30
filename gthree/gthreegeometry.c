@@ -340,11 +340,26 @@ gthree_geometry_get_bounding_sphere  (GthreeGeometry *geometry)
       if (position)
         {
           GthreeAttributeArray *array = gthree_attribute_get_array (position);
+          const graphene_point3d_t *points;
+          g_autofree graphene_point3d_t *alloc_points = NULL;
+          int i, n_points = gthree_attribute_array_get_count (array);
 
-          /* TODO: This assumes the positions are not interleaved... */
+          if (gthree_attribute_array_get_stride (array) == 3)
+            {
+              /* Here we can access memory as a point3d array directly */
+              points = gthree_attribute_array_peek_point3d (array);
+            }
+          else
+            {
+              alloc_points = g_new (graphene_point3d_t, n_points);
+              for (i = 0; i < n_points; i++)
+                gthree_attribute_get_point3d (position, i, &alloc_points[i]);
+              points = alloc_points;
+            }
+
           graphene_sphere_init_from_points (&priv->bounding_sphere,
-                                            gthree_attribute_array_get_count (array),
-                                            gthree_attribute_array_peek_point3d (array),
+                                            n_points,
+                                            points,
                                             NULL);
 
           /* TODO: The three.js code does a lot of special handling for morphing here too */
