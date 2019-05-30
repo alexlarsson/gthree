@@ -20,7 +20,19 @@ example_resources = gnome.compile_resources('gthree-example-resources',
                                             ],
                                             c_name: 'gthree_example')
 
+libexample_sources = ['utils.c', 'prop-editor.c']  + example_resources
+
+libexample = static_library(
+  'libexample',
+  libexample_sources,
+  dependencies: [libgthree_dep, libm],
+)
+
+example_dep = declare_dependency(
+  link_whole: libexample,
+  dependencies: [libgthree_dep, libm]
+)
+
 foreach example_name : examples
-  executable(example_name, ['@0@.c'.format(example_name), 'utils.c', 'prop-editor.c'] + example_resources,
-             dependencies: [libgthree_dep, libm])
+  executable(example_name, ['@0@.c'.format(example_name)], dependencies: example_dep)
 endforeach
