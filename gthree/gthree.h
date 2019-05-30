@@ -21,6 +21,7 @@
 #include <gthree/gthreemesh.h>
 #include <gthree/gthreemultimaterial.h>
 #include <gthree/gthreeobject.h>
+#include <gthree/gthreegroup.h>
 #include <gthree/gthreerenderer.h>
 #include <gthree/gthreescene.h>
 #include <gthree/gthreetexture.h>
