@@ -29,6 +29,8 @@ typedef struct {
 } GthreeLoaderClass;
 
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeLoader, g_object_unref)
+
 typedef enum {
   GTHREE_LOADER_ERROR_FAIL,
 } GthreeLoaderError;

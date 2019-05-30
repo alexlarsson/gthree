@@ -25,6 +25,8 @@ typedef struct {
   GthreeMaterialClass parent_class;
 } GthreeMeshMaterialClass;
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeMeshMaterial, g_object_unref)
+
 GType gthree_mesh_material_get_type (void) G_GNUC_CONST;
 
 gboolean gthree_mesh_material_get_is_wireframe         (GthreeMeshMaterial *material);
