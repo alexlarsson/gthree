@@ -199,6 +199,7 @@ const char *        gthree_attribute_name_to_string      (GthreeAttributeName  n
 #define GTHREE_IS_ATTRIBUTE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GTHREE_TYPE_ATTRIBUTE))
 #define GTHREE_ATTRIBUTE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GTHREE_TYPE_ATTRIBUTE, GthreeAttributeClass))
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeAttributeArray, gthree_attribute_array_unref)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeAttribute, g_object_unref)
 
 GType gthree_attribute_get_type (void) G_GNUC_CONST;

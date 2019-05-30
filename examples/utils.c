@@ -72,3 +72,22 @@ examples_load_geometry (const char *name)
 
   return geometry;
 }
+
+GthreeLoader *
+examples_load_gltl (const char *name, GError **error)
+{
+  GthreeLoader *loader;
+  char *file;
+  g_autoptr(GBytes) bytes = NULL;
+
+  file = g_build_filename ("/org/gnome/gthree-examples/models/", name, NULL);
+  bytes = g_resources_lookup_data (file, G_RESOURCE_LOOKUP_FLAGS_NONE, error);
+  if (bytes == NULL)
+    return FALSE;
+
+  loader = gthree_loader_parse_gltf (bytes, NULL, error);
+  if (loader == NULL)
+    return NULL;
+
+  return loader;
+}

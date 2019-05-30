@@ -9,76 +9,23 @@
 GthreeScene *scene;
 
 GthreeMesh *marine, *knight;
+GthreePerspectiveCamera *camera;
 
 
 GthreeScene *
 init_scene (void)
 {
-  GthreeGeometry *marine_geometry, *knight_geometry;
-  GthreeMeshBasicMaterial *material_wireframe, *material_texture;
-  GthreeMeshPhongMaterial *material_phong;
-  GthreeTexture *texture;
-  GdkPixbuf *pixbuf;
-  GthreeAmbientLight *ambient_light;
-  GthreeDirectionalLight *directional_light;
-  graphene_point3d_t pos;
-  graphene_point3d_t scale = {15,15,15};
+  g_autoptr(GthreeLoader) loader = NULL;
+  GError *error = NULL;
+  GthreeScene *scene;
 
-  pixbuf = examples_load_pixbuf ("MarineCv2_color.jpg");
+  loader = examples_load_gltl ("RobotExpressive.glb", &error);
+  if (loader == NULL)
+    g_error ("Failed to parse robot model: %s\n", error->message);
 
-  texture = gthree_texture_new (pixbuf);
+  scene = gthree_loader_get_scene (loader, 0);
 
-  material_wireframe = gthree_mesh_basic_material_new ();
-  gthree_mesh_material_set_is_wireframe (GTHREE_MESH_MATERIAL (material_wireframe), TRUE);
-  gthree_mesh_basic_material_set_color (material_wireframe, &yellow);
-  gthree_material_set_vertex_colors (GTHREE_MATERIAL (material_wireframe), FALSE);
-
-  material_phong = gthree_mesh_phong_material_new ();
-  gthree_mesh_phong_material_set_color (material_phong, &red);
-  gthree_mesh_phong_material_set_emissive_color (material_phong, &grey);
-  gthree_mesh_phong_material_set_specular_color (material_phong, &white);
-
-  material_texture = gthree_mesh_basic_material_new ();
-  gthree_material_set_vertex_colors (GTHREE_MATERIAL (material_texture), FALSE);
-  gthree_mesh_basic_material_set_map (material_texture, texture);
-
-  scene = gthree_scene_new ();
-
-  marine_geometry = examples_load_geometry ("marine.js");
-
-  marine = gthree_mesh_new (marine_geometry, GTHREE_MATERIAL (material_texture));
-  gthree_object_set_position (GTHREE_OBJECT (marine),
-			      graphene_point3d_init (&pos,
-						     80,
-						     -80,
-						     0));
-
-  gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (marine));
-
-  knight_geometry = examples_load_geometry ("knight.js");
-
-  knight = gthree_mesh_new (knight_geometry, GTHREE_MATERIAL (material_phong));
-  gthree_object_set_position (GTHREE_OBJECT (knight),
-			      graphene_point3d_init (&pos,
-						     -80,
-						     -80,
-						     0));
-
-  gthree_object_set_scale (GTHREE_OBJECT (knight), &scale);
-  gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (knight));
-
-  ambient_light = gthree_ambient_light_new (&dark_grey);
-  gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));
-  
-  directional_light = gthree_directional_light_new (&white, 0.125);
-  gthree_object_set_position (GTHREE_OBJECT (directional_light),
-			      graphene_point3d_init (&pos,
-						     0,
-						     1,
-						     1));
-  gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (directional_light));
-  
-  return scene;
+  return g_object_ref (scene);
 }
 
 static gboolean
@@ -86,19 +33,20 @@ tick (GtkWidget     *widget,
       GdkFrameClock *frame_clock,
       gpointer       user_data)
 {
-  static graphene_point3d_t rot = { 0, 0, 0};
-  static graphene_point3d_t rot2 = { 0, 0, 0};
-  graphene_euler_t euler;
+  graphene_point3d_t pos;
+  gint64 frame_time;
+  float angle;
 
-  rot.y += 1.0;
-  rot2.y += 0.7;
+  frame_time = gdk_frame_clock_get_frame_time (frame_clock);
+  angle = frame_time / 4000000.0;
 
-  gthree_object_set_rotation (GTHREE_OBJECT (marine),
-                              graphene_euler_init (&euler,
-                                                   rot.x, rot.y, rot.z));
-  gthree_object_set_rotation (GTHREE_OBJECT (knight),
-                              graphene_euler_init (&euler,
-                                                   rot2.x, rot2.y, rot2.z));
+  gthree_object_set_position (GTHREE_OBJECT (camera),
+                              graphene_point3d_init (&pos,
+                                                     cos (angle) * 10,
+                                                     2,
+                                                     sin (angle) * 10));
+  gthree_object_look_at (GTHREE_OBJECT (camera),
+                         graphene_point3d_init (&pos, 0, 2, 0));
 
   gtk_widget_queue_draw (widget);
 
@@ -119,7 +67,6 @@ main (int argc, char *argv[])
 {
   GtkWidget *window, *box, *hbox, *button, *area;
   GthreeScene *scene;
-  GthreePerspectiveCamera *camera;
   graphene_point3d_t pos;
 
   gtk_init (&argc, &argv);
@@ -145,7 +92,7 @@ main (int argc, char *argv[])
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
 
   gthree_object_set_position (GTHREE_OBJECT (camera),
-                              graphene_point3d_init (&pos, 0, 0, 500));
+                              graphene_point3d_init (&pos, 0, 2, 10));
 
   area = gthree_area_new (scene, GTHREE_CAMERA (camera));
   g_signal_connect (area, "resize", G_CALLBACK (resize_area), camera);

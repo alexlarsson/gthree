@@ -29,8 +29,11 @@ G_DEFINE_TYPE_WITH_PRIVATE (GthreeGeometry, gthree_geometry, G_TYPE_OBJECT);
 static void
 drop_attribute (GthreeAttribute *attribute)
 {
-  gthree_resource_unuse (GTHREE_RESOURCE (attribute));
-  g_object_unref (attribute);
+  if (attribute)
+    {
+      gthree_resource_unuse (GTHREE_RESOURCE (attribute));
+      g_object_unref (attribute);
+    }
 }
 
 static void

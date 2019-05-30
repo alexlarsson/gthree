@@ -41,7 +41,11 @@ typedef enum {
 GQuark gthree_loader_error_quark (void);
 GType gthree_loader_get_type (void) G_GNUC_CONST;
 
-GthreeLoader *gthree_loader_new_from_json (const char *data, GFile *texture_path, GError **error);
+int          gthree_loader_get_n_scenes (GthreeLoader *loader);
+GthreeScene *gthree_loader_get_scene    (GthreeLoader *loader,
+                                         int           index);
+
+GthreeLoader *gthree_loader_parse_gltf (GBytes *data, GFile *base_path, GError **error);
 
 GthreeGeometry *gthree_load_geometry_from_json (const char *data, GError **error);
 

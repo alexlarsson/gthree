@@ -5,6 +5,8 @@ GthreeGeometry *examples_load_geometry (const char *name);
 void examples_load_cube_pixbufs (const char *dir,
                                  GdkPixbuf *pixbufs[6]);
 
+GthreeLoader *examples_load_gltl (const char *name, GError **error);
+
 extern GdkRGBA red;
 extern GdkRGBA green;
 extern GdkRGBA blue;
