@@ -13,15 +13,29 @@ GthreePerspectiveCamera *camera;
 
 
 GthreeScene *
-init_scene (void)
+init_scene (const char *path)
 {
   g_autoptr(GthreeLoader) loader = NULL;
   GError *error = NULL;
   GthreeScene *scene;
 
-  loader = examples_load_gltl ("RobotExpressive.glb", &error);
-  if (loader == NULL)
-    g_error ("Failed to parse robot model: %s\n", error->message);
+  if (path)
+    {
+      g_autoptr(GFile) file = g_file_new_for_commandline_arg (path);
+      g_autoptr(GBytes) bytes = g_file_load_bytes (file, NULL, NULL, &error);
+      if (bytes == NULL)
+        g_error ("Failed to load %s: %s\n", path, error->message);
+
+      loader = gthree_loader_parse_gltf (bytes, NULL, &error);
+      if (loader == NULL)
+        g_error ("Failed to %s: %s\n", path, error->message);
+    }
+  else
+    {
+      loader = examples_load_gltl ("RobotExpressive.glb", &error);
+      if (loader == NULL)
+        g_error ("Failed to parse robot model: %s\n", error->message);
+    }
 
   scene = gthree_loader_get_scene (loader, 0);
 
@@ -87,7 +101,7 @@ main (int argc, char *argv[])
   gtk_container_add (GTK_CONTAINER (box), hbox);
   gtk_widget_show (hbox);
 
-  scene = init_scene ();
+  scene = init_scene (argc == 2 ? argv[1] : NULL);
   camera = gthree_perspective_camera_new (30, 1, 1, 10000);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
 
