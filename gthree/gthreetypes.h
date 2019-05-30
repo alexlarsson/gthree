@@ -3,6 +3,7 @@
 
 typedef struct _GthreeScene GthreeScene;
 typedef struct _GthreeCamera GthreeCamera;
+typedef struct _GthreeGroup GthreeGroup;
 typedef struct _GthreePerspectiveCamera GthreePerspectiveCamera;
 typedef struct _GthreeRenderer GthreeRenderer;
 typedef struct _GthreeMaterial GthreeMaterial;
