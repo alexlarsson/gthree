@@ -33,9 +33,7 @@ GType  gthree_scene_get_type (void) G_GNUC_CONST;
 
 GthreeScene *gthree_scene_new ();
 
-void            gthree_scene_realize_objects        (GthreeScene   *scene);
 GthreeMaterial *gthree_scene_get_override_material  (GthreeScene   *scene);
-GList *         gthree_scene_get_lights             (GthreeScene   *scene);
 const GdkRGBA * gthree_scene_get_background_color   (GthreeScene   *scene);
 void            gthree_scene_set_background_color   (GthreeScene   *scene,
                                                      GdkRGBA       *color);
