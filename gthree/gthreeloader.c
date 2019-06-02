@@ -11,6 +11,18 @@
 #include "gthreeprivate.h"
 #include <json-glib/json-glib.h>
 
+/* TODO:
+ * Load cameras
+ * Handle primitive draw_mode != triangles
+ * Try grouping primitives into geometry groups if possible
+ * Handle skin weights
+ * Handle morph targets
+ * Handle animations
+ * Handle sparse accessors
+ * Handle line materials
+ * handle data: uris
+ */
+
 typedef struct {
   GPtrArray *buffers;
   GPtrArray *buffer_views;
@@ -914,75 +926,74 @@ parse_materials (GthreeLoader *loader, JsonObject *root, GError **error)
               gthree_mesh_standard_material_set_roughness_map (material, texture);
               gthree_mesh_standard_material_set_metalness_map (material, texture);
             }
+        }
 
-          if (json_object_has_member (pbr, "normalTexture"))
-            {
-              JsonObject *texture_j = json_object_get_object_member (pbr, "normalTexture");
-              g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, texture_j);
-              graphene_vec2_t normal_scale;
+      if (json_object_has_member (material_j, "normalTexture"))
+        {
+          JsonObject *texture_j = json_object_get_object_member (material_j, "normalTexture");
+          g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, texture_j);
+          graphene_vec2_t normal_scale;
 
-              gthree_mesh_standard_material_set_normal_map (material, texture);
+          gthree_mesh_standard_material_set_normal_map (material, texture);
 
-              if (json_object_has_member (texture_j, "scale"))
-                parse_vec2 (json_object_get_array_member (texture_j, "scale"), &normal_scale);
-              else
-                graphene_vec2_init (&normal_scale, 1, 1);
-
-              gthree_mesh_standard_material_set_normal_map_scale (material, &normal_scale);
-            }
-
-          if (json_object_has_member (pbr, "occlusionTexture"))
-            {
-              JsonObject *texture_j = json_object_get_object_member (pbr, "occlusionTexture");
-              g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, texture_j);
-              double intensity = 1.0;
-
-              gthree_mesh_standard_material_set_ao_map (material, texture);
-
-              if (json_object_get_member (texture_j, "strength"))
-                intensity = json_object_get_double_member (texture_j, "strength");
-              gthree_mesh_standard_material_set_ao_map_intensity (material, intensity);
-            }
-
-          if (json_object_has_member (pbr, "emissiveFactor"))
-            {
-              GdkRGBA e_color;
-
-              parse_color (json_object_get_array_member (pbr, "emissiveFactor"), &e_color);
-              gthree_mesh_standard_material_set_emissive_color (material, &e_color);
-            }
-
-          if (json_object_has_member (pbr, "emissiveTexture"))
-            {
-              JsonObject *texture_j = json_object_get_object_member (pbr, "emissiveTexture");
-              g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, texture_j);
-
-              gthree_mesh_standard_material_set_emissive_map (material, texture);
-            }
-
-          if (json_object_has_member (pbr, "doubleSided") &&
-              json_object_get_boolean_member (pbr, "doubleSided"))
-            gthree_material_set_side (GTHREE_MATERIAL (material), GTHREE_SIDE_DOUBLE);
-
-          if (json_object_has_member (pbr, "alphaMode"))
-            alpha_mode = json_object_get_string_member (pbr, "alphaMode");
-
-          if (g_strcmp0 (alpha_mode, "BLEND") == 0)
-            {
-              gthree_material_set_is_transparent (GTHREE_MATERIAL (material), TRUE);
-            }
+          if (json_object_has_member (texture_j, "scale"))
+            parse_vec2 (json_object_get_array_member (texture_j, "scale"), &normal_scale);
           else
-            {
-              gthree_material_set_is_transparent (GTHREE_MATERIAL (material), FALSE);
-              if (g_strcmp0 (alpha_mode, "MASK") == 0)
-                {
-                  double alpha_test = 0.5;
-                  if (json_object_has_member (pbr, "alphaCutoff"))
-                    alpha_test = json_object_get_double_member (pbr, "alphaCutoff");
-                  gthree_material_set_alpha_test (GTHREE_MATERIAL (material), alpha_test);
-                }
-            }
+            graphene_vec2_init (&normal_scale, 1, 1);
 
+          gthree_mesh_standard_material_set_normal_map_scale (material, &normal_scale);
+        }
+
+      if (json_object_has_member (material_j, "occlusionTexture"))
+        {
+          JsonObject *texture_j = json_object_get_object_member (material_j, "occlusionTexture");
+          g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, texture_j);
+          double intensity = 1.0;
+
+          gthree_mesh_standard_material_set_ao_map (material, texture);
+
+          if (json_object_get_member (texture_j, "strength"))
+            intensity = json_object_get_double_member (texture_j, "strength");
+          gthree_mesh_standard_material_set_ao_map_intensity (material, intensity);
+        }
+
+      if (json_object_has_member (material_j, "emissiveFactor"))
+        {
+          GdkRGBA e_color;
+
+          parse_color (json_object_get_array_member (material_j, "emissiveFactor"), &e_color);
+          gthree_mesh_standard_material_set_emissive_color (material, &e_color);
+        }
+
+      if (json_object_has_member (material_j, "emissiveTexture"))
+        {
+          JsonObject *texture_j = json_object_get_object_member (material_j, "emissiveTexture");
+          g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, texture_j);
+
+          gthree_mesh_standard_material_set_emissive_map (material, texture);
+        }
+
+      if (json_object_has_member (material_j, "doubleSided") &&
+          json_object_get_boolean_member (material_j, "doubleSided"))
+        gthree_material_set_side (GTHREE_MATERIAL (material), GTHREE_SIDE_DOUBLE);
+
+      if (json_object_has_member (material_j, "alphaMode"))
+        alpha_mode = json_object_get_string_member (material_j, "alphaMode");
+
+      if (g_strcmp0 (alpha_mode, "BLEND") == 0)
+        {
+          gthree_material_set_is_transparent (GTHREE_MATERIAL (material), TRUE);
+        }
+      else
+        {
+          gthree_material_set_is_transparent (GTHREE_MATERIAL (material), FALSE);
+          if (g_strcmp0 (alpha_mode, "MASK") == 0)
+            {
+              double alpha_test = 0.5;
+              if (json_object_has_member (material_j, "alphaCutoff"))
+                alpha_test = json_object_get_double_member (material_j, "alphaCutoff");
+              gthree_material_set_alpha_test (GTHREE_MATERIAL (material), alpha_test);
+            }
         }
 
       g_ptr_array_add (priv->materials, g_steal_pointer (&material));
@@ -1095,7 +1106,6 @@ parse_meshes (GthreeLoader *loader, JsonObject *root, GError **error)
           if (mode != 4)
             g_warning ("mode is not TRIANGLES, unsupported");
 
-          // TODO: Save material & mode here for later
           g_ptr_array_add (mesh->primitives, g_steal_pointer (&primitive));
         }
 
