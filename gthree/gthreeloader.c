@@ -7,6 +7,7 @@
 #include "gthreemesh.h"
 #include "gthreescene.h"
 #include "gthreegroup.h"
+#include "gthreeenums.h"
 #include "gthreeprivate.h"
 #include <json-glib/json-glib.h>
 
@@ -18,6 +19,11 @@ typedef struct {
   GPtrArray *nodes;
   GPtrArray *meshes;
   GPtrArray *scenes;
+  GPtrArray *samplers;
+  GPtrArray *textures;
+  GPtrArray *materials;
+
+  GthreeMaterial *default_material;
   int scene;
 } GthreeLoaderPrivate;
 
@@ -48,9 +54,23 @@ typedef struct {
   int count;
 } Accessor;
 
+
+typedef struct {
+  GthreeGeometry *geometry;
+  GthreeMaterial *material;
+  int mode;
+} Primitive;
+
 typedef struct {
   GPtrArray *primitives;
 } Mesh;
+
+typedef struct {
+  GthreeFilter mag_filter;
+  GthreeFilter min_filter;
+  GthreeWrapping wrap_s;
+  GthreeWrapping wrap_t;
+} Sampler;
 
 static void
 accessor_free (Accessor *accessor)
@@ -58,6 +78,12 @@ accessor_free (Accessor *accessor)
   if (accessor->array)
     gthree_attribute_array_unref (accessor->array);
   g_free (accessor);
+}
+
+static void
+sampler_free (Sampler *sampler)
+{
+  g_free (sampler);
 }
 
 static void
@@ -71,6 +97,14 @@ buffer_view_free (BufferView *view)
 }
 
 static void
+primitive_free (Primitive *primitive)
+{
+  g_clear_object (&primitive->geometry);
+  g_clear_object (&primitive->material);
+  g_free (primitive);
+}
+
+static void
 mesh_free (Mesh *mesh)
 {
   if (mesh->primitives)
@@ -79,8 +113,10 @@ mesh_free (Mesh *mesh)
 }
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (BufferView, buffer_view_free);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (Primitive, primitive_free);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (Mesh, mesh_free);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (Accessor, accessor_free);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (Sampler, sampler_free);
 
 static BufferView *
 buffer_view_new (GthreeLoader *loader, JsonObject *json, GError **error)
@@ -128,6 +164,7 @@ static void
 gthree_loader_init (GthreeLoader *loader)
 {
   GthreeLoaderPrivate *priv = gthree_loader_get_instance_private (loader);
+  GdkRGBA magenta= {1, 0, 1, 1};
 
   priv->buffers = g_ptr_array_new_with_free_func ((GDestroyNotify)g_bytes_unref);
   priv->buffer_views = g_ptr_array_new_with_free_func ((GDestroyNotify)buffer_view_free);
@@ -136,6 +173,12 @@ gthree_loader_init (GthreeLoader *loader)
   priv->nodes = g_ptr_array_new_with_free_func ((GDestroyNotify)g_object_unref);
   priv->meshes = g_ptr_array_new_with_free_func ((GDestroyNotify)mesh_free);
   priv->scenes = g_ptr_array_new_with_free_func ((GDestroyNotify)g_object_unref);
+  priv->samplers = g_ptr_array_new_with_free_func ((GDestroyNotify)sampler_free);
+  priv->textures = g_ptr_array_new_with_free_func ((GDestroyNotify)g_object_unref);
+  priv->materials = g_ptr_array_new_with_free_func ((GDestroyNotify)g_object_unref);
+
+  priv->default_material = GTHREE_MATERIAL (gthree_mesh_basic_material_new ());
+  gthree_mesh_basic_material_set_color (GTHREE_BASIC_MATERIAL (priv->default_material), &magenta);
 }
 
 static void
@@ -151,6 +194,11 @@ gthree_loader_finalize (GObject *obj)
   g_ptr_array_unref (priv->nodes);
   g_ptr_array_unref (priv->meshes);
   g_ptr_array_unref (priv->scenes);
+  g_ptr_array_unref (priv->samplers);
+  g_ptr_array_unref (priv->textures);
+  g_ptr_array_unref (priv->materials);
+
+  g_object_unref (priv->default_material);
 
   G_OBJECT_CLASS (gthree_loader_parent_class)->finalize (obj);
 }
@@ -245,6 +293,67 @@ get_glb_chunks (GBytes *data, GBytes **json_out, GBytes **bin_out, GError **erro
    *bin_out = g_steal_pointer (&bin);
    return TRUE;
 }
+
+
+static void
+parse_matrix (JsonArray *matrix_j, graphene_matrix_t *m)
+{
+  float floats[16];
+  int i;
+
+  // Graphene and glTL differs here:
+  // glTL:
+  //   A floating-point 4x4 transformation matrix stored in column-major order
+  // graphene:
+  //   The matrix is treated as row-major, i.e. the x, y, z, and w vectors
+  //   are rows, and elements of each vector are a column:
+  // So we have to transpos here
+
+  for (i = 0; i < 16; i++)
+    floats[i] = (float)json_array_get_double_element  (matrix_j, i);
+
+  graphene_matrix_init_from_float (m, floats);
+  graphene_matrix_transpose (m, m);
+}
+
+static void
+parse_point3d (JsonArray *point_j, graphene_point3d_t *p)
+{
+  p->x = json_array_get_double_element  (point_j, 0);
+  p->y = json_array_get_double_element  (point_j, 1);
+  p->z = json_array_get_double_element  (point_j, 2);
+}
+
+static void
+parse_vec2 (JsonArray *vec_j, graphene_vec2_t *v)
+{
+  graphene_vec2_init (v,
+                      json_array_get_double_element  (vec_j, 0),
+                      json_array_get_double_element  (vec_j, 1));
+}
+
+static void
+parse_color (JsonArray *color_j, GdkRGBA *c)
+{
+  c->red = json_array_get_double_element  (color_j, 0);
+  c->green = json_array_get_double_element (color_j, 1);
+  c->blue = json_array_get_double_element (color_j, 2);
+  if (json_array_get_length (color_j) > 3)
+    c->alpha = json_array_get_double_element (color_j, 3);
+  else
+    c->alpha = 1.0;
+}
+
+static void
+parse_quaternion (JsonArray *quat_j, graphene_quaternion_t *q)
+{
+  graphene_quaternion_init (q,
+                            json_array_get_double_element  (quat_j, 0),
+                            json_array_get_double_element  (quat_j, 1),
+                            json_array_get_double_element  (quat_j, 2),
+                            json_array_get_double_element  (quat_j, 3));
+}
+
 
 static gboolean
 parse_buffers (GthreeLoader *loader, JsonObject *root, GBytes *bin_chunk, GFile *base_path, GError **error)
@@ -510,6 +619,80 @@ parse_accessors (GthreeLoader *loader, JsonObject *root, GError **error)
   return TRUE;
 }
 
+
+static GthreeWrapping
+convert_wrapping (int wrapping)
+{
+  if (wrapping == 33071)
+    return GTHREE_WRAPPING_CLAMP;
+  if (wrapping == 33648)
+    return GTHREE_WRAPPING_MIRRORED;
+  if (wrapping == 10497)
+    return GTHREE_WRAPPING_REPEAT;
+
+  g_warning ("unknown wrapping %d\n", wrapping);
+  return GTHREE_WRAPPING_REPEAT;
+}
+
+static GthreeFilter
+convert_filter (int filter)
+{
+  if (filter == 9728)
+    return GTHREE_FILTER_NEAREST;
+  if (filter == 9729)
+    return GTHREE_FILTER_LINEAR;
+  if (filter == 9984)
+    return GTHREE_FILTER_NEAREST_MIPMAP_NEAREST;
+  if (filter == 9985)
+    return GTHREE_FILTER_LINEAR_MIPMAP_NEAREST;
+  if (filter == 9986)
+    return GTHREE_FILTER_NEAREST_MIPMAP_LINEAR;
+  if (filter == 9987)
+    return GTHREE_FILTER_LINEAR_MIPMAP_LINEAR;
+
+  g_warning ("unknown filter %d\n", filter);
+  return GTHREE_FILTER_NEAREST;
+}
+
+static gboolean
+parse_samplers (GthreeLoader *loader, JsonObject *root, GError **error)
+{
+  GthreeLoaderPrivate *priv = gthree_loader_get_instance_private (loader);
+  JsonArray *samplers_j = NULL;
+  guint len;
+  int i;
+
+  if (!json_object_has_member (root, "samplers"))
+    return TRUE;
+
+  samplers_j = json_object_get_array_member (root, "samplers");
+  len = json_array_get_length (samplers_j);
+  for (i = 0; i < len; i++)
+    {
+      JsonObject *sampler_j = json_array_get_object_element (samplers_j, i);
+      g_autoptr(Sampler) sampler = g_new0 (Sampler, 1);
+
+      sampler->mag_filter = GTHREE_FILTER_LINEAR;
+      sampler->min_filter = GTHREE_FILTER_LINEAR_MIPMAP_LINEAR;
+      sampler->wrap_s = GTHREE_WRAPPING_REPEAT;
+      sampler->wrap_t = GTHREE_WRAPPING_REPEAT;
+
+      if (json_object_has_member (sampler_j, "magFilter"))
+        sampler->mag_filter = convert_filter (json_object_get_int_member (sampler_j, "magFilter"));
+      if (json_object_has_member (sampler_j, "minFilter"))
+        sampler->min_filter = convert_filter (json_object_get_int_member (sampler_j, "minFilter"));
+      if (json_object_has_member (sampler_j, "wrapS"))
+        sampler->wrap_s = convert_wrapping (json_object_get_int_member (sampler_j, "wrapS"));
+      if (json_object_has_member (sampler_j, "wrapT"))
+        sampler->wrap_t = convert_wrapping (json_object_get_int_member (sampler_j, "wrapT"));
+
+      g_ptr_array_add (priv->samplers, g_steal_pointer (&sampler));
+    }
+
+  return TRUE;
+}
+
+
 static gboolean
 parse_images (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **error)
 {
@@ -575,43 +758,182 @@ parse_images (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError *
   return TRUE;
 }
 
-static void
-parse_matrix (JsonArray *matrix_j, graphene_matrix_t *m)
+static gboolean
+parse_textures (GthreeLoader *loader, JsonObject *root, GError **error)
 {
-  float floats[16];
+  GthreeLoaderPrivate *priv = gthree_loader_get_instance_private (loader);
+  JsonArray *textures_j = NULL;
+  guint len;
   int i;
 
-  // Graphene and glTL differs here:
-  // glTL:
-  //   A floating-point 4x4 transformation matrix stored in column-major order
-  // graphene:
-  //   The matrix is treated as row-major, i.e. the x, y, z, and w vectors
-  //   are rows, and elements of each vector are a column:
-  // So we have to transpos here
+  if (!json_object_has_member (root, "textures"))
+    return TRUE;
 
-  for (i = 0; i < 16; i++)
-    floats[i] = (float)json_array_get_double_element  (matrix_j, i);
+  textures_j = json_object_get_array_member (root, "textures");
+  len = json_array_get_length (textures_j);
+  for (i = 0; i < len; i++)
+    {
+      JsonObject *texture_j = json_array_get_object_element (textures_j, i);
+      g_autoptr(GthreeTexture) texture = NULL;
+      int sampler_idx, source_idx;
+      Sampler *sampler;
+      GdkPixbuf *image;
 
-  graphene_matrix_init_from_float (m, floats);
-  graphene_matrix_transpose (m, m);
+      sampler_idx = json_object_get_int_member (texture_j, "sampler");
+      source_idx = json_object_get_int_member (texture_j, "source");
+
+      image = g_ptr_array_index (priv->images, source_idx);
+      sampler = g_ptr_array_index (priv->samplers, sampler_idx);
+
+      texture = gthree_texture_new (image);
+      gthree_texture_set_wrap_s (texture, sampler->wrap_s);
+      gthree_texture_set_wrap_t (texture, sampler->wrap_t);
+      gthree_texture_set_mag_filter (texture, sampler->mag_filter);
+      gthree_texture_set_min_filter (texture, sampler->min_filter);
+
+      g_ptr_array_add (priv->textures, g_steal_pointer (&texture));
+    }
+
+  return TRUE;
 }
 
-static void
-parse_point3d (JsonArray *point_j, graphene_point3d_t *p)
+static GthreeTexture *
+parse_texture_ref (GthreeLoader *loader, JsonObject *texture_def)
 {
-  p->x = json_array_get_double_element  (point_j, 0);
-  p->y = json_array_get_double_element  (point_j, 1);
-  p->z = json_array_get_double_element  (point_j, 2);
+  GthreeLoaderPrivate *priv = gthree_loader_get_instance_private (loader);
+  gint64 index = json_object_get_int_member (texture_def, "index");
+
+  return g_object_ref (g_ptr_array_index (priv->textures, index));
 }
 
-static void
-parse_quaternion (JsonArray *quat_j, graphene_quaternion_t *q)
+static gboolean
+parse_materials (GthreeLoader *loader, JsonObject *root, GError **error)
 {
-  graphene_quaternion_init (q,
-                            json_array_get_double_element  (quat_j, 0),
-                            json_array_get_double_element  (quat_j, 1),
-                            json_array_get_double_element  (quat_j, 2),
-                            json_array_get_double_element  (quat_j, 3));
+  GthreeLoaderPrivate *priv = gthree_loader_get_instance_private (loader);
+  JsonArray *materials_j = NULL;
+  guint len;
+  int i;
+
+  if (!json_object_has_member (root, "materials"))
+    return TRUE;
+
+  materials_j = json_object_get_array_member (root, "materials");
+  len = json_array_get_length (materials_j);
+  for (i = 0; i < len; i++)
+    {
+      JsonObject *material_j = json_array_get_object_element (materials_j, i);
+      g_autoptr(GthreeMeshStandardMaterial) material = NULL;
+      JsonObject *pbr = NULL;
+      GdkRGBA color = {1.0, 1.0, 1.0, 1.0};
+      double metallic_factor = 1.0, roughness_factor = 1.0;
+      const char *alpha_mode = "OPAQUE";
+
+      if (json_object_has_member (material_j, "pbrMetallicRoughness"))
+        pbr = json_object_get_object_member (material_j, "pbrMetallicRoughness");
+
+      if (pbr && json_object_has_member (pbr, "baseColorFactor"))
+        parse_color (json_object_get_array_member (pbr, "baseColorFactor"), &color);
+      if (pbr && json_object_has_member (pbr, "metallicFactor"))
+        metallic_factor = json_object_get_double_member (pbr, "metallicFactor");
+      if (pbr && json_object_has_member (pbr, "roughnessFactor"))
+        roughness_factor = json_object_get_double_member (pbr, "roughnessFactor");
+
+      material = gthree_mesh_standard_material_new ();
+
+      gthree_mesh_standard_material_set_color (material, &color);
+      gthree_material_set_opacity (GTHREE_MATERIAL (material), color.alpha);
+      gthree_mesh_standard_material_set_roughness (material, roughness_factor);
+      gthree_mesh_standard_material_set_metalness (material, metallic_factor);
+
+      if (pbr)
+        {
+          if (json_object_has_member (pbr, "baseColorTexture"))
+            {
+              g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, json_object_get_object_member (pbr, "baseColorTexture"));
+              gthree_mesh_standard_material_set_map (material, texture);
+            }
+
+          if (json_object_has_member (pbr, "metallicRoughnessTexture"))
+            {
+              g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, json_object_get_object_member (pbr, "metallicRoughnessTexture"));
+              gthree_mesh_standard_material_set_roughness_map (material, texture);
+              gthree_mesh_standard_material_set_metalness_map (material, texture);
+            }
+
+          if (json_object_has_member (pbr, "normalTexture"))
+            {
+              JsonObject *texture_j = json_object_get_object_member (pbr, "normalTexture");
+              g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, texture_j);
+              graphene_vec2_t normal_scale;
+
+              gthree_mesh_standard_material_set_normal_map (material, texture);
+
+              if (json_object_has_member (texture_j, "scale"))
+                parse_vec2 (json_object_get_array_member (texture_j, "scale"), &normal_scale);
+              else
+                graphene_vec2_init (&normal_scale, 1, 1);
+
+              gthree_mesh_standard_material_set_normal_map_scale (material, &normal_scale);
+            }
+
+          if (json_object_has_member (pbr, "occlusionTexture"))
+            {
+              JsonObject *texture_j = json_object_get_object_member (pbr, "occlusionTexture");
+              g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, texture_j);
+              double intensity = 1.0;
+
+              gthree_mesh_standard_material_set_ao_map (material, texture);
+
+              if (json_object_get_member (texture_j, "strength"))
+                intensity = json_object_get_double_member (texture_j, "strength");
+              gthree_mesh_standard_material_set_ao_map_intensity (material, intensity);
+            }
+
+          if (json_object_has_member (pbr, "emissiveFactor"))
+            {
+              GdkRGBA e_color;
+
+              parse_color (json_object_get_array_member (pbr, "emissiveFactor"), &e_color);
+              gthree_mesh_standard_material_set_emissive_color (material, &e_color);
+            }
+
+          if (json_object_has_member (pbr, "emissiveTexture"))
+            {
+              JsonObject *texture_j = json_object_get_object_member (pbr, "emissiveTexture");
+              g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, texture_j);
+
+              gthree_mesh_standard_material_set_emissive_map (material, texture);
+            }
+
+          if (json_object_has_member (pbr, "doubleSided") &&
+              json_object_get_boolean_member (pbr, "doubleSided"))
+            gthree_material_set_side (GTHREE_MATERIAL (material), GTHREE_SIDE_DOUBLE);
+
+          if (json_object_has_member (pbr, "alphaMode"))
+            alpha_mode = json_object_get_string_member (pbr, "alphaMode");
+
+          if (g_strcmp0 (alpha_mode, "BLEND") == 0)
+            {
+              gthree_material_set_is_transparent (GTHREE_MATERIAL (material), TRUE);
+            }
+          else
+            {
+              gthree_material_set_is_transparent (GTHREE_MATERIAL (material), FALSE);
+              if (g_strcmp0 (alpha_mode, "MASK") == 0)
+                {
+                  double alpha_test = 0.5;
+                  if (json_object_has_member (pbr, "alphaCutoff"))
+                    alpha_test = json_object_get_double_member (pbr, "alphaCutoff");
+                  gthree_material_set_alpha_test (GTHREE_MATERIAL (material), alpha_test);
+                }
+            }
+
+        }
+
+      g_ptr_array_add (priv->materials, g_steal_pointer (&material));
+    }
+
+  return TRUE;
 }
 
 static const char *
@@ -656,19 +978,21 @@ parse_meshes (GthreeLoader *loader, JsonObject *root, GError **error)
       JsonArray *primitives;
       int primitives_len, j;
       g_autoptr(Mesh) mesh = g_new0 (Mesh, 1);
-      mesh->primitives = g_ptr_array_new_with_free_func (g_object_unref);
+      mesh->primitives = g_ptr_array_new_with_free_func ((GDestroyNotify)primitive_free);
 
       primitives = json_object_get_array_member (mesh_j, "primitives");
       primitives_len = json_array_get_length (primitives);
       for (j = 0; j < primitives_len; j++)
         {
-          JsonObject *primitive = json_array_get_object_element (primitives, j);
-          JsonObject *attributes = json_object_get_object_member (primitive, "attributes");
-          g_autoptr(GthreeGeometry) geometry = gthree_geometry_new ();
+          JsonObject *primitive_j = json_array_get_object_element (primitives, j);
+          JsonObject *attributes = json_object_get_object_member (primitive_j, "attributes");
+          g_autoptr(Primitive) primitive = g_new0 (Primitive, 1);
           int mode = 4;
           int material = -1;
           g_autoptr(GList) members = json_object_get_members (attributes);
           GList *l;
+
+          primitive->geometry = gthree_geometry_new ();
 
           for (l = members; l != NULL; l = l->next)
             {
@@ -684,12 +1008,12 @@ parse_meshes (GthreeLoader *loader, JsonObject *root, GError **error)
                                                                        accessor->item_size,
                                                                        accessor->item_offset,
                                                                        accessor->count);
-              gthree_geometry_add_attribute (geometry, attribute);
+              gthree_geometry_add_attribute (primitive->geometry, attribute);
             }
 
-          if (json_object_has_member (primitive, "indices"))
+          if (json_object_has_member (primitive_j, "indices"))
             {
-              int index_index = json_object_get_int_member (primitive, "indices");
+              int index_index = json_object_get_int_member (primitive_j, "indices");
               g_autoptr(GthreeAttribute) attribute = NULL;
               Accessor *accessor = g_ptr_array_index (priv->accessors, index_index);
 
@@ -699,20 +1023,25 @@ parse_meshes (GthreeLoader *loader, JsonObject *root, GError **error)
                                                                        accessor->item_size,
                                                                        accessor->item_offset,
                                                                        accessor->count);
-              gthree_geometry_set_index (geometry, attribute);
+              gthree_geometry_set_index (primitive->geometry, attribute);
             }
 
-          if (json_object_has_member (primitive, "mode"))
-            mode = json_object_get_int_member (primitive, "mode");
+          if (json_object_has_member (primitive_j, "mode"))
+            mode = json_object_get_int_member (primitive_j, "mode");
 
-          if (json_object_has_member (primitive, "material"))
-            material = json_object_get_int_member (primitive, "material");
+          if (json_object_has_member (primitive_j, "material"))
+            material = json_object_get_int_member (primitive_j, "material");
+
+          if (material != -1)
+            primitive->material = g_object_ref (g_ptr_array_index (priv->materials, material));
+          else
+            primitive->material = g_object_ref (priv->default_material);
 
           if (mode != 4)
             g_warning ("mode is not TRIANGLES, unsupported");
 
           // TODO: Save material & mode here for later
-          g_ptr_array_add (mesh->primitives, g_steal_pointer (&geometry));
+          g_ptr_array_add (mesh->primitives, g_steal_pointer (&primitive));
         }
 
       g_ptr_array_add (priv->meshes, g_steal_pointer (&mesh));
@@ -754,15 +1083,9 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
 
           for (j = 0; j < mesh->primitives->len; j++)
             {
-              GthreeGeometry *geometry = g_ptr_array_index (mesh->primitives, j);
-              //g_autoptr(GthreeMaterial) material = GTHREE_MATERIAL (gthree_mesh_standard_material_new ())
-              g_autoptr(GthreeMaterial) material = GTHREE_MATERIAL (gthree_mesh_basic_material_new ());
-              GdkRGBA magenta= {1, 0, 1, 1};
+              Primitive *primitive = g_ptr_array_index (mesh->primitives, j);
 
-              gthree_mesh_basic_material_set_color (GTHREE_BASIC_MATERIAL (material), &magenta);
-
-              // TODO: Find real material
-              GthreeMesh *mesh = gthree_mesh_new (geometry, GTHREE_MATERIAL (material));
+              GthreeMesh *mesh = gthree_mesh_new (primitive->geometry, primitive->material);
 
               gthree_object_add_child (node, GTHREE_OBJECT (mesh));
             }
@@ -929,7 +1252,16 @@ gthree_loader_parse_gltf (GBytes *data, GFile *base_path, GError **error)
   if (!parse_accessors (loader, root, error))
     return NULL;
 
+  if (!parse_samplers (loader, root, error))
+    return NULL;
+
   if (!parse_images (loader, root, base_path, error))
+    return NULL;
+
+  if (!parse_textures (loader, root, error))
+    return NULL;
+
+  if (!parse_materials (loader, root, error))
     return NULL;
 
   if (!parse_meshes (loader, root, error))
