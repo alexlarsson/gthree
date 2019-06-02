@@ -3,6 +3,7 @@
 #include "gthreeloader.h"
 #include "gthreeattribute.h"
 #include "gthreemeshstandardmaterial.h"
+#include "gthreeperspectivecamera.h"
 #include "gthreemeshbasicmaterial.h"
 #include "gthreemesh.h"
 #include "gthreescene.h"
@@ -12,7 +13,7 @@
 #include <json-glib/json-glib.h>
 
 /* TODO:
- * Load cameras
+ * Orthographic cameras
  * Handle primitive draw_mode != triangles
  * Try grouping primitives into geometry groups if possible
  * Handle skin weights
@@ -34,6 +35,7 @@ typedef struct {
   GPtrArray *samplers;
   GPtrArray *textures;
   GPtrArray *materials;
+  GPtrArray *cameras;
 
   GthreeMaterial *default_material;
   int scene;
@@ -65,6 +67,23 @@ typedef struct {
   int item_offset;  // in array->type size units
   int count;
 } Accessor;
+
+typedef struct {
+  gboolean perspective;
+
+  // perspective
+  float aspect_ratio;
+  float yfov;
+
+  // ortog
+  float xmag;
+  float ymag;
+
+  //shared
+  float zfar;
+  float znear;
+
+} Camera;
 
 
 typedef struct {
@@ -99,6 +118,12 @@ sampler_free (Sampler *sampler)
 }
 
 static void
+camera_free (Camera *camera)
+{
+  g_free (camera);
+}
+
+static void
 buffer_view_free (BufferView *view)
 {
   if (view->array)
@@ -129,6 +154,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (Primitive, primitive_free);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (Mesh, mesh_free);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (Accessor, accessor_free);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (Sampler, sampler_free);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (Camera, camera_free);
 
 static BufferView *
 buffer_view_new (GthreeLoader *loader, JsonObject *json, GError **error)
@@ -188,6 +214,7 @@ gthree_loader_init (GthreeLoader *loader)
   priv->samplers = g_ptr_array_new_with_free_func ((GDestroyNotify)sampler_free);
   priv->textures = g_ptr_array_new_with_free_func ((GDestroyNotify)g_object_unref);
   priv->materials = g_ptr_array_new_with_free_func ((GDestroyNotify)g_object_unref);
+  priv->cameras = g_ptr_array_new_with_free_func ((GDestroyNotify)camera_free);
 
   priv->default_material = GTHREE_MATERIAL (gthree_mesh_basic_material_new ());
   gthree_mesh_basic_material_set_color (GTHREE_BASIC_MATERIAL (priv->default_material), &magenta);
@@ -209,6 +236,7 @@ gthree_loader_finalize (GObject *obj)
   g_ptr_array_unref (priv->samplers);
   g_ptr_array_unref (priv->textures);
   g_ptr_array_unref (priv->materials);
+  g_ptr_array_unref (priv->cameras);
 
   g_object_unref (priv->default_material);
 
@@ -1115,6 +1143,66 @@ parse_meshes (GthreeLoader *loader, JsonObject *root, GError **error)
   return TRUE;
 }
 
+static gboolean
+parse_cameras (GthreeLoader *loader, JsonObject *root, GError **error)
+{
+  GthreeLoaderPrivate *priv = gthree_loader_get_instance_private (loader);
+  JsonArray *cameras_j = NULL;
+  guint len;
+  int i;
+
+  if (!json_object_has_member (root, "cameras"))
+    return TRUE;
+
+  cameras_j = json_object_get_array_member (root, "cameras");
+  len = json_array_get_length (cameras_j);
+  for (i = 0; i < len; i++)
+    {
+      JsonObject *camera_j = json_array_get_object_element (cameras_j, i);
+      g_autoptr(Camera) camera = g_new0 (Camera, 1);
+      const char *type = json_object_get_string_member (camera_j, "type");
+
+      if (strcmp (type, "perspective") == 0)
+        {
+          JsonObject *perspective = json_object_get_object_member (camera_j, "perspective");
+
+          camera->perspective = TRUE;
+
+          camera->yfov = json_object_get_double_member (perspective, "yfov");
+          camera->znear = json_object_get_double_member (perspective, "znear");
+
+          camera->aspect_ratio = 1;
+          if (json_object_has_member (perspective, "aspectRatio"))
+            camera->aspect_ratio = json_object_get_double_member (perspective, "aspectRatio");
+
+          camera->zfar = 2e6;
+          if (json_object_has_member (perspective, "zfar"))
+            camera->zfar = json_object_get_double_member (perspective, "zfar");
+        }
+      else if (strcmp (type, "orthographic") == 0)
+        {
+          JsonObject *orthographic = json_object_get_object_member (camera_j, "orthographic");
+
+          camera->perspective = FALSE;
+
+          camera->xmag = json_object_get_double_member (orthographic, "xmag");
+          camera->ymag = json_object_get_double_member (orthographic, "ymag");
+          camera->znear = json_object_get_double_member (orthographic, "znear");
+          camera->zfar = json_object_get_double_member (orthographic, "zfar");
+        }
+      else
+        {
+          g_set_error (error, GTHREE_LOADER_ERROR, GTHREE_LOADER_ERROR_FAIL, "Unsupported camera type %s", type);
+          return FALSE;
+        }
+
+
+
+      g_ptr_array_add (priv->cameras, g_steal_pointer (&camera));
+    }
+
+  return TRUE;
+}
 
 static gboolean
 parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **error)
@@ -1159,7 +1247,18 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
 
       if (json_object_has_member (node_j, "camera"))
         {
-          // TODO
+          gint64 camera_id = json_object_get_int_member (node_j, "camera");
+          Camera *camera = g_ptr_array_index (priv->cameras, camera_id);
+          GthreeCamera *camera_node = NULL;
+
+          if (camera->perspective)
+            camera_node = (GthreeCamera *)gthree_perspective_camera_new (camera->yfov, camera->aspect_ratio,
+                                                                         camera->znear, camera->zfar);
+          else
+            g_warning ("Unsupported orthographic camera");
+
+          if (camera_node)
+            gthree_object_add_child (node, GTHREE_OBJECT (camera_node));
         }
 
       if (json_object_has_member (node_j, "skin"))
@@ -1333,6 +1432,9 @@ gthree_loader_parse_gltf (GBytes *data, GFile *base_path, GError **error)
     return NULL;
 
   if (!parse_meshes (loader, root, error))
+    return NULL;
+
+  if (!parse_cameras (loader, root, error))
     return NULL;
 
   if (!parse_nodes (loader, root, base_path, error))
