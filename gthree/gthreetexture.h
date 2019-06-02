@@ -43,6 +43,18 @@ gboolean               gthree_texture_get_generate_mipmaps (GthreeTexture *textu
 void                   gthree_texture_set_mapping          (GthreeTexture *texture,
                                                             GthreeMapping  mapping);
 GthreeMapping          gthree_texture_get_mapping          (GthreeTexture *texture);
+void                   gthree_texture_set_wrap_s           (GthreeTexture *texture,
+                                                            GthreeWrapping wrap_s);
+GthreeWrapping         gthree_texture_get_wrap_s           (GthreeTexture *texture);
+void                   gthree_texture_set_wrap_t           (GthreeTexture *texture,
+                                                            GthreeWrapping wrap_t);
+GthreeWrapping         gthree_texture_get_wrap_t           (GthreeTexture *texture);
+void                   gthree_texture_set_mag_filter       (GthreeTexture *texture,
+                                                            GthreeFilter   mag_filter);
+GthreeFilter           gthree_texture_get_mag_filter       (GthreeTexture *texture);
+void                   gthree_texture_set_min_filter       (GthreeTexture *texture,
+                                                            GthreeFilter   min_filter);
+GthreeFilter           gthree_texture_get_min_filter       (GthreeTexture *texture);
 
 G_END_DECLS
 

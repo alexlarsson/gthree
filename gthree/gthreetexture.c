@@ -200,6 +200,74 @@ gthree_texture_get_mapping (GthreeTexture *texture)
   return priv->mapping;
 }
 
+void
+gthree_texture_set_wrap_s (GthreeTexture *texture,
+                           GthreeWrapping wrap_s)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  priv->wrap_s = wrap_s;
+}
+
+GthreeWrapping
+gthree_texture_get_wrap_s (GthreeTexture *texture)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  return priv->wrap_s;
+}
+
+void
+gthree_texture_set_wrap_t (GthreeTexture *texture,
+                           GthreeWrapping wrap_t)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  priv->wrap_t = wrap_t;
+}
+
+GthreeWrapping
+gthree_texture_get_wrap_t (GthreeTexture *texture)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  return priv->wrap_t;
+}
+
+void
+gthree_texture_set_mag_filter (GthreeTexture *texture,
+                               GthreeFilter   mag_filter)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  priv->mag_filter = mag_filter;
+}
+
+GthreeFilter
+gthree_texture_get_mag_filter (GthreeTexture *texture)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  return priv->mag_filter;
+}
+
+void
+gthree_texture_set_min_filter (GthreeTexture *texture,
+                               GthreeFilter   min_filter)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  priv->min_filter = min_filter;
+}
+
+GthreeFilter
+gthree_texture_get_min_filter (GthreeTexture *texture)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  return priv->min_filter;
+}
+
 gboolean
 gthree_texture_get_generate_mipmaps (GthreeTexture *texture)
 {
