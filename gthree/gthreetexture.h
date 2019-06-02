@@ -55,6 +55,9 @@ GthreeFilter           gthree_texture_get_mag_filter       (GthreeTexture *textu
 void                   gthree_texture_set_min_filter       (GthreeTexture *texture,
                                                             GthreeFilter   min_filter);
 GthreeFilter           gthree_texture_get_min_filter       (GthreeTexture *texture);
+void                   gthree_texture_set_flip_y           (GthreeTexture *texture,
+                                                            gboolean       flip_y);
+gboolean               gthree_texture_get_flip_y           (GthreeTexture *texture);
 
 G_END_DECLS
 

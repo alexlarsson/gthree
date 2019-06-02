@@ -201,6 +201,23 @@ gthree_texture_get_mapping (GthreeTexture *texture)
 }
 
 void
+gthree_texture_set_flip_y (GthreeTexture *texture,
+                           gboolean       flip_y)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  priv->flip_y = flip_y;
+}
+
+gboolean
+gthree_texture_get_flip_y (GthreeTexture *texture)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  return priv->flip_y;
+}
+
+void
 gthree_texture_set_wrap_s (GthreeTexture *texture,
                            GthreeWrapping wrap_s)
 {
