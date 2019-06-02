@@ -133,7 +133,7 @@ main (int argc, char *argv[])
 
   scene = init_scene (argc == 2 ? argv[1] : NULL);
 
-  cameras = NULL;//gthree_object_find_by_type (GTHREE_OBJECT (scene), GTHREE_TYPE_CAMERA);
+  cameras = gthree_object_find_by_type (GTHREE_OBJECT (scene), GTHREE_TYPE_CAMERA);
 
   if (cameras == NULL)
     {
