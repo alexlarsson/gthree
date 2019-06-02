@@ -84,15 +84,6 @@ tick (GtkWidget     *widget,
   frame_time = gdk_frame_clock_get_frame_time (frame_clock);
   angle = frame_time / 4000000.0;
 
-  gthree_object_set_position (GTHREE_OBJECT (camera),
-                              graphene_point3d_init (&pos,
-                                                     cos (angle) * 10,
-                                                     2,
-                                                     sin (angle) * 10));
-  gthree_object_look_at (GTHREE_OBJECT (camera),
-                         graphene_point3d_init (&pos, 0, 2, 0));
-
-
   gthree_object_set_position (GTHREE_OBJECT (point_light),
                               graphene_point3d_init (&pos,
                                                      sin (angle * 7) * 300,
@@ -119,6 +110,7 @@ main (int argc, char *argv[])
   GtkWidget *window, *box, *hbox, *button, *area;
   GthreeScene *scene;
   graphene_point3d_t pos;
+  GList *cameras;
 
   gtk_init (&argc, &argv);
 
@@ -139,11 +131,24 @@ main (int argc, char *argv[])
   gtk_widget_show (hbox);
 
   scene = init_scene (argc == 2 ? argv[1] : NULL);
-  camera = gthree_perspective_camera_new (30, 1, 1, 10000);
-  gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
 
-  gthree_object_set_position (GTHREE_OBJECT (camera),
-                              graphene_point3d_init (&pos, 0, 2, 10));
+  cameras = NULL;//gthree_object_find_by_type (GTHREE_OBJECT (scene), GTHREE_TYPE_CAMERA);
+
+  if (cameras == NULL)
+    {
+      g_warning ("No camera, adding default one");
+      camera = gthree_perspective_camera_new (37, 1.5, 1, 10000);
+      gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
+
+      gthree_object_set_position (GTHREE_OBJECT (camera),
+                                  graphene_point3d_init (&pos, 10, 2, 4));
+      gthree_object_look_at (GTHREE_OBJECT (camera),
+                             graphene_point3d_init (&pos, 0, 0, 0));
+
+      cameras = g_list_prepend (cameras, camera);
+    }
+
+  camera = cameras->data; // Use first camera
 
   area = gthree_area_new (scene, GTHREE_CAMERA (camera));
   g_signal_connect (area, "resize", G_CALLBACK (resize_area), camera);
