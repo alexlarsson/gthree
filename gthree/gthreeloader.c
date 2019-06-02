@@ -13,6 +13,8 @@
 #include <json-glib/json-glib.h>
 
 /* TODO:
+ * object.set_matrix need to decompose position, etc. or we can't expect e.g. get_position to work.
+ * Need to handle extra material properties, as per GLTFParser.assignFinalMaterial()
  * Orthographic cameras
  * Handle primitive draw_mode != triangles
  * Try grouping primitives into geometry groups if possible
@@ -871,14 +873,23 @@ parse_textures (GthreeLoader *loader, JsonObject *root, GError **error)
       JsonObject *texture_j = json_array_get_object_element (textures_j, i);
       g_autoptr(GthreeTexture) texture = NULL;
       int sampler_idx, source_idx;
+      Sampler default_sampler = { GTHREE_FILTER_LINEAR, GTHREE_FILTER_LINEAR, GTHREE_WRAPPING_REPEAT, GTHREE_WRAPPING_REPEAT};
       Sampler *sampler;
       GdkPixbuf *image;
 
-      sampler_idx = json_object_get_int_member (texture_j, "sampler");
+      if (json_object_has_member(texture_j, "sampler"))
+        {
+          sampler_idx = json_object_get_int_member (texture_j, "sampler");
+          sampler = g_ptr_array_index (priv->samplers, sampler_idx);
+        }
+      else
+        {
+          sampler = &default_sampler;
+        }
+
       source_idx = json_object_get_int_member (texture_j, "source");
 
       image = g_ptr_array_index (priv->images, source_idx);
-      sampler = g_ptr_array_index (priv->samplers, sampler_idx);
 
       texture = gthree_texture_new (image);
       gthree_texture_set_wrap_s (texture, sampler->wrap_s);
@@ -1204,6 +1215,12 @@ parse_cameras (GthreeLoader *loader, JsonObject *root, GError **error)
   return TRUE;
 }
 
+static float
+rad_to_deg (float rad)
+{
+  return rad * 180.0 / G_PI;
+}
+
 static gboolean
 parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **error)
 {
@@ -1252,7 +1269,7 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
           GthreeCamera *camera_node = NULL;
 
           if (camera->perspective)
-            camera_node = (GthreeCamera *)gthree_perspective_camera_new (camera->yfov, camera->aspect_ratio,
+            camera_node = (GthreeCamera *)gthree_perspective_camera_new (rad_to_deg (camera->yfov), camera->aspect_ratio,
                                                                          camera->znear, camera->zfar);
           else
             g_warning ("Unsupported orthographic camera");
@@ -1275,7 +1292,8 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
 
           parse_matrix (matrix_j, &m);
 
-          g_warning ("Not supporting matrix transformations atm");
+          gthree_object_set_matrix_auto_update (node, FALSE);
+          gthree_object_set_matrix (node, &m);
         }
       else
         {
@@ -1294,11 +1312,11 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
               JsonArray *rotation_j = json_object_get_array_member (node_j, "rotation");
               parse_quaternion (rotation_j, &rotate);
             }
-        }
 
-      gthree_object_set_position (node, &translate);
-      gthree_object_set_quaternion (node, &rotate);
-      gthree_object_set_scale (node, &scale);
+          gthree_object_set_position (node, &translate);
+          gthree_object_set_quaternion (node, &rotate);
+          gthree_object_set_scale (node, &scale);
+        }
 
       g_ptr_array_add (priv->nodes, g_steal_pointer (&node));
     }
