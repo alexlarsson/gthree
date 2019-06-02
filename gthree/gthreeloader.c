@@ -14,7 +14,6 @@
 
 /* TODO:
  * object.set_matrix need to decompose position, etc. or we can't expect e.g. get_position to work.
- * Need to handle extra material properties, as per GLTFParser.assignFinalMaterial()
  * Orthographic cameras
  * Handle primitive draw_mode != triangles
  * Try grouping primitives into geometry groups if possible
@@ -38,6 +37,8 @@ typedef struct {
   GPtrArray *textures;
   GPtrArray *materials;
   GPtrArray *cameras;
+
+  GHashTable *final_materials;
 
   GthreeMaterial *default_material;
   int scene;
@@ -87,6 +88,57 @@ typedef struct {
 
 } Camera;
 
+
+typedef struct {
+  GthreeMaterial *orig_material;
+  gboolean use_vertex_tangents;
+  gboolean use_vertex_colors;
+  gboolean use_skinning;
+  gboolean use_morph_targets;
+  gboolean use_morph_normals;
+} MaterialCacheKey;
+
+static void
+material_cache_key_free (MaterialCacheKey *cache_key)
+{
+  g_object_unref (cache_key->orig_material);
+  g_free (cache_key);
+}
+
+static gboolean
+material_cache_key_equal (MaterialCacheKey *a,
+                          MaterialCacheKey *b)
+{
+  return
+    a->orig_material == b->orig_material &&
+    a->use_vertex_tangents == b->use_vertex_tangents &&
+    a->use_vertex_colors == b->use_vertex_colors &&
+    a->use_skinning == b->use_skinning &&
+    a->use_morph_targets == b->use_morph_targets &&
+    a->use_morph_normals == b->use_morph_normals;
+}
+
+static MaterialCacheKey *
+material_cache_key_clone (MaterialCacheKey *cache_key)
+{
+  MaterialCacheKey *clone = g_new0 (MaterialCacheKey, 1);
+  *clone = *cache_key;
+  g_object_ref (clone->orig_material);
+
+  return clone;
+}
+
+static guint
+material_cache_key_hash (MaterialCacheKey *key)
+{
+  return
+    g_direct_hash (key->orig_material) |
+    key->use_vertex_tangents ? 0x0001 : 0 |
+    key->use_vertex_colors   ? 0x0002 : 0 |
+    key->use_skinning        ? 0x0004 : 0 |
+    key->use_morph_targets   ? 0x0008 : 0 |
+    key->use_morph_normals   ? 0x0010 : 0;
+}
 
 typedef struct {
   GthreeGeometry *geometry;
@@ -218,6 +270,11 @@ gthree_loader_init (GthreeLoader *loader)
   priv->materials = g_ptr_array_new_with_free_func ((GDestroyNotify)g_object_unref);
   priv->cameras = g_ptr_array_new_with_free_func ((GDestroyNotify)camera_free);
 
+  priv->final_materials = g_hash_table_new_full ((GHashFunc)material_cache_key_hash,
+                                                 (GEqualFunc)material_cache_key_equal,
+                                                 (GDestroyNotify)material_cache_key_free,
+                                                 g_object_unref);
+
   priv->default_material = GTHREE_MATERIAL (gthree_mesh_basic_material_new ());
   gthree_mesh_basic_material_set_color (GTHREE_BASIC_MATERIAL (priv->default_material), &magenta);
 }
@@ -239,6 +296,8 @@ gthree_loader_finalize (GObject *obj)
   g_ptr_array_unref (priv->textures);
   g_ptr_array_unref (priv->materials);
   g_ptr_array_unref (priv->cameras);
+
+  g_hash_table_unref (priv->final_materials);
 
   g_object_unref (priv->default_material);
 
@@ -1254,8 +1313,39 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
           for (j = 0; j < mesh->primitives->len; j++)
             {
               Primitive *primitive = g_ptr_array_index (mesh->primitives, j);
+              GthreeMaterial *base_material = primitive->material;
+              GthreeMaterial *material;
+              MaterialCacheKey cache_key = { base_material };
+              GthreeMesh *mesh;
 
-              GthreeMesh *mesh = gthree_mesh_new (primitive->geometry, primitive->material);
+              cache_key.use_vertex_tangents =
+                gthree_geometry_has_attribute (primitive->geometry,
+                                               gthree_attribute_name_get_for_static ("tangent"));
+              cache_key.use_vertex_colors =
+                gthree_geometry_has_attribute (primitive->geometry,
+                                               gthree_attribute_name_get_for_static ("color"));
+
+              material = g_hash_table_lookup (priv->final_materials, &cache_key);
+              if (material == NULL)
+                {
+                  MaterialCacheKey *cache_key_copy = material_cache_key_clone (&cache_key);
+
+                  material = gthree_material_clone (base_material);
+                  if (cache_key.use_vertex_colors)
+                    gthree_material_set_vertex_colors (material, TRUE);
+                  //TODO: if (cache_key.use_vertex_tangents)
+
+                  g_hash_table_insert (priv->final_materials, cache_key_copy, material);
+                }
+
+              /* TODO: more cache keys
+               * var useFlatShading = geometry.attributes.normal === undefined;
+               * var useSkinning = mesh.isSkinnedMesh === true;
+               * var useMorphTargets = Object.keys( geometry.morphAttributes ).length > 0;
+               * var useMorphNormals = useMorphTargets && geometry.morphAttributes.normal !== undefined;
+               */
+
+              mesh = gthree_mesh_new (primitive->geometry, g_object_ref (material));
 
               gthree_object_add_child (node, GTHREE_OBJECT (mesh));
             }
