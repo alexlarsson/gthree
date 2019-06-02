@@ -955,6 +955,7 @@ parse_textures (GthreeLoader *loader, JsonObject *root, GError **error)
       gthree_texture_set_wrap_t (texture, sampler->wrap_t);
       gthree_texture_set_mag_filter (texture, sampler->mag_filter);
       gthree_texture_set_min_filter (texture, sampler->min_filter);
+      gthree_texture_set_flip_y (texture, FALSE);
 
       g_ptr_array_add (priv->textures, g_steal_pointer (&texture));
     }
