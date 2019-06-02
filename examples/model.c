@@ -6,10 +6,38 @@
 #include <gthree/gthree.h>
 #include "utils.h"
 
-GthreeScene *scene;
+static GthreePerspectiveCamera *camera;
+static GthreePointLight *point_light;
 
-GthreeMesh *marine, *knight;
-GthreePerspectiveCamera *camera;
+static void
+light_scene (GthreeScene *scene)
+{
+  GthreeAmbientLight *ambient_light;
+  GthreeDirectionalLight *directional_light;
+  GthreeMeshBasicMaterial *material_light;
+  GthreeGeometry *geometry_light;
+  GthreeMesh *particle_light;
+  graphene_point3d_t pos;
+
+  ambient_light = gthree_ambient_light_new (&white);
+  gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));
+
+  geometry_light = gthree_geometry_new_sphere (4, 8, 8);
+  material_light = gthree_mesh_basic_material_new ();
+  gthree_mesh_basic_material_set_color (material_light, &white);
+
+  point_light = gthree_point_light_new (&red, 1, 0);
+  gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (point_light));
+
+  particle_light = gthree_mesh_new (geometry_light, GTHREE_MATERIAL (material_light));
+  gthree_object_add_child (GTHREE_OBJECT (point_light), GTHREE_OBJECT (particle_light));
+
+  directional_light = gthree_directional_light_new (&white, 0.125);
+  gthree_object_set_position (GTHREE_OBJECT (directional_light),
+                              graphene_point3d_init (&pos,
+                                                     1, 1, -1));
+  gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (directional_light));
+}
 
 
 GthreeScene *
@@ -39,6 +67,8 @@ init_scene (const char *path)
 
   scene = gthree_loader_get_scene (loader, 0);
 
+  light_scene (scene);
+
   return g_object_ref (scene);
 }
 
@@ -61,6 +91,13 @@ tick (GtkWidget     *widget,
                                                      sin (angle) * 10));
   gthree_object_look_at (GTHREE_OBJECT (camera),
                          graphene_point3d_init (&pos, 0, 2, 0));
+
+
+  gthree_object_set_position (GTHREE_OBJECT (point_light),
+                              graphene_point3d_init (&pos,
+                                                     sin (angle * 7) * 300,
+                                                     cos (angle * 5) * 400,
+                                                     cos (angle * 3) * 300));
 
   gtk_widget_queue_draw (widget);
 
