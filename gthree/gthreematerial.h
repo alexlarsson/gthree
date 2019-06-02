@@ -53,6 +53,8 @@ typedef struct {
 
 GType gthree_material_get_type (void) G_GNUC_CONST;
 
+GthreeMaterial *  gthree_material_clone                    (GthreeMaterial          *material);
+
 gboolean          gthree_material_get_is_visible           (GthreeMaterial          *material);
 void              gthree_material_set_is_visible           (GthreeMaterial          *material,
                                                             gboolean                 is_visible);

@@ -42,6 +42,33 @@ enum {
 
 static GParamSpec *obj_props[N_PROPS] = { NULL, };
 
+GthreeMaterial *
+gthree_material_clone (GthreeMaterial *material)
+{
+  guint i, num_properties;
+  GParamSpec **props;
+  GthreeMaterial *clone = g_object_new (G_OBJECT_TYPE (material), NULL);
+
+  props = g_object_class_list_properties (G_OBJECT_GET_CLASS (material), &num_properties);
+
+  for (i = 0; i < num_properties; i++)
+    {
+      GParamSpec *prop = props[i];
+      GValue value = G_VALUE_INIT;
+
+      if ((prop->flags & G_PARAM_READWRITE) != G_PARAM_READWRITE)
+        continue;
+
+      g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (prop));
+      g_object_get_property (G_OBJECT (material), g_param_spec_get_name (prop), &value);
+      g_object_set_property (G_OBJECT (clone), g_param_spec_get_name (prop), &value);
+
+      g_value_unset (&value);
+    }
+
+  return clone;
+}
+
 static void
 gthree_material_init (GthreeMaterial *material)
 {
