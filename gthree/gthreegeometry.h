@@ -50,6 +50,8 @@ void                     gthree_geometry_remove_attribute       (GthreeGeometry 
                                                                  GthreeAttributeName      name);
 GthreeAttribute *        gthree_geometry_get_attribute          (GthreeGeometry          *geometry,
                                                                  GthreeAttributeName      name);
+gboolean                 gthree_geometry_has_attribute          (GthreeGeometry          *geometry,
+                                                                 GthreeAttributeName      name);
 GthreeAttribute *        gthree_geometry_get_position           (GthreeGeometry          *geometry);
 int                      gthree_geometry_get_position_count     (GthreeGeometry          *geometry);
 int                      gthree_geometry_get_vertex_count       (GthreeGeometry          *geometry);

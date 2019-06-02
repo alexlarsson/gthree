@@ -145,6 +145,20 @@ gthree_geometry_get_attribute (GthreeGeometry  *geometry,
   return g_ptr_array_index (priv->attributes, name);
 }
 
+
+gboolean
+gthree_geometry_has_attribute (GthreeGeometry  *geometry,
+                               GthreeAttributeName name)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+
+  if (priv->attributes->len <= name)
+    return FALSE;
+
+  return g_ptr_array_index (priv->attributes, name) != NULL;
+}
+
+
 GthreeAttribute *
 gthree_geometry_get_index (GthreeGeometry  *geometry)
 {
