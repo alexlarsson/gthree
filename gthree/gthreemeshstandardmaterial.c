@@ -515,7 +515,7 @@ gthree_mesh_standard_material_get_property (GObject *obj,
       break;
 
     case PROP_EMISSIVE_MAP:
-      g_value_set_object (value, &priv->emissive_map);
+      g_value_set_object (value, priv->emissive_map);
       break;
 
     case PROP_EMISSIVE_INTENSITY:
