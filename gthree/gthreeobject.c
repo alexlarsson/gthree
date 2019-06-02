@@ -414,6 +414,26 @@ gthree_object_get_rotation (GthreeObject *object)
   return &priv->euler;
 }
 
+/* Only valid if update_matrix () was run */
+const graphene_matrix_t *
+gthree_object_get_matrix (GthreeObject *object)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  return &priv->matrix;
+}
+
+/* Only useful if auto-update are off, otherwise its overwritten the next frame */
+void
+gthree_object_set_matrix (GthreeObject                *object,
+                          const graphene_matrix_t     *matrix)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  graphene_matrix_init_from_matrix  (&priv->matrix, matrix);
+  priv->world_matrix_need_update = TRUE;
+}
+
 void
 gthree_object_update_matrix (GthreeObject *object)
 {
@@ -884,6 +904,35 @@ gthree_object_iter_destroy (GthreeObjectIter *iter)
     }
 }
 
+
+static void
+_gthree_object_find_by_type (GthreeObject *object,
+                             GType g_type,
+                             GList **list)
+{
+
+  GthreeObjectIter iter;
+  GthreeObject *child;
+
+  if (G_TYPE_CHECK_INSTANCE_TYPE (object, g_type))
+    *list = g_list_prepend (*list, object);
+
+  gthree_object_iter_init (&iter, object);
+  while (gthree_object_iter_next (&iter, &child))
+    _gthree_object_find_by_type (child, g_type, list);
+}
+
+GList *
+gthree_object_find_by_type (GthreeObject *object,
+                            GType  g_type)
+{
+  GList *list = NULL;
+
+  _gthree_object_find_by_type (object, g_type, &list);
+  return g_list_reverse (list);
+}
+
+
 void
 gthree_object_print_tree (GthreeObject *object, int depth)
 {
@@ -894,7 +943,7 @@ gthree_object_print_tree (GthreeObject *object, int depth)
   for (i = 0; i < depth; i++)
     g_print ("  ");
 
-  g_print ("%s(%p)\n", g_type_name_from_instance (object), object);
+  g_print ("%s(%p)\n", g_type_name_from_instance ((gpointer)object), object);
 
   gthree_object_iter_init (&iter, object);
   while (gthree_object_iter_next (&iter, &child))

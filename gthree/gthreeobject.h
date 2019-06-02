@@ -65,6 +65,9 @@ void                         gthree_object_update_matrix_view           (GthreeO
                                                                          const graphene_matrix_t     *camera_matrix);
 void                         gthree_object_look_at                      (GthreeObject                *object,
                                                                          graphene_point3d_t          *pos);
+const graphene_matrix_t *    gthree_object_get_matrix                   (GthreeObject                *object);
+void                         gthree_object_set_matrix                   (GthreeObject                *object,
+                                                                         const graphene_matrix_t     *matrix);
 void                         gthree_object_set_position                 (GthreeObject                *object,
                                                                          const graphene_point3d_t    *pos);
 graphene_point3d_t *         gthree_object_get_position                 (GthreeObject                *object,
@@ -105,6 +108,8 @@ GthreeObject *               gthree_object_get_previous_sibling         (GthreeO
 void                         gthree_object_destroy_all_children         (GthreeObject                *object);
 void                         gthree_object_set_before_render_callback   (GthreeObject                *object,
                                                                          GthreeBeforeRenderCallback  callback);
+GList *                      gthree_object_find_by_type                 (GthreeObject                *object,
+                                                                         GType                        g_type);
 
 typedef struct _GthreeObjectIter GthreeObjectIter;
 
