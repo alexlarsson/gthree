@@ -356,6 +356,61 @@ parse_quaternion (JsonArray *quat_j, graphene_quaternion_t *q)
 
 
 static gboolean
+supports_extension (const char *extension)
+{
+  return FALSE;
+}
+
+static gboolean
+parse_asset (GthreeLoader *loader, JsonObject *root, GError **error)
+{
+  JsonObject *asset = NULL;
+  const char *version;
+
+  if (!json_object_has_member (root, "asset"))
+    {
+      g_set_error (error, GTHREE_LOADER_ERROR, GTHREE_LOADER_ERROR_FAIL, "No asset field, is this really a GLTF file?");
+      return FALSE;
+    }
+
+  asset = json_object_get_object_member (root, "asset");
+
+  if (!json_object_has_member (asset, "version"))
+    {
+      g_set_error (error, GTHREE_LOADER_ERROR, GTHREE_LOADER_ERROR_FAIL, "No GLTF version specified");
+      return FALSE;
+    }
+
+  version = json_object_get_string_member (asset, "version");
+  if (strcmp (version, "2.0") != 0)
+    {
+      g_set_error (error, GTHREE_LOADER_ERROR, GTHREE_LOADER_ERROR_FAIL,
+                   "Unsupported GLTF version %s", version);
+      return FALSE;
+    }
+
+  if (json_object_has_member (asset, "extensionsRequired"))
+    {
+      JsonArray *required_extensions = json_object_get_array_member (asset, "extensionsRequired");
+      int i, len = json_array_get_length (required_extensions);
+      for (i = 0; i < len; i++)
+        {
+          const char *required_extension = json_array_get_string_element (required_extensions, i);
+          if (!supports_extension (required_extension))
+            {
+              g_set_error (error, GTHREE_LOADER_ERROR, GTHREE_LOADER_ERROR_FAIL,
+                           "Unsupported required GLTF extension %s", required_extension);
+              return FALSE;
+            }
+        }
+    }
+    return TRUE;
+}
+
+
+
+
+static gboolean
 parse_buffers (GthreeLoader *loader, JsonObject *root, GBytes *bin_chunk, GFile *base_path, GError **error)
 {
   GthreeLoaderPrivate *priv = gthree_loader_get_instance_private (loader);
@@ -1242,6 +1297,9 @@ gthree_loader_parse_gltf (GBytes *data, GFile *base_path, GError **error)
   root = json_node_get_object (root_node);
 
   loader = g_object_new (gthree_loader_get_type (), NULL);
+
+  if (!parse_asset (loader, root, error))
+    return NULL;
 
   if (!parse_buffers (loader, root, bin, base_path, error))
     return NULL;
