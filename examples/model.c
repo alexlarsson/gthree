@@ -50,11 +50,12 @@ init_scene (const char *path)
   if (path)
     {
       g_autoptr(GFile) file = g_file_new_for_commandline_arg (path);
+      g_autoptr(GFile) parent = g_file_get_parent (file);
       g_autoptr(GBytes) bytes = g_file_load_bytes (file, NULL, NULL, &error);
       if (bytes == NULL)
         g_error ("Failed to load %s: %s\n", path, error->message);
 
-      loader = gthree_loader_parse_gltf (bytes, NULL, &error);
+      loader = gthree_loader_parse_gltf (bytes, parent, &error);
       if (loader == NULL)
         g_error ("Failed to %s: %s\n", path, error->message);
     }
