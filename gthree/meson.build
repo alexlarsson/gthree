@@ -139,7 +139,7 @@ if not meson.is_cross_build() and get_option('introspection')
                      identifier_prefix: 'Gthree',
                      symbol_prefix: 'gthree',
                      export_packages: 'gthree',
-                     includes: [ 'GObject-2.0' ],
+                     includes: [ 'GObject-2.0', 'Graphene-1.0', 'GdkPixbuf-2.0', 'Gdk-3.0' ],
                      install: true,
                      extra_args: [
                        '--quiet',
