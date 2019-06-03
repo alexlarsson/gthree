@@ -599,7 +599,8 @@ gthree_attribute_array_get_point3d (GthreeAttributeArray *array,
                                     graphene_point3d_t   *point)
 {
   g_assert (array->type == GTHREE_ATTRIBUTE_TYPE_FLOAT);
-  *point = *(graphene_point3d_t *)((float *)&array->data[0] + offset);
+
+  *point = *(graphene_point3d_t *)gthree_attribute_array_peek_float_at (array, index, offset);
 }
 
 static void
@@ -1075,7 +1076,7 @@ guint8 *
 gthree_attribute_peek_uint8 (GthreeAttribute *attribute)
 {
   if (attribute->array)
-    return gthree_attribute_array_peek_uint8 (attribute->array);
+    return gthree_attribute_array_peek_uint8_at (attribute->array, 0, attribute->item_offset);
   return NULL;
 }
 
@@ -1092,7 +1093,7 @@ gint8 *
 gthree_attribute_peek_int8 (GthreeAttribute  *attribute)
 {
   if (attribute->array)
-    return gthree_attribute_array_peek_int8 (attribute->array);
+    return gthree_attribute_array_peek_int8_at (attribute->array, 0, attribute->item_offset);
   return NULL;
 }
 
@@ -1109,7 +1110,7 @@ gint16 *
 gthree_attribute_peek_int16 (GthreeAttribute *attribute)
   {
   if (attribute->array)
-    return gthree_attribute_array_peek_int16 (attribute->array);
+    return gthree_attribute_array_peek_int16_at (attribute->array, 0, attribute->item_offset);
   return NULL;
 }
 
@@ -1126,7 +1127,7 @@ guint16 *
 gthree_attribute_peek_uint16 (GthreeAttribute *attribute)
 {
   if (attribute->array)
-    return gthree_attribute_array_peek_uint16 (attribute->array);
+    return gthree_attribute_array_peek_uint16_at (attribute->array, 0, attribute->item_offset);
   return NULL;
 }
 
@@ -1143,7 +1144,7 @@ gint32 *
 gthree_attribute_peek_int32 (GthreeAttribute *attribute)
 {
   if (attribute->array)
-    return gthree_attribute_array_peek_int32 (attribute->array);
+    return gthree_attribute_array_peek_int32_at (attribute->array, 0, attribute->item_offset);
   return NULL;
 }
 
@@ -1160,7 +1161,7 @@ guint32 *
 gthree_attribute_peek_uint32 (GthreeAttribute *attribute)
 {
   if (attribute->array)
-    return gthree_attribute_array_peek_uint32 (attribute->array);
+    return gthree_attribute_array_peek_uint32_at (attribute->array, 0, attribute->item_offset);
   return NULL;
 }
 
@@ -1177,7 +1178,7 @@ float *
 gthree_attribute_peek_float (GthreeAttribute *attribute)
 {
   if (attribute->array)
-    return gthree_attribute_array_peek_float (attribute->array);
+    return gthree_attribute_array_peek_float_at (attribute->array, 0, attribute->item_offset);
   return NULL;
 }
 
@@ -1194,7 +1195,7 @@ double *
 gthree_attribute_peek_double (GthreeAttribute  *attribute)
 {
   if (attribute->array)
-    return gthree_attribute_array_peek_double (attribute->array);
+    return gthree_attribute_array_peek_double_at (attribute->array, 0, attribute->item_offset);
   return NULL;
 }
 
@@ -1211,7 +1212,7 @@ graphene_point3d_t *
 gthree_attribute_peek_point3d (GthreeAttribute *attribute)
 {
   if (attribute->array)
-    return gthree_attribute_array_peek_point3d (attribute->array);
+    return gthree_attribute_array_peek_point3d_at (attribute->array, 0, attribute->item_offset);
   return NULL;
 }
 
