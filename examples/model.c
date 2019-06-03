@@ -6,7 +6,11 @@
 #include <gthree/gthree.h>
 #include "utils.h"
 
-static GthreePerspectiveCamera *camera;
+static GList *cameras;
+static GthreeCamera *current_camera;
+
+static GthreeGroup *default_camera_group;
+static GthreePerspectiveCamera *default_camera;
 static GthreePointLight *point_light;
 
 static void
@@ -40,7 +44,7 @@ light_scene (GthreeScene *scene)
 }
 
 
-GthreeScene *
+static GthreeScene *
 init_scene (const char *path)
 {
   g_autoptr(GthreeLoader) loader = NULL;
@@ -68,10 +72,62 @@ init_scene (const char *path)
 
   scene = gthree_loader_get_scene (loader, 0);
 
-  light_scene (scene);
-
   return g_object_ref (scene);
 }
+
+// Temporary Work around bug in graphene (not addin in min to center)
+static graphene_sphere_t *
+box_get_bounding_sphere (const graphene_box_t *box,
+                         graphene_sphere_t    *sphere)
+{
+  graphene_vec3_t size;
+  graphene_vec3_t center;
+  float radius;
+  graphene_point3d_t min;
+
+  graphene_box_get_size (box, &size);
+  radius = graphene_vec3_length (&size) * 0.5f;
+
+  graphene_vec3_scale (&size, 0.5f, &center);
+
+  graphene_box_get_min (box, &min);
+  min.x += graphene_vec3_get_x (&center);
+  min.y += graphene_vec3_get_y (&center);
+  min.z += graphene_vec3_get_z (&center);
+
+  return graphene_sphere_init (sphere, &min, radius);
+}
+
+static void
+add_default_camera (GthreeScene *scene)
+{
+  graphene_box_t bounding_box;
+  graphene_sphere_t bounding_sphere;
+  graphene_point3d_t bs_center;
+  float bs_radius;
+  graphene_point3d_t pos;
+
+  /* Generate default camera */
+  gthree_object_update_matrix_world (GTHREE_OBJECT (scene), TRUE);
+
+  gthree_object_get_mesh_extents (GTHREE_OBJECT (scene), &bounding_box);
+
+  box_get_bounding_sphere (&bounding_box, &bounding_sphere);
+  graphene_sphere_get_center (&bounding_sphere, &bs_center);
+  bs_radius = graphene_sphere_get_radius (&bounding_sphere);
+
+  default_camera_group = gthree_group_new ();
+  gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (default_camera_group));
+  gthree_object_set_position (GTHREE_OBJECT (default_camera_group), &bs_center);
+
+  default_camera = gthree_perspective_camera_new (37, 1.5, bs_radius / 1000, bs_radius * 1000);
+  gthree_object_set_position (GTHREE_OBJECT (default_camera),
+                              graphene_point3d_init (&pos, 0, 0, 3 * bs_radius));
+
+  gthree_object_add_child (GTHREE_OBJECT (default_camera_group), GTHREE_OBJECT (default_camera));
+  cameras = g_list_prepend (cameras, default_camera);
+}
+
 
 static gboolean
 tick (GtkWidget     *widget,
@@ -79,6 +135,7 @@ tick (GtkWidget     *widget,
       gpointer       user_data)
 {
   graphene_point3d_t pos;
+  graphene_euler_t rot;
   gint64 frame_time;
   float angle;
 
@@ -91,6 +148,9 @@ tick (GtkWidget     *widget,
                                                      cos (angle * 5) * 400,
                                                      cos (angle * 3) * 300));
 
+  gthree_object_set_rotation (GTHREE_OBJECT (default_camera_group),
+                              graphene_euler_init (&rot, 0, angle * 150, 0));
+
   gtk_widget_queue_draw (widget);
 
   return G_SOURCE_CONTINUE;
@@ -99,10 +159,10 @@ tick (GtkWidget     *widget,
 static void
 resize_area (GthreeArea *area,
              gint width,
-             gint height,
-             GthreePerspectiveCamera *camera)
+             gint height)
 {
-  gthree_perspective_camera_set_aspect (camera, (float)width / (float)(height));
+  if (GTHREE_IS_PERSPECTIVE_CAMERA (current_camera))
+    gthree_perspective_camera_set_aspect (GTHREE_PERSPECTIVE_CAMERA (current_camera), (float)width / (float)(height));
 }
 
 int
@@ -110,8 +170,6 @@ main (int argc, char *argv[])
 {
   GtkWidget *window, *box, *hbox, *button, *area;
   GthreeScene *scene;
-  graphene_point3d_t pos;
-  GList *cameras;
 
   gtk_init (&argc, &argv);
 
@@ -134,25 +192,16 @@ main (int argc, char *argv[])
   scene = init_scene (argc == 2 ? argv[1] : NULL);
 
   cameras = gthree_object_find_by_type (GTHREE_OBJECT (scene), GTHREE_TYPE_CAMERA);
+  add_default_camera (scene);
 
-  if (cameras == NULL)
-    {
-      g_warning ("No camera, adding default one");
-      camera = gthree_perspective_camera_new (37, 1.5, 1, 10000);
-      gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
+  // Must be after default camera creation to avoid the added geometry affecting the size calculation
+  light_scene (scene);
 
-      gthree_object_set_position (GTHREE_OBJECT (camera),
-                                  graphene_point3d_init (&pos, 10, 2, 4));
-      gthree_object_look_at (GTHREE_OBJECT (camera),
-                             graphene_point3d_init (&pos, 0, 0, 0));
+  current_camera = GTHREE_CAMERA (cameras->data);
 
-      cameras = g_list_prepend (cameras, camera);
-    }
+  area = gthree_area_new (scene, current_camera);
+  g_signal_connect (area, "resize", G_CALLBACK (resize_area), NULL);
 
-  camera = cameras->data; // Use first camera
-
-  area = gthree_area_new (scene, GTHREE_CAMERA (camera));
-  g_signal_connect (area, "resize", G_CALLBACK (resize_area), camera);
   gtk_widget_set_hexpand (area, TRUE);
   gtk_widget_set_vexpand (area, TRUE);
   gtk_container_add (GTK_CONTAINER (hbox), area);
