@@ -3,6 +3,7 @@
 
 #include "gthreemeshstandardmaterial.h"
 #include "gthreecubetexture.h"
+#include "gthreeprivate.h"
 #include "gthreetypebuiltins.h"
 
 typedef struct {
