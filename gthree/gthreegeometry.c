@@ -342,6 +342,17 @@ gthree_geometry_set_draw_range (GthreeGeometry  *geometry,
   priv->draw_range_count = count;
 }
 
+
+static float
+distance_sq (const graphene_vec3_t *p1,
+             const graphene_vec3_t *p2)
+{
+  graphene_vec3_t delta;
+
+  graphene_vec3_subtract (p1, p2, &delta);
+  return graphene_vec3_dot (&delta, &delta);
+}
+
 const graphene_sphere_t *
 gthree_geometry_get_bounding_sphere  (GthreeGeometry *geometry)
 {
@@ -353,28 +364,48 @@ gthree_geometry_get_bounding_sphere  (GthreeGeometry *geometry)
 
       if (position)
         {
-          GthreeAttributeArray *array = gthree_attribute_get_array (position);
-          const graphene_point3d_t *points;
-          g_autofree graphene_point3d_t *alloc_points = NULL;
-          int i, n_points = gthree_attribute_array_get_count (array);
+          const float *floats, *f;
+          int n_points = gthree_attribute_get_count (position);
+          int stride = gthree_attribute_get_stride (position);
+          int i;
+          graphene_vec3_t size;
+          graphene_vec3_t center;
+          graphene_vec3_t min;
+          graphene_point3d_t pt;
+          graphene_box_t box;
+          float max_radius_sq = 0.f;
 
-          if (gthree_attribute_array_get_stride (array) == 3)
+          floats = gthree_attribute_peek_float (position);
+
+          graphene_box_init_from_box (&box, graphene_box_empty ());
+          for (f = floats, i = 0; i < n_points; i++, f += stride)
             {
-              /* Here we can access memory as a point3d array directly */
-              points = gthree_attribute_array_peek_point3d (array);
-            }
-          else
-            {
-              alloc_points = g_new (graphene_point3d_t, n_points);
-              for (i = 0; i < n_points; i++)
-                gthree_attribute_get_point3d (position, i, &alloc_points[i]);
-              points = alloc_points;
+              const graphene_point3d_t *point = (const graphene_point3d_t *)f;
+              graphene_vec3_t v;
+
+              graphene_point3d_to_vec3 (point, &v);
+              graphene_box_expand_vec3 (&box, &v, &box);
             }
 
-          graphene_sphere_init_from_points (&priv->bounding_sphere,
-                                            n_points,
-                                            points,
-                                            NULL);
+          graphene_box_get_size (&box, &size);
+          graphene_box_get_min (&box, &pt);
+          graphene_point3d_to_vec3 (&pt, &min);
+
+          graphene_vec3_scale (&size, 0.5f, &center);
+          graphene_vec3_add (&center, &min, &center);
+
+          for (f = floats, i = 0; i < n_points; i++, f += stride)
+            {
+              const graphene_point3d_t *point = (const graphene_point3d_t *)f;
+              graphene_vec3_t p;
+
+              graphene_point3d_to_vec3 (point, &p);
+              max_radius_sq = fmaxf (max_radius_sq, distance_sq (&center, &p));
+            }
+
+          graphene_sphere_init (&priv->bounding_sphere,
+                                graphene_point3d_init_from_vec3 (&pt, &center),
+                                sqrtf (max_radius_sq));
 
           /* TODO: The three.js code does a lot of special handling for morphing here too */
         }
