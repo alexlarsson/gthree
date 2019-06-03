@@ -1003,9 +1003,7 @@ gthree_attribute_set_array (GthreeAttribute      *attribute,
 int
 gthree_attribute_get_count (GthreeAttribute *attribute)
 {
-  if (attribute->array == NULL)
-    return 0;
-  return gthree_attribute_array_get_count (attribute->array);
+  return attribute->count;
 }
 
 GthreeAttributeType
