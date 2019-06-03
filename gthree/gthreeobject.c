@@ -47,6 +47,7 @@ typedef struct {
   guint euler_valid : 1;
   guint world_matrix_need_update : 1;
   guint matrix_auto_update : 1;
+  guint matrix_need_update : 1;
 
   guint frustum_culled : 1;
 } GthreeObjectPrivate;
@@ -108,6 +109,7 @@ gthree_object_init (GthreeObject *object)
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
 
   priv->matrix_auto_update = TRUE;
+  priv->matrix_need_update = TRUE;
   priv->visible = TRUE;
   priv->frustum_culled = TRUE;
 
@@ -351,6 +353,7 @@ gthree_object_set_position (GthreeObject *object,
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
 
   graphene_point3d_to_vec3 (pos, &priv->position);
+  priv->matrix_need_update = TRUE;
 }
 
 graphene_point3d_t *
@@ -369,6 +372,7 @@ gthree_object_set_scale (GthreeObject                *object,
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
 
   graphene_point3d_to_vec3 (scale, &priv->scale);
+  priv->matrix_need_update = TRUE;
 }
 
 void
@@ -379,6 +383,7 @@ gthree_object_set_quaternion (GthreeObject *object,
 
   graphene_quaternion_init_from_quaternion (&priv->quaternion, q);
   priv->euler_valid = FALSE;
+  priv->matrix_need_update = TRUE;
 }
 
 const graphene_quaternion_t *
@@ -398,6 +403,7 @@ gthree_object_set_rotation (GthreeObject *object,
   priv->euler = *rot;
   priv->euler_valid = TRUE;
   graphene_quaternion_init_from_euler (&priv->quaternion, rot);
+  priv->matrix_need_update = TRUE;
 }
 
 const graphene_euler_t *
@@ -432,6 +438,7 @@ gthree_object_set_matrix (GthreeObject                *object,
 
   graphene_matrix_init_from_matrix  (&priv->matrix, matrix);
   priv->world_matrix_need_update = TRUE;
+  priv->matrix_need_update = FALSE;
 }
 
 void
@@ -440,15 +447,19 @@ gthree_object_update_matrix (GthreeObject *object)
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
   graphene_point3d_t pos;
 
-  graphene_quaternion_to_matrix (&priv->quaternion, &priv->matrix);
-  graphene_matrix_scale (&priv->matrix,
-                         graphene_vec3_get_x (&priv->scale),
-                         graphene_vec3_get_y (&priv->scale),
-                         graphene_vec3_get_z (&priv->scale));
-  graphene_point3d_init_from_vec3 (&pos, &priv->position);
-  graphene_matrix_translate  (&priv->matrix, &pos);
+  if (priv->matrix_need_update)
+    {
+      priv->matrix_need_update = FALSE;
+      graphene_quaternion_to_matrix (&priv->quaternion, &priv->matrix);
+      graphene_matrix_scale (&priv->matrix,
+                             graphene_vec3_get_x (&priv->scale),
+                             graphene_vec3_get_y (&priv->scale),
+                             graphene_vec3_get_z (&priv->scale));
+      graphene_point3d_init_from_vec3 (&pos, &priv->position);
+      graphene_matrix_translate  (&priv->matrix, &pos);
 
-  priv->world_matrix_need_update = TRUE;
+      priv->world_matrix_need_update = TRUE;
+    }
 }
 
 const graphene_matrix_t *
