@@ -12,6 +12,7 @@ static GthreeCamera *current_camera;
 static GthreeGroup *default_camera_group;
 static GthreePerspectiveCamera *default_camera;
 static GthreePointLight *point_light;
+static GthreeLoader *loader = NULL;
 
 static void
 light_scene (GthreeScene *scene)
@@ -47,7 +48,6 @@ light_scene (GthreeScene *scene)
 static GthreeScene *
 init_scene (const char *path)
 {
-  g_autoptr(GthreeLoader) loader = NULL;
   GError *error = NULL;
   GthreeScene *scene;
 
@@ -170,6 +170,12 @@ main (int argc, char *argv[])
 {
   GtkWidget *window, *box, *hbox, *button, *area;
   GthreeScene *scene;
+  GthreeCubeTexture *reflectionCube;
+  GdkPixbuf *pixbufs[6];
+  int n_materials, i;
+
+  examples_load_cube_pixbufs ("cube/SwedishRoyalCastle", pixbufs);
+  reflectionCube = gthree_cube_texture_new_from_array (pixbufs);
 
   gtk_init (&argc, &argv);
 
@@ -191,8 +197,18 @@ main (int argc, char *argv[])
 
   scene = init_scene (argc == 2 ? argv[1] : NULL);
 
+  gthree_scene_set_background_texture (scene, GTHREE_TEXTURE (reflectionCube));
+
   cameras = gthree_object_find_by_type (GTHREE_OBJECT (scene), GTHREE_TYPE_CAMERA);
   add_default_camera (scene);
+
+  n_materials = gthree_loader_get_n_materials (loader);
+  for (i = 0; i < n_materials; i++)
+    {
+      GthreeMaterial *m = gthree_loader_get_material (loader, i);
+      if (GTHREE_IS_STANDARD_MATERIAL (m))
+        gthree_mesh_standard_material_set_env_map (GTHREE_STANDARD_MATERIAL (m), GTHREE_TEXTURE (reflectionCube));
+    }
 
   // Must be after default camera creation to avoid the added geometry affecting the size calculation
   light_scene (scene);
