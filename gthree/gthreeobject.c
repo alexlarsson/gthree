@@ -2,6 +2,7 @@
 #include <epoxy/gl.h>
 
 #include "gthreeobjectprivate.h"
+#include "gthreemesh.h"
 
 #include <graphene.h>
 
@@ -915,7 +916,6 @@ gthree_object_iter_destroy (GthreeObjectIter *iter)
     }
 }
 
-
 static void
 _gthree_object_find_by_type (GthreeObject *object,
                              GType g_type,
@@ -959,4 +959,38 @@ gthree_object_print_tree (GthreeObject *object, int depth)
   gthree_object_iter_init (&iter, object);
   while (gthree_object_iter_next (&iter, &child))
     gthree_object_print_tree (child, depth + 1);
+}
+
+static void
+_gthree_object_get_mesh_extents (GthreeObject *object,
+                                 graphene_box_t *box)
+{
+  GthreeObjectIter iter;
+  GthreeObject *child;
+
+  if (GTHREE_IS_MESH (object))
+    {
+      GthreeGeometry *geometry = gthree_mesh_get_geometry (GTHREE_MESH (object));
+      graphene_sphere_t bounding_sphere;
+      graphene_box_t bounding_box;
+
+      graphene_matrix_transform_sphere (gthree_object_get_world_matrix (object),
+                                        gthree_geometry_get_bounding_sphere (geometry),
+                                        &bounding_sphere);
+      graphene_sphere_get_bounding_box (&bounding_sphere, &bounding_box);
+
+      graphene_box_union (box, &bounding_box, box);
+    }
+
+  gthree_object_iter_init (&iter, object);
+  while (gthree_object_iter_next (&iter, &child))
+    _gthree_object_get_mesh_extents (child, box);
+}
+
+void
+gthree_object_get_mesh_extents (GthreeObject *object,
+                                graphene_box_t *box)
+{
+  graphene_box_init_from_box (box, graphene_box_empty ());
+  _gthree_object_get_mesh_extents (object, box);
 }

@@ -110,6 +110,9 @@ void                         gthree_object_set_before_render_callback   (GthreeO
                                                                          GthreeBeforeRenderCallback  callback);
 GList *                      gthree_object_find_by_type                 (GthreeObject                *object,
                                                                          GType                        g_type);
+void                         gthree_object_get_mesh_extents             (GthreeObject                *object,
+                                                                         graphene_box_t              *box);
+
 
 typedef struct _GthreeObjectIter GthreeObjectIter;
 
