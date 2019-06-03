@@ -30,7 +30,7 @@ light_scene (GthreeScene *scene)
   material_light = gthree_mesh_basic_material_new ();
   gthree_mesh_basic_material_set_color (material_light, &white);
 
-  point_light = gthree_point_light_new (&red, 1, 0);
+  point_light = gthree_point_light_new (&white, 1, 0);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (point_light));
 
   particle_light = gthree_mesh_new (geometry_light, GTHREE_MATERIAL (material_light));
@@ -122,7 +122,7 @@ add_default_camera (GthreeScene *scene)
 
   default_camera = gthree_perspective_camera_new (37, 1.5, bs_radius / 1000, bs_radius * 1000);
   gthree_object_set_position (GTHREE_OBJECT (default_camera),
-                              graphene_point3d_init (&pos, 0, 0, 3 * bs_radius));
+                              graphene_point3d_init (&pos, 0, 0, 2 * bs_radius));
 
   gthree_object_add_child (GTHREE_OBJECT (default_camera_group), GTHREE_OBJECT (default_camera));
   cameras = g_list_prepend (cameras, default_camera);
