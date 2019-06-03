@@ -1590,7 +1590,7 @@ gthree_loader_get_material (GthreeLoader *loader,
                             int index)
 {
   GthreeLoaderPrivate *priv = gthree_loader_get_instance_private (loader);
-  GthreeScene *material = g_ptr_array_index (priv->final_materials, index);
+  GthreeMaterial *material = g_ptr_array_index (priv->final_materials, index);
 
   return material;
 }
