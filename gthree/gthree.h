@@ -38,6 +38,7 @@
 #include <gthree/gthreemeshdepthmaterial.h>
 #include <gthree/gthreeshadermaterial.h>
 #include <gthree/gthreeprimitives.h>
+#include <gthree/gthreebone.h>
 
 #undef __GTHREE_H_INSIDE__
 
