@@ -38,7 +38,8 @@ typedef struct {
   GPtrArray *materials;
   GPtrArray *cameras;
 
-  GHashTable *final_materials;
+  GHashTable *final_materials_hash;
+  GPtrArray *final_materials;
 
   GthreeMaterial *default_material;
   int scene;
@@ -270,10 +271,11 @@ gthree_loader_init (GthreeLoader *loader)
   priv->materials = g_ptr_array_new_with_free_func ((GDestroyNotify)g_object_unref);
   priv->cameras = g_ptr_array_new_with_free_func ((GDestroyNotify)camera_free);
 
-  priv->final_materials = g_hash_table_new_full ((GHashFunc)material_cache_key_hash,
-                                                 (GEqualFunc)material_cache_key_equal,
-                                                 (GDestroyNotify)material_cache_key_free,
-                                                 g_object_unref);
+  priv->final_materials = g_ptr_array_new_with_free_func ((GDestroyNotify)g_object_unref);
+  priv->final_materials_hash = g_hash_table_new_full ((GHashFunc)material_cache_key_hash,
+                                                      (GEqualFunc)material_cache_key_equal,
+                                                      (GDestroyNotify)material_cache_key_free,
+                                                      NULL);
 
   priv->default_material = GTHREE_MATERIAL (gthree_mesh_basic_material_new ());
   gthree_mesh_basic_material_set_color (GTHREE_BASIC_MATERIAL (priv->default_material), &magenta);
@@ -297,7 +299,8 @@ gthree_loader_finalize (GObject *obj)
   g_ptr_array_unref (priv->materials);
   g_ptr_array_unref (priv->cameras);
 
-  g_hash_table_unref (priv->final_materials);
+  g_ptr_array_unref (priv->final_materials);
+  g_hash_table_unref (priv->final_materials_hash);
 
   g_object_unref (priv->default_material);
 
@@ -1326,7 +1329,7 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
                 gthree_geometry_has_attribute (primitive->geometry,
                                                gthree_attribute_name_get_for_static ("color"));
 
-              material = g_hash_table_lookup (priv->final_materials, &cache_key);
+              material = g_hash_table_lookup (priv->final_materials_hash, &cache_key);
               if (material == NULL)
                 {
                   MaterialCacheKey *cache_key_copy = material_cache_key_clone (&cache_key);
@@ -1336,7 +1339,8 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
                     gthree_material_set_vertex_colors (material, TRUE);
                   //TODO: if (cache_key.use_vertex_tangents)
 
-                  g_hash_table_insert (priv->final_materials, cache_key_copy, material);
+                  g_hash_table_insert (priv->final_materials_hash, cache_key_copy, material);
+                  g_ptr_array_add (priv->final_materials, material);
                 }
 
               /* TODO: more cache keys
@@ -1571,6 +1575,24 @@ gthree_loader_get_scene (GthreeLoader *loader,
   GthreeScene *scene = g_ptr_array_index (priv->scenes, index);
 
   return scene;
+}
+
+int
+gthree_loader_get_n_materials (GthreeLoader *loader)
+{
+  GthreeLoaderPrivate *priv = gthree_loader_get_instance_private (loader);
+
+  return priv->final_materials->len;
+}
+
+GthreeMaterial *
+gthree_loader_get_material (GthreeLoader *loader,
+                            int index)
+{
+  GthreeLoaderPrivate *priv = gthree_loader_get_instance_private (loader);
+  GthreeScene *material = g_ptr_array_index (priv->final_materials, index);
+
+  return material;
 }
 
 GthreeGeometry *
