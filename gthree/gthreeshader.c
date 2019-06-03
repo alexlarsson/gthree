@@ -437,7 +437,7 @@ static GthreeUniformsDefinition standard_uniforms[] = {
   {"emissive", GTHREE_UNIFORM_TYPE_COLOR, &black },
   {"roughness", GTHREE_UNIFORM_TYPE_FLOAT, &fp5 },
   {"metalness", GTHREE_UNIFORM_TYPE_FLOAT, &fp5 },
-  {"enbMapIntensity", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
+  {"envMapIntensity", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
 };
 
 static const char *matcap_uniform_libs[] = { "common", "bumpmap", "normalmap", "displacementmap", "fog", NULL };
