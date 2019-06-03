@@ -41,6 +41,7 @@ typedef struct {
   gboolean flip_y;
   int unpack_alignment;
 
+  guint max_mip_level;
   guint gl_texture;
 } GthreeTexturePrivate;
 
@@ -522,7 +523,10 @@ gthree_texture_real_load (GthreeTexture *texture, int slot)
         }
 
       if (priv->generate_mipmaps && is_image_power_of_two)
-        glGenerateMipmap (GL_TEXTURE_2D);
+        {
+          glGenerateMipmap (GL_TEXTURE_2D);
+          gthree_texture_set_max_mip_level (texture, log2 (MAX (width, height)));
+        }
 
       priv->needs_update = FALSE;
     }
@@ -534,4 +538,21 @@ gthree_texture_load (GthreeTexture *texture, int slot)
   GthreeTextureClass *class = GTHREE_TEXTURE_GET_CLASS(texture);
 
   class->load (texture, slot);
+}
+
+void
+gthree_texture_set_max_mip_level (GthreeTexture *texture,
+                                  int level)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  priv->max_mip_level = level;
+}
+
+int
+gthree_texture_get_max_mip_level (GthreeTexture *texture)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  return priv->max_mip_level;
 }

@@ -42,6 +42,9 @@ void gthree_render_list_sort (GthreeRenderList *list);
 
 guint gthree_renderer_allocate_texture_unit (GthreeRenderer *renderer);
 
+void gthree_texture_set_max_mip_level (GthreeTexture *texture,
+                                       int level);
+int gthree_texture_get_max_mip_level (GthreeTexture *texture);
 void     gthree_texture_load             (GthreeTexture *texture,
                                           int            slot);
 gboolean gthree_texture_get_needs_update (GthreeTexture *texture);

@@ -253,6 +253,8 @@ gthree_mesh_standard_material_real_set_uniforms (GthreeMaterial *material,
 
   if (priv->env_map)
     {
+      int max_mip_level;
+
       uni = gthree_uniforms_lookup_from_string (uniforms, "envMap");
       if (uni != NULL)
         gthree_uniform_set_texture (uni, priv->env_map);
@@ -268,6 +270,11 @@ gthree_mesh_standard_material_real_set_uniforms (GthreeMaterial *material,
       uni = gthree_uniforms_lookup_from_string (uniforms, "envMapIntensity");
       if (uni != NULL)
         gthree_uniform_set_float (uni, priv->env_map_intensity);
+
+      max_mip_level = gthree_texture_get_max_mip_level (priv->env_map);
+      uni = gthree_uniforms_lookup_from_string (uniforms, "maxMipLevel");
+      if (uni != NULL)
+        gthree_uniform_set_int (uni, max_mip_level);
     }
 
   if (priv->light_map)

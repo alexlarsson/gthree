@@ -132,7 +132,10 @@ gthree_cube_texture_real_load (GthreeTexture *texture, int slot)
         }
 
       if (gthree_texture_get_generate_mipmaps (texture) && is_image_power_of_two)
-        glGenerateMipmap (GL_TEXTURE_CUBE_MAP);
+        {
+          glGenerateMipmap (GL_TEXTURE_CUBE_MAP);
+          gthree_texture_set_max_mip_level (texture, log2 (MAX (width, height)));
+        }
 
       gthree_texture_set_needs_update (texture, FALSE);
     }
