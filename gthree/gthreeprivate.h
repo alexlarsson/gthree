@@ -66,6 +66,9 @@ void gthree_geometry_fill_render_list (GthreeGeometry   *geometry,
 gboolean gthree_light_setup_hash_equal (GthreeLightSetupHash *a,
                                         GthreeLightSetupHash *b);
 
+void gthree_skeleton_update  (GthreeSkeleton *skeleton);
+float *gthree_skeleton_get_bone_matrices (GthreeSkeleton *skeleton);
+
 void gthree_light_setup  (GthreeLight   *light,
                           GthreeCamera  *camera,
                           GthreeLightSetup *setup);

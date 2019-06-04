@@ -6,12 +6,14 @@
 #include <gthree/gthree.h>
 #include "utils.h"
 
-GthreeScene *scene;
+static GthreeScene *scene;
+static GPtrArray *bones = NULL;
 
 #define SEGMENT_HEIGHT 5
 #define N_SEGMENTS 4
 #define SPLIT_PER_SEGMENT 2
 #define TOTAL_HEIGHT (SEGMENT_HEIGHT * N_SEGMENTS)
+
 
 GthreeScene *
 init_scene (void)
@@ -21,10 +23,13 @@ init_scene (void)
   GthreeSkinnedMesh *mesh;
   GthreeAttribute *position, *skin_indices, *skin_weights;
   int i, n_vert;
+  GthreeBone *last_bone, *root_bone;
+  GthreeSkeleton *skeleton;
 
   material = gthree_mesh_phong_material_new ();
   gthree_mesh_phong_material_set_color (material, &cyan);
-  gthree_mesh_material_set_is_wireframe (GTHREE_MESH_MATERIAL (material),1);
+  gthree_mesh_material_set_is_wireframe (GTHREE_MESH_MATERIAL (material), TRUE);
+  gthree_mesh_material_set_skinning (GTHREE_MESH_MATERIAL (material), TRUE);
 
   scene = gthree_scene_new ();
 
@@ -83,20 +88,36 @@ init_scene (void)
 
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (mesh));
 
+  bones = g_ptr_array_new_with_free_func (g_object_unref);
+  last_bone = NULL;
+  for (i = 0; i < N_SEGMENTS; i++)
+    {
+      GthreeBone *bone = gthree_bone_new ();
+      graphene_point3d_t p;
+
+      g_ptr_array_add (bones, bone);
+
+      gthree_object_set_position (GTHREE_OBJECT (bone),
+                                  graphene_point3d_init (&p, SEGMENT_HEIGHT, 0, 0));
+
+      if (last_bone != NULL)
+        gthree_object_add_child (GTHREE_OBJECT (last_bone),
+                                 GTHREE_OBJECT (bone));
+      else
+        root_bone = bone;
+
+      last_bone = bone;
+    }
+
+  skeleton = gthree_skeleton_new ((GthreeBone **)bones->pdata, bones->len, NULL);
+  gthree_object_add_child (GTHREE_OBJECT (mesh), GTHREE_OBJECT (root_bone));
+
+  gthree_skinned_mesh_bind (mesh, skeleton, NULL);
+
 #if 0
-  create 5 bones...
-    var skeleton = new THREE.Skeleton( bones );
-
-  var rootBone = skeleton.bones[ 0 ];
-  mesh.add( rootBone );
-
-  // bind the skeleton to the mesh
-  mesh.bind( skeleton );
-
   // move the bones and manipulate the model
   skeleton.bones[ 0 ].rotation.x = -0.1;
   skeleton.bones[ 1 ].rotation.x = 0.2;
-
 #endif
 
   return scene;

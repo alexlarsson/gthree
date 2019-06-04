@@ -7,8 +7,7 @@
 typedef struct {
   GPtrArray *bones;
   graphene_matrix_t *bone_inverses;
-
-  //GthreeAttributeArray *bone_matrices;
+  float *bone_matrices;
 } GthreeSkeletonPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeSkeleton, gthree_skeleton, G_TYPE_OBJECT)
@@ -29,6 +28,7 @@ gthree_skeleton_finalize (GObject *obj)
 
   g_ptr_array_unref (priv->bones);
   g_free (priv->bone_inverses);
+  g_free (priv->bone_matrices);
 
   G_OBJECT_CLASS (gthree_skeleton_parent_class)->finalize (obj);
 }
@@ -52,6 +52,7 @@ gthree_skeleton_new  (GthreeBone **bones,
   priv = gthree_skeleton_get_instance_private (skeleton);
 
   priv->bone_inverses = g_new (graphene_matrix_t, n_bones);
+  priv->bone_matrices = g_new (float, 16 * n_bones);
 
   for (i = 0; i < n_bones; i++)
     {
@@ -147,23 +148,29 @@ gthree_skeleton_pose  (GthreeSkeleton *skeleton)
 void
 gthree_skeleton_update  (GthreeSkeleton *skeleton)
 {
+  GthreeSkeletonPrivate *priv = gthree_skeleton_get_instance_private (skeleton);
+  int i;
+
+  for (i = 0; i < priv->bones->len; i++)
+    {
+      GthreeBone *bone = g_ptr_array_index (priv->bones, i);
+      const graphene_matrix_t *matrix_world = gthree_object_get_world_matrix (GTHREE_OBJECT (bone));
+      graphene_matrix_t offset_matrix;
+
+      graphene_matrix_multiply (matrix_world, &priv->bone_inverses[i], &offset_matrix);
+      graphene_matrix_to_float (&offset_matrix, (priv->bone_matrices + i * 16));
+    }
+
 #ifdef TODO
-  var bones = this.bones;
-  var boneInverses = this.boneInverses;
-  var boneMatrices = this.boneMatrices;
-  var boneTexture = this.boneTexture;
-
-  // flatten bone matrices to array
-
-  for ( var i = 0, il = bones.length; i < il; i ++ ) {
-    // compute the offset between the current and the original transform
-    var matrix = bones[ i ] ? bones[ i ].matrixWorld : identityMatrix;
-    offsetMatrix.multiplyMatrices( matrix, boneInverses[ i ] );
-    offsetMatrix.toArray( boneMatrices, i * 16 );
-  }
-
-  if ( boneTexture !== undefined ) {
+  if ( boneTexture !== undefined )
     boneTexture.needsUpdate = true;
-  }
 #endif
+}
+
+float *
+gthree_skeleton_get_bone_matrices (GthreeSkeleton *skeleton)
+{
+  GthreeSkeletonPrivate *priv = gthree_skeleton_get_instance_private (skeleton);
+
+  return priv->bone_matrices;
 }

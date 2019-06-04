@@ -98,6 +98,11 @@ typedef enum {
   GTHREE_NORMAL_MAP_TYPE_OBJECT_SPACE,
 }  GthreeNormalMapType;
 
+typedef enum {
+  GTHREE_BIND_MODE_ATTACHED,
+  GTHREE_BIND_MODE_DETACHED,
+}  GthreeBindMode;
+
 G_END_DECLS
 
 #endif /* __GTHREE_ENUM_H__ */

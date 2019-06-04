@@ -10,12 +10,12 @@
 
 G_BEGIN_DECLS
 
-#define GTHREE_TYPE_SKINNED_SKINNED_MESH      (gthree_skinned_mesh_get_type ())
-#define GTHREE_SKINNED_SKINNED_MESH(inst)     (G_TYPE_CHECK_INSTANCE_CAST ((inst), \
-                                                                           GTHREE_TYPE_SKINNED_SKINNED_MESH, \
-                                                                           GthreeSkinnedMesh))
-#define GTHREE_IS_SKINNED_SKINNED_MESH(inst)  (G_TYPE_CHECK_INSTANCE_TYPE ((inst), \
-                                                                           GTHREE_TYPE_SKINNED_SKINNED_MESH))
+#define GTHREE_TYPE_SKINNED_MESH      (gthree_skinned_mesh_get_type ())
+#define GTHREE_SKINNED_MESH(inst)     (G_TYPE_CHECK_INSTANCE_CAST ((inst), \
+                                                                   GTHREE_TYPE_SKINNED_MESH, \
+                                                                   GthreeSkinnedMesh))
+#define GTHREE_IS_SKINNED_MESH(inst)  (G_TYPE_CHECK_INSTANCE_TYPE ((inst), \
+                                                                   GTHREE_TYPE_SKINNED_MESH))
 
 typedef struct {
   GthreeMesh parent;
@@ -33,11 +33,18 @@ GType gthree_skinned_mesh_get_type (void) G_GNUC_CONST;
 GthreeSkinnedMesh *gthree_skinned_mesh_new (GthreeGeometry *geometry,
                                             GthreeMaterial *material);
 
-void gthree_skinned_mesh_normalize_skin_weights (GthreeSkinnedMesh       *mesh);
-void gthree_skinned_mesh_bind                   (GthreeSkinnedMesh       *mesh,
-                                                 GthreeSkeleton          *skeleton,
-                                                 const graphene_matrix_t *bind_matrix);
-void gthree_skinned_mesh_pose                   (GthreeSkinnedMesh       *mesh);
+GthreeSkeleton *         gthree_skinned_mesh_get_skeleton            (GthreeSkinnedMesh       *mesh);
+const graphene_matrix_t *gthree_skinned_mesh_get_bind_matrix         (GthreeSkinnedMesh       *mesh);
+const graphene_matrix_t *gthree_skinned_mesh_get_inverse_bind_matrix (GthreeSkinnedMesh       *mesh);
+void                     gthree_skinned_mesh_set_bind_mode           (GthreeSkinnedMesh       *mesh,
+                                                                      GthreeBindMode           bind_mode);
+void                     gthree_skinned_mesh_normalize_skin_weights  (GthreeSkinnedMesh       *mesh);
+void                     gthree_skinned_mesh_bind                    (GthreeSkinnedMesh       *mesh,
+                                                                      GthreeSkeleton          *skeleton,
+                                                                      const graphene_matrix_t *bind_matrix);
+void                     gthree_skinned_mesh_pose                    (GthreeSkinnedMesh       *mesh);
+
+
 
 G_END_DECLS
 

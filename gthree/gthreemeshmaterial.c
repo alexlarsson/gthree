@@ -27,8 +27,8 @@ static GParamSpec *obj_props[N_PROPS] = { NULL, };
 
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeMeshMaterial, gthree_mesh_material, GTHREE_TYPE_MATERIAL)
 
-  static void
-  gthree_mesh_material_finalize (GObject *obj)
+static void
+gthree_mesh_material_finalize (GObject *obj)
 {
   G_OBJECT_CLASS (gthree_mesh_material_parent_class)->finalize (obj);
 }
@@ -103,14 +103,33 @@ gthree_mesh_material_get_property (GObject *obj,
     }
 }
 
+static gboolean
+gthree_mesh_material_needs_view_matrix (GthreeMaterial *material)
+{
+  GthreeMeshMaterial *mesh_material = GTHREE_MESH_MATERIAL (material);
+  GthreeMeshMaterialPrivate *priv = gthree_mesh_material_get_instance_private (mesh_material);
+
+  if (priv->skinning)
+    return TRUE;
+
+  if (GTHREE_MATERIAL_CLASS (gthree_mesh_material_parent_class)->needs_view_matrix)
+    return GTHREE_MATERIAL_CLASS (gthree_mesh_material_parent_class)->needs_view_matrix (material);
+ else
+   return FALSE;
+}
+
+
 static void
 gthree_mesh_material_class_init (GthreeMeshMaterialClass *klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GthreeMaterialClass *material_class = GTHREE_MATERIAL_CLASS (klass);
 
   gobject_class->set_property = gthree_mesh_material_set_property;
   gobject_class->get_property = gthree_mesh_material_get_property;
   gobject_class->finalize = gthree_mesh_material_finalize;
+
+  material_class->needs_view_matrix = gthree_mesh_material_needs_view_matrix;
 
   obj_props[PROP_WIREFRAME] =
     g_param_spec_boolean ("wireframe", "Wireframe", "Wireframe",

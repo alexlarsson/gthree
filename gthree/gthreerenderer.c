@@ -4,6 +4,7 @@
 #include "gthreerenderer.h"
 #include "gthreeobjectprivate.h"
 #include "gthreemesh.h"
+#include "gthreeskinnedmesh.h"
 #include "gthreelinesegments.h"
 #include "gthreeshader.h"
 #include "gthreematerial.h"
@@ -13,6 +14,7 @@
 #include "gthreeshadermaterial.h"
 #include "gthreelinebasicmaterial.h"
 #include "gthreeprimitives.h"
+#include "gthreegroup.h"
 #include "gthreeattribute.h"
 
 typedef struct {
@@ -121,6 +123,9 @@ static GQuark q_ambientLightColor;
 static GQuark q_directionalLights;
 static GQuark q_pointLights;
 static GQuark q_spotLights;
+static GQuark q_bindMatrix;
+static GQuark q_bindMatrixInverse;
+static GQuark q_boneGlobalMatrices;
 
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeRenderer, gthree_renderer, G_TYPE_OBJECT);
 
@@ -241,6 +246,9 @@ gthree_renderer_class_init (GthreeRendererClass *klass)
   INIT_QUARK(directionalLights);
   INIT_QUARK(pointLights);
   INIT_QUARK(spotLights);
+  INIT_QUARK(bindMatrix);
+  INIT_QUARK(bindMatrixInverse);
+  INIT_QUARK(boneGlobalMatrices);
 }
 
 void
@@ -540,7 +548,13 @@ project_object (GthreeRenderer *renderer,
   if (!gthree_object_get_visible (object))
     return;
 
-  if (GTHREE_IS_LIGHT (object))
+  if (GTHREE_IS_GROUP (object))
+    {
+#if 0
+      groupOrder = object.renderOrder;
+#endif
+    }
+  else if (GTHREE_IS_LIGHT (object))
     {
       priv->lights = g_list_append (priv->lights, object);
 #if TODO
@@ -550,6 +564,13 @@ project_object (GthreeRenderer *renderer,
     }
   else if (GTHREE_IS_MESH (object) || GTHREE_IS_LINE_SEGMENTS (object))
     {
+      if (GTHREE_IS_SKINNED_MESH (object))
+        {
+          GthreeSkeleton *skeleton = gthree_skinned_mesh_get_skeleton (GTHREE_SKINNED_MESH (object));
+          if (skeleton)
+            gthree_skeleton_update (skeleton);
+        }
+
       if (!gthree_object_get_is_frustum_culled (object) || gthree_object_is_in_frustum (object, &priv->frustum))
         {
           gthree_object_update (object);
@@ -616,6 +637,7 @@ init_material (GthreeRenderer *renderer,
   GthreeShader *shader;
   GthreeProgramParameters parameters = {0};
   GthreeUniforms *m_uniforms;
+  int max_bones;
   GthreeMaterialProperties *material_properties = gthree_material_get_properties (material);
 
   shader = gthree_material_get_shader (material);
@@ -631,6 +653,18 @@ init_material (GthreeRenderer *renderer,
   gthree_material_set_params (material, &parameters);
   parameters.num_dir_lights = priv->light_setup.directional->len;
   parameters.num_point_lights = priv->light_setup.point->len;
+
+
+  max_bones = 0;
+  if (GTHREE_IS_SKINNED_MESH (object))
+    {
+      GthreeSkeleton *skeleton = gthree_skinned_mesh_get_skeleton (GTHREE_SKINNED_MESH (object));
+      if (skeleton)
+        max_bones = gthree_skeleton_get_n_bones (skeleton);
+    }
+
+  parameters.max_bones = max_bones;
+  parameters.skinning = GTHREE_IS_MESH_MATERIAL (material) && gthree_mesh_material_get_skinning (GTHREE_MESH_MATERIAL (material));
 
 #ifdef TODO
   parameters =
@@ -648,8 +682,6 @@ init_material (GthreeRenderer *renderer,
     sizeAttenuation: material.sizeAttenuation,
     logarithmicDepthBuffer: _logarithmicDepthBuffer,
 
-    skinning: material.skinning,
-    maxBones: maxBones,
     useVertexTexture: _supportsBoneTextures && object && object.skeleton && object.skeleton.useVertexTexture,
 
     morphTargets: material.morphTargets,
@@ -913,18 +945,14 @@ set_program (GthreeRenderer *renderer,
             }
         }
 
-      if (gthree_material_needs_view_matrix (material)
-#if TODO
-	  || material.skinning
-#endif
-	  )
+      if (gthree_material_needs_view_matrix (material))
         {
-	  gint view_matrix_location = gthree_program_lookup_uniform_location (program, q_viewMatrix);
+          gint view_matrix_location = gthree_program_lookup_uniform_location (program, q_viewMatrix);
           if (view_matrix_location >= 0)
             {
-	      const graphene_matrix_t *m = gthree_camera_get_world_inverse_matrix (camera);
-	      float floats[16];
-	      graphene_matrix_to_float (m, floats);
+              const graphene_matrix_t *m = gthree_camera_get_world_inverse_matrix (camera);
+              float floats[16];
+              graphene_matrix_to_float (m, floats);
               glUniformMatrix4fv (view_matrix_location, 1, FALSE, floats);
             }
         }
@@ -934,15 +962,32 @@ set_program (GthreeRenderer *renderer,
   // auto-setting of texture unit for bone texture must go before other textures
   // not sure why, but otherwise weird things happen
 
-#if TODO
-  if ( material.skinning )
+  if (GTHREE_IS_MESH_MATERIAL (material) && gthree_mesh_material_get_skinning (GTHREE_MESH_MATERIAL (material)))
     {
-      if ( object.bindMatrix && uniform_locations.bindMatrix !== null )
-        glUniformMatrix4fv( uniform_locations.bindMatrix, false, object.bindMatrix.elements );
+      GthreeSkeleton *skeleton = NULL;
+      gint bind_matrix_location = gthree_program_lookup_uniform_location (program, q_bindMatrix);
+      gint bind_matrix_inverse_location = gthree_program_lookup_uniform_location (program, q_bindMatrixInverse);
 
-      if ( object.bindMatrixInverse && uniform_locations.bindMatrixInverse !== null )
-        glUniformMatrix4fv( uniform_locations.bindMatrixInverse, false, object.bindMatrixInverse.elements );
+      if (GTHREE_IS_SKINNED_MESH (object))
+        {
+          const graphene_matrix_t *bind_matrix = gthree_skinned_mesh_get_bind_matrix (GTHREE_SKINNED_MESH (object));
+          const graphene_matrix_t *inv_bind_matrix = gthree_skinned_mesh_get_inverse_bind_matrix (GTHREE_SKINNED_MESH (object));
+          if (bind_matrix)
+            {
+              float floats[16];
+              graphene_matrix_to_float (bind_matrix, floats);
+              glUniformMatrix4fv (bind_matrix_location, 1, FALSE, floats);
+            }
+          if (inv_bind_matrix)
+            {
+              float floats[16];
+              graphene_matrix_to_float (inv_bind_matrix, floats);
+              glUniformMatrix4fv (bind_matrix_inverse_location, 1, FALSE, floats);
+            }
+          skeleton = gthree_skinned_mesh_get_skeleton (GTHREE_SKINNED_MESH (object));
+        }
 
+#ifdef TODO
       if ( _supportsBoneTextures && object.skeleton && object.skeleton.useVertexTexture )
         {
           if ( uniform_locations.boneTexture !== null )
@@ -959,13 +1004,17 @@ set_program (GthreeRenderer *renderer,
             glUniform1i( uniform_locations.boneTextureHeight, object.skeleton.boneTextureHeight );
 
         }
-      else if ( object.skeleton && object.skeleton.boneMatrices )
-        {
-          if ( uniform_locations.boneGlobalMatrices !== null )
-            glUniformMatrix4fv( uniform_locations.boneGlobalMatrices, false, object.skeleton.boneMatrices );
-        }
-    }
+      else
 #endif
+
+        if (skeleton)
+          {
+            gint bone_global_matrices_location = gthree_program_lookup_uniform_location (program, q_boneGlobalMatrices);
+            float *bone_matrices = gthree_skeleton_get_bone_matrices (skeleton);
+            if (bone_global_matrices_location >= 0)
+              glUniformMatrix4fv (bone_global_matrices_location, gthree_skeleton_get_n_bones (skeleton), FALSE, bone_matrices);
+          }
+    }
 
   if ( refreshMaterial )
     {

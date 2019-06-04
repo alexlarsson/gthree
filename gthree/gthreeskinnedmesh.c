@@ -4,10 +4,11 @@
 #include "gthreeskinnedmesh.h"
 #include "gthreeobjectprivate.h"
 #include "gthreeprivate.h"
+#include "gthreetypebuiltins.h"
 
 typedef struct {
   GthreeSkeleton *skeleton;
-  const char *bind_mode; // enum?
+  GthreeBindMode bind_mode;
   graphene_matrix_t bind_matrix;
   graphene_matrix_t bind_matrix_inverse;
 } GthreeSkinnedMeshPrivate;
@@ -15,6 +16,7 @@ typedef struct {
 enum {
   PROP_0,
 
+  PROP_BIND_MODE,
 
   N_PROPS
 };
@@ -38,6 +40,7 @@ gthree_skinned_mesh_init (GthreeSkinnedMesh *mesh)
 {
   GthreeSkinnedMeshPrivate *priv = gthree_skinned_mesh_get_instance_private (mesh);
 
+  priv->bind_mode = GTHREE_BIND_MODE_ATTACHED;
   graphene_matrix_init_identity (&priv->bind_matrix);
   graphene_matrix_init_identity (&priv->bind_matrix_inverse);
 }
@@ -45,7 +48,7 @@ gthree_skinned_mesh_init (GthreeSkinnedMesh *mesh)
 static void
 gthree_skinned_mesh_finalize (GObject *obj)
 {
-  GthreeSkinnedMesh *mesh = GTHREE_SKINNED_SKINNED_MESH (obj);
+  GthreeSkinnedMesh *mesh = GTHREE_SKINNED_MESH (obj);
   GthreeSkinnedMeshPrivate *priv = gthree_skinned_mesh_get_instance_private (mesh);
 
   g_clear_object (&priv->skeleton);
@@ -56,9 +59,6 @@ gthree_skinned_mesh_finalize (GObject *obj)
 static void
 gthree_skinned_mesh_update (GthreeObject *object)
 {
-  GthreeSkinnedMesh *mesh = GTHREE_SKINNED_SKINNED_MESH (object);
-  GthreeSkinnedMeshPrivate *priv = gthree_skinned_mesh_get_instance_private (mesh);
-
   GTHREE_OBJECT_CLASS (gthree_skinned_mesh_parent_class)->update (object);
 }
 
@@ -68,11 +68,14 @@ gthree_skinned_mesh_set_property (GObject *obj,
                                   const GValue *value,
                                   GParamSpec *pspec)
 {
-  GthreeSkinnedMesh *mesh = GTHREE_SKINNED_SKINNED_MESH (obj);
-  GthreeSkinnedMeshPrivate *priv = gthree_skinned_mesh_get_instance_private (mesh);
+  GthreeSkinnedMesh *mesh = GTHREE_SKINNED_MESH (obj);
 
   switch (prop_id)
     {
+    case PROP_BIND_MODE:
+      gthree_skinned_mesh_set_bind_mode (mesh, g_value_get_enum (value));
+      break;
+
 
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
@@ -85,49 +88,54 @@ gthree_skinned_mesh_get_property (GObject *obj,
                                   GValue *value,
                                   GParamSpec *pspec)
 {
-  GthreeSkinnedMesh *mesh = GTHREE_SKINNED_SKINNED_MESH (obj);
+  GthreeSkinnedMesh *mesh = GTHREE_SKINNED_MESH (obj);
   GthreeSkinnedMeshPrivate *priv = gthree_skinned_mesh_get_instance_private (mesh);
 
   switch (prop_id)
     {
+    case PROP_BIND_MODE:
+      g_value_set_enum (value, priv->bind_mode);
+      break;
 
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
     }
 }
 
-static void
-gthree_skinned_mesh_class_init (GthreeSkinnedMeshClass *klass)
+
+GthreeSkeleton *
+gthree_skinned_mesh_get_skeleton (GthreeSkinnedMesh *mesh)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  GthreeObjectClass *object_class = GTHREE_OBJECT_CLASS (klass);
+  GthreeSkinnedMeshPrivate *priv = gthree_skinned_mesh_get_instance_private (mesh);
 
-  gobject_class->set_property = gthree_skinned_mesh_set_property;
-  gobject_class->get_property = gthree_skinned_mesh_get_property;
-  gobject_class->finalize = gthree_skinned_mesh_finalize;
-
-  object_class->update = gthree_skinned_mesh_update;
-
-  //g_object_class_install_properties (gobject_class, N_PROPS, obj_props);
+  return priv->skeleton;
 }
-
 
 void
 gthree_skinned_mesh_bind (GthreeSkinnedMesh *mesh,
                           GthreeSkeleton *skeleton,
                           const graphene_matrix_t *bind_matrix)
 {
-#ifdef TODO
-  this.skeleton = skeleton;
-  if ( bindMatrix === undefined ) {
-    this.updateMatrixWorld( true );
-    this.skeleton.calculateInverses();
-    bindMatrix = this.matrixWorld;
-  }
+  GthreeSkinnedMeshPrivate *priv = gthree_skinned_mesh_get_instance_private (mesh);
 
-  this.bindMatrix.copy( bindMatrix );
-  this.bindMatrixInverse.getInverse( bindMatrix );
-#endif
+  g_object_ref (skeleton);
+  g_clear_object (&priv->skeleton);
+  priv->skeleton = skeleton;
+
+  if (bind_matrix == NULL)
+    {
+      gthree_object_update_matrix_world (GTHREE_OBJECT (mesh), TRUE);
+      gthree_skeleton_calculate_inverses  (priv->skeleton);
+      graphene_matrix_init_from_matrix (&priv->bind_matrix,
+                                        gthree_object_get_world_matrix (GTHREE_OBJECT (mesh)));
+    }
+  else
+    {
+      graphene_matrix_init_from_matrix (&priv->bind_matrix,
+                                        bind_matrix);
+    }
+
+  graphene_matrix_inverse (&priv->bind_matrix, &priv->bind_matrix_inverse);
 }
 
 void
@@ -139,9 +147,35 @@ gthree_skinned_mesh_pose (GthreeSkinnedMesh *mesh)
     gthree_skeleton_pose (priv->skeleton);
 }
 
+const graphene_matrix_t *
+gthree_skinned_mesh_get_bind_matrix (GthreeSkinnedMesh       *mesh)
+{
+  GthreeSkinnedMeshPrivate *priv = gthree_skinned_mesh_get_instance_private (mesh);
+
+  return &priv->bind_matrix;
+}
+
+const graphene_matrix_t *
+gthree_skinned_mesh_get_inverse_bind_matrix (GthreeSkinnedMesh       *mesh)
+{
+  GthreeSkinnedMeshPrivate *priv = gthree_skinned_mesh_get_instance_private (mesh);
+
+  return &priv->bind_matrix_inverse;
+}
+
+void
+gthree_skinned_mesh_set_bind_mode (GthreeSkinnedMesh *mesh,
+                                   GthreeBindMode bind_mode)
+{
+  GthreeSkinnedMeshPrivate *priv = gthree_skinned_mesh_get_instance_private (mesh);
+
+  priv->bind_mode = bind_mode;
+}
+
 void
 gthree_skinned_mesh_normalize_skin_weights (GthreeSkinnedMesh *mesh)
 {
+  g_warning ("TODO gthree_skinned_mesh_normalize_skin_weights");
 #ifdef TODO
   var vector = new Vector4();
   var skinWeight = this.geometry.attributes.skinWeight;
@@ -161,19 +195,42 @@ gthree_skinned_mesh_normalize_skin_weights (GthreeSkinnedMesh *mesh)
 #endif
 }
 
-void
-gthre_skinned_mesh_update_matrix_world (GthreeSkinnedMesh *mesh,
-                                        gboolean force)
+static gboolean
+gthree_skinned_mesh_update_matrix_world (GthreeObject *object,
+                                         gboolean force)
 {
-#ifdef TODO
-  // Needs a vfunc in GthreeObject
-  Mesh.prototype.updateMatrixWorld.call( this, force );
-  if ( this.bindMode === 'attached' ) {
-    this.bindMatrixInverse.getInverse( this.matrixWorld );
-  } else if ( this.bindMode === 'detached' ) {
-    this.bindMatrixInverse.getInverse( this.bindMatrix );
-  } else {
-    console.warn( 'THREE.SkinnedMesh: Unrecognized bindMode: ' + this.bindMode );
-  }
-#endif
+  GthreeSkinnedMesh *mesh = GTHREE_SKINNED_MESH (object);
+  GthreeSkinnedMeshPrivate *priv = gthree_skinned_mesh_get_instance_private (mesh);
+
+  force = GTHREE_OBJECT_CLASS (gthree_skinned_mesh_parent_class)->update_matrix_world (object, force);
+
+  if (priv->bind_mode == GTHREE_BIND_MODE_ATTACHED)
+    graphene_matrix_inverse (gthree_object_get_world_matrix (object),
+                             &priv->bind_matrix_inverse);
+  else
+    graphene_matrix_inverse (&priv->bind_matrix, &priv->bind_matrix_inverse);
+
+  return force;
+}
+
+static void
+gthree_skinned_mesh_class_init (GthreeSkinnedMeshClass *klass)
+{
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GthreeObjectClass *object_class = GTHREE_OBJECT_CLASS (klass);
+
+  gobject_class->set_property = gthree_skinned_mesh_set_property;
+  gobject_class->get_property = gthree_skinned_mesh_get_property;
+  gobject_class->finalize = gthree_skinned_mesh_finalize;
+
+  object_class->update = gthree_skinned_mesh_update;
+  object_class->update_matrix_world = gthree_skinned_mesh_update_matrix_world;
+
+  obj_props[PROP_BIND_MODE] =
+    g_param_spec_enum ("bind-mode", "Bind mode", "Bind mode",
+                       GTHREE_TYPE_BIND_MODE,
+                       GTHREE_BIND_MODE_ATTACHED,
+                       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  g_object_class_install_properties (gobject_class, N_PROPS, obj_props);
 }
