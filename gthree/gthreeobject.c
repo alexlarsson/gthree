@@ -482,6 +482,8 @@ gthree_object_set_world_matrix (GthreeObject *object, const graphene_matrix_t *m
 
   priv->world_matrix = *matrix;
   priv->world_matrix_need_update = FALSE;
+
+  // TODO: decompose matrix into position, quat, scale
 }
 
 void
