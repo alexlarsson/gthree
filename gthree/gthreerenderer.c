@@ -125,7 +125,7 @@ static GQuark q_pointLights;
 static GQuark q_spotLights;
 static GQuark q_bindMatrix;
 static GQuark q_bindMatrixInverse;
-static GQuark q_boneGlobalMatrices;
+static GQuark q_boneMatrices;
 
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeRenderer, gthree_renderer, G_TYPE_OBJECT);
 
@@ -248,7 +248,7 @@ gthree_renderer_class_init (GthreeRendererClass *klass)
   INIT_QUARK(spotLights);
   INIT_QUARK(bindMatrix);
   INIT_QUARK(bindMatrixInverse);
-  INIT_QUARK(boneGlobalMatrices);
+  INIT_QUARK(boneMatrices);
 }
 
 void
@@ -661,6 +661,7 @@ init_material (GthreeRenderer *renderer,
       GthreeSkeleton *skeleton = gthree_skinned_mesh_get_skeleton (GTHREE_SKINNED_MESH (object));
       if (skeleton)
         max_bones = gthree_skeleton_get_n_bones (skeleton);
+      // TODO: Limit max bones to GPU specs
     }
 
   parameters.max_bones = max_bones;
@@ -1009,10 +1010,12 @@ set_program (GthreeRenderer *renderer,
 
         if (skeleton)
           {
-            gint bone_global_matrices_location = gthree_program_lookup_uniform_location (program, q_boneGlobalMatrices);
+            /* Unclear why we need [0] here rather than boneMatrices? Do we ever need [1]?? */
+            gint bone_matrices_location = gthree_program_lookup_uniform_location (program,
+                                                                                  g_quark_from_static_string ("boneMatrices[0]"));
             float *bone_matrices = gthree_skeleton_get_bone_matrices (skeleton);
-            if (bone_global_matrices_location >= 0)
-              glUniformMatrix4fv (bone_global_matrices_location, gthree_skeleton_get_n_bones (skeleton), FALSE, bone_matrices);
+            if (bone_matrices_location >= 0)
+              glUniformMatrix4fv (bone_matrices_location, gthree_skeleton_get_n_bones (skeleton), FALSE, bone_matrices);
           }
     }
 
