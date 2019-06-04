@@ -39,6 +39,8 @@ typedef struct {
 
   void (* update)               (GthreeObject          *object);
   void (* destroy)              (GthreeObject          *object);
+  gboolean (* update_matrix_world) (GthreeObject          *object,
+                                    gboolean               force);
 
 
   void (* fill_render_list)      (GthreeObject          *object,

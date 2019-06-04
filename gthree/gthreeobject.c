@@ -74,6 +74,10 @@ G_DEFINE_TYPE_WITH_PRIVATE (GthreeObject, gthree_object, G_TYPE_OBJECT);
 
 #define PRIV(_o) ((GthreeObjectPrivate*)gthree_object_get_instance_private (_o))
 
+static gboolean gthree_object_real_update_matrix_world (GthreeObject *object,
+                                                        gboolean force);
+
+
 GthreeObject *
 gthree_object_new ()
 {
@@ -233,6 +237,7 @@ gthree_object_class_init (GthreeObjectClass *klass)
   obj_class->finalize = gthree_object_finalize;
 
   klass->destroy = gthree_object_real_destroy;
+  klass->update_matrix_world = gthree_object_real_update_matrix_world;
 
   object_signals[DESTROY] =
     g_signal_new ("destroy",
@@ -486,12 +491,11 @@ gthree_object_set_world_matrix (GthreeObject *object, const graphene_matrix_t *m
   // TODO: decompose matrix into position, quat, scale
 }
 
-void
-gthree_object_update_matrix_world (GthreeObject *object,
-                                   gboolean force)
+static gboolean
+gthree_object_real_update_matrix_world (GthreeObject *object,
+                                        gboolean force)
 {
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
-  GthreeObject *child;
 
   if (priv->matrix_auto_update)
     gthree_object_update_matrix (object);
@@ -509,11 +513,25 @@ gthree_object_update_matrix_world (GthreeObject *object,
       force = TRUE;
     }
 
+  return force;
+}
+
+void
+gthree_object_update_matrix_world (GthreeObject *object,
+                                   gboolean force)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+  GthreeObjectClass *class = GTHREE_OBJECT_GET_CLASS(object);
+  GthreeObject *child;
+
+  force = class->update_matrix_world (object, force);
+
   for (child = priv->first_child;
        child != NULL;
        child = PRIV (child)->next_sibling)
     gthree_object_update_matrix_world (child, force);
 }
+
 
 void
 gthree_object_update_matrix_view (GthreeObject *object,
