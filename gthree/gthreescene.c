@@ -23,7 +23,7 @@ gthree_scene_new ()
   scene = g_object_new (gthree_scene_get_type (),
                          NULL);
 
-  return scene;
+  return g_object_ref_sink (scene);
 }
 
 static void
