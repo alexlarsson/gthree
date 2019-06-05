@@ -7,6 +7,7 @@
 #include "utils.h"
 
 static GthreeScene *scene;
+static GthreeSkinnedMesh *cylinder;
 static GPtrArray *bones = NULL;
 
 #define SEGMENT_HEIGHT 5
@@ -14,28 +15,70 @@ static GPtrArray *bones = NULL;
 #define SPLIT_PER_SEGMENT 2
 #define TOTAL_HEIGHT (SEGMENT_HEIGHT * N_SEGMENTS)
 
+static void
+colorise_faces (GthreeGeometry *geometry)
+{
+  int count = gthree_geometry_get_position_count (geometry);
+  GthreeAttribute *color = gthree_geometry_add_attribute (geometry,
+                                                          gthree_attribute_new ("color", GTHREE_ATTRIBUTE_TYPE_FLOAT, count,
+                                                                                3, FALSE));
+  int i, j;
+
+  for (i = 0; i < count / 4; i++)
+    {
+      GdkRGBA *rgba;
+      switch (i)
+        {
+        case 0:
+          rgba = &red;
+          break;
+        case 1:
+          rgba = &green;
+          break;
+        case 2:
+          rgba = &blue;
+          break;
+        case 3:
+          rgba = &cyan;
+          break;
+        case 4:
+          rgba = &magenta;
+          break;
+        case 5:
+          rgba = &yellow;
+          break;
+        }
+
+      for (j = 0; j < 4; j++)
+        gthree_attribute_set_rgb (color, i * 4 + j, rgba);
+    }
+
+  g_object_unref (color);
+}
 
 GthreeScene *
 init_scene (void)
 {
-  GthreeMeshPhongMaterial *material;
+  GthreeMeshStandardMaterial *material;
   GthreeGeometry *geometry;
-  GthreeSkinnedMesh *mesh;
   GthreeAttribute *position, *skin_indices, *skin_weights;
   int i, n_vert;
   GthreeBone *last_bone, *root_bone;
   GthreeSkeleton *skeleton;
+  GthreeGeometry *dot_geometry;
+  GthreeMeshBasicMaterial *dot_material;
 
-  material = gthree_mesh_phong_material_new ();
-  gthree_mesh_phong_material_set_color (material, &cyan);
+  material = gthree_mesh_standard_material_new ();
+  gthree_mesh_standard_material_set_color (material, &cyan);
   gthree_mesh_material_set_is_wireframe (GTHREE_MESH_MATERIAL (material), TRUE);
+  gthree_mesh_material_set_wireframe_line_width (GTHREE_MESH_MATERIAL (material), 3);
   gthree_mesh_material_set_skinning (GTHREE_MESH_MATERIAL (material), TRUE);
 
   scene = gthree_scene_new ();
 
   geometry = gthree_geometry_new_cylinder_full (5, 5,
                                                 TOTAL_HEIGHT,
-                                                5, SPLIT_PER_SEGMENT * N_SEGMENTS,
+                                                10, SPLIT_PER_SEGMENT * N_SEGMENTS,
                                                 TRUE,
                                                 0, 2 * G_PI);
 
@@ -68,8 +111,6 @@ init_scene (void)
       skin_index = floor (y / SEGMENT_HEIGHT);
       skin_weight = y  / (float)SEGMENT_HEIGHT - skin_index;
 
-      //g_print ("y: %f, skin index %d %f\n", y, skin_index, skin_weight);
-
       idx = gthree_attribute_peek_uint16_at (skin_indices, i);
       idx[0] = skin_index;
       idx[1] = skin_index + 1;
@@ -83,22 +124,34 @@ init_scene (void)
       wt[3] = 0;
     }
 
+  cylinder = gthree_skinned_mesh_new (geometry, GTHREE_MATERIAL (material));
 
-  mesh = gthree_skinned_mesh_new (geometry, GTHREE_MATERIAL (material));
+  gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (cylinder));
 
-  gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (mesh));
+  dot_geometry = gthree_geometry_new_box (1.5, 1.5, 1.5, 1, 1, 1);
+  colorise_faces (dot_geometry);
+  dot_material = gthree_mesh_basic_material_new ();
+  gthree_material_set_vertex_colors (GTHREE_MATERIAL (dot_material), TRUE);
 
   bones = g_ptr_array_new_with_free_func (g_object_unref);
   last_bone = NULL;
-  for (i = 0; i < N_SEGMENTS; i++)
+  for (i = 0; i < N_SEGMENTS+1; i++)
     {
       GthreeBone *bone = gthree_bone_new ();
       graphene_point3d_t p;
+      GthreeMesh *dot;
 
       g_ptr_array_add (bones, bone);
 
-      gthree_object_set_position (GTHREE_OBJECT (bone),
-                                  graphene_point3d_init (&p, SEGMENT_HEIGHT, 0, 0));
+      if (i == 0)
+        gthree_object_set_position (GTHREE_OBJECT (bone),
+                                    graphene_point3d_init (&p, 0, - (N_SEGMENTS) * SEGMENT_HEIGHT / 2, 0));
+      else
+        gthree_object_set_position (GTHREE_OBJECT (bone),
+                                    graphene_point3d_init (&p, 0, SEGMENT_HEIGHT, 0));
+
+      dot = gthree_mesh_new (dot_geometry, GTHREE_MATERIAL (dot_material));
+      gthree_object_add_child (GTHREE_OBJECT (bone), GTHREE_OBJECT (dot));
 
       if (last_bone != NULL)
         gthree_object_add_child (GTHREE_OBJECT (last_bone),
@@ -110,15 +163,9 @@ init_scene (void)
     }
 
   skeleton = gthree_skeleton_new ((GthreeBone **)bones->pdata, bones->len, NULL);
-  gthree_object_add_child (GTHREE_OBJECT (mesh), GTHREE_OBJECT (root_bone));
+  gthree_object_add_child (GTHREE_OBJECT (cylinder), GTHREE_OBJECT (root_bone));
 
-  gthree_skinned_mesh_bind (mesh, skeleton, NULL);
-
-#if 0
-  // move the bones and manipulate the model
-  skeleton.bones[ 0 ].rotation.x = -0.1;
-  skeleton.bones[ 1 ].rotation.x = 0.2;
-#endif
+  gthree_skinned_mesh_bind (cylinder, skeleton, NULL);
 
   return scene;
 }
@@ -128,6 +175,27 @@ tick (GtkWidget     *widget,
       GdkFrameClock *frame_clock,
       gpointer       user_data)
 {
+  graphene_euler_t rot;
+  graphene_point3d_t pos;
+  gint64 frame_time;
+  float angle;
+  int i;
+
+  frame_time = gdk_frame_clock_get_frame_time (frame_clock);
+  angle = frame_time / 40000.0;
+
+  for (i = 0; i < N_SEGMENTS+1; i++)
+    {
+      GthreeBone *bone = g_ptr_array_index (bones, i);
+      
+      graphene_euler_init (&rot,
+                           0,  sin (angle / 40) * 15, 0);
+      gthree_object_set_rotation (GTHREE_OBJECT (bone), &rot);
+
+      gthree_object_get_position (GTHREE_OBJECT (bone), &pos);
+      pos.x = sin (angle / 40) * 1;
+      gthree_object_set_position (GTHREE_OBJECT (bone), &pos);
+    }
 
   gtk_widget_queue_draw (widget);
 
@@ -181,12 +249,14 @@ main (int argc, char *argv[])
                               graphene_point3d_init (&pos,
                                                      1, 1, -1));
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (directional_light));
- 
+
   camera = gthree_perspective_camera_new (30, 1, 1, 10000);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
 
   gthree_object_set_position (GTHREE_OBJECT (camera),
-                              graphene_point3d_init (&pos, 0, 0, 40));
+                              graphene_point3d_init (&pos, 0, 13, 50));
+  gthree_object_look_at (GTHREE_OBJECT (camera),
+                         graphene_point3d_init (&pos, 0, 0, 0));
 
   area = gthree_area_new (scene, GTHREE_CAMERA (camera));
   g_signal_connect (area, "resize", G_CALLBACK (resize_area), camera);
