@@ -64,7 +64,7 @@ gthree_skeleton_new  (GthreeBone **bones,
         graphene_matrix_init_identity (&priv->bone_inverses[i]);
     }
 
-  if (!bone_inverses)
+  if (bone_inverses == NULL)
     gthree_skeleton_calculate_inverses (skeleton);
 
   return skeleton;
