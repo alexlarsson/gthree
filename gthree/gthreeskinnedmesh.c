@@ -5,6 +5,7 @@
 #include "gthreeobjectprivate.h"
 #include "gthreeprivate.h"
 #include "gthreetypebuiltins.h"
+#include "gthreeattribute.h"
 
 typedef struct {
   GthreeSkeleton *skeleton;
@@ -175,24 +176,23 @@ gthree_skinned_mesh_set_bind_mode (GthreeSkinnedMesh *mesh,
 void
 gthree_skinned_mesh_normalize_skin_weights (GthreeSkinnedMesh *mesh)
 {
-  g_warning ("TODO gthree_skinned_mesh_normalize_skin_weights");
-#ifdef TODO
-  var vector = new Vector4();
-  var skinWeight = this.geometry.attributes.skinWeight;
-  for ( var i = 0, l = skinWeight.count; i < l; i ++ ) {
-    vector.x = skinWeight.getX( i );
-    vector.y = skinWeight.getY( i );
-    vector.z = skinWeight.getZ( i );
-    vector.w = skinWeight.getW( i );
-    var scale = 1.0 / vector.manhattanLength();
-    if ( scale !== Infinity ) {
-      vector.multiplyScalar( scale );
-    } else {
-      vector.set( 1, 0, 0, 0 ); // do something reasonable
+  GthreeAttribute *skin_weight;
+  int count, i;
+
+  skin_weight =
+    gthree_geometry_get_attribute (gthree_mesh_get_geometry (GTHREE_MESH (mesh)),
+                                   GTHREE_ATTRIBUTE_NAME_SKIN_WEIGHT);
+  if (skin_weight == NULL)
+    return;
+
+  count = gthree_attribute_get_count (skin_weight);
+  for (i = 0; i < count; i++)
+    {
+      graphene_vec4_t v;
+      gthree_attribute_get_vec4 (skin_weight, i, &v);
+      graphene_vec4_normalize (&v, &v);
+      gthree_attribute_set_vec4 (skin_weight, i, &v);
     }
-    skinWeight.setXYZW( i, vector.x, vector.y, vector.z, vector.w );
-  }
-#endif
 }
 
 static gboolean
