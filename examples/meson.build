@@ -1,6 +1,7 @@
 examples = [
   'cubes',
   'envmap',
+  'skin',
   'skinning',
   'gtklogo',
   'materials',

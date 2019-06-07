@@ -1485,8 +1485,7 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
               MaterialCacheKey cache_key = { base_material };
               GthreeMesh *mesh;
 
-              // TODO: Enable this when it works
-              //cache_key.use_skinning = skin != NULL;
+              cache_key.use_skinning = skin != NULL;
 
               cache_key.use_vertex_tangents =
                 gthree_geometry_has_attribute (primitive->geometry,
