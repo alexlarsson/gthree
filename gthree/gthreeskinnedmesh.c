@@ -190,7 +190,15 @@ gthree_skinned_mesh_normalize_skin_weights (GthreeSkinnedMesh *mesh)
     {
       graphene_vec4_t v;
       gthree_attribute_get_vec4 (skin_weight, i, &v);
-      graphene_vec4_normalize (&v, &v);
+
+      float sum =
+        graphene_vec4_get_x (&v) +
+        graphene_vec4_get_y (&v) +
+        graphene_vec4_get_z (&v) +
+        graphene_vec4_get_w (&v);
+
+      graphene_vec4_scale (&v, 1.0/sum, &v);
+
       gthree_attribute_set_vec4 (skin_weight, i, &v);
     }
 }
