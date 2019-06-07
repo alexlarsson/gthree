@@ -26,6 +26,11 @@
  */
 
 typedef struct {
+  gboolean is_bone;
+} NodeInfo;
+
+typedef struct {
+  NodeInfo *node_infos;
   GPtrArray *buffers;
   GPtrArray *buffer_views;
   GPtrArray *images;
@@ -299,6 +304,9 @@ gthree_loader_finalize (GObject *obj)
   g_ptr_array_unref (priv->materials);
   g_ptr_array_unref (priv->cameras);
 
+  if (priv->node_infos)
+    g_free (priv->node_infos);
+
   g_ptr_array_unref (priv->final_materials);
   g_hash_table_unref (priv->final_materials_hash);
 
@@ -463,6 +471,22 @@ static gboolean
 supports_extension (const char *extension)
 {
   return FALSE;
+}
+
+static void
+init_node_info (GthreeLoader *loader, JsonObject *root)
+{
+  GthreeLoaderPrivate *priv = gthree_loader_get_instance_private (loader);
+  JsonArray *nodes_j = NULL;
+  guint len;
+
+  if (!json_object_has_member (root, "nodes"))
+    return;
+
+  nodes_j = json_object_get_array_member (root, "nodes");
+  len = json_array_get_length (nodes_j);
+
+  priv->node_infos = g_new (NodeInfo, len);
 }
 
 static gboolean
@@ -1519,6 +1543,8 @@ gthree_loader_parse_gltf (GBytes *data, GFile *base_path, GError **error)
   root = json_node_get_object (root_node);
 
   loader = g_object_new (gthree_loader_get_type (), NULL);
+
+  init_node_info (loader, root);
 
   if (!parse_asset (loader, root, error))
     return NULL;
