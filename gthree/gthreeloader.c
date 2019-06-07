@@ -6,7 +6,9 @@
 #include "gthreeperspectivecamera.h"
 #include "gthreemeshbasicmaterial.h"
 #include "gthreemesh.h"
+#include "gthreeskinnedmesh.h"
 #include "gthreescene.h"
+#include "gthreebone.h"
 #include "gthreegroup.h"
 #include "gthreeenums.h"
 #include "gthreeprivate.h"
@@ -1382,92 +1384,25 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
   JsonArray *nodes_j = NULL;
   guint len;
   int i;
-  graphene_point3d_t scale = { 1.f, 1.f, 1.f }, translate = { 0, 0, 0};
-  graphene_quaternion_t rotate;
 
   if (!json_object_has_member (root, "nodes"))
     return TRUE;
 
   nodes_j = json_object_get_array_member (root, "nodes");
   len = json_array_get_length (nodes_j);
+
+  /* First create all all base nodes with the right type and local transform */
   for (i = 0; i < len; i++)
     {
       JsonObject *node_j = json_array_get_object_element (nodes_j, i);
       g_autoptr(GthreeObject) node = NULL;
+      graphene_point3d_t scale = { 1.f, 1.f, 1.f }, translate = { 0, 0, 0};
+      graphene_quaternion_t rotate;
 
-      // TODO: handle cameras, skin, weights (morph targets)
-
-      node = (GthreeObject *)g_object_ref_sink (gthree_group_new ());
-
-      if (json_object_has_member (node_j, "mesh"))
-        {
-          gint64 mesh_id = json_object_get_int_member (node_j, "mesh");
-          Mesh *mesh = g_ptr_array_index (priv->meshes, mesh_id);
-          int j;
-
-          for (j = 0; j < mesh->primitives->len; j++)
-            {
-              Primitive *primitive = g_ptr_array_index (mesh->primitives, j);
-              GthreeMaterial *base_material = primitive->material;
-              GthreeMaterial *material;
-              MaterialCacheKey cache_key = { base_material };
-              GthreeMesh *mesh;
-
-              cache_key.use_vertex_tangents =
-                gthree_geometry_has_attribute (primitive->geometry,
-                                               gthree_attribute_name_get_for_static ("tangent"));
-              cache_key.use_vertex_colors =
-                gthree_geometry_has_attribute (primitive->geometry,
-                                               gthree_attribute_name_get_for_static ("color"));
-
-              material = g_hash_table_lookup (priv->final_materials_hash, &cache_key);
-              if (material == NULL)
-                {
-                  MaterialCacheKey *cache_key_copy = material_cache_key_clone (&cache_key);
-
-                  material = gthree_material_clone (base_material);
-                  if (cache_key.use_vertex_colors)
-                    gthree_material_set_vertex_colors (material, TRUE);
-                  //TODO: if (cache_key.use_vertex_tangents)
-
-                  g_hash_table_insert (priv->final_materials_hash, cache_key_copy, material);
-                  g_ptr_array_add (priv->final_materials, material);
-                }
-
-              /* TODO: more cache keys
-               * var useFlatShading = geometry.attributes.normal === undefined;
-               * var useSkinning = mesh.isSkinnedMesh === true;
-               * var useMorphTargets = Object.keys( geometry.morphAttributes ).length > 0;
-               * var useMorphNormals = useMorphTargets && geometry.morphAttributes.normal !== undefined;
-               */
-
-              mesh = gthree_mesh_new (primitive->geometry, g_object_ref (material));
-
-              gthree_object_add_child (node, GTHREE_OBJECT (mesh));
-            }
-
-        }
-
-      if (json_object_has_member (node_j, "camera"))
-        {
-          gint64 camera_id = json_object_get_int_member (node_j, "camera");
-          Camera *camera = g_ptr_array_index (priv->cameras, camera_id);
-          GthreeCamera *camera_node = NULL;
-
-          if (camera->perspective)
-            camera_node = (GthreeCamera *)gthree_perspective_camera_new (rad_to_deg (camera->yfov), camera->aspect_ratio,
-                                                                         camera->znear, camera->zfar);
-          else
-            g_warning ("Unsupported orthographic camera");
-
-          if (camera_node)
-            gthree_object_add_child (node, GTHREE_OBJECT (camera_node));
-        }
-
-      if (json_object_has_member (node_j, "skin"))
-        {
-          // TODO
-        }
+      if (priv->node_infos[i].is_bone)
+        node = (GthreeObject *)g_object_ref_sink (gthree_bone_new ());
+      else
+        node = (GthreeObject *)g_object_ref_sink (gthree_group_new ());
 
       graphene_quaternion_init_identity (&rotate);
 
@@ -1507,8 +1442,7 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
       g_ptr_array_add (priv->nodes, g_steal_pointer (&node));
     }
 
-  nodes_j = json_object_get_array_member (root, "nodes");
-  len = json_array_get_length (nodes_j);
+  /* Then apply the hierarchy */
   for (i = 0; i < len; i++)
     {
       JsonObject *node_j = json_array_get_object_element (nodes_j, i);
@@ -1527,6 +1461,131 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
               gthree_object_add_child (parent, child);
             }
         }
+    }
+
+  /* Then create extra objects like meshes and cameras */
+  for (i = 0; i < len; i++)
+    {
+      JsonObject *node_j = json_array_get_object_element (nodes_j, i);
+      GthreeObject *node = g_ptr_array_index (priv->nodes, i);
+
+      // TODO: weights (morph targets)
+
+      if (json_object_has_member (node_j, "mesh"))
+        {
+          gint64 mesh_id = json_object_get_int_member (node_j, "mesh");
+          Mesh *mesh = g_ptr_array_index (priv->meshes, mesh_id);
+          Skin *skin = NULL;
+          int j;
+
+          if (json_object_has_member (node_j, "skin"))
+            {
+              gint64 skin_id = json_object_get_int_member (node_j, "skin");
+
+              // This is used below for each primitive mesh
+              skin = g_ptr_array_index (priv->skins, skin_id);
+            }
+
+          for (j = 0; j < mesh->primitives->len; j++)
+            {
+              Primitive *primitive = g_ptr_array_index (mesh->primitives, j);
+              GthreeMaterial *base_material = primitive->material;
+              GthreeMaterial *material;
+              MaterialCacheKey cache_key = { base_material };
+              GthreeMesh *mesh;
+
+              // TODO: Enable this when it works
+              //cache_key.use_skinning = skin != NULL;
+
+              cache_key.use_vertex_tangents =
+                gthree_geometry_has_attribute (primitive->geometry,
+                                               gthree_attribute_name_get_for_static ("tangent"));
+              cache_key.use_vertex_colors =
+                gthree_geometry_has_attribute (primitive->geometry,
+                                               gthree_attribute_name_get_for_static ("color"));
+
+              material = g_hash_table_lookup (priv->final_materials_hash, &cache_key);
+              if (material == NULL)
+                {
+                  MaterialCacheKey *cache_key_copy = material_cache_key_clone (&cache_key);
+
+                  material = gthree_material_clone (base_material);
+                  if (cache_key.use_vertex_colors)
+                    gthree_material_set_vertex_colors (material, TRUE);
+                  if (cache_key.use_skinning)
+                    gthree_mesh_material_set_skinning (GTHREE_MESH_MATERIAL (material), TRUE);
+                  //TODO: if (cache_key.use_vertex_tangents)
+
+                  g_hash_table_insert (priv->final_materials_hash, cache_key_copy, material);
+                  g_ptr_array_add (priv->final_materials, material);
+                }
+
+              /* TODO: more cache keys
+               * var useFlatShading = geometry.attributes.normal === undefined;
+               * var useSkinning = mesh.isSkinnedMesh === true;
+               * var useMorphTargets = Object.keys( geometry.morphAttributes ).length > 0;
+               * var useMorphNormals = useMorphTargets && geometry.morphAttributes.normal !== undefined;
+               */
+
+              if (skin != NULL)
+                {
+                  GthreeSkeleton *skeleton;
+                  g_autofree GthreeBone **bones = g_new0 (GthreeBone *, skin->joints->len);
+                  g_autofree graphene_matrix_t *bone_inverses = g_new0 (graphene_matrix_t, skin->joints->len);
+                  int b;
+
+                  for (b = 0; b < skin->joints->len; b++)
+                    {
+                      bones[b] = g_ptr_array_index (priv->nodes, g_array_index (skin->joints, int, b));
+                      graphene_matrix_init_identity (&bone_inverses[b]);
+                    }
+
+                  mesh = (GthreeMesh *)gthree_skinned_mesh_new (primitive->geometry, g_object_ref (material));
+
+                  if (skin->inverse_bind_matrices >= 0)
+                    {
+                      Accessor *accessor = g_ptr_array_index (priv->accessors, skin->inverse_bind_matrices);
+
+                      if (accessor->count != skin->joints->len)
+                        g_warning ("Wrong inverse bind matrices size");
+                      else
+                        {
+                          for (b = 0; b < skin->joints->len; b++)
+                            gthree_attribute_array_get_matrix (accessor->array, b, 0, &bone_inverses[b]);
+                        }
+                    }
+
+                  // From three.js, see #15319
+                  gthree_skinned_mesh_normalize_skin_weights (GTHREE_SKINNED_MESH (mesh));
+
+                  skeleton = gthree_skeleton_new (bones, skin->joints->len, bone_inverses);
+                  gthree_skinned_mesh_bind (GTHREE_SKINNED_MESH (mesh), skeleton,
+                                            gthree_object_get_world_matrix (GTHREE_OBJECT (mesh)));
+                }
+              else
+                mesh = gthree_mesh_new (primitive->geometry, g_object_ref (material));
+
+              gthree_object_add_child (node, GTHREE_OBJECT (mesh));
+            }
+
+        }
+
+      if (json_object_has_member (node_j, "camera"))
+        {
+          gint64 camera_id = json_object_get_int_member (node_j, "camera");
+          Camera *camera = g_ptr_array_index (priv->cameras, camera_id);
+          GthreeCamera *camera_node = NULL;
+
+          if (camera->perspective)
+            camera_node = (GthreeCamera *)gthree_perspective_camera_new (rad_to_deg (camera->yfov), camera->aspect_ratio,
+                                                                         camera->znear, camera->zfar);
+          else
+            g_warning ("Unsupported orthographic camera");
+
+          if (camera_node)
+            gthree_object_add_child (node, GTHREE_OBJECT (camera_node));
+        }
+
     }
 
   return TRUE;
