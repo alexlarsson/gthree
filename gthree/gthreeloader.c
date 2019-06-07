@@ -497,7 +497,7 @@ init_node_info (GthreeLoader *loader, JsonObject *root)
   nodes_j = json_object_get_array_member (root, "nodes");
   len = json_array_get_length (nodes_j);
 
-  priv->node_infos = g_new (NodeInfo, len);
+  priv->node_infos = g_new0 (NodeInfo, len);
 }
 
 static gboolean
