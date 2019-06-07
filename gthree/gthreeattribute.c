@@ -436,6 +436,22 @@ gthree_attribute_array_set_xyzw (GthreeAttributeArray *array,
 }
 
 void
+gthree_attribute_array_get_xyzw (GthreeAttributeArray *array,
+                                 guint                 index,
+                                 guint                 offset,
+                                 float                *x,
+                                 float                *y,
+                                 float                *z,
+                                 float                *w)
+{
+  float *p = gthree_attribute_array_peek_float_at (array, index, offset);
+  *x = p[0];
+  *y = p[1];
+  *z = p[2];
+  *w = p[3];
+}
+
+void
 gthree_attribute_array_set_point3d (GthreeAttributeArray *array,
                                     guint                 index,
                                     guint                 offset,
@@ -481,6 +497,27 @@ gthree_attribute_array_set_vec4 (GthreeAttributeArray *array,
                                    graphene_vec4_get_y (vec4),
                                    graphene_vec4_get_z (vec4),
                                    graphene_vec4_get_w (vec4));
+}
+
+void
+gthree_attribute_array_get_vec4 (GthreeAttributeArray *array,
+                                 guint                 index,
+                                 guint                 offset,
+                                 graphene_vec4_t      *vec4)
+{
+  float x, y, z, w;
+  gthree_attribute_array_get_xyzw (array, index, offset, &x, &y, &z, &w);
+  graphene_vec4_init (vec4, x, y, z, w);
+}
+
+void
+gthree_attribute_array_get_matrix (GthreeAttributeArray *array,
+                                   guint                 index,
+                                   guint                 offset,
+                                   graphene_matrix_t    *matrix)
+{
+  float *p = gthree_attribute_array_peek_float_at (array, index, offset);
+  graphene_matrix_init_from_float (matrix, p);
 }
 
 void
@@ -1293,6 +1330,18 @@ gthree_attribute_set_xyzw (GthreeAttribute      *attribute,
 }
 
 void
+gthree_attribute_get_xyzw (GthreeAttribute      *attribute,
+                           guint                 index,
+                           float                 *x,
+                           float                 *y,
+                           float                 *z,
+                           float                 *w)
+{
+  g_assert (attribute->array);
+  gthree_attribute_array_get_xyzw  (attribute->array, index, attribute->item_offset, x, y, z, w);
+}
+
+void
 gthree_attribute_set_point3d (GthreeAttribute      *attribute,
                               guint                 index,
                               graphene_point3d_t   *point)
@@ -1326,6 +1375,24 @@ gthree_attribute_set_vec4 (GthreeAttribute      *attribute,
 {
   g_assert (attribute->array);
   gthree_attribute_array_set_vec4  (attribute->array, index, attribute->item_offset, vec4);
+}
+
+void
+gthree_attribute_get_vec4 (GthreeAttribute      *attribute,
+                           guint                 index,
+                           graphene_vec4_t      *vec4)
+{
+  g_assert (attribute->array);
+  gthree_attribute_array_get_vec4  (attribute->array, index, attribute->item_offset, vec4);
+}
+
+void
+gthree_attribute_get_matrix (GthreeAttribute      *attribute,
+                             guint                 index,
+                             graphene_matrix_t    *matrix)
+{
+  g_assert (attribute->array);
+  gthree_attribute_array_get_matrix  (attribute->array, index, attribute->item_offset, matrix);
 }
 
 void
