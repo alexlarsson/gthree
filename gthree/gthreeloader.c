@@ -42,6 +42,7 @@ typedef struct {
   GPtrArray *textures;
   GPtrArray *materials;
   GPtrArray *cameras;
+  GPtrArray *skins;
 
   GHashTable *final_materials_hash;
   GPtrArray *final_materials;
@@ -93,6 +94,12 @@ typedef struct {
   float znear;
 
 } Camera;
+
+typedef struct {
+  int inverse_bind_matrices;
+  int skeleton;
+  GArray *joints;
+} Skin;
 
 
 typedef struct {
@@ -184,6 +191,14 @@ camera_free (Camera *camera)
 }
 
 static void
+skin_free (Skin *skin)
+{
+  if (skin->joints)
+    g_array_unref (skin->joints);
+  g_free (skin);
+}
+
+static void
 buffer_view_free (BufferView *view)
 {
   if (view->array)
@@ -215,6 +230,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (Mesh, mesh_free);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (Accessor, accessor_free);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (Sampler, sampler_free);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (Camera, camera_free);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (Skin, skin_free);
 
 static BufferView *
 buffer_view_new (GthreeLoader *loader, JsonObject *json, GError **error)
@@ -275,6 +291,7 @@ gthree_loader_init (GthreeLoader *loader)
   priv->textures = g_ptr_array_new_with_free_func ((GDestroyNotify)g_object_unref);
   priv->materials = g_ptr_array_new_with_free_func ((GDestroyNotify)g_object_unref);
   priv->cameras = g_ptr_array_new_with_free_func ((GDestroyNotify)camera_free);
+  priv->skins = g_ptr_array_new_with_free_func ((GDestroyNotify)skin_free);
 
   priv->final_materials = g_ptr_array_new_with_free_func ((GDestroyNotify)g_object_unref);
   priv->final_materials_hash = g_hash_table_new_full ((GHashFunc)material_cache_key_hash,
@@ -303,6 +320,7 @@ gthree_loader_finalize (GObject *obj)
   g_ptr_array_unref (priv->textures);
   g_ptr_array_unref (priv->materials);
   g_ptr_array_unref (priv->cameras);
+  g_ptr_array_unref (priv->skins);
 
   if (priv->node_infos)
     g_free (priv->node_infos);
@@ -1302,6 +1320,55 @@ parse_cameras (GthreeLoader *loader, JsonObject *root, GError **error)
   return TRUE;
 }
 
+static gboolean
+parse_skins (GthreeLoader *loader, JsonObject *root, GError **error)
+{
+  GthreeLoaderPrivate *priv = gthree_loader_get_instance_private (loader);
+  JsonArray *skins_j = NULL;
+  guint len;
+  int i;
+
+  if (!json_object_has_member (root, "skins"))
+    return TRUE;
+
+  skins_j = json_object_get_array_member (root, "skins");
+  len = json_array_get_length (skins_j);
+  for (i = 0; i < len; i++)
+    {
+      JsonObject *skin_j = json_array_get_object_element (skins_j, i);
+      g_autoptr(Skin) skin = g_new0 (Skin, 1);
+      skin->inverse_bind_matrices = -1;
+      skin->skeleton = -1;
+
+      skin->joints = g_array_new (FALSE, TRUE, sizeof (int));
+      if (json_object_has_member (skin_j, "joints"))
+        {
+          JsonArray *joints = json_object_get_array_member (skin_j, "joints");
+          int joints_len = json_array_get_length (joints);
+
+          for (int j = 0; j < joints_len; j++)
+            {
+              int joint_index = json_array_get_int_element (joints, j);
+              NodeInfo *node_info = &priv->node_infos[joint_index];
+
+              g_array_append_val (skin->joints, joint_index);
+
+              node_info->is_bone = TRUE;
+            }
+        }
+
+      if (json_object_has_member (skin_j, "inverseBindMatrices"))
+        skin->inverse_bind_matrices = json_object_get_int_member (skin_j, "inverseBindMatrices");
+
+      if (json_object_has_member (skin_j, "skeleton"))
+        skin->skeleton = json_object_get_int_member (skin_j, "skeleton");
+
+      g_ptr_array_add (priv->skins, g_steal_pointer (&skin));
+    }
+
+  return TRUE;
+}
+
 static float
 rad_to_deg (float rad)
 {
@@ -1574,6 +1641,9 @@ gthree_loader_parse_gltf (GBytes *data, GFile *base_path, GError **error)
     return NULL;
 
   if (!parse_cameras (loader, root, error))
+    return NULL;
+
+  if (!parse_skins (loader, root, error))
     return NULL;
 
   if (!parse_nodes (loader, root, base_path, error))
