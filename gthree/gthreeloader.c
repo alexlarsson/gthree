@@ -433,19 +433,10 @@ parse_matrix (JsonArray *matrix_j, graphene_matrix_t *m)
   float floats[16];
   int i;
 
-  // Graphene and glTL differs here:
-  // glTL:
-  //   A floating-point 4x4 transformation matrix stored in column-major order
-  // graphene:
-  //   The matrix is treated as row-major, i.e. the x, y, z, and w vectors
-  //   are rows, and elements of each vector are a column:
-  // So we have to transpos here
-
   for (i = 0; i < 16; i++)
     floats[i] = (float)json_array_get_double_element  (matrix_j, i);
 
   graphene_matrix_init_from_float (m, floats);
-  graphene_matrix_transpose (m, m);
 }
 
 static void
