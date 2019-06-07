@@ -157,7 +157,7 @@ gthree_skeleton_update  (GthreeSkeleton *skeleton)
       const graphene_matrix_t *matrix_world = gthree_object_get_world_matrix (GTHREE_OBJECT (bone));
       graphene_matrix_t offset_matrix;
 
-      graphene_matrix_multiply (matrix_world, &priv->bone_inverses[i], &offset_matrix);
+      graphene_matrix_multiply (&priv->bone_inverses[i], matrix_world, &offset_matrix);
       graphene_matrix_to_float (&offset_matrix, (priv->bone_matrices + i * 16));
     }
 
