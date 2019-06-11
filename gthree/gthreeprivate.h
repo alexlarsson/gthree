@@ -4,6 +4,7 @@
 #include <gthree/gthreeobject.h>
 #include <gthree/gthreelight.h>
 #include <gthree/gthreegeometry.h>
+#include <gthree/gthreeinterpolant.h>
 
 /* Each hash maps to a specific program (e.g. one with some set of lights), not a particular set of uniform values (like positions/colors/etc) */
 typedef struct {
@@ -78,5 +79,11 @@ GthreeMaterialProperties *gthree_material_get_properties (GthreeMaterial  *mater
 graphene_matrix_t *gthree_camera_get_projection_matrix_for_write (GthreeCamera *camera);
 
 void gthree_object_print_tree (GthreeObject *object, int depth);
+
+GthreeInterpolant *gthree_interpolant_create (GType type,
+                                              GthreeAttributeArray *parameter_positions,
+                                              GthreeAttributeArray *sample_values);
+
+void gthree_interpolant_copy_sample_value (GthreeInterpolant *interpolant, int index);
 
 #endif /* __GTHREE_PRIVATE_H__ */

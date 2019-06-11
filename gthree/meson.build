@@ -36,6 +36,8 @@ gthree_sources = [
     'gthreeshadermaterial.c',
     'gthreetexture.c',
     'gthreeuniforms.c',
+    'gthreeinterpolant.c',
+    'gthreelinearinterpolant.c',
 ]
 
 gthree_headers = [
@@ -78,6 +80,8 @@ gthree_headers = [
     'gthreetexture.h',
     'gthreetypes.h',
     'gthreeuniforms.h',
+    'gthreeinterpolant.h',
+    'gthreelinearinterpolant.h',
 ]
 
 gthree_private_headers = [

@@ -40,6 +40,7 @@
 #include <gthree/gthreeshadermaterial.h>
 #include <gthree/gthreeprimitives.h>
 #include <gthree/gthreebone.h>
+#include <gthree/gthreelinearinterpolant.h>
 
 #undef __GTHREE_H_INSIDE__
 
