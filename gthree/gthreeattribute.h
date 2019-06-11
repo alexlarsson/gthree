@@ -61,6 +61,9 @@ float *               gthree_attribute_array_peek_float         (GthreeAttribute
 float *               gthree_attribute_array_peek_float_at      (GthreeAttributeArray *array,
                                                                  int                   index,
                                                                  int                   offset);
+float                 gthree_attribute_array_get_float_at       (GthreeAttributeArray *array,
+                                                                 int                   index,
+                                                                 int                   offset);
 double *              gthree_attribute_array_peek_double        (GthreeAttributeArray *array);
 double *              gthree_attribute_array_peek_double_at     (GthreeAttributeArray *array,
                                                                  int                   index,

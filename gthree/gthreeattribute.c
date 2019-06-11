@@ -334,6 +334,14 @@ gthree_attribute_array_peek_float_at (GthreeAttributeArray *array,
   return gthree_attribute_array_peek_float (array) + n;
 }
 
+float
+gthree_attribute_array_get_float_at (GthreeAttributeArray *array,
+                                     int                   index,
+                                     int                   offset)
+{
+  return *gthree_attribute_array_peek_float_at (array, index, offset);
+}
+
 double *
 gthree_attribute_array_peek_double (GthreeAttributeArray *array)
 {
