@@ -648,14 +648,154 @@ gthree_attribute_array_get_point3d (GthreeAttributeArray *array,
   *point = *(graphene_point3d_t *)gthree_attribute_array_peek_float_at (array, index, offset);
 }
 
+void
+gthree_attribute_array_get_elements_as_float (GthreeAttributeArray *array,
+                                              guint                 index,
+                                              guint                 offset,
+                                              float                *dest,
+                                              guint                 n_elements)
+{
+  guint i;
+
+  switch (array->type)
+    {
+    case GTHREE_ATTRIBUTE_TYPE_FLOAT:
+      {
+        float *floats = gthree_attribute_array_peek_float_at (array, index, offset);
+        for (i = 0; i < n_elements; i++)
+          dest[i] = floats[i];
+        break;
+      }
+    case GTHREE_ATTRIBUTE_TYPE_DOUBLE:
+      {
+        double *values = gthree_attribute_array_peek_double_at (array, index, offset);
+        for (i = 0; i < n_elements; i++)
+          dest[i] = (float)values[i];
+        break;
+      }
+    case GTHREE_ATTRIBUTE_TYPE_UINT32:
+      {
+        guint32 *values = gthree_attribute_array_peek_uint32_at (array, index, offset);
+        for (i = 0; i < n_elements; i++)
+          dest[i] = (float)values[i];
+        break;
+      }
+    case GTHREE_ATTRIBUTE_TYPE_INT32:
+      {
+        gint32 *values = gthree_attribute_array_peek_int32_at (array, index, offset);
+        for (i = 0; i < n_elements; i++)
+          dest[i] = (float)values[i];
+        break;
+      }
+    case GTHREE_ATTRIBUTE_TYPE_UINT16:
+      {
+        guint16 *values = gthree_attribute_array_peek_uint16_at (array, index, offset);
+        for (i = 0; i < n_elements; i++)
+          dest[i] = (float)values[i];
+        break;
+      }
+    case GTHREE_ATTRIBUTE_TYPE_INT16:
+      {
+        gint16 *values = gthree_attribute_array_peek_int16_at (array, index, offset);
+        for (i = 0; i < n_elements; i++)
+          dest[i] = (float)values[i];
+        break;
+      }
+    case GTHREE_ATTRIBUTE_TYPE_UINT8:
+      {
+        guint8 *values = gthree_attribute_array_peek_uint8_at (array, index, offset);
+        for (i = 0; i < n_elements; i++)
+          dest[i] = (float)values[i];
+        break;
+      }
+    case GTHREE_ATTRIBUTE_TYPE_INT8:
+      {
+        gint8 *values = gthree_attribute_array_peek_int8_at (array, index, offset);
+        for (i = 0; i < n_elements; i++)
+          dest[i] = (float)values[i];
+        break;
+      }
+    }
+}
+
+void
+gthree_attribute_array_set_elements_from_float (GthreeAttributeArray *array,
+                                                guint                 index,
+                                                guint                 offset,
+                                                float                *src,
+                                                guint                 n_elements)
+{
+  guint i;
+
+  switch (array->type)
+    {
+    case GTHREE_ATTRIBUTE_TYPE_FLOAT:
+      {
+        float *floats = gthree_attribute_array_peek_float_at (array, index, offset);
+        for (i = 0; i < n_elements; i++)
+          floats[i] = src[i];
+        break;
+      }
+    case GTHREE_ATTRIBUTE_TYPE_DOUBLE:
+      {
+        double *dest = gthree_attribute_array_peek_double_at (array, index, offset);
+        for (i = 0; i < n_elements; i++)
+          dest[i] = (double)src[i];
+        break;
+      }
+    case GTHREE_ATTRIBUTE_TYPE_UINT32:
+      {
+        guint32 *dest = gthree_attribute_array_peek_uint32_at (array, index, offset);
+        for (i = 0; i < n_elements; i++)
+          dest[i] = (guint32)roundf(src[i]);
+        break;
+      }
+    case GTHREE_ATTRIBUTE_TYPE_INT32:
+      {
+        gint32 *dest = gthree_attribute_array_peek_int32_at (array, index, offset);
+        for (i = 0; i < n_elements; i++)
+          dest[i] = (gint32)roundf(src[i]);
+        break;
+      }
+    case GTHREE_ATTRIBUTE_TYPE_UINT16:
+      {
+        guint16 *dest = gthree_attribute_array_peek_uint16_at (array, index, offset);
+        for (i = 0; i < n_elements; i++)
+          dest[i] = (guint16)roundf(src[i]);
+        break;
+      }
+    case GTHREE_ATTRIBUTE_TYPE_INT16:
+      {
+        gint16 *dest = gthree_attribute_array_peek_int16_at (array, index, offset);
+        for (i = 0; i < n_elements; i++)
+          dest[i] = (gint16)roundf(src[i]);
+        break;
+      }
+    case GTHREE_ATTRIBUTE_TYPE_UINT8:
+      {
+        guint8 *dest = gthree_attribute_array_peek_uint8_at (array, index, offset);
+        for (i = 0; i < n_elements; i++)
+          dest[i] = (guint8)roundf(src[i]);
+        break;
+      }
+    case GTHREE_ATTRIBUTE_TYPE_INT8:
+      {
+        gint8 *dest = gthree_attribute_array_peek_int8_at (array, index, offset);
+        for (i = 0; i < n_elements; i++)
+          dest[i] = (gint8)roundf(src[i]);
+        break;
+      }
+    }
+}
+
 static void
 gthree_attribute_array_copy_raw (GthreeAttributeArray *array,
-                                  guint index,
-                                  guint offset,
-                                  gpointer source,
-                                  guint source_stride,
-                                  guint n_elements,
-                                  guint n_items)
+                                 guint index,
+                                 guint offset,
+                                 gpointer source,
+                                 guint source_stride,
+                                 guint n_elements,
+                                 guint n_items)
 {
   guint i;
   guint8 *src, *dst;

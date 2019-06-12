@@ -206,6 +206,16 @@ void                  gthree_attribute_array_get_point3d        (GthreeAttribute
                                                                  guint                 index,
                                                                  guint                 offset,
                                                                  graphene_point3d_t   *point);
+void                  gthree_attribute_array_get_elements_as_float (GthreeAttributeArray *array,
+                                                                    guint                 index,
+                                                                    guint                 offset,
+                                                                    float                *dest,
+                                                                    guint                 n_elements);
+void                  gthree_attribute_array_set_elements_from_float (GthreeAttributeArray *array,
+                                                                      guint                 index,
+                                                                      guint                 offset,
+                                                                      float                *src,
+                                                                      guint                 n_elements);
 
 
 /* Some pre-defined values for attribute names */
