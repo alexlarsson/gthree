@@ -41,6 +41,7 @@
 #include <gthree/gthreeprimitives.h>
 #include <gthree/gthreebone.h>
 #include <gthree/gthreelinearinterpolant.h>
+#include <gthree/gthreediscreteinterpolant.h>
 
 #undef __GTHREE_H_INSIDE__
 

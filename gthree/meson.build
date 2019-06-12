@@ -38,6 +38,7 @@ gthree_sources = [
     'gthreeuniforms.c',
     'gthreeinterpolant.c',
     'gthreelinearinterpolant.c',
+    'gthreediscreteinterpolant.c',
 ]
 
 gthree_headers = [
@@ -82,6 +83,7 @@ gthree_headers = [
     'gthreeuniforms.h',
     'gthreeinterpolant.h',
     'gthreelinearinterpolant.h',
+    'gthreediscreteinterpolant.h',
 ]
 
 gthree_private_headers = [
