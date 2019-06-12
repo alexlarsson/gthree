@@ -44,6 +44,11 @@
 #include <gthree/gthreediscreteinterpolant.h>
 #include <gthree/gthreecubicinterpolant.h>
 #include <gthree/gthreequaternioninterpolant.h>
+#include <gthree/gthreekeyframetrack.h>
+#include <gthree/gthreevectorkeyframetrack.h>
+#include <gthree/gthreecolorkeyframetrack.h>
+#include <gthree/gthreenumberkeyframetrack.h>
+#include <gthree/gthreequaternionkeyframetrack.h>
 
 #undef __GTHREE_H_INSIDE__
 

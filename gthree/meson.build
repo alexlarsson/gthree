@@ -41,6 +41,11 @@ gthree_sources = [
     'gthreediscreteinterpolant.c',
     'gthreecubicinterpolant.c',
     'gthreequaternioninterpolant.c',
+    'gthreekeyframetrack.c',
+    'gthreevectorkeyframetrack.c',
+    'gthreecolorkeyframetrack.c',
+    'gthreenumberkeyframetrack.c',
+    'gthreequaternionkeyframetrack.c',
 ]
 
 gthree_headers = [
@@ -88,6 +93,10 @@ gthree_headers = [
     'gthreediscreteinterpolant.h',
     'gthreecubicinterpolant.h',
     'gthreequaternioninterpolant.h',
+    'gthreevectorkeyframetrack.h',
+    'gthreecolorkeyframetrack.h',
+    'gthreenumberkeyframetrack.h',
+    'gthreequaternionkeyframetrack.h',
 ]
 
 gthree_private_headers = [

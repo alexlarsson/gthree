@@ -5,6 +5,7 @@
 #include <gthree/gthreelight.h>
 #include <gthree/gthreegeometry.h>
 #include <gthree/gthreeinterpolant.h>
+#include <gthree/gthreekeyframetrack.h>
 
 /* Each hash maps to a specific program (e.g. one with some set of lights), not a particular set of uniform values (like positions/colors/etc) */
 typedef struct {
@@ -85,5 +86,10 @@ GthreeInterpolant *gthree_interpolant_create (GType type,
                                               GthreeAttributeArray *sample_values);
 
 void gthree_interpolant_copy_sample_value (GthreeInterpolant *interpolant, int index);
+
+GthreeKeyframeTrack * gthree_keyframe_track_create  (GType type,
+                                                     const char *name,
+                                                     GthreeAttributeArray *times,
+                                                     GthreeAttributeArray *values);
 
 #endif /* __GTHREE_PRIVATE_H__ */
