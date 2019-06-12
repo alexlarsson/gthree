@@ -46,6 +46,7 @@ gthree_sources = [
     'gthreecolorkeyframetrack.c',
     'gthreenumberkeyframetrack.c',
     'gthreequaternionkeyframetrack.c',
+    'gthreeanimationclip.c',
 ]
 
 gthree_headers = [
@@ -97,6 +98,7 @@ gthree_headers = [
     'gthreecolorkeyframetrack.h',
     'gthreenumberkeyframetrack.h',
     'gthreequaternionkeyframetrack.h',
+    'gthreeanimationclip.h',
 ]
 
 gthree_private_headers = [

@@ -49,6 +49,7 @@
 #include <gthree/gthreecolorkeyframetrack.h>
 #include <gthree/gthreenumberkeyframetrack.h>
 #include <gthree/gthreequaternionkeyframetrack.h>
+#include <gthree/gthreeanimationclip.h>
 
 #undef __GTHREE_H_INSIDE__
 
