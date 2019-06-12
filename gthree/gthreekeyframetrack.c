@@ -41,6 +41,14 @@ gthree_keyframe_track_get_name (GthreeKeyframeTrack     *track)
   return priv->name;
 }
 
+float
+gthree_keyframe_track_get_end_time (GthreeKeyframeTrack     *track)
+{
+  GthreeKeyframeTrackPrivate *priv = gthree_keyframe_track_get_instance_private (track);
+  int n_times = gthree_attribute_array_get_count (priv->times);
+  return gthree_attribute_array_get_float_at (priv->times, n_times - 1, 0);
+}
+
 GthreeAttributeArray *
 gthree_keyframe_track_get_times (GthreeKeyframeTrack     *track)
 {

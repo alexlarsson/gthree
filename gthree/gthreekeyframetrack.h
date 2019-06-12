@@ -41,6 +41,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeKeyframeTrack, g_object_unref)
 GType gthree_keyframe_track_get_type (void) G_GNUC_CONST;
 
 const char *          gthree_keyframe_track_get_name           (GthreeKeyframeTrack     *track);
+float                 gthree_keyframe_track_get_end_time       (GthreeKeyframeTrack     *track);
 GthreeAttributeArray *gthree_keyframe_track_get_times          (GthreeKeyframeTrack     *track);
 GthreeAttributeArray *gthree_keyframe_track_get_values         (GthreeKeyframeTrack     *track);
 GthreeInterpolant *   gthree_keyframe_track_create_interpolant (GthreeKeyframeTrack     *track);
