@@ -50,6 +50,8 @@
 #include <gthree/gthreenumberkeyframetrack.h>
 #include <gthree/gthreequaternionkeyframetrack.h>
 #include <gthree/gthreeanimationclip.h>
+#include <gthree/gthreeanimationmixer.h>
+#include <gthree/gthreeanimationaction.h>
 
 #undef __GTHREE_H_INSIDE__
 
