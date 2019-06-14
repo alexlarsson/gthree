@@ -92,4 +92,24 @@ GthreeKeyframeTrack * gthree_keyframe_track_create  (GType type,
                                                      GthreeAttributeArray *times,
                                                      GthreeAttributeArray *values);
 
+void  _gthree_animation_action_update            (GthreeAnimationAction *action,
+                                                  float                  time,
+                                                  float                  delta_time,
+                                                  float                  time_direction,
+                                                  int                    accu_index);
+float _gthree_animation_action_update_weight     (GthreeAnimationAction *action,
+                                                  float                  time);
+float _gthree_animation_action_update_time_scale (GthreeAnimationAction *action,
+                                                  float                  time_scale);
+float _gthree_animation_action_update_time        (GthreeAnimationAction *action,
+                                                  float                  delta_time);
+void  _gthree_animation_action_set_endings       (GthreeAnimationAction *action,
+                                                  gboolean               at_start,
+                                                  gboolean               at_end,
+                                                  gboolean               ping_pong);
+void  _gthree_animation_action_schedule_fading   (GthreeAnimationAction *action,
+                                                  float                  duration,
+                                                  float                  weight_now,
+                                                  float                  weight_then);
+
 #endif /* __GTHREE_PRIVATE_H__ */

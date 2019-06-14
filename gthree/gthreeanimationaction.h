@@ -8,6 +8,8 @@
 #include <gio/gio.h>
 #include <gthree/gthreetypes.h>
 #include <gthree/gthreeenums.h>
+#include <gthree/gthreeanimationclip.h>
+#include <gthree/gthreeobject.h>
 
 G_BEGIN_DECLS
 
@@ -33,6 +35,55 @@ typedef struct {
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeAnimationAction, g_object_unref)
 
 GType gthree_animation_action_get_type (void) G_GNUC_CONST;
+
+GthreeAnimationAction * gthree_animation_action_new (GthreeAnimationMixer *mixer,
+                                                     GthreeAnimationClip *clip,
+                                                     GthreeObject *local_root);
+
+void                  gthree_animation_action_play                     (GthreeAnimationAction *action);
+void                  gthree_animation_action_stop                     (GthreeAnimationAction *action);
+void                  gthree_animation_action_reset                    (GthreeAnimationAction *action);
+gboolean              gthree_animation_action_is_running               (GthreeAnimationAction *action);
+gboolean              gthree_animation_action_is_scheduled             (GthreeAnimationAction *action);
+void                  gthree_animation_action_start_at                 (GthreeAnimationAction *action,
+                                                                        float                  time);
+void                  gthree_animation_action_set_loop_mode            (GthreeAnimationAction *action,
+                                                                        GthreeLoopMode         loop_mode,
+                                                                        int                    repetitions);
+void                  gthree_animation_action_set_effective_weight     (GthreeAnimationAction *action,
+                                                                        float                  weight);
+float                 gthree_animation_action_get_effective_weight     (GthreeAnimationAction *action);
+void                  gthree_animation_action_fade_in                  (GthreeAnimationAction *action,
+                                                                        float                  duration);
+void                  gthree_animation_action_fade_out                 (GthreeAnimationAction *action,
+                                                                        float                  duration);
+void                  gthree_animation_action_cross_fade_from          (GthreeAnimationAction *action,
+                                                                        GthreeAnimationAction *fade_out_action,
+                                                                        float                  duration,
+                                                                        gboolean               warp);
+void                  gthree_animation_action_cross_fade_to            (GthreeAnimationAction *action,
+                                                                        GthreeAnimationAction *fade_in_action,
+                                                                        float                  duration,
+                                                                        gboolean               warp);
+void                  gthree_animation_action_stop_fading              (GthreeAnimationAction *action);
+void                  gthree_animation_action_set_effective_time_scale (GthreeAnimationAction *action,
+                                                                        float                  time_scale);
+float                 gthree_animation_action_get_effective_time_scale (GthreeAnimationAction *action);
+void                  gthree_animation_action_set_duration             (GthreeAnimationAction *action,
+                                                                        float                  duration);
+void                  gthree_animation_action_sync_with                (GthreeAnimationAction *action,
+                                                                        GthreeAnimationAction *other_action);
+void                  gthree_animation_action_halt                     (GthreeAnimationAction *action,
+                                                                        float                  duration);
+void                  gthree_animation_action_warp                     (GthreeAnimationAction *action,
+                                                                        float                  start_time_scale,
+                                                                        float                  end_time_scale,
+                                                                        float                  duration);
+void                  gthree_animation_action_stop_warping             (GthreeAnimationAction *action);
+GthreeAnimationMixer *gthree_animation_action_get_mixer                (GthreeAnimationAction *action);
+GthreeAnimationClip * gthree_animation_action_get_clip                 (GthreeAnimationAction *action);
+GthreeObject *        gthree_animation_action_get_root                 (GthreeAnimationAction *action);
+
 
 G_END_DECLS
 
