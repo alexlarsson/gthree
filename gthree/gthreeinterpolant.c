@@ -1,6 +1,64 @@
 #include "gthreeinterpolant.h"
 
+struct _GthreeInterpolantSettings {
+  GObject parent;
+  GthreeEndingMode ending_start;
+  GthreeEndingMode ending_end;
+};
+
 typedef struct {
+  GObjectClass parent_class;
+} GthreeInterpolantSettingsClass;
+
+G_DEFINE_TYPE (GthreeInterpolantSettings, gthree_interpolant_settings, G_TYPE_OBJECT)
+
+static void
+gthree_interpolant_settings_init (GthreeInterpolantSettings *settings)
+{
+  settings->ending_start = GTHREE_ENDING_MODE_ZERO_CURVATURE;
+  settings->ending_end = GTHREE_ENDING_MODE_ZERO_CURVATURE;
+}
+
+static void
+gthree_interpolant_settings_class_init (GthreeInterpolantSettingsClass *klass)
+{
+}
+
+GthreeInterpolantSettings *
+gthree_interpolant_settings_new (void)
+{
+  return g_object_new (gthree_interpolant_settings_get_type (), NULL);
+}
+
+GthreeEndingMode
+gthree_interpolant_settings_get_start_ending_mode (GthreeInterpolantSettings *settings)
+{
+  return settings->ending_start;
+}
+
+void
+gthree_interpolant_settings_set_start_ending_mode (GthreeInterpolantSettings *settings,
+                                                   GthreeEndingMode   mode)
+{
+  settings->ending_start = mode;
+}
+
+GthreeEndingMode
+gthree_interpolant_settings_get_end_ending_mode (GthreeInterpolantSettings *settings)
+{
+  return settings->ending_end;
+}
+
+void
+gthree_interpolant_settings_set_end_ending_mode (GthreeInterpolantSettings *settings,
+                                                 GthreeEndingMode   mode)
+{
+  settings->ending_end = mode;
+}
+
+
+typedef struct {
+  GthreeInterpolantSettings *settings;
   GthreeAttributeArray *parameter_positions; /* Must be float */
   GthreeAttributeArray *sample_values; /* Any kind of value */
   GthreeAttributeArray *result_buffer; /* Same type as sample_values */
@@ -33,6 +91,8 @@ gthree_interpolant_create (GType type,
 static void
 gthree_interpolant_init (GthreeInterpolant *interpolant)
 {
+  GthreeInterpolantPrivate *priv = gthree_interpolant_get_instance_private (interpolant);
+  priv->settings = gthree_interpolant_settings_new ();
 }
 
 static void
@@ -45,6 +105,8 @@ gthree_interpolant_finalize (GObject *obj)
   gthree_attribute_array_unref (priv->sample_values);
   gthree_attribute_array_unref (priv->result_buffer);
 
+  g_clear_object (&priv->settings);
+
   G_OBJECT_CLASS (gthree_interpolant_parent_class)->finalize (obj);
 }
 
@@ -53,6 +115,37 @@ gthree_interpolant_class_init (GthreeInterpolantClass *klass)
 {
   G_OBJECT_CLASS (klass)->finalize = gthree_interpolant_finalize;
 }
+
+GthreeInterpolantSettings *
+gthree_interpolant_get_settings (GthreeInterpolant *interpolant)
+{
+  GthreeInterpolantPrivate *priv = gthree_interpolant_get_instance_private (interpolant);
+  return priv->settings;
+}
+
+void
+gthree_interpolant_set_settings (GthreeInterpolant *interpolant,
+                                 GthreeInterpolantSettings *settings)
+{
+  GthreeInterpolantPrivate *priv = gthree_interpolant_get_instance_private (interpolant);
+  g_set_object (&priv->settings, settings);
+}
+
+
+GthreeEndingMode
+gthree_interpolant_get_start_ending_mode   (GthreeInterpolant *interpolant)
+{
+  GthreeInterpolantPrivate *priv = gthree_interpolant_get_instance_private (interpolant);
+  return gthree_interpolant_settings_get_start_ending_mode (priv->settings);
+}
+
+GthreeEndingMode
+gthree_interpolant_get_end_ending_mode (GthreeInterpolant *interpolant)
+{
+  GthreeInterpolantPrivate *priv = gthree_interpolant_get_instance_private (interpolant);
+  return gthree_interpolant_settings_get_end_ending_mode (priv->settings);
+}
+
 
 GthreeAttributeArray *
 gthree_interpolant_get_parameter_positions (GthreeInterpolant *interpolant)

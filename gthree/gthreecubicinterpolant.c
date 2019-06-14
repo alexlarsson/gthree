@@ -2,8 +2,6 @@
 #include "gthreeprivate.h"
 
 typedef struct {
-  GthreeEndingMode ending_start;
-  GthreeEndingMode ending_end;
   float *floats;
   float weight_prev, weight_next;
 } GthreeCubicInterpolantPrivate;
@@ -31,9 +29,6 @@ gthree_cubic_interpolant_new (GthreeAttributeArray *parameter_positions,
 static void
 gthree_cubic_interpolant_init (GthreeCubicInterpolant *interpolant)
 {
-  GthreeCubicInterpolantPrivate *priv = gthree_cubic_interpolant_get_instance_private (interpolant);
-  priv->ending_start = GTHREE_ENDING_MODE_ZERO_CURVATURE;
-  priv->ending_end = GTHREE_ENDING_MODE_ZERO_CURVATURE;
 }
 
 static void
@@ -62,7 +57,7 @@ gthree_cubic_interpolant_interval_changed (GthreeInterpolant *interpolant, int i
     }
   else
     {
-      switch (priv->ending_start)
+      switch (gthree_interpolant_get_start_ending_mode (interpolant))
         {
         case GTHREE_ENDING_MODE_ZERO_CURVATURE:
           // f'(t0) = 0
@@ -91,7 +86,7 @@ gthree_cubic_interpolant_interval_changed (GthreeInterpolant *interpolant, int i
     }
   else
     {
-      switch (priv->ending_end)
+      switch (gthree_interpolant_get_end_ending_mode (interpolant))
         {
         case GTHREE_ENDING_MODE_ZERO_CURVATURE:
           // f'(t0) = 0
