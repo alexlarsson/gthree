@@ -49,6 +49,8 @@ gthree_sources = [
     'gthreeanimationclip.c',
     'gthreeanimationaction.c',
     'gthreeanimationmixer.c',
+    'gthreepropertymixer.c',
+    'gthreepropertybinding.c',
 ]
 
 gthree_headers = [
@@ -106,6 +108,8 @@ gthree_headers = [
 ]
 
 gthree_private_headers = [
+    'gthreepropertymixerprivate.h',
+    'gthreepropertybindingprivate.h',
     'gthreeobjectprivate.h',
     'gthreeprivate.h',
 ]

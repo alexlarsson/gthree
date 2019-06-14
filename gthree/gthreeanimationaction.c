@@ -3,6 +3,7 @@
 #include "gthreeanimationaction.h"
 #include "gthreeanimationmixer.h"
 #include "gthreeprivate.h"
+#include "gthreepropertymixerprivate.h"
 
 
 typedef struct {
@@ -417,12 +418,6 @@ gthree_animation_action_get_root (GthreeAnimationAction *action)
   GthreeAnimationActionPrivate *priv = gthree_animation_action_get_instance_private (action);
 
   return priv->local_root ? priv->local_root : gthree_action_mixer_get_root (priv->mixer);
-}
-
-static void
-gthree_property_mixer_accumulate (GthreePropertyMixer *mixer, int accu_index, float weight)
-{
-  g_warning ("TODO");
 }
 
 void

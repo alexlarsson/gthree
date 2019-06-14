@@ -33,7 +33,6 @@ typedef struct _GthreeRenderList GthreeRenderList;
 typedef struct _GthreeMaterialProperties GthreeMaterialProperties;
 typedef struct _GthreeAnimationAction GthreeAnimationAction;
 typedef struct _GthreeAnimationMixer GthreeAnimationMixer;
-typedef struct _GthreePropertyMixer GthreePropertyMixer;
 typedef int GthreeAttributeName;
 
 #endif /* __GTHREE_TYPES_H__ */
