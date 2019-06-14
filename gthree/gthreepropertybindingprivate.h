@@ -21,6 +21,26 @@ G_BEGIN_DECLS
                                                   GTHREE_TYPE_PROPERTY_BINDING))
 #define GTHREE_PROPERTY_BINDING_GET_CLASS(inst) (G_TYPE_INSTANCE_GET_CLASS ((inst), GTHREE_TYPE_PROPERTY_BINDING, GthreePropertyBindingClass))
 
+typedef struct {
+  char *node_name;
+  char *object_name;
+  char *object_index;
+  char *property_name;
+  char *property_index;
+} GthreeParsedPath;
+
+void gthree_parsed_path_free (GthreeParsedPath *path);
+GthreeParsedPath *gthree_parsed_path_dup (GthreeParsedPath *path);
+GthreeParsedPath * gthree_parsed_path_new (const char *node_name,
+                                           const char *object_name,
+                                           const char *object_index,
+                                           const char *property_name,
+                                           const char *property_index);
+
+GthreeParsedPath * gthree_parsed_path_parse (const char *name);
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeParsedPath, gthree_parsed_path_free)
+
 
 typedef struct {
   GObject parent;
@@ -35,6 +55,17 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreePropertyBinding, g_object_unref)
 
 GType gthree_property_binding_get_type (void) G_GNUC_CONST;
 
+GthreePropertyBinding *gthree_property_binding_new (GthreeObject     *root,
+                                                    const char       *path,
+                                                    GthreeParsedPath *parsed_path);
+
+
+void ghtree_property_binding_get_value (GthreePropertyBinding *binding,
+                                        float                 *buffer,
+                                        int                    offset);
+void ghtree_property_binding_set_value (GthreePropertyBinding *binding,
+                                        float                 *buffer,
+                                        int                    offset);
 
 G_END_DECLS
 
