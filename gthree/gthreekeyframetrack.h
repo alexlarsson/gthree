@@ -28,6 +28,7 @@ typedef struct {
 typedef struct {
   GObjectClass parent_class;
 
+  GthreeValueType value_type;
   GthreeInterpolationMode default_interpolation_mode;
   GthreeInterpolant * (*create_discrete_interpolant) (GthreeKeyframeTrack *track);
   GthreeInterpolant * (*create_linear_interpolant) (GthreeKeyframeTrack *track);

@@ -40,4 +40,5 @@ gthree_quaternion_keyframe_track_class_init (GthreeQuaternionKeyframeTrackClass 
   G_OBJECT_CLASS (klass)->finalize = gthree_quaternion_keyframe_track_finalize;
 
   GTHREE_KEYFRAME_TRACK_CLASS(klass)->create_linear_interpolant = create_linear_interpolant;
+  GTHREE_KEYFRAME_TRACK_CLASS(klass)->value_type = GTHREE_VALUE_TYPE_QUATERNION;
 }

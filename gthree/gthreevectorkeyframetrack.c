@@ -30,4 +30,5 @@ static void
 gthree_vector_keyframe_track_class_init (GthreeVectorKeyframeTrackClass *klass)
 {
   G_OBJECT_CLASS (klass)->finalize = gthree_vector_keyframe_track_finalize;
+  GTHREE_KEYFRAME_TRACK_CLASS(klass)->value_type = GTHREE_VALUE_TYPE_VECTOR;
 }
