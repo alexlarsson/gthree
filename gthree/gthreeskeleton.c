@@ -87,6 +87,23 @@ gthree_skeleton_get_bone (GthreeSkeleton *skeleton,
   return g_ptr_array_index (priv->bones, index);
 }
 
+GthreeBone *
+gthree_skeleton_get_bone_by_name (GthreeSkeleton *skeleton,
+                                  const char *name)
+{
+  GthreeSkeletonPrivate *priv = gthree_skeleton_get_instance_private (skeleton);
+  int i;
+
+  for (i = 0; i < priv->bones->len; i++)
+    {
+      GthreeBone *bone = g_ptr_array_index (priv->bones, i);
+      if (g_strcmp0 (name, gthree_object_get_name (GTHREE_OBJECT (bone))) == 0)
+        return bone;
+    }
+
+  return NULL;
+}
+
 void
 gthree_skeleton_calculate_inverses  (GthreeSkeleton *skeleton)
 {

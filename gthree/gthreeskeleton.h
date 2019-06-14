@@ -36,13 +36,13 @@ GthreeSkeleton *gthree_skeleton_new  (GthreeBone **bones,
                                       int n_bones,
                                       graphene_matrix_t *bone_inverses);
 
-int             gthree_skeleton_get_n_bones  (GthreeSkeleton *skeleton);
-GthreeBone *    gthree_skeleton_get_bone     (GthreeSkeleton *skeleton,
-                                              int           index);
-
-void gthree_skeleton_calculate_inverses  (GthreeSkeleton *skeleton);
-void gthree_skeleton_pose  (GthreeSkeleton *skeleton);
-
+int         gthree_skeleton_get_n_bones        (GthreeSkeleton *skeleton);
+GthreeBone *gthree_skeleton_get_bone           (GthreeSkeleton *skeleton,
+                                                int             index);
+GthreeBone *gthree_skeleton_get_bone_by_name   (GthreeSkeleton *skeleton,
+                                                const char     *name);
+void        gthree_skeleton_calculate_inverses (GthreeSkeleton *skeleton);
+void        gthree_skeleton_pose               (GthreeSkeleton *skeleton);
 
 
 G_END_DECLS
