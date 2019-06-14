@@ -17,6 +17,9 @@ enum
 static guint object_signals[LAST_SIGNAL] = { 0, };
 
 typedef struct {
+  char *name;
+  char *uuid;
+
   graphene_vec3_t position;
   graphene_quaternion_t quaternion;
   graphene_euler_t euler; /* Only valid if euler_valid == TRUE, canonical value in quaternion */
@@ -113,6 +116,8 @@ gthree_object_init (GthreeObject *object)
 {
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
 
+  priv->uuid = g_uuid_string_random ();
+
   priv->matrix_auto_update = TRUE;
   priv->matrix_need_update = TRUE;
   priv->visible = TRUE;
@@ -160,8 +165,11 @@ gthree_object_dispose (GObject *obj)
 static void
 gthree_object_finalize (GObject *obj)
 {
-  //GthreeObject *object = GTHREE_OBJECT (obj);
-  //GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+  GthreeObject *object = GTHREE_OBJECT (obj);
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  g_free (priv->uuid);
+  g_free (priv->name);
 
   G_OBJECT_CLASS (gthree_object_parent_class)->finalize (obj);
 }
@@ -294,6 +302,42 @@ gthree_object_set_matrix_auto_update (GthreeObject *object,
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
 
   priv->matrix_auto_update = !! auto_update;
+}
+
+const char *
+gthree_object_get_name (GthreeObject *object)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  return priv->name;
+}
+
+void
+gthree_object_set_name (GthreeObject *object,
+                        const char *name)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  g_free (priv->name);
+  priv->name = g_strdup (name);
+}
+
+const char *
+gthree_object_get_uuid (GthreeObject *object)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  return priv->uuid;
+}
+
+void
+gthree_object_set_uuid (GthreeObject *object,
+                        const char *uuid)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  g_free (priv->uuid);
+  priv->uuid = g_strdup (uuid);
 }
 
 gboolean
@@ -962,7 +1006,6 @@ gthree_object_find_by_type (GthreeObject *object,
   _gthree_object_find_by_type (object, g_type, &list);
   return g_list_reverse (list);
 }
-
 
 void
 gthree_object_print_tree (GthreeObject *object, int depth)

@@ -55,6 +55,14 @@ typedef void (*GthreeBeforeRenderCallback) (GthreeObject                *object,
                                             GthreeScene                 *scene,
                                             GthreeCamera                *camera);
 
+
+
+const char *                 gthree_object_get_name                     (GthreeObject                *object);
+void                         gthree_object_set_name                     (GthreeObject                *object,
+                                                                         const char                  *name);
+const char *                 gthree_object_get_uuid                     (GthreeObject                *object);
+void                         gthree_object_set_uuid                     (GthreeObject                *object,
+                                                                         const char                  *uuid);
 const graphene_matrix_t *    gthree_object_get_world_matrix             (GthreeObject                *object);
 void                         gthree_object_set_world_matrix             (GthreeObject                *object,
                                                                          const graphene_matrix_t     *matrix);
@@ -109,7 +117,7 @@ GthreeObject *               gthree_object_get_next_sibling             (GthreeO
 GthreeObject *               gthree_object_get_previous_sibling         (GthreeObject                *object);
 void                         gthree_object_destroy_all_children         (GthreeObject                *object);
 void                         gthree_object_set_before_render_callback   (GthreeObject                *object,
-                                                                         GthreeBeforeRenderCallback  callback);
+                                                                         GthreeBeforeRenderCallback   callback);
 GList *                      gthree_object_find_by_type                 (GthreeObject                *object,
                                                                          GType                        g_type);
 void                         gthree_object_get_mesh_extents             (GthreeObject                *object,
