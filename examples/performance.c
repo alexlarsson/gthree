@@ -66,7 +66,9 @@ tick (GtkWidget     *widget,
   graphene_point3d_t pos;
   GList *l;
 
-  gthree_object_get_position (GTHREE_OBJECT (camera), &pos);
+  graphene_point3d_init_from_vec3 (&pos,
+                                   gthree_object_get_position (GTHREE_OBJECT (camera)));
+
   pos.x += (pointer_x * 8000 - pos.x) * 0.5;
   pos.y += (pointer_y * 8000 - pos.y) * 0.5;
   gthree_object_set_position (GTHREE_OBJECT (camera), &pos);

@@ -80,10 +80,10 @@ void                         gthree_object_set_matrix                   (GthreeO
                                                                          const graphene_matrix_t     *matrix);
 void                         gthree_object_set_position                 (GthreeObject                *object,
                                                                          const graphene_point3d_t    *pos);
-graphene_point3d_t *         gthree_object_get_position                 (GthreeObject                *object,
-                                                                         graphene_point3d_t          *res);
+const graphene_vec3_t *      gthree_object_get_position                 (GthreeObject                *object);
 void                         gthree_object_set_scale                    (GthreeObject                *object,
                                                                          const graphene_point3d_t    *scale);
+const graphene_vec3_t *      gthree_object_get_scale                    (GthreeObject                *object);
 void                         gthree_object_set_quaternion               (GthreeObject                *object,
                                                                          const graphene_quaternion_t *q);
 const graphene_quaternion_t *gthree_object_get_quaternion               (GthreeObject                *object);

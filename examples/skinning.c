@@ -187,12 +187,13 @@ tick (GtkWidget     *widget,
   for (i = 0; i < N_SEGMENTS+1; i++)
     {
       GthreeBone *bone = g_ptr_array_index (bones, i);
-      
+
       graphene_euler_init (&rot,
                            0,  sin (angle / 40) * 15, 0);
       gthree_object_set_rotation (GTHREE_OBJECT (bone), &rot);
 
-      gthree_object_get_position (GTHREE_OBJECT (bone), &pos);
+      graphene_point3d_init_from_vec3 (&pos,
+                                       gthree_object_get_position (GTHREE_OBJECT (bone)));
       pos.x = sin (angle / 40) * 1;
       gthree_object_set_position (GTHREE_OBJECT (bone), &pos);
     }

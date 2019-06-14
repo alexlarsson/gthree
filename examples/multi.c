@@ -76,7 +76,8 @@ clicked_z (GtkWidget      *widget,
   w = gtk_widget_get_allocated_width (widget);
   h = gtk_widget_get_allocated_height (widget);
 
-  gthree_object_get_position (GTHREE_OBJECT (cube), &pos);
+  graphene_point3d_init_from_vec3 (&pos,
+                                   gthree_object_get_position (GTHREE_OBJECT (cube)));
 
   point.x = event->x / (0.5*w) - 1;
   point.y = -event->y / (0.5*h) + 1;
@@ -107,7 +108,8 @@ clicked_y (GtkWidget      *widget,
   w = gtk_widget_get_allocated_width (widget);
   h = gtk_widget_get_allocated_height (widget);
 
-  gthree_object_get_position (GTHREE_OBJECT (cube), &pos);
+  graphene_point3d_init_from_vec3 (&pos,
+                                   gthree_object_get_position (GTHREE_OBJECT (cube)));
 
   point.x = event->x / (0.5*w) - 1;
   point.y = -event->y / (0.5*h) + 1;
@@ -138,7 +140,8 @@ clicked_x (GtkWidget      *widget,
   w = gtk_widget_get_allocated_width (widget);
   h = gtk_widget_get_allocated_height (widget);
 
-  gthree_object_get_position (GTHREE_OBJECT (cube), &pos);
+  graphene_point3d_init_from_vec3 (&pos,
+                                   gthree_object_get_position (GTHREE_OBJECT (cube)));
 
   point.x = event->x / (0.5*w) - 1;
   point.y = -event->y / (0.5*h) + 1;

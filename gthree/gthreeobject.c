@@ -406,13 +406,12 @@ gthree_object_set_position (GthreeObject *object,
   priv->matrix_need_update = TRUE;
 }
 
-graphene_point3d_t *
-gthree_object_get_position (GthreeObject *object,
-                            graphene_point3d_t *pos)
+const graphene_vec3_t *
+gthree_object_get_position (GthreeObject *object)
 {
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
 
-  return graphene_point3d_init_from_vec3 (pos, &priv->position);
+  return &priv->position;
 }
 
 void
@@ -468,6 +467,14 @@ gthree_object_get_rotation (GthreeObject *object)
     }
 
   return &priv->euler;
+}
+
+const graphene_vec3_t *
+gthree_object_get_scale (GthreeObject *object)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  return &priv->scale;
 }
 
 /* Only valid if update_matrix () was run */
