@@ -77,10 +77,10 @@ gthree_interpolant_create (GType type,
   GthreeInterpolant *interpolant = g_object_new (type, NULL);
   GthreeInterpolantPrivate *priv = gthree_interpolant_get_instance_private (interpolant);
 
-  g_assert (gthree_attribute_array_get_attribute_type (priv->parameter_positions) == GTHREE_ATTRIBUTE_TYPE_FLOAT);
-  g_assert (gthree_attribute_array_get_stride (priv->parameter_positions) == 1);
+  g_assert (gthree_attribute_array_get_attribute_type (parameter_positions) == GTHREE_ATTRIBUTE_TYPE_FLOAT);
+  g_assert (gthree_attribute_array_get_stride (parameter_positions) == 1);
 
-  g_assert (gthree_attribute_array_get_count (priv->parameter_positions) == gthree_attribute_array_get_count (priv->sample_values));
+  g_assert (gthree_attribute_array_get_count (parameter_positions) == gthree_attribute_array_get_count (sample_values));
 
   priv->parameter_positions = gthree_attribute_array_ref (parameter_positions);
   priv->sample_values = gthree_attribute_array_ref (sample_values);

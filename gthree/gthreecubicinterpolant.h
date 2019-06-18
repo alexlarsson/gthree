@@ -9,7 +9,7 @@
 
 G_BEGIN_DECLS
 
-#define GTHREE_TYPE_CUBIC_INTERPOLANT      (gthree_interpolant_get_type ())
+#define GTHREE_TYPE_CUBIC_INTERPOLANT      (gthree_cubic_interpolant_get_type ())
 #define GTHREE_CUBIC_INTERPOLANT(inst)     (G_TYPE_CHECK_INSTANCE_CAST ((inst), \
                                                  GTHREE_TYPE_CUBIC_INTERPOLANT, \
                                                  GthreeCubicInterpolant))

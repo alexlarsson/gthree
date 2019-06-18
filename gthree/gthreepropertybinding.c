@@ -89,19 +89,19 @@ gthree_parsed_path_parse (const char *name)
 
   //path->directory_name = g_match_info_fetch (match_info, 1); currently unused
   path->node_name = g_match_info_fetch (match_info, 2);
-  if (path->node_name[0] == 0)
+  if (path->node_name && path->node_name[0] == 0)
     g_clear_pointer (&path->node_name, g_free);
   path->object_name = g_match_info_fetch (match_info, 3);
-  if (path->object_name[0] == 0)
+  if (path->object_name && path->object_name[0] == 0)
     g_clear_pointer (&path->object_name, g_free);
   path->object_index = g_match_info_fetch (match_info, 4);
-  if (path->object_index[0] == 0)
+  if (path->object_index && path->object_index[0] == 0)
     g_clear_pointer (&path->object_index, g_free);
   path->property_name = g_match_info_fetch (match_info, 5); // required
-  if (path->property_name[0] == 0)
+  if (path->property_name && path->property_name[0] == 0)
     g_clear_pointer (&path->property_name, g_free);
   path->property_index = g_match_info_fetch (match_info, 6);
-  if (path->property_index[0] == 0)
+  if (path->property_index && path->property_index[0] == 0)
     g_clear_pointer (&path->property_index, g_free);
 
   if (path->node_name)

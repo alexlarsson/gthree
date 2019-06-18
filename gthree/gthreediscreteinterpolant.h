@@ -9,7 +9,7 @@
 
 G_BEGIN_DECLS
 
-#define GTHREE_TYPE_DISCRETE_INTERPOLANT      (gthree_interpolant_get_type ())
+#define GTHREE_TYPE_DISCRETE_INTERPOLANT      (gthree_discrete_interpolant_get_type ())
 #define GTHREE_DISCRETE_INTERPOLANT(inst)     (G_TYPE_CHECK_INSTANCE_CAST ((inst), \
                                                  GTHREE_TYPE_DISCRETE_INTERPOLANT, \
                                                  GthreeDiscreteInterpolant))

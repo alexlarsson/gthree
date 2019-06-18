@@ -9,7 +9,7 @@
 
 G_BEGIN_DECLS
 
-#define GTHREE_TYPE_QUATERNION_INTERPOLANT      (gthree_interpolant_get_type ())
+#define GTHREE_TYPE_QUATERNION_INTERPOLANT      (gthree_quaternion_interpolant_get_type ())
 #define GTHREE_QUATERNION_INTERPOLANT(inst)     (G_TYPE_CHECK_INSTANCE_CAST ((inst), \
                                                  GTHREE_TYPE_QUATERNION_INTERPOLANT, \
                                                  GthreeQuaternionInterpolant))

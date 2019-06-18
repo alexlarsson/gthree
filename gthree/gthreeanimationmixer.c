@@ -151,7 +151,7 @@ _gthree_animation_mixer_remove_inactive_binding (GthreeAnimationMixer  *mixer,
                                                  GthreePropertyMixer *binding)
 {
   //GthreeAnimationMixerPrivate *priv = gthree_animation_mixer_get_instance_private (mixer);
-  g_warning ("TODO");
+  g_warning ("TODO _gthree_animation_mixer_remove_inactive_binding");
 }
 
 static void
@@ -222,7 +222,7 @@ _gthree_animation_mixer_bind_action (GthreeAnimationMixer  *mixer,
   for (i = 0; i < n_tracks; i++)
     {
       GthreeKeyframeTrack *track = gthree_animation_clip_get_track (clip, i);
-      const char *track_name = gthree_animation_clip_get_name (clip);
+      const char *track_name = gthree_keyframe_track_get_name (track);
       GthreePropertyMixer *binding;
 
       binding = g_hash_table_lookup (bindings_by_name, track_name);
@@ -640,7 +640,7 @@ gthree_animation_mixer_uncache_clip (GthreeAnimationMixer  *mixer,
                                      GthreeAnimationClip *clip)
 {
   //GthreeAnimationMixerPrivate *priv = gthree_animation_mixer_get_instance_private (mixer);
-  g_warning ("TODO");
+  g_warning ("TODO - gthree_animation_mixer_uncache_clip");
 }
 
 // free all resources specific to a particular root target object
@@ -649,7 +649,7 @@ gthree_animation_mixer_uncache_root (GthreeAnimationMixer  *mixer,
                                      GthreeObject *object)
 {
   //GthreeAnimationMixerPrivate *priv = gthree_animation_mixer_get_instance_private (mixer);
-  g_warning ("TODO");
+  g_warning ("TODO gthree_animation_mixer_uncache_root");
 }
 
 // remove a targeted clip from the cache
@@ -659,7 +659,7 @@ gthree_animation_mixer_uncache_action (GthreeAnimationMixer  *mixer,
                                        GthreeObject *optional_root)
 {
   //GthreeAnimationMixerPrivate *priv = gthree_animation_mixer_get_instance_private (mixer);
-  g_warning ("TODO");
+  g_warning ("TODO gthree_animation_mixer_uncache_action");
 }
 
 float
@@ -684,5 +684,5 @@ _gthree_animation_mixer_displatch_event (GthreeAnimationMixer  *mixer,
                                          const char *type,
                                          ...)
 {
-  g_warning ("TODO");
+  g_warning ("TODO - _gthree_animation_mixer_displatch_event");
 }
