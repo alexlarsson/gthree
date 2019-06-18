@@ -81,6 +81,7 @@ typedef struct {
 } Accessor;
 
 typedef struct {
+  char *name;
   gboolean perspective;
 
   // perspective
@@ -162,6 +163,7 @@ typedef struct {
 } Primitive;
 
 typedef struct {
+  char *name;
   GPtrArray *primitives;
 } Mesh;
 
@@ -189,6 +191,7 @@ sampler_free (Sampler *sampler)
 static void
 camera_free (Camera *camera)
 {
+  g_free (camera->name);
   g_free (camera);
 }
 
@@ -221,6 +224,7 @@ primitive_free (Primitive *primitive)
 static void
 mesh_free (Mesh *mesh)
 {
+  g_free (mesh->name);
   if (mesh->primitives)
     g_ptr_array_unref (mesh->primitives);
   g_free (mesh);
@@ -1183,6 +1187,9 @@ parse_meshes (GthreeLoader *loader, JsonObject *root, GError **error)
       g_autoptr(Mesh) mesh = g_new0 (Mesh, 1);
       mesh->primitives = g_ptr_array_new_with_free_func ((GDestroyNotify)primitive_free);
 
+      if (json_object_has_member (mesh_j, "name"))
+        mesh->name = g_strdup (json_object_get_string_member (mesh_j, "name"));
+
       primitives = json_object_get_array_member (mesh_j, "primitives");
       primitives_len = json_array_get_length (primitives);
       for (j = 0; j < primitives_len; j++)
@@ -1270,6 +1277,9 @@ parse_cameras (GthreeLoader *loader, JsonObject *root, GError **error)
       JsonObject *camera_j = json_array_get_object_element (cameras_j, i);
       g_autoptr(Camera) camera = g_new0 (Camera, 1);
       const char *type = json_object_get_string_member (camera_j, "type");
+
+      if (json_object_has_member (camera_j, "name"))
+        camera->name = g_strdup (json_object_get_string_member (camera_j, "name"));
 
       if (strcmp (type, "perspective") == 0)
         {
@@ -1430,6 +1440,12 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
           gthree_object_set_scale (node, &scale);
         }
 
+      if (json_object_has_member (node_j, "name"))
+        {
+          const char *name = json_object_get_string_member (node_j, "name");
+          gthree_object_set_name (node, name);
+        }
+
       g_ptr_array_add (priv->nodes, g_steal_pointer (&node));
     }
 
@@ -1465,7 +1481,7 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
       if (json_object_has_member (node_j, "mesh"))
         {
           gint64 mesh_id = json_object_get_int_member (node_j, "mesh");
-          Mesh *mesh = g_ptr_array_index (priv->meshes, mesh_id);
+          Mesh *mesh_info = g_ptr_array_index (priv->meshes, mesh_id);
           Skin *skin = NULL;
           int j;
 
@@ -1477,9 +1493,9 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
               skin = g_ptr_array_index (priv->skins, skin_id);
             }
 
-          for (j = 0; j < mesh->primitives->len; j++)
+          for (j = 0; j < mesh_info->primitives->len; j++)
             {
-              Primitive *primitive = g_ptr_array_index (mesh->primitives, j);
+              Primitive *primitive = g_ptr_array_index (mesh_info->primitives, j);
               GthreeMaterial *base_material = primitive->material;
               GthreeMaterial *material;
               MaterialCacheKey cache_key = { base_material };
@@ -1555,6 +1571,9 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
               else
                 mesh = gthree_mesh_new (primitive->geometry, g_object_ref (material));
 
+              if (mesh_info->name)
+                gthree_object_set_name (GTHREE_OBJECT (mesh), mesh_info->name);
+
               gthree_object_add_child (node, GTHREE_OBJECT (mesh));
             }
 
@@ -1573,7 +1592,12 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
             g_warning ("Unsupported orthographic camera");
 
           if (camera_node)
-            gthree_object_add_child (node, GTHREE_OBJECT (camera_node));
+            {
+              if (camera->name)
+                gthree_object_set_name (GTHREE_OBJECT (camera_node), camera->name);
+
+              gthree_object_add_child (node, GTHREE_OBJECT (camera_node));
+            }
         }
 
     }
@@ -1598,6 +1622,12 @@ parse_scenes (GthreeLoader *loader, JsonObject *root, GError **error)
     {
       JsonObject *scene_j = json_array_get_object_element (scenes_j, i);
       g_autoptr(GthreeScene) scene = gthree_scene_new ();
+
+      if (json_object_has_member (scene_j, "name"))
+        {
+          const char *name = json_object_get_string_member (scene_j, "name");
+          gthree_object_set_name (GTHREE_OBJECT (scene), name);
+        }
 
       if (json_object_has_member (scene_j, "nodes"))
         {
