@@ -9,7 +9,7 @@
 
 G_BEGIN_DECLS
 
-#define GTHREE_TYPE_VECTOR_KEYFRAME_TRACK      (gthree_keyframe_track_get_type ())
+#define GTHREE_TYPE_VECTOR_KEYFRAME_TRACK      (gthree_vector_keyframe_track_get_type ())
 #define GTHREE_VECTOR_KEYFRAME_TRACK(inst)     (G_TYPE_CHECK_INSTANCE_CAST ((inst), \
                                                  GTHREE_TYPE_VECTOR_KEYFRAME_TRACK, \
                                                  GthreeVectorKeyframeTrack))

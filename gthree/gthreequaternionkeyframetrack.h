@@ -9,7 +9,7 @@
 
 G_BEGIN_DECLS
 
-#define GTHREE_TYPE_QUATERNION_KEYFRAME_TRACK      (gthree_keyframe_track_get_type ())
+#define GTHREE_TYPE_QUATERNION_KEYFRAME_TRACK      (gthree_quaternion_keyframe_track_get_type ())
 #define GTHREE_QUATERNION_KEYFRAME_TRACK(inst)     (G_TYPE_CHECK_INSTANCE_CAST ((inst), \
                                                  GTHREE_TYPE_QUATERNION_KEYFRAME_TRACK, \
                                                  GthreeQuaternionKeyframeTrack))
