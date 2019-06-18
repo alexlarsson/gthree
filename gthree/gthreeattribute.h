@@ -27,6 +27,12 @@ GthreeAttributeArray *gthree_attribute_array_new_from_uint16    (guint16        
 GthreeAttributeArray *gthree_attribute_array_new_from_uint32    (guint32              *data,
                                                                  int                   count,
                                                                  int                   item_size);
+GthreeAttributeArray *gthree_attribute_array_reshape (GthreeAttributeArray *array,
+                                                      guint                 index,
+                                                      guint                 offset,
+                                                      guint                 count,
+                                                      guint                 item_size,
+                                                      gboolean              share_if_possible);
 GthreeAttributeArray *gthree_attribute_array_ref                (GthreeAttributeArray *array);
 void                  gthree_attribute_array_unref              (GthreeAttributeArray *array);
 GthreeAttributeType   gthree_attribute_array_get_attribute_type (GthreeAttributeArray *array);

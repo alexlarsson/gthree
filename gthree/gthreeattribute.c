@@ -98,6 +98,34 @@ gthree_attribute_array_new_from_uint32 (guint32              *data,
   return array;
 }
 
+GthreeAttributeArray *gthree_attribute_array_reshape (GthreeAttributeArray *array,
+                                                      guint                 index,
+                                                      guint                 offset,
+                                                      guint                 count,
+                                                      guint                 item_size,
+                                                      gboolean              share_if_possible)
+{
+  GthreeAttributeArray *reshaped;
+  guint len, remaining_len, subset_len, element_size;
+
+  if (share_if_possible &&
+      index == 0 && offset == 0 && count == array->count && item_size == array->stride)
+    return gthree_attribute_array_ref (array);
+
+  element_size = attribute_type_size[array->type];
+
+  len = array->count * array->stride;
+  remaining_len = len - (index * array->stride + offset);
+  subset_len = item_size * count;
+  g_assert (subset_len <= remaining_len);
+
+  reshaped = gthree_attribute_array_new (array->type, count, item_size);
+  memcpy (reshaped->data,
+          array->data + (index * array->stride + offset) * element_size,
+          subset_len * element_size);
+  return reshaped;
+}
+
 GthreeAttributeArray *
 gthree_attribute_array_ref (GthreeAttributeArray *array)
 {
