@@ -10,6 +10,7 @@
 #include <gthree/gthreeenums.h>
 #include <gthree/gthreeinterpolant.h>
 #include <gthree/gthreeobject.h>
+#include <gthree/gthreeanimationclip.h>
 
 G_BEGIN_DECLS
 
@@ -38,8 +39,24 @@ GType gthree_animation_mixer_get_type (void) G_GNUC_CONST;
 
 GthreeAnimationMixer *gthree_animation_mixer_new (GthreeObject *root);
 
-float              gthree_animation_mixer_get_time                       (GthreeAnimationMixer  *mixer);
-GthreeObject *     gthree_animation_mixer_get_root                       (GthreeAnimationMixer  *mixer);
+GthreeAnimationAction *gthree_animation_mixer_clip_action     (GthreeAnimationMixer *mixer,
+                                                               GthreeAnimationClip  *clip,
+                                                               GthreeObject         *optional_root);
+GthreeAnimationAction *gthree_animation_mixer_existing_action (GthreeAnimationMixer *mixer,
+                                                               GthreeAnimationClip  *clip,
+                                                               GthreeObject         *optional_root);
+void                   gthree_animation_mixer_stop_all_action (GthreeAnimationMixer *mixer);
+void                   gthree_animation_mixer_update          (GthreeAnimationMixer *mixer,
+                                                               float                 delta_time);
+void                   gthree_animation_mixer_uncache_clip    (GthreeAnimationMixer *mixer,
+                                                               GthreeAnimationClip  *clip);
+void                   gthree_animation_mixer_uncache_root    (GthreeAnimationMixer *mixer,
+                                                               GthreeObject         *object);
+void                   gthree_animation_mixer_uncache_action  (GthreeAnimationMixer *mixer,
+                                                               GthreeAnimationClip  *clip,
+                                                               GthreeObject         *optional_root);
+float                  gthree_animation_mixer_get_time        (GthreeAnimationMixer *mixer);
+GthreeObject *         gthree_animation_mixer_get_root        (GthreeAnimationMixer *mixer);
 
 G_END_DECLS
 

@@ -44,11 +44,7 @@ typedef struct {
   gboolean zero_slope_at_start; // for smooth interpolation w/o separate
   gboolean zero_slope_at_end;   // clips for start, loop and end
 
-  /*
-    _cacheIndex = null; // for the memory manager
-    _byClipCacheIndex = null; // for the memory manager
-  */
-
+  GthreeAnimationActionMixerData mixer_data;
 
 } GthreeAnimationActionPrivate;
 
@@ -93,6 +89,8 @@ gthree_animation_action_init (GthreeAnimationAction *action)
   priv->interpolant_settings = gthree_interpolant_settings_new ();
   gthree_interpolant_settings_set_start_ending_mode (priv->interpolant_settings, GTHREE_ENDING_MODE_ZERO_CURVATURE);
   gthree_interpolant_settings_set_end_ending_mode (priv->interpolant_settings, GTHREE_ENDING_MODE_ZERO_CURVATURE);
+
+  _gthree_animation_mixer_init_action_data (&priv->mixer_data);
 }
 
 static void
@@ -147,6 +145,14 @@ gthree_animation_action_new (GthreeAnimationMixer *mixer,
   g_ptr_array_set_size (priv->property_bindings, n_tracks);
 
   return action;
+}
+
+GthreeAnimationActionMixerData *
+_gthree_animation_action_get_mixer_data (GthreeAnimationAction *action)
+{
+  GthreeAnimationActionPrivate *priv = gthree_animation_action_get_instance_private (action);
+
+  return &priv->mixer_data;
 }
 
 void
@@ -470,9 +476,9 @@ _gthree_animation_action_update (GthreeAnimationAction *action,
         {
           GthreeInterpolant *interpolant = g_ptr_array_index (priv->interpolants, i);
           GthreePropertyMixer *property_mixer = g_ptr_array_index (priv->property_bindings, i);
+          GthreeAttributeArray *result = gthree_interpolant_evaluate (interpolant, clip_time);
 
-          gthree_interpolant_evaluate (interpolant, clip_time);
-          gthree_property_mixer_accumulate (property_mixer, accu_index, weight);
+          gthree_property_mixer_accumulate (property_mixer, result, accu_index, weight);
         }
     }
 }
@@ -746,4 +752,18 @@ _gthree_animation_action_schedule_fading (GthreeAnimationAction *action,
   times[1] = now + duration;
   values[0] = weight_now;
   values[1] = weight_then;
+}
+
+GPtrArray *
+_gthree_animation_action_get_property_bindings (GthreeAnimationAction *action)
+{
+  GthreeAnimationActionPrivate *priv = gthree_animation_action_get_instance_private (action);
+  return priv->property_bindings;
+}
+
+GPtrArray *
+_gthree_animation_action_get_interpolants (GthreeAnimationAction *action)
+{
+  GthreeAnimationActionPrivate *priv = gthree_animation_action_get_instance_private (action);
+  return priv->interpolants;
 }

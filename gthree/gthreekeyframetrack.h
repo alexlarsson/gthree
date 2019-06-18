@@ -44,6 +44,8 @@ GType gthree_keyframe_track_get_type (void) G_GNUC_CONST;
 const char *          gthree_keyframe_track_get_name           (GthreeKeyframeTrack     *track);
 float                 gthree_keyframe_track_get_end_time       (GthreeKeyframeTrack     *track);
 GthreeAttributeArray *gthree_keyframe_track_get_times          (GthreeKeyframeTrack     *track);
+GthreeValueType       gthree_keyframe_track_get_value_type     (GthreeKeyframeTrack     *track);
+int                   gthree_keyframe_track_get_value_size     (GthreeKeyframeTrack     *track);
 GthreeAttributeArray *gthree_keyframe_track_get_values         (GthreeKeyframeTrack     *track);
 GthreeInterpolant *   gthree_keyframe_track_create_interpolant (GthreeKeyframeTrack     *track);
 void                  gthree_keyframe_track_optimize           (GthreeKeyframeTrack     *track);

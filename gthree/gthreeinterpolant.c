@@ -63,6 +63,8 @@ typedef struct {
   GthreeAttributeArray *sample_values; /* Any kind of value */
   GthreeAttributeArray *result_buffer; /* Same type as sample_values */
   int cached_index;
+
+  int cache_index; /* Used by AnimationMixer */
 } GthreeInterpolantPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeInterpolant, gthree_interpolant, G_TYPE_OBJECT)
@@ -93,6 +95,7 @@ gthree_interpolant_init (GthreeInterpolant *interpolant)
 {
   GthreeInterpolantPrivate *priv = gthree_interpolant_get_instance_private (interpolant);
   priv->settings = gthree_interpolant_settings_new ();
+  priv->cache_index = -1;
 }
 
 static void
@@ -349,4 +352,19 @@ gthree_interpolant_evaluate (GthreeInterpolant *interpolant, float t)
   t0 = pp[i1-1];
   gthree_interpolant_interval_changed (interpolant, i1, t0, t1);
   return gthree_interpolant_interpolate (interpolant, i1, t0, t, t1);
+}
+
+/* Used by AnimationMixer */
+int
+_gthree_interpolant_get_cache_index (GthreeInterpolant *interpolant)
+{
+  GthreeInterpolantPrivate *priv = gthree_interpolant_get_instance_private (interpolant);
+  return priv->cache_index;
+}
+void
+_gthree_interpolant_set_cache_index (GthreeInterpolant *interpolant,
+                                     int cache_index)
+{
+  GthreeInterpolantPrivate *priv = gthree_interpolant_get_instance_private (interpolant);
+  priv->cache_index = cache_index;
 }

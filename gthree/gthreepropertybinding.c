@@ -291,6 +291,13 @@ ghtree_property_sanitize_name (const char *name)
   return g_string_free (s, FALSE);
 }
 
+GthreeParsedPath *
+gthree_property_binding_get_parsed_path (GthreePropertyBinding *binding)
+{
+  GthreePropertyBindingPrivate *priv = gthree_property_binding_get_instance_private (binding);
+  return priv->parsed_path;
+}
+
 void
 ghtree_property_binding_get_value_vec3 (GthreePropertyBinding *binding,
                                         gpointer property,

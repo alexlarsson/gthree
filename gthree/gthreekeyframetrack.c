@@ -49,6 +49,20 @@ gthree_keyframe_track_get_end_time (GthreeKeyframeTrack     *track)
   return gthree_attribute_array_get_float_at (priv->times, n_times - 1, 0);
 }
 
+GthreeValueType
+gthree_keyframe_track_get_value_type (GthreeKeyframeTrack     *track)
+{
+  GthreeKeyframeTrackClass *class = GTHREE_KEYFRAME_TRACK_GET_CLASS(track);
+  return class->value_type;
+}
+
+int
+gthree_keyframe_track_get_value_size (GthreeKeyframeTrack     *track)
+{
+  GthreeKeyframeTrackPrivate *priv = gthree_keyframe_track_get_instance_private (track);
+  return gthree_attribute_array_get_stride (priv->values);
+}
+
 GthreeAttributeArray *
 gthree_keyframe_track_get_times (GthreeKeyframeTrack     *track)
 {

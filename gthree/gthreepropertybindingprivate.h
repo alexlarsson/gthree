@@ -59,13 +59,13 @@ GthreePropertyBinding *gthree_property_binding_new (GthreeObject     *root,
                                                     const char       *path,
                                                     GthreeParsedPath *parsed_path);
 
-
-void ghtree_property_binding_get_value (GthreePropertyBinding *binding,
-                                        float                 *buffer,
-                                        int                    offset);
-void ghtree_property_binding_set_value (GthreePropertyBinding *binding,
-                                        float                 *buffer,
-                                        int                    offset);
+GthreeParsedPath *gthree_property_binding_get_parsed_path (GthreePropertyBinding *binding);
+void              ghtree_property_binding_get_value       (GthreePropertyBinding *binding,
+                                                           float                 *buffer,
+                                                           int                    offset);
+void              ghtree_property_binding_set_value       (GthreePropertyBinding *binding,
+                                                           float                 *buffer,
+                                                           int                    offset);
 
 G_END_DECLS
 

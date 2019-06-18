@@ -92,6 +92,11 @@ GthreeKeyframeTrack * gthree_keyframe_track_create  (GType type,
                                                      GthreeAttributeArray *times,
                                                      GthreeAttributeArray *values);
 
+typedef struct {
+  int cache_index;
+  int by_clip_cache_index;
+} GthreeAnimationActionMixerData;
+
 void  _gthree_animation_action_update            (GthreeAnimationAction *action,
                                                   float                  time,
                                                   float                  delta_time,
@@ -111,6 +116,13 @@ void  _gthree_animation_action_schedule_fading   (GthreeAnimationAction *action,
                                                   float                  duration,
                                                   float                  weight_now,
                                                   float                  weight_then);
+GPtrArray * _gthree_animation_action_get_property_bindings (GthreeAnimationAction *action);
+GPtrArray * _gthree_animation_action_get_interpolants (GthreeAnimationAction *action);
+
+GthreeAnimationActionMixerData *_gthree_animation_action_get_mixer_data (GthreeAnimationAction *action);
+
+
+void _gthree_animation_mixer_init_action_data (GthreeAnimationActionMixerData *data);
 
 void               _gthree_animation_mixer_activate_action               (GthreeAnimationMixer  *mixer,
                                                                           GthreeAnimationAction *action);
@@ -125,5 +137,9 @@ void               _gthree_animation_mixer_displatch_event               (Gthree
                                                                           const char            *type,
                                                                           ...);
 
+
+int _gthree_interpolant_get_cache_index (GthreeInterpolant *interpolant);
+void _gthree_interpolant_set_cache_index (GthreeInterpolant *interpolant,
+                                          int cache_index);
 
 #endif /* __GTHREE_PRIVATE_H__ */

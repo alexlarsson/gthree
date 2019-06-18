@@ -25,6 +25,11 @@ G_BEGIN_DECLS
 
 typedef struct  {
   GObject parent;
+
+  /* Used by mixer */
+  int use_count;
+  int reference_count;
+  int cache_index;
 } GthreePropertyMixer;
 
 typedef struct {
@@ -41,17 +46,16 @@ GthreePropertyMixer *gthree_property_mixer_new (GthreePropertyBinding *binding,
                                                 int                    value_size);
 
 
-void gthree_property_mixer_accumulate             (GthreePropertyMixer *mixer,
-                                                   int                  accu_index,
-                                                   float                weight);
-void gthree_property_mixer_apply                  (GthreePropertyMixer *mixer,
-                                                   int                  accu_index);
-void gthree_property_mixer_save_original_state    (GthreePropertyMixer *mixer,
-                                                   int                  accu_index,
-                                                   float                weight);
-void gthree_property_mixer_restore_original_state (GthreePropertyMixer *mixer,
-                                                   int                  accu_index,
-                                                   float                weight);
+GthreePropertyBinding *gthree_property_mixer_get_binding            (GthreePropertyMixer *mixer);
+void                   gthree_property_mixer_accumulate             (GthreePropertyMixer *mixer,
+                                                                     GthreeAttributeArray *values,
+                                                                     int                  accu_index,
+                                                                     float                weight);
+void                   gthree_property_mixer_apply                  (GthreePropertyMixer *mixer,
+                                                                     int                  accu_index);
+void                   gthree_property_mixer_save_original_state    (GthreePropertyMixer *mixer);
+void                   gthree_property_mixer_restore_original_state (GthreePropertyMixer *mixer);
+
 
 G_END_DECLS
 

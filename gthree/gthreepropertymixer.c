@@ -1,6 +1,7 @@
 #include <math.h>
 
 #include "gthreepropertymixerprivate.h"
+#include "gthreeattribute.h"
 
 typedef void (*BufferMixFunc) (float *buffer, int dst_offset, int src_offset, float t, int stride);
 
@@ -34,6 +35,11 @@ gthree_property_mixer_init (GthreePropertyMixer *mixer)
   GthreePropertyMixerPrivate *priv = gthree_property_mixer_get_instance_private (mixer);
 
   priv->cumulative_weight = 0.0;
+
+  /* These are used by GthreeAnimationMixer */
+  mixer->use_count = 0;
+  mixer->reference_count = 0;
+  mixer->cache_index = -1;
 }
 
 static void
@@ -53,6 +59,13 @@ static void
 gthree_property_mixer_class_init (GthreePropertyMixerClass *klass)
 {
   G_OBJECT_CLASS (klass)->finalize = gthree_property_mixer_finalize;
+}
+
+GthreePropertyBinding *
+gthree_property_mixer_get_binding (GthreePropertyMixer *mixer)
+{
+  GthreePropertyMixerPrivate *priv = gthree_property_mixer_get_instance_private (mixer);
+  return priv->binding;
 }
 
 static void
@@ -107,7 +120,7 @@ mix_buffer_region_linear_vec3 (float *buffer, int dst_offset, int src_offset, fl
 
 // accumulate data in the 'incoming' region into 'accu<i>'
 void
-gthree_property_mixer_accumulate (GthreePropertyMixer *mixer, int accu_index, float weight)
+gthree_property_mixer_accumulate (GthreePropertyMixer *mixer, GthreeAttributeArray *values, int accu_index, float weight)
 {
   GthreePropertyMixerPrivate *priv = gthree_property_mixer_get_instance_private (mixer);
   int stride = priv->value_size;
@@ -118,6 +131,8 @@ gthree_property_mixer_accumulate (GthreePropertyMixer *mixer, int accu_index, fl
 
   // note: happily accumulating nothing when weight = 0, the caller knows
   // the weight and shouldn't have made the call in the first place
+
+  gthree_attribute_array_get_elements_as_float (values, 0, 0, buffer, stride);
 
   if (current_weight == 0)
     {
@@ -174,7 +189,7 @@ gthree_property_mixer_apply (GthreePropertyMixer *mixer, int accu_index)
 
 // remember the state of the bound property and copy it to both accus
 void
-gthree_property_mixer_save_original_state (GthreePropertyMixer *mixer, int accu_index, float weight)
+gthree_property_mixer_save_original_state (GthreePropertyMixer *mixer)
 {
   GthreePropertyMixerPrivate *priv = gthree_property_mixer_get_instance_private (mixer);
   int stride = priv->value_size;
@@ -193,7 +208,7 @@ gthree_property_mixer_save_original_state (GthreePropertyMixer *mixer, int accu_
 
 // apply the state previously taken via 'saveOriginalState' to the binding
 void
-gthree_property_mixer_restore_original_state (GthreePropertyMixer *mixer, int accu_index, float weight)
+gthree_property_mixer_restore_original_state (GthreePropertyMixer *mixer)
 {
   GthreePropertyMixerPrivate *priv = gthree_property_mixer_get_instance_private (mixer);
   int stride = priv->value_size;
