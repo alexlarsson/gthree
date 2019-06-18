@@ -407,18 +407,18 @@ ghtree_property_binding_set_value_point3d (GthreePropertyBinding *binding,
 
   switch (priv->resolved_prop_index) {
   case -1:
-    point.x = buffer[0];
-    point.y = buffer[1];
-    point.z = buffer[2];
+    point.x = buffer[offset + 0];
+    point.y = buffer[offset + 1];
+    point.z = buffer[offset + 2];
     break;
   case 0:
-    point.x = buffer[0];
+    point.x = buffer[offset + 0];
     break;
   case 1:
-    point.y = buffer[0];
+    point.y = buffer[offset + 0];
     break;
   case 2:
-    point.z = buffer[0];
+    point.z = buffer[offset + 0];
     break;
   }
 
@@ -442,18 +442,18 @@ ghtree_property_binding_set_value_euler (GthreePropertyBinding *binding,
 
   switch (priv->resolved_prop_index) {
   case -1:
-    val[0] = buffer[0];
-    val[1] = buffer[1];
-    val[2] = buffer[2];
+    val[0] = buffer[offset + 0];
+    val[1] = buffer[offset + 1];
+    val[2] = buffer[offset + 2];
     break;
   case 0:
-    val[0] = buffer[0];
+    val[0] = buffer[offset + 0];
     break;
   case 1:
-    val[1] = buffer[0];
+    val[1] = buffer[offset + 0];
     break;
   case 2:
-    val[2] = buffer[0];
+    val[2] = buffer[offset + 0];
     break;
   }
 
@@ -468,7 +468,7 @@ ghtree_property_binding_set_value_quaternion (GthreePropertyBinding *binding,
 {
   GthreePropertyBindingPrivate *priv = gthree_property_binding_get_instance_private (binding);
   float val[4];
-  graphene_euler_t euler;
+  graphene_quaternion_t quaternion;
 
   if (priv->resolved_prop_index != -1)
     {
@@ -478,27 +478,27 @@ ghtree_property_binding_set_value_quaternion (GthreePropertyBinding *binding,
 
   switch (priv->resolved_prop_index) {
   case -1:
-    val[0] = buffer[0];
-    val[1] = buffer[1];
-    val[2] = buffer[2];
-    val[3] = buffer[3];
+    val[0] = buffer[offset + 0];
+    val[1] = buffer[offset + 1];
+    val[2] = buffer[offset + 2];
+    val[3] = buffer[offset + 3];
     break;
   case 0:
-    val[0] = buffer[0];
+    val[0] = buffer[offset + 0];
     break;
   case 1:
-    val[1] = buffer[0];
+    val[1] = buffer[offset + 0];
     break;
   case 2:
-    val[2] = buffer[0];
+    val[2] = buffer[offset + 0];
     break;
   case 3:
-    val[3] = buffer[0];
+    val[3] = buffer[offset + 0];
     break;
   }
 
-  graphene_euler_init (&euler, val[0], val[1], val[2]);
-  priv->set_property (priv->resolved_object, &euler);
+  graphene_quaternion_init (&quaternion, val[0], val[1], val[2], val[3]);
+  priv->set_property (priv->resolved_object, &quaternion);
 }
 
 
