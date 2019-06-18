@@ -112,4 +112,18 @@ void  _gthree_animation_action_schedule_fading   (GthreeAnimationAction *action,
                                                   float                  weight_now,
                                                   float                  weight_then);
 
+void               _gthree_animation_mixer_activate_action               (GthreeAnimationMixer  *mixer,
+                                                                          GthreeAnimationAction *action);
+void               _gthree_animation_mixer_deactivate_action             (GthreeAnimationMixer  *mixer,
+                                                                          GthreeAnimationAction *action);
+gboolean           _gthree_animation_mixer_is_active_action              (GthreeAnimationMixer  *mixer,
+                                                                          GthreeAnimationAction *action);
+void               _gthree_animation_mixer_take_back_control_interpolant (GthreeAnimationMixer  *mixer,
+                                                                          GthreeInterpolant     *interpolant);
+GthreeInterpolant *_gthree_animation_mixer_lend_control_interpolant      (GthreeAnimationMixer  *mixer);
+void               _gthree_animation_mixer_displatch_event               (GthreeAnimationMixer  *mixer,
+                                                                          const char            *type,
+                                                                          ...);
+
+
 #endif /* __GTHREE_PRIVATE_H__ */

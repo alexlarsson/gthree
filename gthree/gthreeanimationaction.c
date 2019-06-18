@@ -154,7 +154,7 @@ gthree_animation_action_play (GthreeAnimationAction *action)
 {
   GthreeAnimationActionPrivate *priv = gthree_animation_action_get_instance_private (action);
 
-  gthree_animation_mixer_activate_action (priv->mixer, action);
+  _gthree_animation_mixer_activate_action (priv->mixer, action);
 }
 
 
@@ -163,7 +163,7 @@ gthree_animation_action_stop (GthreeAnimationAction *action)
 {
   GthreeAnimationActionPrivate *priv = gthree_animation_action_get_instance_private (action);
 
-  gthree_animation_mixer_deactivate_action (priv->mixer, action);
+  _gthree_animation_mixer_deactivate_action (priv->mixer, action);
 }
 
 void
@@ -191,7 +191,7 @@ gthree_animation_action_is_running (GthreeAnimationAction *action)
     !priv->paused &&
     priv->time_scale != 0 &&
     !priv->start_time_set &&
-    gthree_animation_mixer_is_active_action (priv->mixer, action);
+    _gthree_animation_mixer_is_active_action (priv->mixer, action);
 }
 
 gboolean
@@ -199,7 +199,7 @@ gthree_animation_action_is_scheduled (GthreeAnimationAction *action)
 {
   GthreeAnimationActionPrivate *priv = gthree_animation_action_get_instance_private (action);
   return
-    gthree_animation_mixer_is_active_action (priv->mixer, action);
+    _gthree_animation_mixer_is_active_action (priv->mixer, action);
 }
 
 void
@@ -297,7 +297,7 @@ gthree_animation_action_stop_fading (GthreeAnimationAction *action)
   if (weight_interpolant != NULL)
     {
       priv->weight_interpolant = NULL;
-      gthree_action_mixer_take_back_control_interpolant (priv->mixer, weight_interpolant);
+      _gthree_animation_mixer_take_back_control_interpolant (priv->mixer, weight_interpolant);
     }
 }
 
@@ -362,14 +362,14 @@ gthree_animation_action_warp (GthreeAnimationAction *action,
                               float duration)
 {
   GthreeAnimationActionPrivate *priv = gthree_animation_action_get_instance_private (action);
-  float now = gthree_action_mixer_get_time (priv->mixer);
+  float now = gthree_animation_mixer_get_time (priv->mixer);
   GthreeInterpolant *interpolant = priv->time_scale_interpolant;
   float time_scale = priv->time_scale;
   float *times, *values;
 
   if (interpolant == NULL)
     {
-      interpolant = gthree_action_mixer_lend_control_interpolant (priv->mixer);
+      interpolant = _gthree_animation_mixer_lend_control_interpolant (priv->mixer);
       priv->time_scale_interpolant = interpolant;
     }
 
@@ -391,7 +391,7 @@ gthree_animation_action_stop_warping (GthreeAnimationAction *action)
   if (time_scale_interpolant)
     {
       priv->time_scale_interpolant = NULL;
-      gthree_action_mixer_take_back_control_interpolant (priv->mixer, time_scale_interpolant);
+      _gthree_animation_mixer_take_back_control_interpolant (priv->mixer, time_scale_interpolant);
     }
 
 }
@@ -417,7 +417,7 @@ gthree_animation_action_get_root (GthreeAnimationAction *action)
 {
   GthreeAnimationActionPrivate *priv = gthree_animation_action_get_instance_private (action);
 
-  return priv->local_root ? priv->local_root : gthree_action_mixer_get_root (priv->mixer);
+  return priv->local_root ? priv->local_root : gthree_animation_mixer_get_root (priv->mixer);
 }
 
 void
@@ -596,10 +596,10 @@ _gthree_animation_action_update_time (GthreeAnimationAction *action,
               priv->enabled = FALSE;
             priv->time = time;
 
-            gthree_action_mixer_displatch_event (priv->mixer, "finished"
-                                                 // action: this,
-                                                 // direction: deltaTime < 0 ? - 1 : 1
-                                                 );
+            _gthree_animation_mixer_displatch_event (priv->mixer, "finished"
+                                                     // action: this,
+                                                     // direction: deltaTime < 0 ? - 1 : 1
+                                                     );
           }
       }
     }
@@ -647,10 +647,10 @@ _gthree_animation_action_update_time (GthreeAnimationAction *action,
               time = delta_time > 0 ? duration : 0;
               priv->time = time;
 
-            gthree_action_mixer_displatch_event (priv->mixer, "finished"
-                                                 // action: this,
-                                                 // direction: deltaTime > 0 ? 1 : - 1
-                                                 );
+            _gthree_animation_mixer_displatch_event (priv->mixer, "finished"
+                                                     // action: this,
+                                                     // direction: deltaTime > 0 ? 1 : - 1
+                                                     );
             }
           else
             {
@@ -668,10 +668,10 @@ _gthree_animation_action_update_time (GthreeAnimationAction *action,
 
               priv->loop_count = loop_count;
               priv->time = time;
-              gthree_action_mixer_displatch_event (priv->mixer, "loop"
-                                                 // action: this,
-                                                 // loopDelta: loopDelta
-                                                   );
+              _gthree_animation_mixer_displatch_event (priv->mixer, "loop"
+                                                       // action: this,
+                                                       // loopDelta: loopDelta
+                                                       );
             }
         }
       else
@@ -730,12 +730,12 @@ _gthree_animation_action_schedule_fading (GthreeAnimationAction *action,
 {
   GthreeAnimationActionPrivate *priv = gthree_animation_action_get_instance_private (action);
   GthreeInterpolant *interpolant = priv->weight_interpolant;
-  float now = gthree_action_mixer_get_time (priv->mixer);
+  float now = gthree_animation_mixer_get_time (priv->mixer);
   float *times, *values;
 
   if (interpolant == NULL)
     {
-      interpolant = gthree_action_mixer_lend_control_interpolant (priv->mixer);
+      interpolant = _gthree_animation_mixer_lend_control_interpolant (priv->mixer);
       priv->weight_interpolant = interpolant;
     }
 

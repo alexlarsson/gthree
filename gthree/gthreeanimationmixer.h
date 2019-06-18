@@ -36,22 +36,10 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeAnimationMixer, g_object_unref)
 
 GType gthree_animation_mixer_get_type (void) G_GNUC_CONST;
 
-void               gthree_animation_mixer_activate_action            (GthreeAnimationMixer  *mixer,
-                                                                      GthreeAnimationAction *action);
-void               gthree_animation_mixer_deactivate_action          (GthreeAnimationMixer  *mixer,
-                                                                      GthreeAnimationAction *action);
-gboolean           gthree_animation_mixer_is_active_action           (GthreeAnimationMixer  *mixer,
-                                                                      GthreeAnimationAction *action);
-void               gthree_action_mixer_take_back_control_interpolant (GthreeAnimationMixer  *mixer,
-                                                                      GthreeInterpolant     *interpolant);
-GthreeInterpolant *gthree_action_mixer_lend_control_interpolant      (GthreeAnimationMixer  *mixer);
-float              gthree_action_mixer_get_time                      (GthreeAnimationMixer  *mixer);
-GthreeObject *     gthree_action_mixer_get_root                      (GthreeAnimationMixer  *mixer);
+GthreeAnimationMixer *gthree_animation_mixer_new (GthreeObject *root);
 
-void gthree_action_mixer_displatch_event                      (GthreeAnimationMixer  *mixer,
-                                                               const char *type /*, ... */);
-
-
+float              gthree_animation_mixer_get_time                       (GthreeAnimationMixer  *mixer);
+GthreeObject *     gthree_animation_mixer_get_root                       (GthreeAnimationMixer  *mixer);
 
 G_END_DECLS
 
