@@ -205,8 +205,8 @@ search_node_subtree (GthreeObject *object, const char *node_name)
   gthree_object_iter_init (&iter, object);
   while (gthree_object_iter_next (&iter, &child))
     {
-      if (g_strcmp0 (node_name, gthree_object_get_name (child)) ||
-          g_strcmp0 (node_name, gthree_object_get_uuid (child)))
+      if (g_strcmp0 (node_name, gthree_object_get_name (child)) == 0 ||
+          g_strcmp0 (node_name, gthree_object_get_uuid (child)) == 0)
         return child;
 
       found = search_node_subtree (child, node_name);
@@ -225,8 +225,8 @@ ghtree_property_binding_find_node (GthreeObject *root, const char *node_name)
        strcmp (node_name, "root") == 0 ||
        strcmp (node_name, ".") == 0 ||
        strcmp (node_name, "-1") == 0 ||
-       g_strcmp0 (node_name, gthree_object_get_name (root)) ||
-       g_strcmp0 (node_name, gthree_object_get_uuid (root)))
+       g_strcmp0 (node_name, gthree_object_get_name (root)) == 0 ||
+       g_strcmp0 (node_name, gthree_object_get_uuid (root)) == 0)
     return root;
 
   // search into skeleton bones.
