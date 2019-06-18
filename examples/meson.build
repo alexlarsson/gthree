@@ -1,4 +1,5 @@
 examples = [
+  'testanimation',
   'cubes',
   'envmap',
   'skinning',
