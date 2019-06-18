@@ -265,7 +265,7 @@ gthree_property_binding_new (GthreeObject *root, const char *path, GthreeParsedP
         priv->parsed_path = gthree_parsed_path_parse (path);
 
       node = ghtree_property_binding_find_node (root, priv->parsed_path->node_name);
-      if (priv->node == NULL)
+      if (node == NULL)
         node = root;
       priv->node = g_object_ref (node);
       priv->root  = g_object_ref (root);
