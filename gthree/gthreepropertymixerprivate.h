@@ -9,6 +9,7 @@
 #include <gthree/gthreetypes.h>
 #include <gthree/gthreeenums.h>
 #include <gthree/gthreeobject.h>
+#include "gthreepropertybindingprivate.h"
 
 G_BEGIN_DECLS
 
@@ -35,9 +36,22 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreePropertyMixer, g_object_unref)
 
 GType gthree_property_mixer_get_type (void) G_GNUC_CONST;
 
+GthreePropertyMixer *gthree_property_mixer_new (GthreePropertyBinding *binding,
+                                                GthreeValueType        value_type,
+                                                int                    value_size);
 
-void gthree_property_mixer_accumulate (GthreePropertyMixer *mixer, int accu_index, float weight);
 
+void gthree_property_mixer_accumulate             (GthreePropertyMixer *mixer,
+                                                   int                  accu_index,
+                                                   float                weight);
+void gthree_property_mixer_apply                  (GthreePropertyMixer *mixer,
+                                                   int                  accu_index);
+void gthree_property_mixer_save_original_state    (GthreePropertyMixer *mixer,
+                                                   int                  accu_index,
+                                                   float                weight);
+void gthree_property_mixer_restore_original_state (GthreePropertyMixer *mixer,
+                                                   int                  accu_index,
+                                                   float                weight);
 
 G_END_DECLS
 
