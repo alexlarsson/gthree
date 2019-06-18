@@ -670,6 +670,32 @@ gthree_animation_mixer_get_time (GthreeAnimationMixer  *mixer)
   return priv->time;
 }
 
+void
+gthree_animation_mixer_set_time (GthreeAnimationMixer  *mixer,
+                                 float time)
+{
+  GthreeAnimationMixerPrivate *priv = gthree_animation_mixer_get_instance_private (mixer);
+
+ priv->time = time;
+}
+
+float
+gthree_animation_mixer_get_time_scale  (GthreeAnimationMixer *mixer)
+{
+  GthreeAnimationMixerPrivate *priv = gthree_animation_mixer_get_instance_private (mixer);
+
+  return priv->time_scale;
+}
+
+void
+gthree_animation_mixer_set_time_scale  (GthreeAnimationMixer *mixer,
+                                        float                 time_scale)
+{
+  GthreeAnimationMixerPrivate *priv = gthree_animation_mixer_get_instance_private (mixer);
+
+ priv->time_scale = time_scale;
+}
+
 // return this mixer's root target object
 GthreeObject *
 gthree_animation_mixer_get_root (GthreeAnimationMixer  *mixer)
@@ -684,5 +710,5 @@ _gthree_animation_mixer_displatch_event (GthreeAnimationMixer  *mixer,
                                          const char *type,
                                          ...)
 {
-  g_warning ("TODO - _gthree_animation_mixer_displatch_event");
+  //g_warning ("TODO - _gthree_animation_mixer_displatch_event");
 }

@@ -56,6 +56,11 @@ void                   gthree_animation_mixer_uncache_action  (GthreeAnimationMi
                                                                GthreeAnimationClip  *clip,
                                                                GthreeObject         *optional_root);
 float                  gthree_animation_mixer_get_time        (GthreeAnimationMixer *mixer);
+void                   gthree_animation_mixer_set_time        (GthreeAnimationMixer *mixer,
+                                                               float                 time);
+float                  gthree_animation_mixer_get_time_scale  (GthreeAnimationMixer *mixer);
+void                   gthree_animation_mixer_set_time_scale  (GthreeAnimationMixer *mixer,
+                                                               float                 time_scale);
 GthreeObject *         gthree_animation_mixer_get_root        (GthreeAnimationMixer *mixer);
 
 G_END_DECLS
