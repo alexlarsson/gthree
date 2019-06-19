@@ -366,6 +366,7 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters)
   g_autofree char *fragment_expanded = NULL;
   GLuint glVertexShader, glFragmentShader;
   GLint status;
+  char formatd_buffer[G_ASCII_DTOSTR_BUF_SIZE];
 
   program = g_object_new (gthree_program_get_type (),
                           NULL);
@@ -464,7 +465,9 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters)
       if (parameters->supports_vertex_textures)
         g_string_append (vertex, "#define VERTEX_TEXTURES\n");
 
-      g_string_append_printf (vertex, "#define GAMMA_FACTOR %f\n", gamma_factor_define);
+      g_string_append_printf (vertex, "#define GAMMA_FACTOR %s\n",
+                              g_ascii_formatd (formatd_buffer, sizeof(formatd_buffer),
+                                               "%f", gamma_factor_define));
 
       g_string_append_printf (vertex,
                               "#define MAX_BONES %d\n",
@@ -597,7 +600,17 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters)
       if (defines)
         generate_defines (fragment, defines);
 
-      g_string_append_printf (fragment, "#define GAMMA_FACTOR %f\n", gamma_factor_define);
+      g_print ("parameters->alpha_test: %d (%.3f)\n", parameters->alpha_test, parameters->alpha_test / 255.0);
+      if (parameters->alpha_test > 0)
+        {
+          g_string_append_printf (fragment, "#define ALPHATEST %s\n",
+                                  g_ascii_formatd (formatd_buffer, sizeof(formatd_buffer),
+                                                   "%.3f", parameters->alpha_test / 255.0));
+        }
+
+      g_string_append_printf (fragment, "#define GAMMA_FACTOR %s\n",
+                              g_ascii_formatd (formatd_buffer, sizeof(formatd_buffer),
+                                               "%f", gamma_factor_define));
 
       if (parameters->map)
         g_string_append (fragment, "#define USE_MAP\n");

@@ -67,12 +67,12 @@ typedef struct {
   guint shadow_map_type_ : 2;
   guint tone_mapping : 1;
   guint physically_correct_lights : 1;
-  guint alpha_test : 1;
   guint double_sided : 1;
   guint flip_sided : 1;
   guint depth_packing : 1;
   guint dithering : 1;
 
+  guint8 alpha_test;
   guint16 max_bones;
   guint16 max_morph_targets;
 

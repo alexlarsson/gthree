@@ -212,7 +212,7 @@ gthree_material_real_set_params (GthreeMaterial *material,
 
   params->double_sided = priv->side == GTHREE_SIDE_DOUBLE;
   params->flip_sided = priv->side == GTHREE_SIDE_BACK;
-  params->alpha_test = priv->alpha_test;
+  params->alpha_test = MIN(MAX(0, roundf(priv->alpha_test * 255.0)), 255);
   params->vertex_colors = priv->vertex_colors;
 }
 
