@@ -21,6 +21,7 @@ static float press_y, press_x;
 
 static gboolean button_down;
 static gboolean auto_rotate;
+static gboolean fade_animations;
 static float auto_rotate_start_time;
 static float auto_rotate_start_angle;
 static float last_frame_time;
@@ -231,6 +232,7 @@ update_scene (GthreeArea *area)
 {
   int i;
 
+  active_action = NULL;
   g_clear_object (&mixer);
   //g_clear_object (&scene);
   //g_clear_object (&loader);
@@ -263,6 +265,7 @@ animations_combo_changed (GtkComboBox *combo)
 {
   int index = gtk_combo_box_get_active (combo);
   GthreeAnimationClip *clip;
+  float fade_time = 0.4;
 
   if (index <= 0)
     {
@@ -272,7 +275,7 @@ animations_combo_changed (GtkComboBox *combo)
   else
     clip = gthree_loader_get_animation (loader, index - 1);
 
-  if (active_action != NULL)
+  if (active_action != NULL && !fade_animations)
       gthree_animation_action_set_enabled (active_action, FALSE);
 
   if (clip != NULL)
@@ -282,10 +285,31 @@ animations_combo_changed (GtkComboBox *combo)
       gthree_animation_action_set_loop_mode (action, GTHREE_LOOP_MODE_REPEAT, -1);
       gthree_animation_action_set_enabled (action, TRUE);
 
+      if (fade_animations)
+        {
+          if (active_action)
+            gthree_animation_action_cross_fade_to (active_action, action, fade_time, FALSE);
+          else
+            gthree_animation_action_fade_in (action, fade_time);
+        }
+
       gthree_animation_action_play (action);
+
       active_action = action;
     }
+  else if (active_action != NULL)
+    {
+      if (fade_animations)
+        gthree_animation_action_fade_out (active_action, fade_time);
+      active_action = NULL;
+    }
 
+}
+
+static void
+fade_animations_toggled (GtkToggleButton *toggle_button)
+{
+  fade_animations = gtk_toggle_button_get_active (toggle_button);
 }
 
 static void
@@ -314,7 +338,6 @@ auto_rotate_toggled (GtkToggleButton *toggle_button)
       auto_rotate_start_time = last_frame_time;
     }
 }
-
 
 static gboolean
 button_press_event_cb (GtkWidget      *widget,
@@ -556,6 +579,11 @@ main (int argc, char *argv[])
 
   gtk_container_add (GTK_CONTAINER (hbox), combo);
   gtk_widget_show (combo);
+
+  check = gtk_check_button_new_with_label ("Fade animations");
+  gtk_container_add (GTK_CONTAINER (hbox), check);
+  gtk_widget_show (check);
+  g_signal_connect (check, "toggled", G_CALLBACK (fade_animations_toggled), NULL);
 
   button = gtk_button_new_with_label ("Quit");
   gtk_widget_set_hexpand (button, TRUE);
