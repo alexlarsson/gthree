@@ -71,22 +71,22 @@ gthree_property_mixer_get_binding (GthreePropertyMixer *mixer)
 static void
 mix_buffer_region_quat (float *buffer, int dst_offset, int src_offset, float t, int stride)
 {
-  graphene_quaternion_t a, b;
+  graphene_quaternion_t src, dst;
   graphene_vec4_t res;
 
   g_assert (stride == 4);
-  graphene_quaternion_init (&a,
+  graphene_quaternion_init (&src,
                             buffer[src_offset + 0],
                             buffer[src_offset + 1],
                             buffer[src_offset + 2],
                             buffer[src_offset + 3]);
-  graphene_quaternion_init (&b,
+  graphene_quaternion_init (&dst,
                             buffer[dst_offset + 0],
                             buffer[dst_offset + 1],
                             buffer[dst_offset + 2],
                             buffer[dst_offset + 3]);
-  graphene_quaternion_slerp (&a, &b, t, &b);
-  graphene_quaternion_to_vec4 (&b, &res);
+  graphene_quaternion_slerp (&dst, &src, t, &dst);
+  graphene_quaternion_to_vec4 (&dst, &res);
   graphene_vec4_to_float (&res, &buffer[dst_offset]);
 }
 
