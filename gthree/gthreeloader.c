@@ -12,6 +12,10 @@
 #include "gthreegroup.h"
 #include "gthreeenums.h"
 #include "gthreeprivate.h"
+#include "gthreeanimationclip.h"
+#include "gthreevectorkeyframetrack.h"
+#include "gthreenumberkeyframetrack.h"
+#include "gthreequaternionkeyframetrack.h"
 #include <json-glib/json-glib.h>
 
 /* TODO:
@@ -45,6 +49,7 @@ typedef struct {
   GPtrArray *materials;
   GPtrArray *cameras;
   GPtrArray *skins;
+  GPtrArray *animations;
 
   GHashTable *final_materials_hash;
   GPtrArray *final_materials;
@@ -103,7 +108,6 @@ typedef struct {
   int skeleton;
   GArray *joints;
 } Skin;
-
 
 typedef struct {
   GthreeMaterial *orig_material;
@@ -298,6 +302,7 @@ gthree_loader_init (GthreeLoader *loader)
   priv->materials = g_ptr_array_new_with_free_func ((GDestroyNotify)g_object_unref);
   priv->cameras = g_ptr_array_new_with_free_func ((GDestroyNotify)camera_free);
   priv->skins = g_ptr_array_new_with_free_func ((GDestroyNotify)skin_free);
+  priv->animations = g_ptr_array_new_with_free_func ((GDestroyNotify)g_object_unref);
 
   priv->final_materials = g_ptr_array_new_with_free_func ((GDestroyNotify)g_object_unref);
   priv->final_materials_hash = g_hash_table_new_full ((GHashFunc)material_cache_key_hash,
@@ -327,6 +332,7 @@ gthree_loader_finalize (GObject *obj)
   g_ptr_array_unref (priv->materials);
   g_ptr_array_unref (priv->cameras);
   g_ptr_array_unref (priv->skins);
+  g_ptr_array_unref (priv->animations);
 
   if (priv->node_infos)
     g_free (priv->node_infos);
@@ -796,7 +802,6 @@ parse_accessors (GthreeLoader *loader, JsonObject *root, GError **error)
 
               /* Create an array for the entire bufferview now that we know the type, then store
                  that for later use and use a subset of it here. */
-
               accessor->array = gthree_attribute_array_new (attribute_type, count_shared_array, item_size_in_shared_array);
               accessor->item_size = item_size;
               accessor->item_offset = byte_offset / attribute_type_size;
@@ -828,7 +833,7 @@ convert_wrapping (int wrapping)
   if (wrapping == 10497)
     return GTHREE_WRAPPING_REPEAT;
 
-  g_warning ("unknown wrapping %d\n", wrapping);
+  g_warning ("unknown wrapping %d", wrapping);
   return GTHREE_WRAPPING_REPEAT;
 }
 
@@ -848,7 +853,7 @@ convert_filter (int filter)
   if (filter == 9987)
     return GTHREE_FILTER_LINEAR_MIPMAP_LINEAR;
 
-  g_warning ("unknown filter %d\n", filter);
+  g_warning ("unknown filter %d", filter);
   return GTHREE_FILTER_NEAREST;
 }
 
@@ -1646,10 +1651,186 @@ parse_scenes (GthreeLoader *loader, JsonObject *root, GError **error)
       g_ptr_array_add (priv->scenes, g_steal_pointer (&scene));
     }
 
+
   return TRUE;
 }
 
+static gboolean
+parse_animations (GthreeLoader *loader, JsonObject *root, GError **error)
+{
+  GthreeLoaderPrivate *priv = gthree_loader_get_instance_private (loader);
+  JsonArray *animations_j = NULL;
+  guint len;
+  int i;
 
+  if (!json_object_has_member (root, "animations"))
+    return TRUE;
+
+  animations_j = json_object_get_array_member (root, "animations");
+  len = json_array_get_length (animations_j);
+  for (i = 0; i < len; i++)
+    {
+      JsonObject *animation_j = json_array_get_object_element (animations_j, i);
+      JsonArray *samplers_j = json_object_get_array_member (animation_j, "samplers");
+      JsonArray *channels_j = json_object_get_array_member (animation_j, "channels");
+      g_autoptr(GthreeAnimationClip) clip = NULL;
+      g_autofree char *name = NULL;
+      int j;
+
+      if (json_object_has_member (animation_j, "name"))
+        name = g_strdup (json_object_get_string_member (animation_j, "name"));
+      else
+        name = g_strdup_printf ("animation_%d", i);
+
+      clip = gthree_animation_clip_new (name, 0);
+
+      for (j = 0; j < json_array_get_length (channels_j); j++)
+        {
+          JsonObject *channel_j = json_array_get_object_element (channels_j, j);
+          JsonObject *target_j = json_object_get_object_member (channel_j, "target");
+          int sampler_index = json_object_get_int_member (channel_j, "sampler");;
+          JsonObject *sampler_j;
+          int target_node_index;
+          const char *target_path = NULL;
+          GthreeObject *target_node = NULL;
+          const char *gthree_target_path = NULL;
+          const char *target_name;
+          GthreeInterpolationMode interpolation_mode = GTHREE_INTERPOLATION_MODE_LINEAR;
+          GthreeValueType value_type;
+          int input_id, output_id;
+          Accessor *input_accessor, *output_accessor;
+          int k;
+          g_autoptr(GPtrArray) target_names = g_ptr_array_new ();
+
+          sampler_j = json_array_get_object_element (samplers_j, sampler_index);
+
+          target_path = json_object_get_string_member (target_j, "path");
+          target_node_index = json_object_get_int_member (target_j, "node");
+          target_node = g_ptr_array_index (priv->nodes, target_node_index);
+
+          if (strcmp (target_path, "scale") == 0)
+            {
+              gthree_target_path = "scale";
+              value_type = GTHREE_VALUE_TYPE_VECTOR;
+            }
+          else if (strcmp (target_path, "translation") == 0)
+            {
+              gthree_target_path = "position";
+              value_type = GTHREE_VALUE_TYPE_VECTOR;
+            }
+          else if (strcmp (target_path, "rotation") == 0)
+            {
+              gthree_target_path = "quaternion";
+              value_type = GTHREE_VALUE_TYPE_QUATERNION;
+            }
+          else if (strcmp (target_path, "weights") == 0)
+            {
+              gthree_target_path = "morphTargetInfluences";
+              value_type = GTHREE_VALUE_TYPE_NUMBER;
+              g_warning ("Unsupported animation target path %s", target_path);
+             continue;
+            }
+          else
+            {
+              g_warning ("Unsupported animation target path %s", target_path);
+              continue;
+            }
+
+          input_id = json_object_get_int_member (sampler_j, "input");
+          input_accessor = g_ptr_array_index (priv->accessors, input_id);
+
+          output_id = json_object_get_int_member (sampler_j, "output");
+          output_accessor = g_ptr_array_index (priv->accessors, output_id);
+
+          if (json_object_has_member (sampler_j, "interpolation"))
+            {
+              const char *s = json_object_get_string_member (sampler_j, "interpolation");
+              if (strcmp (s, "LINEAR") == 0)
+                interpolation_mode = GTHREE_INTERPOLATION_MODE_LINEAR;
+              else if (strcmp (s, "STEP") == 0)
+                interpolation_mode = GTHREE_INTERPOLATION_MODE_DISCRETE;
+              else if (strcmp (s, "CUBICSPLINE") == 0)
+                {
+                  g_warning ("Interpolation CUBICSPLINE not supported yet, see three.js hack");
+                  continue;
+                }
+              else
+                g_warning ("Unknown interpolation mode %s", s);
+            }
+
+          target_name = gthree_object_get_name (target_node);
+          if (target_name == NULL)
+            target_name = gthree_object_get_uuid (target_node);
+
+#ifdef TODO
+          if (strcmp (target_path, "weights") == 0)
+            {
+              // Node may be a THREE.Group (glTF mesh with several primitives) or a THREE.Mesh.
+              node.traverse( function ( object ) {
+
+                  if ( object.isMesh === true && object.morphTargetInfluences ) {
+                    targetNames.push( object.name ? object.name : object.uuid );
+                  }
+                } );
+            }
+          else
+#endif
+            g_ptr_array_add (target_names, (char *)target_name);
+
+          for (k = 0; k < target_names->len; k++)
+            {
+              char *target_name = g_ptr_array_index (target_names, k);
+              GthreeKeyframeTrack *track;
+              g_autofree char *track_name = g_strdup_printf ("%s.%s", target_name, gthree_target_path);
+              g_autoptr(GthreeAttributeArray) input_array = NULL;
+              g_autoptr(GthreeAttributeArray) output_array = NULL;
+
+              input_array = gthree_attribute_array_reshape (input_accessor->array,
+                                                            0, input_accessor->item_offset,
+                                                            input_accessor->count,
+                                                            input_accessor->item_size,
+                                                            TRUE);
+
+              output_array = gthree_attribute_array_reshape (output_accessor->array,
+                                                            0, output_accessor->item_offset,
+                                                            output_accessor->count,
+                                                            output_accessor->item_size,
+                                                            TRUE);
+
+
+              switch (value_type)
+                {
+                default:
+                case GTHREE_VALUE_TYPE_VECTOR:
+                  track = gthree_vector_keyframe_track_new (track_name,
+                                                            input_array,
+                                                            output_array);
+                  break;
+                case GTHREE_VALUE_TYPE_QUATERNION:
+                  track = gthree_quaternion_keyframe_track_new (track_name,
+                                                                input_array,
+                                                                output_array);
+                  break;
+                case GTHREE_VALUE_TYPE_NUMBER:
+                  track = gthree_number_keyframe_track_new (track_name,
+                                                            input_array,
+                                                            output_array);
+                  break;
+                }
+
+              gthree_keyframe_track_set_interpolation  (track, interpolation_mode);
+
+              gthree_animation_clip_add_track (clip, track);
+            }
+        }
+
+      gthree_animation_reset_duration (clip);
+
+      g_ptr_array_add (priv->animations, g_steal_pointer (&clip));
+    }
+
+  return TRUE;
+}
 
 GthreeLoader *
 gthree_loader_parse_gltf (GBytes *data, GFile *base_path, GError **error)
@@ -1731,6 +1912,9 @@ gthree_loader_parse_gltf (GBytes *data, GFile *base_path, GError **error)
   if (!parse_scenes (loader, root, error))
     return NULL;
 
+  if (!parse_animations (loader, root, error))
+    return NULL;
+
   return g_steal_pointer (&loader);
 }
 
@@ -1768,6 +1952,23 @@ gthree_loader_get_material (GthreeLoader *loader,
   GthreeMaterial *material = g_ptr_array_index (priv->final_materials, index);
 
   return material;
+}
+
+int
+gthree_loader_get_n_animations (GthreeLoader *loader)
+{
+  GthreeLoaderPrivate *priv = gthree_loader_get_instance_private (loader);
+
+  return priv->animations->len;
+}
+
+GthreeAnimationClip *
+gthree_loader_get_animation (GthreeLoader *loader,
+                             int index)
+{
+  GthreeLoaderPrivate *priv = gthree_loader_get_instance_private (loader);
+
+  return g_ptr_array_index (priv->animations, index);
 }
 
 GthreeGeometry *

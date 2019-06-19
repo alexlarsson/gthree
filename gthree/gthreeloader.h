@@ -8,6 +8,7 @@
 #include <gio/gio.h>
 #include <gthree/gthreegeometry.h>
 #include <gthree/gthreematerial.h>
+#include <gthree/gthreeanimationclip.h>
 
 G_BEGIN_DECLS
 
@@ -41,12 +42,15 @@ typedef enum {
 GQuark gthree_loader_error_quark (void);
 GType gthree_loader_get_type (void) G_GNUC_CONST;
 
-int             gthree_loader_get_n_scenes    (GthreeLoader *loader);
-GthreeScene *   gthree_loader_get_scene       (GthreeLoader *loader,
-                                               int           index);
-int             gthree_loader_get_n_materials (GthreeLoader *loader);
-GthreeMaterial *gthree_loader_get_material    (GthreeLoader *loader,
-                                               int           index);
+int                  gthree_loader_get_n_scenes     (GthreeLoader *loader);
+GthreeScene *        gthree_loader_get_scene        (GthreeLoader *loader,
+                                                     int           index);
+int                  gthree_loader_get_n_materials  (GthreeLoader *loader);
+GthreeMaterial *     gthree_loader_get_material     (GthreeLoader *loader,
+                                                     int           index);
+int                  gthree_loader_get_n_animations (GthreeLoader *loader);
+GthreeAnimationClip *gthree_loader_get_animation    (GthreeLoader *loader,
+                                                     int           index);
 
 GthreeLoader *gthree_loader_parse_gltf (GBytes *data, GFile *base_path, GError **error);
 
