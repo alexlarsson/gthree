@@ -458,14 +458,6 @@ parse_point3d (JsonArray *point_j, graphene_point3d_t *p)
 }
 
 static void
-parse_vec2 (JsonArray *vec_j, graphene_vec2_t *v)
-{
-  graphene_vec2_init (v,
-                      json_array_get_double_element  (vec_j, 0),
-                      json_array_get_double_element  (vec_j, 1));
-}
-
-static void
 parse_color (JsonArray *color_j, GdkRGBA *c)
 {
   c->red = json_array_get_double_element  (color_j, 0);
@@ -1079,13 +1071,13 @@ parse_materials (GthreeLoader *loader, JsonObject *root, GError **error)
           JsonObject *texture_j = json_object_get_object_member (material_j, "normalTexture");
           g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, texture_j);
           graphene_vec2_t normal_scale;
+          float scale = 1.0;
 
           gthree_mesh_standard_material_set_normal_map (material, texture);
 
           if (json_object_has_member (texture_j, "scale"))
-            parse_vec2 (json_object_get_array_member (texture_j, "scale"), &normal_scale);
-          else
-            graphene_vec2_init (&normal_scale, 1, 1);
+            scale = json_object_get_double_member (texture_j, "scale");
+          graphene_vec2_init (&normal_scale, scale, scale);
 
           gthree_mesh_standard_material_set_normal_map_scale (material, &normal_scale);
         }
