@@ -170,6 +170,7 @@ gthree_animation_action_stop (GthreeAnimationAction *action)
   GthreeAnimationActionPrivate *priv = gthree_animation_action_get_instance_private (action);
 
   _gthree_animation_mixer_deactivate_action (priv->mixer, action);
+  gthree_animation_action_reset (action);
 }
 
 void
@@ -229,6 +230,57 @@ gthree_animation_action_set_loop_mode (GthreeAnimationAction *action,
 }
 
 void
+gthree_animation_action_set_enabled (GthreeAnimationAction *action,
+                                     gboolean enabled)
+{
+  GthreeAnimationActionPrivate *priv = gthree_animation_action_get_instance_private (action);
+
+  priv->enabled = enabled;
+}
+
+gboolean
+gthree_animation_action_get_enabled (GthreeAnimationAction *action)
+{
+  GthreeAnimationActionPrivate *priv = gthree_animation_action_get_instance_private (action);
+
+  return priv->enabled;
+}
+
+void
+gthree_animation_action_set_paused (GthreeAnimationAction *action,
+                                    gboolean paused)
+{
+  GthreeAnimationActionPrivate *priv = gthree_animation_action_get_instance_private (action);
+
+  priv->paused = paused;
+}
+
+gboolean
+gthree_animation_action_get_paused (GthreeAnimationAction *action)
+{
+  GthreeAnimationActionPrivate *priv = gthree_animation_action_get_instance_private (action);
+
+  return priv->paused;
+}
+
+void
+gthree_animation_action_set_time (GthreeAnimationAction *action,
+                                  float time)
+{
+  GthreeAnimationActionPrivate *priv = gthree_animation_action_get_instance_private (action);
+
+  priv->time = time;
+}
+
+float
+gthree_animation_action_get_time (GthreeAnimationAction *action)
+{
+  GthreeAnimationActionPrivate *priv = gthree_animation_action_get_instance_private (action);
+
+  return priv->time;
+}
+
+void
 gthree_animation_action_set_effective_weight (GthreeAnimationAction *action,
                                               float weight)
 {
@@ -246,6 +298,14 @@ gthree_animation_action_get_effective_weight (GthreeAnimationAction *action)
   GthreeAnimationActionPrivate *priv = gthree_animation_action_get_instance_private (action);
 
   return priv->effective_weight;
+}
+
+float
+gthree_animation_action_get_weight (GthreeAnimationAction *action)
+{
+  GthreeAnimationActionPrivate *priv = gthree_animation_action_get_instance_private (action);
+
+  return priv->weight;
 }
 
 void
@@ -326,6 +386,14 @@ gthree_animation_action_get_effective_time_scale (GthreeAnimationAction *action)
   GthreeAnimationActionPrivate *priv = gthree_animation_action_get_instance_private (action);
 
   return priv->effective_time_scale;
+}
+
+float
+gthree_animation_action_get_time_scale (GthreeAnimationAction *action)
+{
+  GthreeAnimationActionPrivate *priv = gthree_animation_action_get_instance_private (action);
+
+  return priv->time_scale;
 }
 
 void

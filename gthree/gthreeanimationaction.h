@@ -43,6 +43,15 @@ GthreeAnimationAction * gthree_animation_action_new (GthreeAnimationMixer *mixer
 void                  gthree_animation_action_play                     (GthreeAnimationAction *action);
 void                  gthree_animation_action_stop                     (GthreeAnimationAction *action);
 void                  gthree_animation_action_reset                    (GthreeAnimationAction *action);
+void                  gthree_animation_action_set_enabled              (GthreeAnimationAction *action,
+                                                                        gboolean               enabled);
+gboolean              gthree_animation_action_get_enabled              (GthreeAnimationAction *action);
+void                  gthree_animation_action_set_paused               (GthreeAnimationAction *action,
+                                                                        gboolean               paused);
+gboolean              gthree_animation_action_get_paused               (GthreeAnimationAction *action);
+void                  gthree_animation_action_set_time                 (GthreeAnimationAction *action,
+                                                                        float                  time);
+float                 gthree_animation_action_get_time                 (GthreeAnimationAction *action);
 gboolean              gthree_animation_action_is_running               (GthreeAnimationAction *action);
 gboolean              gthree_animation_action_is_scheduled             (GthreeAnimationAction *action);
 void                  gthree_animation_action_start_at                 (GthreeAnimationAction *action,
@@ -53,6 +62,7 @@ void                  gthree_animation_action_set_loop_mode            (GthreeAn
 void                  gthree_animation_action_set_effective_weight     (GthreeAnimationAction *action,
                                                                         float                  weight);
 float                 gthree_animation_action_get_effective_weight     (GthreeAnimationAction *action);
+float                 gthree_animation_action_get_weight               (GthreeAnimationAction *action);
 void                  gthree_animation_action_fade_in                  (GthreeAnimationAction *action,
                                                                         float                  duration);
 void                  gthree_animation_action_fade_out                 (GthreeAnimationAction *action,
@@ -69,6 +79,7 @@ void                  gthree_animation_action_stop_fading              (GthreeAn
 void                  gthree_animation_action_set_effective_time_scale (GthreeAnimationAction *action,
                                                                         float                  time_scale);
 float                 gthree_animation_action_get_effective_time_scale (GthreeAnimationAction *action);
+float                 gthree_animation_action_get_time_scale            (GthreeAnimationAction *action);
 void                  gthree_animation_action_set_duration             (GthreeAnimationAction *action,
                                                                         float                  duration);
 void                  gthree_animation_action_sync_with                (GthreeAnimationAction *action,
