@@ -1017,6 +1017,7 @@ gthree_object_find_by_type (GthreeObject *object,
 void
 gthree_object_print_tree (GthreeObject *object, int depth)
 {
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
   GthreeObjectIter iter;
   GthreeObject *child;
   int i;
@@ -1024,7 +1025,10 @@ gthree_object_print_tree (GthreeObject *object, int depth)
   for (i = 0; i < depth; i++)
     g_print ("  ");
 
-  g_print ("%s(%p)\n", g_type_name_from_instance ((gpointer)object), object);
+  g_print ("%s(%p) %s", g_type_name_from_instance ((gpointer)object), object, priv->uuid);
+  if (priv->name)
+    g_print ("name: '%s'", priv->name);
+  g_print ("\n");
 
   gthree_object_iter_init (&iter, object);
   while (gthree_object_iter_next (&iter, &child))
