@@ -1193,7 +1193,7 @@ parse_meshes (GthreeLoader *loader, JsonObject *root, GError **error)
       mesh->primitives = g_ptr_array_new_with_free_func ((GDestroyNotify)primitive_free);
 
       if (json_object_has_member (mesh_j, "name"))
-        mesh->name = g_strdup (json_object_get_string_member (mesh_j, "name"));
+        mesh->name = ghtree_property_sanitize_name (json_object_get_string_member (mesh_j, "name"));
 
       primitives = json_object_get_array_member (mesh_j, "primitives");
       primitives_len = json_array_get_length (primitives);
@@ -1284,7 +1284,7 @@ parse_cameras (GthreeLoader *loader, JsonObject *root, GError **error)
       const char *type = json_object_get_string_member (camera_j, "type");
 
       if (json_object_has_member (camera_j, "name"))
-        camera->name = g_strdup (json_object_get_string_member (camera_j, "name"));
+        camera->name = ghtree_property_sanitize_name (json_object_get_string_member (camera_j, "name"));
 
       if (strcmp (type, "perspective") == 0)
         {
@@ -1447,7 +1447,7 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
 
       if (json_object_has_member (node_j, "name"))
         {
-          const char *name = json_object_get_string_member (node_j, "name");
+          g_autofree char *name = ghtree_property_sanitize_name (json_object_get_string_member (node_j, "name"));
           gthree_object_set_name (node, name);
         }
 
@@ -1630,7 +1630,7 @@ parse_scenes (GthreeLoader *loader, JsonObject *root, GError **error)
 
       if (json_object_has_member (scene_j, "name"))
         {
-          const char *name = json_object_get_string_member (scene_j, "name");
+          g_autofree char *name = ghtree_property_sanitize_name (json_object_get_string_member (scene_j, "name"));
           gthree_object_set_name (GTHREE_OBJECT (scene), name);
         }
 

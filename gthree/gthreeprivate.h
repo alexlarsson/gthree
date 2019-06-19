@@ -142,4 +142,6 @@ int _gthree_interpolant_get_cache_index (GthreeInterpolant *interpolant);
 void _gthree_interpolant_set_cache_index (GthreeInterpolant *interpolant,
                                           int cache_index);
 
+char * ghtree_property_sanitize_name (const char *name);
+
 #endif /* __GTHREE_PRIVATE_H__ */
