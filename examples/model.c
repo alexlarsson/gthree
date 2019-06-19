@@ -27,6 +27,7 @@ static float last_frame_time;
 
 static GthreeScene *scene;
 static GthreeAnimationMixer *mixer;
+static GthreeAnimationAction *active_action;
 static GthreeLoader *loader;
 static float scene_radius;
 static graphene_point3d_t scene_center;
@@ -271,15 +272,20 @@ animations_combo_changed (GtkComboBox *combo)
   else
     clip = gthree_loader_get_animation (loader, index - 1);
 
-  gthree_animation_mixer_stop_all_action (mixer);
+  if (active_action != NULL)
+      gthree_animation_action_set_enabled (active_action, FALSE);
 
   if (clip != NULL)
     {
       GthreeAnimationAction *action = gthree_animation_mixer_clip_action (mixer, clip, NULL);
 
       gthree_animation_action_set_loop_mode (action, GTHREE_LOOP_MODE_REPEAT, -1);
+      gthree_animation_action_set_enabled (action, TRUE);
+
       gthree_animation_action_play (action);
+      active_action = action;
     }
+
 }
 
 static void
