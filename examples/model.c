@@ -9,6 +9,7 @@
 static GPtrArray *env_maps;
 static GPtrArray *model_paths;
 static GtkWidget *models_combo;
+static GtkWidget *animations_combo;
 
 static int current_env_map;
 static int current_model;
@@ -25,6 +26,7 @@ static float auto_rotate_start_angle;
 static float last_frame_time;
 
 static GthreeScene *scene;
+static GthreeAnimationMixer *mixer;
 static GthreeLoader *loader;
 static float scene_radius;
 static graphene_point3d_t scene_center;
@@ -175,10 +177,20 @@ tick (GtkWidget     *widget,
 {
   graphene_point3d_t pos;
   graphene_euler_t rot;
+  static gint64 last_frame_time_i = 0;
+  gint64 frame_time_i;
   float frame_time;
 
-  // Scale to some useful float value
-  frame_time = gdk_frame_clock_get_frame_time (frame_clock) / 100000.0;
+  frame_time_i = gdk_frame_clock_get_frame_time (frame_clock);
+  if (last_frame_time_i != 0)
+    {
+      float delta_time_sec = (frame_time_i - last_frame_time_i) / (float) G_USEC_PER_SEC;
+      gthree_animation_mixer_update (mixer, delta_time_sec);
+    }
+  last_frame_time_i = frame_time_i;
+
+  // Scale to some random useful float value
+  frame_time = frame_time_i / 100000.0;
 
   gthree_object_set_rotation (GTHREE_OBJECT (point_light_group),
                               graphene_euler_init (&rot,
@@ -216,7 +228,9 @@ resize_area (GthreeArea *area,
 static void
 update_scene (GthreeArea *area)
 {
-  //TODO: There is some unrealize refcount issue that causes this to crash, so leak for now
+  int i;
+
+  g_clear_object (&mixer);
   //g_clear_object (&scene);
   //g_clear_object (&loader);
 
@@ -226,8 +240,46 @@ update_scene (GthreeArea *area)
   light_scene ();
   apply_env_map ();
 
+  mixer = gthree_animation_mixer_new (GTHREE_OBJECT (scene));
+
+  gtk_combo_box_text_remove_all  (GTK_COMBO_BOX_TEXT (animations_combo));
+  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (animations_combo), "No animation");
+  gtk_combo_box_set_active (GTK_COMBO_BOX (animations_combo), 0);
+
+  for (i = 0; i < gthree_loader_get_n_animations (loader); i++)
+    {
+      GthreeAnimationClip *clip = gthree_loader_get_animation (loader, i);
+      gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (animations_combo), gthree_animation_clip_get_name (clip));
+    }
+
   gthree_area_set_scene (area, scene);
   gthree_area_set_camera (area, GTHREE_CAMERA (camera));
+}
+
+
+static void
+animations_combo_changed (GtkComboBox *combo)
+{
+  int index = gtk_combo_box_get_active (combo);
+  GthreeAnimationClip *clip;
+
+  if (index <= 0)
+    {
+      // No animation
+      clip = NULL;
+    }
+  else
+    clip = gthree_loader_get_animation (loader, index - 1);
+
+  gthree_animation_mixer_stop_all_action (mixer);
+
+  if (clip != NULL)
+    {
+      GthreeAnimationAction *action = gthree_animation_mixer_clip_action (mixer, clip, NULL);
+
+      gthree_animation_action_set_loop_mode (action, GTHREE_LOOP_MODE_REPEAT, -1);
+      gthree_animation_action_play (action);
+    }
 }
 
 static void
@@ -489,6 +541,15 @@ main (int argc, char *argv[])
   gtk_container_add (GTK_CONTAINER (hbox), check);
   gtk_widget_show (check);
   g_signal_connect (check, "toggled", G_CALLBACK (auto_rotate_toggled), NULL);
+
+  combo = gtk_combo_box_text_new ();
+  animations_combo = combo;
+  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), "No animation");
+  gtk_combo_box_set_active (GTK_COMBO_BOX (combo), 0);
+  g_signal_connect (combo, "changed", G_CALLBACK (animations_combo_changed), NULL);
+
+  gtk_container_add (GTK_CONTAINER (hbox), combo);
+  gtk_widget_show (combo);
 
   button = gtk_button_new_with_label ("Quit");
   gtk_widget_set_hexpand (button, TRUE);
