@@ -3,6 +3,7 @@
 
 #include "gthreematerial.h"
 #include "gthreeprivate.h"
+#include "gthreetypebuiltins.h"
 
 typedef struct {
   gboolean transparent;
@@ -36,6 +37,8 @@ enum {
   PROP_TRANSPARENT,
   PROP_OPACITY,
   PROP_VERTEX_COLORS,
+  PROP_SIDE,
+  PROP_ALPHA_TEST,
 
   N_PROPS
 };
@@ -117,6 +120,14 @@ gthree_material_set_property (GObject *obj,
 
   switch (prop_id)
     {
+    case PROP_ALPHA_TEST:
+      gthree_material_set_alpha_test (material, g_value_get_float (value));
+      break;
+
+    case PROP_SIDE:
+      gthree_material_set_side (material, g_value_get_enum (value));
+      break;
+
     case PROP_VERTEX_COLORS:
       gthree_material_set_vertex_colors (material, g_value_get_boolean (value));
       break;
@@ -145,6 +156,14 @@ gthree_material_get_property (GObject *obj,
 
   switch (prop_id)
     {
+    case PROP_ALPHA_TEST:
+      g_value_set_float (value, priv->alpha_test);
+      break;
+
+    case PROP_SIDE:
+      g_value_set_enum (value, priv->side);
+      break;
+
     case PROP_VERTEX_COLORS:
       g_value_set_boolean (value, priv->vertex_colors);
       break;
@@ -277,6 +296,15 @@ gthree_material_class_init (GthreeMaterialClass *klass)
     g_param_spec_boolean ("vertex-colors", "Vertex Colors", "Vertex Colors",
                           FALSE,
                           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_SIDE] =
+    g_param_spec_enum ("side", "Side", "Side",
+                       GTHREE_TYPE_SIDE,
+                       GTHREE_SIDE_FRONT,
+                       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_ALPHA_TEST] =
+    g_param_spec_float ("alpha-test", "Alpha test", "Alpha test",
+                        0.f, 1.f, 0.0f,
+                        G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, N_PROPS, obj_props);
 }
