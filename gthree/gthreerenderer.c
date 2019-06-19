@@ -1315,7 +1315,9 @@ render_item (GthreeRenderer *renderer,
     {
       int index_type = gthree_attribute_get_gl_type (index);
       int index_bytes_per_element = gthree_attribute_get_gl_bytes_per_element (index);
-      glDrawElements (draw_mode, draw_count, index_type, GINT_TO_POINTER (draw_start * index_bytes_per_element));
+      int index_offset = gthree_attribute_get_item_offset (index);
+
+      glDrawElements (draw_mode, draw_count, index_type, GINT_TO_POINTER ((index_offset + draw_start) * index_bytes_per_element));
     }
   else
     {
