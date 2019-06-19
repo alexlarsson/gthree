@@ -600,7 +600,6 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters)
       if (defines)
         generate_defines (fragment, defines);
 
-      g_print ("parameters->alpha_test: %d (%.3f)\n", parameters->alpha_test, parameters->alpha_test / 255.0);
       if (parameters->alpha_test > 0)
         {
           g_string_append_printf (fragment, "#define ALPHATEST %s\n",
