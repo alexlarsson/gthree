@@ -1476,6 +1476,9 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
           gint64 mesh_id = json_object_get_int_member (node_j, "mesh");
           Mesh *mesh_info = g_ptr_array_index (priv->meshes, mesh_id);
           Skin *skin = NULL;
+          GthreeGroup *group = NULL;
+          GthreeObject *toplevel = NULL;
+          GthreeObject *parent = node;
           int j;
 
           if (json_object_has_member (node_j, "skin"))
@@ -1484,6 +1487,13 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
 
               // This is used below for each primitive mesh
               skin = g_ptr_array_index (priv->skins, skin_id);
+            }
+
+          if (mesh_info->primitives->len > 1)
+            {
+              group = gthree_group_new ();
+              gthree_object_add_child (node, GTHREE_OBJECT (group));
+              parent = toplevel = GTHREE_OBJECT (group);
             }
 
           for (j = 0; j < mesh_info->primitives->len; j++)
@@ -1580,12 +1590,13 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
                   break;
                 }
 
-              if (mesh_info->name)
-                gthree_object_set_name (GTHREE_OBJECT (mesh), mesh_info->name);
-
-              gthree_object_add_child (node, GTHREE_OBJECT (mesh));
+              gthree_object_add_child (parent, GTHREE_OBJECT (mesh));
+              if (toplevel == NULL)
+                toplevel = GTHREE_OBJECT (mesh);
             }
 
+          if (mesh_info->name && toplevel)
+            gthree_object_set_name (GTHREE_OBJECT (toplevel), mesh_info->name);
         }
 
       if (json_object_has_member (node_j, "camera"))
