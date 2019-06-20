@@ -4,6 +4,7 @@
 #include "gthreeprogram.h"
 #include "gthreeuniforms.h"
 #include "gthreeshader.h"
+#include "gthreerenderer.h"
 
 typedef struct {
   GHashTable *uniform_locations;
@@ -346,7 +347,7 @@ get_texel_encoding_function (GString *shader,
 }
 
 GthreeProgram *
-gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters)
+gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, GthreeRenderer *renderer)
 {
   GthreeProgram *program;
   GthreeProgramPrivate *priv;
@@ -440,7 +441,7 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters)
 	}
 #endif
 
-  gamma_factor_define = /*TODO: ( renderer.gammaFactor > 0 ) ? renderer.gammaFactor : */ 1.0;
+  gamma_factor_define = gthree_renderer_get_gamma_factor (renderer);
 
   // console.log( "building new program " );
 
@@ -947,7 +948,7 @@ gthree_program_cache_remove (GthreeProgramCache *cache, GthreeProgram *program)
 }
 
 GthreeProgram *
-gthree_program_cache_get (GthreeProgramCache *cache, GthreeShader *shader, GthreeProgramParameters *parameters)
+gthree_program_cache_get (GthreeProgramCache *cache, GthreeShader *shader, GthreeProgramParameters *parameters, GthreeRenderer *renderer)
 {
   GthreeProgramPrivate *priv;
   GthreeProgramPrivate key = {NULL};
@@ -960,7 +961,7 @@ gthree_program_cache_get (GthreeProgramCache *cache, GthreeShader *shader, Gthre
   if (program)
     return g_object_ref (program);
 
-  program = gthree_program_new (shader, parameters);
+  program = gthree_program_new (shader, parameters, renderer);
   priv = gthree_program_get_instance_private (program);
   priv->cache = cache;
 

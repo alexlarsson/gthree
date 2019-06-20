@@ -89,7 +89,9 @@ typedef struct {
 
 GType gthree_program_get_type (void) G_GNUC_CONST;
 
-GthreeProgram *gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters);
+GthreeProgram *gthree_program_new (GthreeShader *shader,
+                                   GthreeProgramParameters *parameters,
+                                   GthreeRenderer *renderer);
 
 void gthree_program_use                                   (GthreeProgram *program);
 gint gthree_program_lookup_uniform_location               (GthreeProgram *program,
@@ -108,7 +110,8 @@ GthreeProgramCache *gthree_program_cache_new  (void);
 void                gthree_program_cache_free (GthreeProgramCache      *cache);
 GthreeProgram *     gthree_program_cache_get  (GthreeProgramCache      *cache,
                                                GthreeShader            *shader,
-                                               GthreeProgramParameters *parameters);
+                                               GthreeProgramParameters *parameters,
+                                               GthreeRenderer          *renderer);
 
 G_END_DECLS
 

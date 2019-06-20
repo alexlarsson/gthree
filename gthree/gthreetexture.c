@@ -19,11 +19,14 @@ static void gthree_texture_real_unrealize (GthreeResource *resource);
 typedef struct {
   gboolean needs_update;
 
+  char *name;
+  char *uuid;
   GdkPixbuf *pixbuf;
   GArray *mipmaps;
   GthreeMapping mapping;
   GthreeWrapping wrap_s;
   GthreeWrapping wrap_t;
+  GthreeEncodingFormat encoding;
 
   GthreeFilter mag_filter;
   GthreeFilter min_filter;
@@ -70,6 +73,8 @@ gthree_texture_init (GthreeTexture *texture)
 {
   GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
 
+  priv->uuid = g_uuid_string_random ();
+
   priv->anisotropy = 1;
   priv->unpack_alignment = 4;
   priv->flip_y = TRUE;
@@ -79,6 +84,7 @@ gthree_texture_init (GthreeTexture *texture)
   priv->mag_filter = GTHREE_FILTER_LINEAR;
   priv->min_filter = GTHREE_FILTER_LINEAR_MIPMAP_LINEAR;
   priv->mapping = GTHREE_MAPPING_UV;
+  priv->encoding = GTHREE_ENCODING_FORMAT_SRGB; // Differs rom three.js deault LINEAR
 
   priv->format = GL_RGBA;
   priv->type = GL_UNSIGNED_BYTE;
@@ -94,6 +100,9 @@ gthree_texture_finalize (GObject *obj)
 {
   GthreeTexture *texture = GTHREE_TEXTURE (obj);
   GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  g_free (priv->uuid);
+  g_free (priv->name);
 
   g_clear_object (&priv->pixbuf);
 
@@ -555,4 +564,57 @@ gthree_texture_get_max_mip_level (GthreeTexture *texture)
   GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
 
   return priv->max_mip_level;
+}
+
+void
+gthree_texture_set_encoding (GthreeTexture *texture,
+                             GthreeEncodingFormat encoding)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  priv->encoding = encoding;
+}
+
+GthreeEncodingFormat
+gthree_texture_get_encoding (GthreeTexture *texture)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  return priv->encoding;
+}
+
+void
+gthree_texture_set_name (GthreeTexture *texture,
+                         const char *name)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  g_free (priv->name);
+  priv->name = g_strdup (name);
+}
+
+const char *
+gthree_texture_get_name (GthreeTexture *texture)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  return priv->name;
+}
+
+void
+gthree_texture_set_uuid (GthreeTexture *texture,
+                         const char *uuid)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  g_free (priv->uuid);
+  priv->uuid = g_strdup (uuid);
+}
+
+const char *
+gthree_texture_get_uuid (GthreeTexture *texture)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  return priv->uuid;
 }

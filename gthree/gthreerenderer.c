@@ -45,6 +45,8 @@ typedef struct {
   gboolean auto_clear_stencil;
   GdkRGBA clear_color;
   gboolean sort_objects;
+  float gamma_factor;
+  gboolean physically_correct_lights;
 
   float viewport_x;
   float viewport_y;
@@ -162,6 +164,8 @@ gthree_renderer_init (GthreeRenderer *renderer)
   priv->sort_objects = TRUE;
   priv->width = 1;
   priv->height = 1;
+  priv->gamma_factor = 2.2; // Differs from three.js default 2.0
+  priv->physically_correct_lights = FALSE;
 
   priv->light_setup.directional = g_ptr_array_new ();
   priv->light_setup.point = g_ptr_array_new ();
@@ -326,6 +330,23 @@ gthree_renderer_set_clear_color (GthreeRenderer *renderer,
   priv->clear_color = *color;
 
   glClearColor (priv->clear_color.red, priv->clear_color.green, priv->clear_color.blue, priv->clear_color.alpha );
+}
+
+void
+gthree_renderer_set_gamma_factor (GthreeRenderer *renderer,
+                                   float           factor)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  priv->gamma_factor = factor;
+}
+
+float
+gthree_renderer_get_gamma_factor (GthreeRenderer *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  return priv->gamma_factor;
 }
 
 static void
@@ -607,13 +628,6 @@ project_object (GthreeRenderer *renderer,
     project_object (renderer, scene, child, camera);
 }
 
-static GthreeEncodingFormat
-get_texture_encoding_from_map (void/* map, gammaOverrideLinear*/) {
-  /* TODO */
-  return GTHREE_ENCODING_FORMAT_LINEAR;
-
-}
-
 static void
 material_apply_light_setup (GthreeUniforms *m_uniforms,
                             GthreeLightSetup *light_setup,
@@ -648,7 +662,9 @@ init_material (GthreeRenderer *renderer,
 
   parameters.precision = GTHREE_PRECISION_HIGH;
   parameters.supports_vertex_textures = priv->supports_vertex_textures;
-  parameters.output_encoding = get_texture_encoding_from_map (/* ( ! currentRenderTarget ) ? null : currentRenderTarget.texture, renderer.gammaOutput*/ );
+  // TODO: Get encoding from currentRenderTarget if set
+  parameters.output_encoding = GTHREE_ENCODING_FORMAT_GAMMA;
+  parameters.physically_correct_lights = priv->physically_correct_lights;
 
   gthree_material_set_params (material, &parameters);
   parameters.num_dir_lights = priv->light_setup.directional->len;
@@ -698,7 +714,7 @@ init_material (GthreeRenderer *renderer,
     };
 #endif
 
-  program = gthree_program_cache_get (priv->program_cache, shader, &parameters);
+  program = gthree_program_cache_get (priv->program_cache, shader, &parameters, renderer);
   g_clear_object (&material_properties->program);
   material_properties->program = program;
 

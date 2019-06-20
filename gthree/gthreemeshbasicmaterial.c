@@ -65,9 +65,15 @@ gthree_mesh_basic_material_real_set_params (GthreeMaterial *material,
   GTHREE_MATERIAL_CLASS (gthree_mesh_basic_material_parent_class)->set_params (material, params);
 
   params->map = priv->map != NULL;
+  if (params->map)
+    params->map_encoding = gthree_texture_get_encoding (priv->map);
+
   params->env_map = priv->env_map != NULL;
   if (params->env_map)
-    params->env_map_mode = gthree_texture_get_mapping (priv->env_map);
+    {
+      params->env_map_encoding = gthree_texture_get_encoding (priv->env_map);
+      params->env_map_mode = gthree_texture_get_mapping (priv->env_map);
+    }
 }
 
 static void

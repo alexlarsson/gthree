@@ -117,9 +117,15 @@ gthree_mesh_phong_material_real_set_params (GthreeMaterial *material,
   GthreeMeshPhongMaterialPrivate *priv = gthree_mesh_phong_material_get_instance_private (phong);
 
   params->map = priv->map != NULL;
+  if (params->map)
+    params->map_encoding = gthree_texture_get_encoding (priv->map);
+
   params->env_map = priv->env_map != NULL;
   if (params->env_map)
-    params->env_map_mode = gthree_texture_get_mapping (priv->env_map);
+    {
+      params->env_map_encoding = gthree_texture_get_encoding (priv->env_map);
+      params->env_map_mode = gthree_texture_get_mapping (priv->env_map);
+    }
 
   params->flat_shading = priv->flat_shading;
 

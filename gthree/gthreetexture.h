@@ -37,27 +37,36 @@ GType gthree_texture_get_type (void) G_GNUC_CONST;
 
 GthreeTexture *gthree_texture_new (GdkPixbuf *pixbuf);
 
-const graphene_vec2_t *gthree_texture_get_repeat           (GthreeTexture *texture);
-const graphene_vec2_t *gthree_texture_get_offset           (GthreeTexture *texture);
-gboolean               gthree_texture_get_generate_mipmaps (GthreeTexture *texture);
-void                   gthree_texture_set_mapping          (GthreeTexture *texture,
-                                                            GthreeMapping  mapping);
-GthreeMapping          gthree_texture_get_mapping          (GthreeTexture *texture);
-void                   gthree_texture_set_wrap_s           (GthreeTexture *texture,
-                                                            GthreeWrapping wrap_s);
-GthreeWrapping         gthree_texture_get_wrap_s           (GthreeTexture *texture);
-void                   gthree_texture_set_wrap_t           (GthreeTexture *texture,
-                                                            GthreeWrapping wrap_t);
-GthreeWrapping         gthree_texture_get_wrap_t           (GthreeTexture *texture);
-void                   gthree_texture_set_mag_filter       (GthreeTexture *texture,
-                                                            GthreeFilter   mag_filter);
-GthreeFilter           gthree_texture_get_mag_filter       (GthreeTexture *texture);
-void                   gthree_texture_set_min_filter       (GthreeTexture *texture,
-                                                            GthreeFilter   min_filter);
-GthreeFilter           gthree_texture_get_min_filter       (GthreeTexture *texture);
-void                   gthree_texture_set_flip_y           (GthreeTexture *texture,
-                                                            gboolean       flip_y);
-gboolean               gthree_texture_get_flip_y           (GthreeTexture *texture);
+const graphene_vec2_t *gthree_texture_get_repeat           (GthreeTexture        *texture);
+const graphene_vec2_t *gthree_texture_get_offset           (GthreeTexture        *texture);
+gboolean               gthree_texture_get_generate_mipmaps (GthreeTexture        *texture);
+void                   gthree_texture_set_mapping          (GthreeTexture        *texture,
+                                                            GthreeMapping         mapping);
+GthreeMapping          gthree_texture_get_mapping          (GthreeTexture        *texture);
+void                   gthree_texture_set_wrap_s           (GthreeTexture        *texture,
+                                                            GthreeWrapping        wrap_s);
+GthreeWrapping         gthree_texture_get_wrap_s           (GthreeTexture        *texture);
+void                   gthree_texture_set_wrap_t           (GthreeTexture        *texture,
+                                                            GthreeWrapping        wrap_t);
+GthreeWrapping         gthree_texture_get_wrap_t           (GthreeTexture        *texture);
+void                   gthree_texture_set_mag_filter       (GthreeTexture        *texture,
+                                                            GthreeFilter          mag_filter);
+GthreeFilter           gthree_texture_get_mag_filter       (GthreeTexture        *texture);
+void                   gthree_texture_set_min_filter       (GthreeTexture        *texture,
+                                                            GthreeFilter          min_filter);
+GthreeFilter           gthree_texture_get_min_filter       (GthreeTexture        *texture);
+void                   gthree_texture_set_flip_y           (GthreeTexture        *texture,
+                                                            gboolean              flip_y);
+gboolean               gthree_texture_get_flip_y           (GthreeTexture        *texture);
+void                   gthree_texture_set_encoding         (GthreeTexture        *texture,
+                                                            GthreeEncodingFormat  encoding);
+GthreeEncodingFormat   gthree_texture_get_encoding         (GthreeTexture        *texture);
+void                   gthree_texture_set_name             (GthreeTexture        *texture,
+                                                            const char           *name);
+const char *           gthree_texture_get_name             (GthreeTexture        *texture);
+void                   gthree_texture_set_uuid             (GthreeTexture        *texture,
+                                                            const char           *uuid);
+const char *           gthree_texture_get_uuid             (GthreeTexture        *texture);
 
 G_END_DECLS
 
