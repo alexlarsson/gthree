@@ -10,6 +10,7 @@
 typedef struct {
   GthreeGeometry *geometry;
   GthreeMaterial *material;
+  GthreeDrawMode draw_mode;
 } GthreeMeshPrivate;
 
 enum {
@@ -38,6 +39,9 @@ gthree_mesh_new (GthreeGeometry *geometry,
 static void
 gthree_mesh_init (GthreeMesh *mesh)
 {
+  GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
+
+  priv->draw_mode = GTHREE_DRAW_MODE_TRIANGLES;
 }
 
 static void
@@ -193,4 +197,22 @@ gthree_mesh_class_init (GthreeMeshClass *klass)
                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, N_PROPS, obj_props);
+}
+
+
+GthreeDrawMode
+gthree_mesh_get_draw_mode (GthreeMesh *mesh)
+{
+  GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
+
+  return priv->draw_mode;
+}
+
+void
+gthree_mesh_set_draw_mode (GthreeMesh *mesh,
+                           GthreeDrawMode mode)
+{
+  GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
+
+  priv->draw_mode = mode;
 }

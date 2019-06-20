@@ -1297,25 +1297,19 @@ render_item (GthreeRenderer *renderer,
         }
       else
         {
-          // triangles
-          draw_mode = GL_TRIANGLES;
-
-          /* TODO: Support all these!
-          switch (object.drawMode)
+          switch (gthree_mesh_get_draw_mode (GTHREE_MESH (object)))
             {
-            case TrianglesDrawMode:
+            default:
+            case GTHREE_DRAW_MODE_TRIANGLES:
               draw_mode = GL_TRIANGLES;
               break;
-
-            case TriangleStripDrawMode:
+            case GTHREE_DRAW_MODE_TRIANGLE_STRIP:
               draw_mode = GL_TRIANGLE_STRIP;
               break;
-
-            case TriangleFanDrawMode:
+            case GTHREE_DRAW_MODE_TRIANGLE_FAN:
               draw_mode = GL_TRIANGLE_FAN;
               break;
             }
-          */
         }
     }
   else if (GTHREE_IS_LINE_SEGMENTS (object))

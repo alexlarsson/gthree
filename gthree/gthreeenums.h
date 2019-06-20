@@ -128,6 +128,12 @@ typedef enum {
  GTHREE_VALUE_TYPE_VECTOR,
 }  GthreeValueType;
 
+typedef enum {
+ GTHREE_DRAW_MODE_TRIANGLES,
+ GTHREE_DRAW_MODE_TRIANGLE_STRIP,
+ GTHREE_DRAW_MODE_TRIANGLE_FAN,
+}  GthreeDrawMode;
+
 
 G_END_DECLS
 

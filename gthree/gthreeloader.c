@@ -21,11 +21,8 @@
 /* TODO:
  * object.set_matrix need to decompose position, etc. or we can't expect e.g. get_position to work.
  * Orthographic cameras
- * Handle primitive draw_mode != triangles
  * Try grouping primitives into geometry groups if possible
- * Handle skin weights
  * Handle morph targets
- * Handle animations
  * Handle sparse accessors
  * Handle line materials
  * handle data: uris
@@ -1244,8 +1241,7 @@ parse_meshes (GthreeLoader *loader, JsonObject *root, GError **error)
           else
             primitive->material = g_object_ref (priv->default_material);
 
-          if (mode != 4)
-            g_warning ("mode is not TRIANGLES, unsupported");
+          primitive->mode = mode;
 
           g_ptr_array_add (mesh->primitives, g_steal_pointer (&primitive));
         }
@@ -1567,6 +1563,22 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
                 }
               else
                 mesh = gthree_mesh_new (primitive->geometry, g_object_ref (material));
+
+              switch (primitive->mode)
+                {
+                case 4:
+                  gthree_mesh_set_draw_mode (mesh, GTHREE_DRAW_MODE_TRIANGLES);
+                  break;
+                case 5:
+                  gthree_mesh_set_draw_mode (mesh, GTHREE_DRAW_MODE_TRIANGLE_STRIP);
+                  break;
+                case 6:
+                  gthree_mesh_set_draw_mode (mesh, GTHREE_DRAW_MODE_TRIANGLE_FAN);
+                  break;
+                default:
+                  g_warning ("Unsupported primitive mode %d", primitive->mode);
+                  break;
+                }
 
               if (mesh_info->name)
                 gthree_object_set_name (GTHREE_OBJECT (mesh), mesh_info->name);
