@@ -40,6 +40,8 @@ GthreeTexture *gthree_texture_new (GdkPixbuf *pixbuf);
 const graphene_vec2_t *gthree_texture_get_repeat           (GthreeTexture        *texture);
 const graphene_vec2_t *gthree_texture_get_offset           (GthreeTexture        *texture);
 gboolean               gthree_texture_get_generate_mipmaps (GthreeTexture        *texture);
+void                   gthree_texture_set_generate_mipmaps (GthreeTexture        *texture,
+                                                            gboolean              generate_mipmaps);
 void                   gthree_texture_set_mapping          (GthreeTexture        *texture,
                                                             GthreeMapping         mapping);
 GthreeMapping          gthree_texture_get_mapping          (GthreeTexture        *texture);
@@ -61,6 +63,15 @@ gboolean               gthree_texture_get_flip_y           (GthreeTexture       
 void                   gthree_texture_set_encoding         (GthreeTexture        *texture,
                                                             GthreeEncodingFormat  encoding);
 GthreeEncodingFormat   gthree_texture_get_encoding         (GthreeTexture        *texture);
+void                   gthree_texture_set_format           (GthreeTexture        *texture,
+                                                            GthreeTextureFormat   format);
+GthreeTextureFormat    gthree_texture_get_format           (GthreeTexture        *texture);
+void                   gthree_texture_set_data_type        (GthreeTexture        *texture,
+                                                            GthreeDataType     type);
+GthreeDataType         gthree_texture_get_data_type        (GthreeTexture        *texture);
+void                   gthree_texture_set_anisotropy       (GthreeTexture        *texture,
+                                                            int                   anisotropy);
+int                    gthree_texture_get_anisotropy       (GthreeTexture        *texture);
 void                   gthree_texture_set_name             (GthreeTexture        *texture,
                                                             const char           *name);
 const char *           gthree_texture_get_name             (GthreeTexture        *texture);

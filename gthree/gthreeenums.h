@@ -94,6 +94,16 @@ typedef enum {
 } GthreeEncodingFormat;
 
 typedef enum {
+  GTHREE_TEXTURE_FORMAT_RGBA,
+  GTHREE_TEXTURE_FORMAT_RGB,
+} GthreeTextureFormat;
+
+typedef enum {
+  GTHREE_DATA_TYPE_UNSIGNED_BYTE,
+  GTHREE_DATA_TYPE_BYTE,
+} GthreeDataType;
+
+typedef enum {
   GTHREE_NORMAL_MAP_TYPE_TANGENT_SPACE,
   GTHREE_NORMAL_MAP_TYPE_OBJECT_SPACE,
 }  GthreeNormalMapType;

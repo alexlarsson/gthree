@@ -19,22 +19,21 @@ static void gthree_texture_real_unrealize (GthreeResource *resource);
 typedef struct {
   gboolean needs_update;
 
+  GdkPixbuf *pixbuf;
   char *name;
   char *uuid;
-  GdkPixbuf *pixbuf;
   GArray *mipmaps;
   GthreeMapping mapping;
   GthreeWrapping wrap_s;
   GthreeWrapping wrap_t;
   GthreeEncodingFormat encoding;
+  GthreeTextureFormat format;
+  GthreeDataType type;
 
   GthreeFilter mag_filter;
   GthreeFilter min_filter;
 
   int anisotropy;
-
-  int format;
-  int type;
 
   graphene_vec2_t offset;
   graphene_vec2_t repeat;
@@ -86,8 +85,8 @@ gthree_texture_init (GthreeTexture *texture)
   priv->mapping = GTHREE_MAPPING_UV;
   priv->encoding = GTHREE_ENCODING_FORMAT_SRGB; // Differs rom three.js deault LINEAR
 
-  priv->format = GL_RGBA;
-  priv->type = GL_UNSIGNED_BYTE;
+  priv->format = GTHREE_TEXTURE_FORMAT_RGBA;
+  priv->type = GTHREE_DATA_TYPE_UNSIGNED_BYTE;
 
   priv->needs_update = TRUE;
 
@@ -127,6 +126,10 @@ gthree_texture_set_property (GObject *obj,
     case PROP_PIXBUF:
       g_clear_object (&priv->pixbuf);
       priv->pixbuf = g_value_dup_object (value);
+      if (priv->pixbuf && gdk_pixbuf_get_has_alpha (priv->pixbuf))
+        priv->format = GTHREE_TEXTURE_FORMAT_RGBA;
+      else
+        priv->format = GTHREE_TEXTURE_FORMAT_RGB;
       break;
 
     default:
@@ -303,6 +306,15 @@ gthree_texture_get_generate_mipmaps (GthreeTexture *texture)
   return priv->generate_mipmaps;
 }
 
+void
+gthree_texture_set_generate_mipmaps (GthreeTexture *texture,
+                                     gboolean generate_mipmaps)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  priv->generate_mipmaps = generate_mipmaps;
+}
+
 const graphene_vec2_t *
 gthree_texture_get_repeat (GthreeTexture *texture)
 {
@@ -439,6 +451,32 @@ gthree_texture_bind (GthreeTexture *texture, int slot, int target)
   glBindTexture (target, priv->gl_texture);
 }
 
+static int
+texture_type_to_gl (GthreeDataType type)
+{
+  switch (type)
+    {
+    default:
+    case GTHREE_DATA_TYPE_UNSIGNED_BYTE:
+      return GL_UNSIGNED_BYTE;
+    case GTHREE_DATA_TYPE_BYTE:
+      return GL_BYTE;
+    }
+}
+
+static int
+texture_format_to_gl (GthreeTextureFormat format)
+{
+  switch (format)
+    {
+    default:
+    case GTHREE_TEXTURE_FORMAT_RGBA:
+      return GL_RGBA;
+    case GTHREE_TEXTURE_FORMAT_RGB:
+      return GL_RGB;
+    }
+}
+
 static void
 gthree_texture_real_load (GthreeTexture *texture, int slot)
 {
@@ -446,7 +484,7 @@ gthree_texture_real_load (GthreeTexture *texture, int slot)
 
   gthree_texture_bind (texture, slot, GL_TEXTURE_2D);
 
-  if (priv->needs_update)
+  if (priv->needs_update && priv->pixbuf)
     {
       guint width = gdk_pixbuf_get_width (priv->pixbuf);
       guint height = gdk_pixbuf_get_height (priv->pixbuf);
@@ -457,8 +495,8 @@ gthree_texture_real_load (GthreeTexture *texture, int slot)
       //glPixelStorei( GL_UNPACK_PREMULTIPLY_ALPHA_WEBGL, texture.premultiplyAlpha );
       glPixelStorei (GL_UNPACK_ALIGNMENT, priv->unpack_alignment);
 
-      gl_format = gdk_pixbuf_get_has_alpha (priv->pixbuf) ? GL_RGBA : GL_RGB;
-      gl_type = priv->type;
+      gl_format = texture_format_to_gl (priv->format);
+      gl_type = texture_type_to_gl (priv->type);
 
       gthree_texture_set_parameters (GL_TEXTURE_2D, texture, is_image_power_of_two);
 
@@ -617,4 +655,55 @@ gthree_texture_get_uuid (GthreeTexture *texture)
   GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
 
   return priv->uuid;
+}
+
+void
+gthree_texture_set_format (GthreeTexture *texture,
+                           GthreeTextureFormat format)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  priv->format = format;
+}
+
+GthreeTextureFormat
+gthree_texture_get_format (GthreeTexture *texture)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  return priv->format;
+}
+
+void
+gthree_texture_set_data_type (GthreeTexture *texture,
+                              GthreeDataType type)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  priv->type = type;
+}
+
+GthreeDataType
+gthree_texture_get_data_type (GthreeTexture *texture)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  return priv->type;
+}
+
+void
+gthree_texture_set_anisotropy (GthreeTexture *texture,
+                               int anisotropy)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  priv->anisotropy = anisotropy;
+}
+
+int
+gthree_texture_get_anisotropy (GthreeTexture *texture)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  return priv->anisotropy;
 }
