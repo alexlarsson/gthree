@@ -164,6 +164,26 @@ gthree_render_target_new (int width,
                                         NULL);
 }
 
+GthreeRenderTarget *
+gthree_render_target_clone (GthreeRenderTarget *target)
+{
+  GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
+
+  return gthree_render_target_new_full (priv->width, priv->height,
+                                        gthree_texture_get_wrap_s (priv->texture),
+                                        gthree_texture_get_wrap_t (priv->texture),
+                                        gthree_texture_get_mag_filter (priv->texture),
+                                        gthree_texture_get_min_filter (priv->texture),
+                                        gthree_texture_get_format (priv->texture),
+                                        gthree_texture_get_data_type (priv->texture),
+                                        gthree_texture_get_anisotropy (priv->texture),
+                                        gthree_texture_get_encoding (priv->texture),
+                                        gthree_texture_get_generate_mipmaps (priv->texture),
+                                        priv->depth_buffer,
+                                        priv->stencil_buffer,
+                                        priv->depth_texture);
+}
+
 GthreeTexture *
 gthree_render_target_get_texture (GthreeRenderTarget *target)
 {

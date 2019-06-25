@@ -53,6 +53,7 @@ GthreeRenderTarget *gthree_render_target_new_full (int width,
 
 GthreeRenderTarget *gthree_render_target_new (int width,
                                               int height);
+GthreeRenderTarget *gthree_render_target_clone (GthreeRenderTarget *target);
 
 int            gthree_render_target_get_width         (GthreeRenderTarget *target);
 int            gthree_render_target_get_height        (GthreeRenderTarget *target);
