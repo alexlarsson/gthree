@@ -11,6 +11,7 @@ examples = [
   'normals',
   'performance',
   'shader',
+  'rendertarget',
 ]
 
 example_resources = gnome.compile_resources('gthree-example-resources',
