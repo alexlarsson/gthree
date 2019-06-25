@@ -500,8 +500,15 @@ static GthreeUniformsDefinition physical_uniforms[] = {
   {"clearCoatRoughness", GTHREE_UNIFORM_TYPE_FLOAT, &f0 },
 };
 
+static const char *copy_uniform_libs[] = { NULL };
+static GthreeUniformsDefinition copy_uniforms[] = {
+  {"tDiffuse", GTHREE_UNIFORM_TYPE_TEXTURE, NULL},
+  {"opacity", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
+};
+
+
 static GthreeShader *basic, *lambert, *phong, *standard, *matcap, *points, *dashed, *depth, *normal, *sprite, *background;
-static GthreeShader *cube, *equirect, *distanceRGBA, *shadow, *physical;
+static GthreeShader *cube, *equirect, *distanceRGBA, *shadow, *physical, *copy;
 
 static void
 gthree_shader_init_libs ()
@@ -575,6 +582,10 @@ gthree_shader_init_libs ()
                                                  physical_uniforms, G_N_ELEMENTS (physical_uniforms),
                                                  "meshphysical_vert", "meshphysical_frag");
 
+  copy = gthree_shader_new_from_definitions (copy_uniform_libs,
+                                             copy_uniforms, G_N_ELEMENTS (copy_uniforms),
+                                             "copy_vert", "copy_frag");
+
   initialized = TRUE;
 }
 
@@ -630,6 +641,9 @@ gthree_get_shader_from_library (const char *name)
 
   if (strcmp (name, "physical") == 0)
     return physical;
+
+  if (strcmp (name, "copy") == 0)
+    return copy;
 
   g_warning ("can't find shader library %s\n", name);
   return NULL;

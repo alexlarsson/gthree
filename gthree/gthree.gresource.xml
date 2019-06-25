@@ -122,5 +122,7 @@
     <file>shader_lib/shadow_vert.glsl</file>
     <file>shader_lib/sprite_frag.glsl</file>
     <file>shader_lib/sprite_vert.glsl</file>
+    <file>shader_lib/copy_frag.glsl</file>
+    <file>shader_lib/copy_vert.glsl</file>
  </gresource>
 </gresources>
