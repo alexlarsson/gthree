@@ -7,6 +7,7 @@ typedef struct _GthreeGroup GthreeGroup;
 typedef struct _GthreeBone GthreeBone;
 typedef struct _GthreeSkeleton GthreeSkeleton;
 typedef struct _GthreePerspectiveCamera GthreePerspectiveCamera;
+typedef struct _GthreeOrthographicCamera GthreeOrthographicCamera;
 typedef struct _GthreeRenderer GthreeRenderer;
 typedef struct _GthreeMaterial GthreeMaterial;
 typedef struct _GthreeMultiMaterial GthreeMultiMaterial;

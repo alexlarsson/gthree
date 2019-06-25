@@ -14,6 +14,7 @@
 #include <gthree/gthreemeshbasicmaterial.h>
 #include <gthree/gthreecamera.h>
 #include <gthree/gthreeperspectivecamera.h>
+#include <gthree/gthreeorthographiccamera.h>
 #include <gthree/gthreegeometry.h>
 #include <gthree/gthreelinebasicmaterial.h>
 #include <gthree/gthreelinesegments.h>
