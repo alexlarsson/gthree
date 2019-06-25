@@ -6,6 +6,7 @@
 #include <gthree/gthreegeometry.h>
 #include <gthree/gthreeinterpolant.h>
 #include <gthree/gthreekeyframetrack.h>
+#include <gthree/gthreerendertarget.h>
 
 /* Each hash maps to a specific program (e.g. one with some set of lights), not a particular set of uniform values (like positions/colors/etc) */
 typedef struct {
@@ -44,6 +45,18 @@ void gthree_render_list_sort (GthreeRenderList *list);
 
 guint gthree_renderer_allocate_texture_unit (GthreeRenderer *renderer);
 
+int gthree_texture_get_internal_gl_format (guint gl_format,
+                                           guint gl_type);
+int gthree_texture_format_to_gl (GthreeTextureFormat format);
+int gthree_texture_data_type_to_gl (GthreeDataType type);
+
+void gthree_texture_setup_framebuffer (GthreeTexture *texture,
+                                       int width,
+                                       int height,
+                                       guint framebuffer,
+                                       int attachement,
+                                       int texture_target);
+
 void gthree_texture_set_max_mip_level (GthreeTexture *texture,
                                        int level);
 int gthree_texture_get_max_mip_level (GthreeTexture *texture);
@@ -52,12 +65,18 @@ void     gthree_texture_load             (GthreeTexture *texture,
 gboolean gthree_texture_get_needs_update (GthreeTexture *texture);
 void     gthree_texture_set_needs_update (GthreeTexture *texture,
                                           gboolean       needs_update);
+void     gthree_texture_realize          (GthreeTexture *texture);
 void     gthree_texture_bind             (GthreeTexture *texture,
                                           int            slot,
                                           int            target);
 void     gthree_texture_set_parameters (guint texture_type,
                                         GthreeTexture *texture,
                                         gboolean is_image_power_of_two);
+
+guint gthree_render_target_get_gl_framebuffer (GthreeRenderTarget *target);
+void gthree_render_target_realize (GthreeRenderTarget *target);
+const graphene_rect_t * gthree_render_target_get_viewport (GthreeRenderTarget *target);
+
 
 void gthree_geometry_update           (GthreeGeometry   *geometry);
 void gthree_geometry_fill_render_list (GthreeGeometry   *geometry,

@@ -105,10 +105,6 @@ gthree_texture_finalize (GObject *obj)
 
   g_clear_object (&priv->pixbuf);
 
-  // TODO: This should be in unrealize to guarantee current context
-  if (priv->gl_texture)
-    glDeleteTextures (1, &priv->gl_texture);
-
   G_OBJECT_CLASS (gthree_texture_parent_class)->finalize (obj);
 }
 
@@ -437,7 +433,7 @@ gthree_texture_real_unrealize (GthreeResource *resource)
 }
 
 void
-gthree_texture_bind (GthreeTexture *texture, int slot, int target)
+gthree_texture_realize (GthreeTexture *texture)
 {
   GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
 
@@ -452,13 +448,22 @@ gthree_texture_bind (GthreeTexture *texture, int slot, int target)
       }
 #endif
     }
+}
 
-  glActiveTexture (GL_TEXTURE0 + slot);
+void
+gthree_texture_bind (GthreeTexture *texture, int slot, int target)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  gthree_texture_realize (texture);
+
+  if (slot >= 0)
+    glActiveTexture (GL_TEXTURE0 + slot);
   glBindTexture (target, priv->gl_texture);
 }
 
-static int
-texture_type_to_gl (GthreeDataType type)
+int
+gthree_texture_data_type_to_gl (GthreeDataType type)
 {
   switch (type)
     {
@@ -470,8 +475,8 @@ texture_type_to_gl (GthreeDataType type)
     }
 }
 
-static int
-texture_format_to_gl (GthreeTextureFormat format)
+int
+gthree_texture_format_to_gl (GthreeTextureFormat format)
 {
   switch (format)
     {
@@ -482,6 +487,69 @@ texture_format_to_gl (GthreeTextureFormat format)
       return GL_RGB;
     }
 }
+
+int
+gthree_texture_get_internal_gl_format (guint gl_format,
+                                       guint gl_type)
+{
+  guint internal_format = gl_format;
+
+  if (gl_format == GL_RED)
+    {
+      if (gl_type == GL_FLOAT )
+        internal_format = GL_R32F;
+      if (gl_type == GL_HALF_FLOAT)
+        internal_format = GL_R16F;
+      if (gl_type == GL_UNSIGNED_BYTE)
+        internal_format = GL_R8;
+    }
+
+  if ( gl_format == GL_RGB )
+    {
+    if (gl_type == GL_FLOAT)
+      internal_format = GL_RGB32F;
+    if (gl_type == GL_HALF_FLOAT)
+      internal_format = GL_RGB16F;
+    if (gl_type == GL_UNSIGNED_BYTE)
+      internal_format = GL_RGB8;
+    }
+
+  if ( gl_format == GL_RGBA )
+    {
+      if (gl_type == GL_FLOAT)
+        internal_format = GL_RGBA32F;
+      if (gl_type == GL_HALF_FLOAT)
+        internal_format = GL_RGBA16F;
+      if (gl_type == GL_UNSIGNED_BYTE)
+        internal_format = GL_RGBA8;
+  }
+
+  return internal_format;
+}
+
+void
+gthree_texture_setup_framebuffer (GthreeTexture *texture,
+                                  int width,
+                                  int height,
+                                  guint framebuffer,
+                                  int attachment,
+                                  int texture_target)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+  guint gl_format, gl_type, gl_internal_format;
+
+  gl_format = gthree_texture_format_to_gl (priv->format);
+  gl_type = gthree_texture_data_type_to_gl (priv->type);
+  gl_internal_format = gthree_texture_get_internal_gl_format (gl_format, gl_type);
+
+  glTexImage2D (texture_target, 0, gl_internal_format,
+                width, height, 0, gl_format, gl_type, 0);
+  glBindFramebuffer (GL_FRAMEBUFFER, framebuffer);
+  glFramebufferTexture2D (GL_FRAMEBUFFER, attachment, texture_target,
+                          priv->gl_texture, 0);
+  glBindFramebuffer (GL_FRAMEBUFFER, 0);
+}
+
 
 static void
 gthree_texture_real_load (GthreeTexture *texture, int slot)
@@ -501,8 +569,8 @@ gthree_texture_real_load (GthreeTexture *texture, int slot)
       //glPixelStorei( GL_UNPACK_PREMULTIPLY_ALPHA_WEBGL, texture.premultiplyAlpha );
       glPixelStorei (GL_UNPACK_ALIGNMENT, priv->unpack_alignment);
 
-      gl_format = texture_format_to_gl (priv->format);
-      gl_type = texture_type_to_gl (priv->type);
+      gl_format = gthree_texture_format_to_gl (priv->format);
+      gl_type = gthree_texture_data_type_to_gl (priv->type);
 
       gthree_texture_set_parameters (GL_TEXTURE_2D, texture, is_image_power_of_two);
 

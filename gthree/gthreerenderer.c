@@ -50,10 +50,7 @@ typedef struct {
   float gamma_factor;
   gboolean physically_correct_lights;
 
-  float viewport_x;
-  float viewport_y;
-  float viewport_width;
-  float viewport_height;
+  graphene_rect_t viewport;
 
   /* Render state */
   GthreeProgramCache *program_cache;
@@ -79,9 +76,12 @@ typedef struct {
   guint old_blend_src;
   guint old_blend_dst;
   GdkRGBA old_clear_color;
+  GthreeRenderTarget *current_render_target;
   GthreeProgram *current_program;
   GthreeMaterial *current_material;
   GthreeCamera *current_camera;
+  graphene_rect_t current_viewport;
+  guint current_framebuffer;
 
   GthreeGeometry *current_geometry_program_geometry;
   GthreeProgram *current_geometry_program_program;
@@ -200,6 +200,8 @@ gthree_renderer_init (GthreeRenderer *renderer)
   priv->gamma_factor = 2.2; // Differs from three.js default 2.0
   priv->physically_correct_lights = FALSE;
 
+  priv->current_framebuffer = 0;
+
   priv->light_setup.directional = g_ptr_array_new ();
   priv->light_setup.point = g_ptr_array_new ();
 
@@ -244,6 +246,8 @@ gthree_renderer_finalize (GObject *obj)
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
 
   g_assert (gdk_gl_context_get_current () == priv->gl_context);
+
+  g_clear_object (&priv->current_render_target);
 
   gthree_program_cache_free (priv->program_cache);
 
@@ -297,12 +301,13 @@ gthree_renderer_set_viewport (GthreeRenderer *renderer,
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
 
-  priv->viewport_x = x;
-  priv->viewport_y = y;
-  priv->viewport_width = width;
-  priv->viewport_height = height;
+  graphene_rect_init (&priv->viewport, x, y, width, height);
+  graphene_rect_init_from_rect (&priv->current_viewport, &priv->viewport);
 
-  glViewport (x, y, width, height);
+  glViewport (graphene_rect_get_x (&priv->current_viewport),
+              graphene_rect_get_y (&priv->current_viewport),
+              graphene_rect_get_width (&priv->current_viewport),
+              graphene_rect_get_height (&priv->current_viewport));
 }
 
 void
@@ -378,9 +383,118 @@ float
 gthree_renderer_get_gamma_factor (GthreeRenderer *renderer)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
-
   return priv->gamma_factor;
 }
+
+GthreeRenderTarget *
+gthree_renderer_get_render_target (GthreeRenderer *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  return priv->current_render_target;
+}
+
+
+static void
+update_render_target_mipmap (GthreeRenderer *renderer,
+                             GthreeRenderTarget *render_target)
+{
+  // TODO
+}
+
+static void
+update_multisample_render_target (GthreeRenderer *renderer,
+                                  GthreeRenderTarget *render_target)
+{
+  // TODO
+}
+
+void
+gthree_renderer_set_render_target (GthreeRenderer *renderer,
+                                   GthreeRenderTarget *render_target,
+                                   int active_cube_target,
+                                   int active_mipmap_level)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  gboolean is_cube;
+  int framebuffer;
+
+  if (render_target)
+    g_object_ref (render_target);
+
+  g_clear_object (&priv->current_render_target);
+  priv->current_render_target = render_target;
+
+  if (render_target != NULL)
+    gthree_render_target_realize (render_target);
+
+  framebuffer = priv->window_framebuffer;
+  is_cube = FALSE;
+
+  if (render_target)
+    {
+#ifdef TODO
+      if ( renderTarget.isWebGLRenderTargetCube )
+        {
+          var __webglFramebuffer = properties.get( renderTarget ).__webglFramebuffer;
+          framebuffer = __webglFramebuffer[ activeCubeFace || 0 ];
+          isCube = true;
+        }
+      else if ( renderTarget.isWebGLMultisampleRenderTarget )
+        {
+          framebuffer = properties.get( renderTarget ).__webglMultisampledFramebuffer;
+        }
+      else
+#endif
+        {
+          framebuffer = gthree_render_target_get_gl_framebuffer (render_target);
+        }
+
+      graphene_rect_init_from_rect (&priv->current_viewport,
+                                    gthree_render_target_get_viewport (render_target));
+
+#ifdef TODO
+      _currentScissor.copy( renderTarget.scissor );
+      _currentScissorTest = renderTarget.scissorTest;
+#endif
+    }
+  else
+    {
+      graphene_rect_init_from_rect (&priv->current_viewport,
+                                    &priv->viewport);
+#ifdef TODO
+      _currentScissor.copy( _scissor ).multiplyScalar( _pixelRatio );
+      _currentScissorTest = _scissorTest;
+#endif
+    }
+
+  if (priv->current_framebuffer != framebuffer)
+    {
+      glBindFramebuffer (GL_FRAMEBUFFER, framebuffer);
+      priv->current_framebuffer = framebuffer;
+    }
+
+  glViewport (graphene_rect_get_x (&priv->current_viewport),
+              graphene_rect_get_y (&priv->current_viewport),
+              graphene_rect_get_width (&priv->current_viewport),
+              graphene_rect_get_height (&priv->current_viewport));
+#ifdef TODO
+  state.scissor( _currentScissor );
+  state.setScissorTest( _currentScissorTest );
+#endif
+
+  if (is_cube)
+    {
+#ifdef TODO
+      var textureProperties = properties.get( renderTarget.texture );
+      _gl.framebufferTexture2D( _gl.FRAMEBUFFER, _gl.COLOR_ATTACHMENT0,
+                                _gl.TEXTURE_CUBE_MAP_POSITIVE_X + ( activeCubeFace || 0 ),
+                                textureProperties.__webglTexture,
+                                activeMipMapLevel || 0 );
+#endif
+    }
+}
+
 
 static void
 gthree_set_default_gl_state (GthreeRenderer *renderer)
@@ -402,8 +516,13 @@ gthree_set_default_gl_state (GthreeRenderer *renderer)
   glBlendEquation (GL_FUNC_ADD);
   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  glViewport (priv->viewport_x, priv->viewport_y, priv->viewport_width, priv->viewport_height);
-  glClearColor (priv->clear_color.red, priv->clear_color.green, priv->clear_color.blue, priv->clear_color.alpha );
+  glViewport (graphene_rect_get_x (&priv->current_viewport),
+              graphene_rect_get_y (&priv->current_viewport),
+              graphene_rect_get_width (&priv->current_viewport),
+              graphene_rect_get_height (&priv->current_viewport));
+
+  glClearColor (priv->clear_color.red, priv->clear_color.green,
+                priv->clear_color.blue, priv->clear_color.alpha );
 };
 
 void
@@ -1640,7 +1759,7 @@ gthree_renderer_render (GthreeRenderer *renderer,
 
   setup_lights (renderer, camera);
 
-  //this.setRenderTarget( renderTarget );
+  gthree_renderer_set_render_target (renderer, priv->current_render_target, 0, 0);
 
   gthree_renderer_render_background (renderer, scene);
 
@@ -1676,6 +1795,14 @@ gthree_renderer_render (GthreeRenderer *renderer,
 
       // transparent pass (back-to-front order)
       render_objects (renderer, scene, priv->current_render_list->transparent, camera, lights, fog, TRUE, NULL);
+    }
+
+  if (priv->current_render_target != NULL)
+    {
+      // Generate mipmap if we're using any kind of mipmap filtering
+      update_render_target_mipmap (renderer, priv->current_render_target);
+      // resolve multisample renderbuffers to a single-sample texture if necessary
+      update_multisample_render_target (renderer, priv->current_render_target);
     }
 
   pop_debug_group ();
