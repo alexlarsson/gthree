@@ -133,6 +133,8 @@ static GQuark q_boneMatrices;
 
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeRenderer, gthree_renderer, G_TYPE_OBJECT);
 
+static void clear (gboolean color, gboolean depth, gboolean stencil);
+
 static void
 push_debug_group (const char   *format, ...)
 {
@@ -323,6 +325,40 @@ gthree_renderer_set_size (GthreeRenderer *renderer,
   gthree_renderer_set_viewport (renderer, 0, 0, width, height);
 }
 
+int
+gthree_renderer_get_width (GthreeRenderer     *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  return priv->width;
+}
+
+int
+gthree_renderer_get_height (GthreeRenderer     *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  return priv->height;
+}
+
+int
+gthree_renderer_get_drawing_buffer_width (GthreeRenderer     *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  // TODO: This should multiply with pixelration on hidip
+  return priv->width;
+}
+
+int
+gthree_renderer_get_drawing_buffer_height (GthreeRenderer     *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  // TODO: This should multiply with pixelration on hidip
+  return priv->height;
+}
+
 void
 gthree_renderer_set_autoclear (GthreeRenderer *renderer,
                                gboolean        auto_clear)
@@ -330,6 +366,14 @@ gthree_renderer_set_autoclear (GthreeRenderer *renderer,
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
 
   priv->auto_clear = !!auto_clear;
+}
+
+gboolean
+gthree_renderer_get_autoclear (GthreeRenderer *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  return priv->auto_clear;
 }
 
 void
@@ -341,6 +385,14 @@ gthree_renderer_set_autoclear_color (GthreeRenderer *renderer,
   priv->auto_clear_color = !!clear_color;
 }
 
+gboolean
+gthree_renderer_get_autoclear_color (GthreeRenderer *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  return priv->auto_clear_color;
+}
+
 void
 gthree_renderer_set_autoclear_depth (GthreeRenderer *renderer,
                                      gboolean        clear_depth)
@@ -350,6 +402,14 @@ gthree_renderer_set_autoclear_depth (GthreeRenderer *renderer,
   priv->auto_clear_depth = !!clear_depth;
 }
 
+gboolean
+gthree_renderer_get_autoclear_depth (GthreeRenderer *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  return priv->auto_clear_depth;
+}
+
 void
 gthree_renderer_set_autoclear_stencil (GthreeRenderer *renderer,
                                        gboolean        clear_stencil)
@@ -357,6 +417,14 @@ gthree_renderer_set_autoclear_stencil (GthreeRenderer *renderer,
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
 
   priv->auto_clear_stencil = !!clear_stencil;
+}
+
+gboolean
+gthree_renderer_get_autoclear_stencil (GthreeRenderer *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  return priv->auto_clear_stencil;
 }
 
 void
@@ -526,13 +594,36 @@ gthree_set_default_gl_state (GthreeRenderer *renderer)
 };
 
 void
-gthree_renderer_clear (GthreeRenderer *renderer)
+gthree_renderer_clear (GthreeRenderer *renderer,
+                       gboolean color,
+                       gboolean depth,
+                       gboolean stencil)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
 
   g_assert (gdk_gl_context_get_current () == priv->gl_context);
 
-  /* TODO */
+  clear (color, depth, stencil);
+}
+
+void
+gthree_renderer_clear_depth (GthreeRenderer *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  g_assert (gdk_gl_context_get_current () == priv->gl_context);
+
+  clear (FALSE, TRUE, FALSE);
+}
+
+void
+gthree_renderer_clear_color (GthreeRenderer *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  g_assert (gdk_gl_context_get_current () == priv->gl_context);
+
+  clear (TRUE, FALSE, FALSE);
 }
 
 static void
@@ -583,7 +674,7 @@ set_depth_test (GthreeRenderer *renderer,
 
 static void
 set_depth_write (GthreeRenderer *renderer,
-                gboolean depth_write)
+                 gboolean depth_write)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
 
@@ -629,7 +720,7 @@ set_polygon_offset (GthreeRenderer *renderer,
       glPolygonOffset (factor, units);
       priv->old_polygon_offset_factor = factor;
       priv->old_polygon_offset_units = units;
-  }
+    }
 }
 
 static void
@@ -1205,7 +1296,7 @@ set_program (GthreeRenderer *renderer,
       gthree_material_set_uniforms (material, m_uniforms, camera);
 
 #if TODO
-    // refresh uniforms common to several materials
+      // refresh uniforms common to several materials
       if ( fog && material.fog )
         refreshUniformsFog( m_uniforms, fog );
 #endif
