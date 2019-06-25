@@ -168,7 +168,8 @@ gthree_area_realize (GtkWidget *widget)
 
   GTK_WIDGET_CLASS (gthree_area_parent_class)->realize (widget);
 
-  gtk_gl_area_make_current (glarea);
+  // Ensure we have the right target framebuffer
+  gtk_gl_area_attach_buffers (glarea);
 
   priv->renderer = gthree_renderer_new ();
 }

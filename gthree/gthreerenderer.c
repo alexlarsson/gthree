@@ -39,6 +39,8 @@ typedef struct {
 
   int width;
   int height;
+  guint window_framebuffer;
+
   gboolean auto_clear;
   gboolean auto_clear_color;
   gboolean auto_clear_depth;
@@ -154,6 +156,10 @@ static void
 gthree_renderer_init (GthreeRenderer *renderer)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  GLint fbo_id = 0;
+
+  glGetIntegerv(GL_FRAMEBUFFER_BINDING, &fbo_id);
+  priv->window_framebuffer = fbo_id;
 
   priv->program_cache = gthree_program_cache_new ();
 
