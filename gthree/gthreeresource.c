@@ -258,11 +258,19 @@ gthree_resource_unrealize (GthreeResource *resource)
   g_object_unref (resource); /* Drop ownership from context */
 }
 
+gboolean
+gthree_resource_is_used (GthreeResource *resource)
+{
+  GthreeResourcePrivate *priv = gthree_resource_get_instance_private (resource);
+
+  return priv->use_count > 0;
+}
 
 void
 gthree_resource_use (GthreeResource *resource)
 {
   GthreeResourcePrivate *priv = gthree_resource_get_instance_private (resource);
+  GthreeResourceClass *class = GTHREE_RESOURCE_GET_CLASS(resource);
 
   if (priv->gl_context && priv->use_count == 0)
     {
@@ -271,6 +279,9 @@ gthree_resource_use (GthreeResource *resource)
                    &priv->resource_list);
     }
 
+  if (priv->use_count == 0 && class->used)
+    class->used (resource);
+
   priv->use_count++;
 }
 
@@ -278,6 +289,7 @@ void
 gthree_resource_unuse (GthreeResource *resource)
 {
   GthreeResourcePrivate *priv = gthree_resource_get_instance_private (resource);
+  GthreeResourceClass *class = GTHREE_RESOURCE_GET_CLASS(resource);
 
   g_assert (priv->use_count > 0);
 
@@ -288,5 +300,9 @@ gthree_resource_unuse (GthreeResource *resource)
       list_node_unlink (&priv->resource_list);
       list_append (gl_context_get_unused_list_head (priv->gl_context),
                    &priv->resource_list);
+
     }
+
+  if (priv->use_count == 0 && class->unused)
+    class->unused (resource);
 }

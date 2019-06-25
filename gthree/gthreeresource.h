@@ -25,6 +25,8 @@ struct _GthreeResource {
 typedef struct {
   GObjectClass parent_class;
 
+  void (*used) (GthreeResource *resource);
+  void (*unused) (GthreeResource *resource);
   void (*unrealize) (GthreeResource *resource);
 } GthreeResourceClass;
 
@@ -35,8 +37,9 @@ void gthree_resources_unrealize_unused_for (GdkGLContext *context);
 
 void     gthree_resource_set_realized_for (GthreeResource *resource,
                                            GdkGLContext   *context);
-gboolean gthree_resource_is_realized      (GthreeResource *resource);
+gboolean gtahree_resource_is_realized      (GthreeResource *resource);
 void     gthree_resource_unrealize        (GthreeResource *resource);
+gboolean gtahree_resource_is_used         (GthreeResource *resource);
 void     gthree_resource_use              (GthreeResource *resource);
 void     gthree_resource_unuse            (GthreeResource *resource);
 
