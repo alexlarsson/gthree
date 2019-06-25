@@ -308,7 +308,7 @@ gthree_loader_init (GthreeLoader *loader)
                                                       NULL);
 
   priv->default_material = GTHREE_MATERIAL (gthree_mesh_basic_material_new ());
-  gthree_mesh_basic_material_set_color (GTHREE_BASIC_MATERIAL (priv->default_material), &magenta);
+  gthree_mesh_basic_material_set_color (GTHREE_MESH_BASIC_MATERIAL (priv->default_material), &magenta);
 }
 
 static void

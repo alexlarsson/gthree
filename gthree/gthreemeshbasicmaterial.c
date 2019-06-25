@@ -38,7 +38,7 @@ G_DEFINE_TYPE_WITH_PRIVATE (GthreeMeshBasicMaterial, gthree_mesh_basic_material,
 static void
 gthree_mesh_basic_material_finalize (GObject *obj)
 {
-  GthreeMeshBasicMaterial *basic = GTHREE_BASIC_MATERIAL (obj);
+  GthreeMeshBasicMaterial *basic = GTHREE_MESH_BASIC_MATERIAL (obj);
   GthreeMeshBasicMaterialPrivate *priv = gthree_mesh_basic_material_get_instance_private (basic);
 
   if (priv->map)
@@ -59,7 +59,7 @@ static void
 gthree_mesh_basic_material_real_set_params (GthreeMaterial *material,
                                             GthreeProgramParameters *params)
 {
-  GthreeMeshBasicMaterial *basic = GTHREE_BASIC_MATERIAL (material);
+  GthreeMeshBasicMaterial *basic = GTHREE_MESH_BASIC_MATERIAL (material);
   GthreeMeshBasicMaterialPrivate *priv = gthree_mesh_basic_material_get_instance_private (basic);
 
   GTHREE_MATERIAL_CLASS (gthree_mesh_basic_material_parent_class)->set_params (material, params);
@@ -81,7 +81,7 @@ gthree_mesh_basic_material_real_set_uniforms (GthreeMaterial *material,
                                               GthreeUniforms *uniforms,
                                               GthreeCamera   *camera)
 {
-  GthreeMeshBasicMaterial *basic = GTHREE_BASIC_MATERIAL (material);
+  GthreeMeshBasicMaterial *basic = GTHREE_MESH_BASIC_MATERIAL (material);
   GthreeMeshBasicMaterialPrivate *priv = gthree_mesh_basic_material_get_instance_private (basic);
   GthreeTexture *scale_map;
   GthreeUniform *uni;
@@ -161,7 +161,7 @@ gthree_mesh_basic_material_real_set_uniforms (GthreeMaterial *material,
 static gboolean
 gthree_mesh_basic_material_needs_camera_pos (GthreeMaterial *material)
 {
-  GthreeMeshBasicMaterial *basic = GTHREE_BASIC_MATERIAL (material);
+  GthreeMeshBasicMaterial *basic = GTHREE_MESH_BASIC_MATERIAL (material);
   GthreeMeshBasicMaterialPrivate *priv = gthree_mesh_basic_material_get_instance_private (basic);
 
   return priv->env_map != NULL;
@@ -173,7 +173,7 @@ gthree_mesh_basic_material_set_property (GObject *obj,
                                          const GValue *value,
                                          GParamSpec *pspec)
 {
-  GthreeMeshBasicMaterial *basic = GTHREE_BASIC_MATERIAL (obj);
+  GthreeMeshBasicMaterial *basic = GTHREE_MESH_BASIC_MATERIAL (obj);
 
   switch (prop_id)
     {
@@ -212,7 +212,7 @@ gthree_mesh_basic_material_get_property (GObject *obj,
                                          GValue *value,
                                          GParamSpec *pspec)
 {
-  GthreeMeshBasicMaterial *basic = GTHREE_BASIC_MATERIAL (obj);
+  GthreeMeshBasicMaterial *basic = GTHREE_MESH_BASIC_MATERIAL (obj);
   GthreeMeshBasicMaterialPrivate *priv = gthree_mesh_basic_material_get_instance_private (basic);
 
   switch (prop_id)
