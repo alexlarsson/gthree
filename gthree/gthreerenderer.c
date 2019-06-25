@@ -133,6 +133,33 @@ static GQuark q_boneMatrices;
 
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeRenderer, gthree_renderer, G_TYPE_OBJECT);
 
+static void
+push_debug_group (const char   *format, ...)
+{
+#ifdef DEBUG
+  gchar *message;
+  va_list args;
+  int msg_len;
+
+  va_start (args, format);
+  message = g_strdup_vprintf (format, args);
+  va_end (args);
+
+  msg_len = strlen (message) - 1;
+  glPushDebugGroupKHR (GL_DEBUG_SOURCE_APPLICATION, 0, msg_len, message);
+  g_free (message);
+#endif
+}
+
+static void
+pop_debug_group (void)
+{
+#ifdef DEBUG
+  glPopDebugGroupKHR ();
+#endif
+}
+
+
 GthreeRenderer *
 gthree_renderer_new ()
 {
@@ -1572,6 +1599,8 @@ gthree_renderer_render (GthreeRenderer *renderer,
   GList *lights;
   gpointer fog;
 
+  push_debug_group ("gthree render to %p", priv->current_render_target);
+
   g_assert (gdk_gl_context_get_current () == priv->gl_context);
 
   g_list_free (priv->lights);
@@ -1648,6 +1677,8 @@ gthree_renderer_render (GthreeRenderer *renderer,
       // transparent pass (back-to-front order)
       render_objects (renderer, scene, priv->current_render_list->transparent, camera, lights, fog, TRUE, NULL);
     }
+
+  pop_debug_group ();
 }
 
 guint
