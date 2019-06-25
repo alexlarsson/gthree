@@ -444,7 +444,13 @@ gthree_texture_bind (GthreeTexture *texture, int slot, int target)
   if (!priv->gl_texture)
     {
       gthree_resource_set_realized_for (GTHREE_RESOURCE (texture), gdk_gl_context_get_current ());
-      glGenTextures(1, &priv->gl_texture);
+      glGenTextures (1, &priv->gl_texture);
+#ifdef DEBUG
+      {
+        g_autofree char *label = g_strdup_printf ("GthreeTexture %p", texture);
+        glObjectLabel (GL_TEXTURE, priv->gl_texture, strlen (label), label);
+      }
+#endif
     }
 
   glActiveTexture (GL_TEXTURE0 + slot);
