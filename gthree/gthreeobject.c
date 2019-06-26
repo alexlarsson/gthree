@@ -507,11 +507,11 @@ gthree_object_update_matrix (GthreeObject *object)
   if (priv->matrix_need_update)
     {
       priv->matrix_need_update = FALSE;
-      graphene_quaternion_to_matrix (&priv->quaternion, &priv->matrix);
-      graphene_matrix_scale (&priv->matrix,
-                             graphene_vec3_get_x (&priv->scale),
-                             graphene_vec3_get_y (&priv->scale),
-                             graphene_vec3_get_z (&priv->scale));
+      graphene_matrix_init_scale (&priv->matrix,
+                                  graphene_vec3_get_x (&priv->scale),
+                                  graphene_vec3_get_y (&priv->scale),
+                                  graphene_vec3_get_z (&priv->scale));
+      graphene_matrix_rotate_quaternion (&priv->matrix, &priv->quaternion);
       graphene_point3d_init_from_vec3 (&pos, &priv->position);
       graphene_matrix_translate  (&priv->matrix, &pos);
 
