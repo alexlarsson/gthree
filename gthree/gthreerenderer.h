@@ -53,6 +53,7 @@ void                gthree_renderer_set_autoclear_stencil     (GthreeRenderer   
 gboolean            gthree_renderer_get_autoclear_stencil     (GthreeRenderer     *renderer);
 void                gthree_renderer_set_clear_color           (GthreeRenderer     *renderer,
                                                                GdkRGBA            *color);
+const GdkRGBA      *gthree_renderer_get_clear_color           (GthreeRenderer     *renderer);
 void                gthree_renderer_set_gamma_factor          (GthreeRenderer     *renderer,
                                                                float               factor);
 float               gthree_renderer_get_gamma_factor          (GthreeRenderer     *renderer);

@@ -438,6 +438,14 @@ gthree_renderer_set_clear_color (GthreeRenderer *renderer,
   glClearColor (priv->clear_color.red, priv->clear_color.green, priv->clear_color.blue, priv->clear_color.alpha );
 }
 
+const GdkRGBA *
+gthree_renderer_get_clear_color  (GthreeRenderer     *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  return &priv->clear_color;
+}
+
 void
 gthree_renderer_set_gamma_factor (GthreeRenderer *renderer,
                                    float           factor)
