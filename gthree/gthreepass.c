@@ -110,8 +110,11 @@ gthree_fullscreen_quad_pass_render (GthreePass *pass,
 {
   GthreeFullscreenQuadPass *fq_pass = GTHREE_FULLSCREEN_QUAD_PASS (pass);
   GthreeFullscreenQuadPassClass *pass_class = GTHREE_FULLSCREEN_QUAD_PASS_GET_CLASS(pass);
+  gboolean old_auto_clear = gthree_renderer_get_autoclear (renderer);
 
+  gthree_renderer_set_autoclear (renderer, FALSE);
   gthree_renderer_render (renderer, fq_pass->scene, pass_class->camera);
+  gthree_renderer_set_autoclear (renderer, old_auto_clear);
 }
 
 static void
