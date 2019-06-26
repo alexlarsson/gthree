@@ -20,6 +20,7 @@ GthreePass *psycho_pass;
 GthreePass *clear_depth_pass;
 GthreePass *render_pass;
 GthreePass *render2_pass;
+GthreePass *bloom_pass;
 GthreePass *greyscale_pass;
 
 GthreeRenderTarget *render_target;
@@ -173,9 +174,11 @@ init_composer (void)
                                vertex_shader,
                                fragment_greyscale_shader);
 
-  clear_pass = gthree_clear_pass_new (&cyan);
+  clear_pass = gthree_clear_pass_new (&black);
   psycho_pass = gthree_shader_pass_new (psycho_shader, NULL);
   gthree_pass_set_clear (psycho_pass, FALSE);
+  bloom_pass = gthree_bloom_pass_new (0.8, 4.0, 512);
+  gthree_pass_set_enabled (bloom_pass, FALSE);
   greyscale_pass = gthree_shader_pass_new (shader2, NULL);
   gthree_pass_set_enabled (greyscale_pass, FALSE);
 
@@ -196,6 +199,7 @@ init_composer (void)
   gthree_effect_composer_add_pass  (composer, clear_depth_pass);
   gthree_effect_composer_add_pass  (composer, render_pass);
   gthree_effect_composer_add_pass  (composer, render2_pass);
+  gthree_effect_composer_add_pass  (composer, bloom_pass);
   gthree_effect_composer_add_pass  (composer, greyscale_pass);
 }
 
@@ -314,6 +318,12 @@ main (int argc, char *argv[])
   gtk_container_add (GTK_CONTAINER (hbox), check);
   gtk_widget_show (check);
   g_signal_connect (check, "toggled", G_CALLBACK (pass_toggled), render2_pass);
+
+  check = gtk_check_button_new_with_label ("Bloom");
+  gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (check), FALSE);
+  gtk_container_add (GTK_CONTAINER (hbox), check);
+  gtk_widget_show (check);
+  g_signal_connect (check, "toggled", G_CALLBACK (pass_toggled), bloom_pass);
 
   check = gtk_check_button_new_with_label ("Greyscale");
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (check), FALSE);
