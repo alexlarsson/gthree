@@ -405,6 +405,7 @@ gthree_uniform_is_array (GthreeUniform *uniform)
     case GTHREE_UNIFORM_TYPE_UNIFORMS_ARRAY:
       return TRUE;
 
+    default:
     case GTHREE_UNIFORM_TYPE_TEXTURE:
     case GTHREE_UNIFORM_TYPE_INT:
     case GTHREE_UNIFORM_TYPE_FLOAT:
