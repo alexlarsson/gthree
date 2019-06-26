@@ -14,6 +14,7 @@ gthree_pass_init (GthreePass *pass)
 {
   pass->enabled = TRUE;
   pass->need_swap = TRUE;
+  pass->need_source_texture = TRUE;
   pass->clear = FALSE;
   pass->render_to_screen = FALSE;
 }
@@ -268,6 +269,7 @@ gthree_render_pass_init (GthreeRenderPass *render_pass)
 
   pass->clear = TRUE;
   pass->need_swap = FALSE;
+  pass->need_source_texture = FALSE;
   render_pass->clear_depth = FALSE;
 }
 
@@ -375,6 +377,7 @@ gthree_clear_pass_init (GthreeClearPass *clear_pass)
 
   pass->clear = TRUE;
   pass->need_swap = FALSE;
+  pass->need_source_texture = FALSE;
   clear_pass->clear_depth = FALSE;
 }
 

@@ -31,6 +31,10 @@ typedef struct {
   // if set to true, the pass indicates to swap read and write buffer after rendering
   gboolean need_swap;
 
+  // if set to true, the pass needs a texture to source from, i.e. it can't draw directly on the screen on
+  // top the previous stage
+  gboolean need_source_texture;
+
   // if set to true, the pass clears its buffer before rendering
   gboolean clear;
 

@@ -114,12 +114,11 @@ should_render_pass_to_screen (GthreeEffectComposer *composer,
   int i;
 
   /* The last enabled pass should render to the screen, but also any
-     directly previous passes that don't need swapping, as these will share
-     buffers. */
+     directly previous passes that don't a source_texture. */
   for (i = index + 1; i < priv->passes->len; i++)
     {
       GthreePass *pass = g_ptr_array_index (priv->passes, i);
-      if (pass->enabled && pass->need_swap)
+      if (pass->enabled && pass->need_source_texture)
         return FALSE;
     }
 
