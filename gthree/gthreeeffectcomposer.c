@@ -31,7 +31,7 @@ gthree_effect_composer_init (GthreeEffectComposer *composer)
   priv->passes = g_ptr_array_new_with_free_func (g_object_unref);
   priv->render_to_screen = TRUE;
 
-  priv->copy_pass = gthree_shader_pass_new (gthree_get_shader_from_library ("copy"), NULL);
+  priv->copy_pass = gthree_shader_pass_new (gthree_clone_shader_from_library ("copy"), NULL);
 }
 
 static void

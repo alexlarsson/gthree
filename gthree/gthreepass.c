@@ -227,7 +227,6 @@ GthreePass *
 gthree_shader_pass_new (GthreeShader *shader, const char *texture_id)
 {
   GthreeShaderPass *pass = g_object_new (GTHREE_TYPE_SHADER_PASS, NULL);
-  g_autoptr(GthreeShader) shader_clone = NULL;
   GthreeShaderMaterial *material = NULL;
 
   if (texture_id == NULL)
@@ -235,12 +234,10 @@ gthree_shader_pass_new (GthreeShader *shader, const char *texture_id)
 
   pass->texture_id = g_strdup (texture_id);
 
-  shader_clone = gthree_shader_clone (shader);
-
-  material = gthree_shader_material_new (shader_clone);
+  material = gthree_shader_material_new (shader);
 
   pass->material = GTHREE_MATERIAL (material);
-  pass->uniforms = gthree_shader_get_uniforms (shader_clone);
+  pass->uniforms = gthree_shader_get_uniforms (shader);
   pass->fs_quad = gthree_fullscreen_quad_pass_new (pass->material);
 
   return GTHREE_PASS (pass);
