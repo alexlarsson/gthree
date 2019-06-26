@@ -578,9 +578,21 @@ static GthreeUniformsDefinition copy_uniforms[] = {
   {"opacity", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
 };
 
+static float convolution_default_increment[2] = { 0.001953125, 0.0 };
+static const char *convolution_uniform_libs[] = { NULL };
+static GthreeUniformsDefinition convolution_uniforms[] = {
+  {"tDiffuse", GTHREE_UNIFORM_TYPE_TEXTURE, NULL},
+  {"uImageIncrement", GTHREE_UNIFORM_TYPE_VECTOR2, &convolution_default_increment},
+  {"cKernel", GTHREE_UNIFORM_TYPE_FLOAT_ARRAY, NULL },
+};
+static const char *convolution_defines[] = {
+  "KERNEL_SIZE_FLOAT", "25.0",
+  "KERNEL_SIZE_INT", "25",
+  NULL
+};
 
 static GthreeShader *basic, *lambert, *phong, *standard, *matcap, *points, *dashed, *depth, *normal, *sprite, *background;
-static GthreeShader *cube, *equirect, *distanceRGBA, *shadow, *physical, *copy;
+static GthreeShader *cube, *equirect, *distanceRGBA, *shadow, *physical, *copy, *convolution;
 
 static void
 gthree_shader_init_libs ()
@@ -690,6 +702,13 @@ gthree_shader_init_libs ()
                                              copy_uniforms, G_N_ELEMENTS (copy_uniforms),
                                              NULL,
                                              "copy_vert", "copy_frag");
+  gthree_shader_set_name (copy, "copy");
+
+  convolution = gthree_shader_new_from_definitions (convolution_uniform_libs,
+                                                    convolution_uniforms, G_N_ELEMENTS (convolution_uniforms),
+                                                    convolution_defines,
+                                                    "convolution_vert", "convolution_frag");
+  gthree_shader_set_name (convolution, "convolution");
 
   initialized = TRUE;
 }
@@ -750,6 +769,9 @@ gthree_get_shader_from_library (const char *name)
   if (strcmp (name, "copy") == 0)
     return copy;
 
+  if (strcmp (name, "convolution") == 0)
+    return convolution;
+
   g_warning ("can't find shader library %s\n", name);
   return NULL;
 }
@@ -764,4 +786,42 @@ gthree_clone_shader_from_library (const char *name)
     return NULL;
 
   return gthree_shader_clone (orig);
+}
+
+// We lop off the sqrt(2 * pi) * sigma term, since we're going to normalize anyway.
+static float
+gauss (float x, float sigma)
+{
+  return expf( - (x * x) / (2.0 * sigma * sigma));
+}
+
+GArray *
+gthree_convolution_shader_build_kernel (float sigma)
+{
+  GArray *values;
+  int i, kMaxKernelSize, kernelSize;
+  float sum, halfWidth;
+
+  kMaxKernelSize = 25;
+  kernelSize = 2 * ceilf (sigma * 3.0) + 1;
+
+  if (kernelSize > kMaxKernelSize)
+    kernelSize = kMaxKernelSize;
+
+  halfWidth = (kernelSize - 1) * 0.5;
+
+  values = g_array_new (FALSE, TRUE, sizeof (float));
+  sum = 0.0;
+  for (i = 0; i < kernelSize; i++)
+    {
+      float value = gauss (i - halfWidth, sigma);
+      sum += value;
+      g_array_append_val (values, value);
+  }
+
+  // normalize the kernel
+  for (i = 0; i < kernelSize; i++)
+    g_array_index(values, float, i) /= sum;
+
+  return values;
 }

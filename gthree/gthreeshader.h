@@ -53,6 +53,7 @@ const char *    gthree_shader_get_name                             (GthreeShader
 GthreeShader *gthree_get_shader_from_library   (const char *name);
 GthreeShader *gthree_clone_shader_from_library (const char *name);
 
+GArray *gthree_convolution_shader_build_kernel (float sigma);
 
 G_END_DECLS
 
