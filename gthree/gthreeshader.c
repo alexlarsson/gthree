@@ -103,19 +103,23 @@ static gboolean
 defines_equal (GPtrArray *a, GPtrArray *b)
 {
   int i;
+  int a_len, b_len;
 
   if (a == b)
     return TRUE;
 
-  if (a == NULL)
-    return b == NULL;
-  if (b == NULL)
-    return a == NULL;
+  a_len = a ? a->len : 0;
+  b_len = b ? b->len : 0;
 
-  if (a->len != b->len)
+  if (a_len == 0)
+    return b_len == 0;
+  if (b_len == 0)
+    return a_len == 0;
+
+  if (a_len != b_len)
     return FALSE;
 
-  for (i = 0; i < a->len; i++)
+  for (i = 0; i < a_len; i++)
     {
       if (!str_equal (g_ptr_array_index (a, i), g_ptr_array_index (b, i)))
         return FALSE;
@@ -246,6 +250,24 @@ gthree_shader_get_defines (GthreeShader  *shader)
   return priv->defines;
 }
 
+void
+gthree_shader_set_defines (GthreeShader *shader,
+                           GPtrArray *defines)
+{
+  GthreeShaderPrivate *priv = gthree_shader_get_instance_private (shader);
+
+  if (defines)
+    g_ptr_array_ref (defines);
+
+  if (priv->defines)
+    g_ptr_array_unref (priv->defines);
+
+  priv->defines = defines;
+
+  gthree_shader_init_hash (shader);
+
+}
+
 GthreeUniforms *
 gthree_shader_get_uniforms (GthreeShader  *shader)
 {
@@ -275,6 +297,7 @@ gthree_shader_clone (GthreeShader *orig)
 {
   GthreeShader *clone;
   GthreeShaderPrivate *orig_priv, *clone_priv;
+  int i;
 
   orig_priv = gthree_shader_get_instance_private (orig);
 
@@ -284,6 +307,13 @@ gthree_shader_clone (GthreeShader *orig)
   clone_priv->uniforms = gthree_uniforms_clone (orig_priv->uniforms);
   clone_priv->vertex_shader_text = orig_priv->vertex_shader_text;
   clone_priv->fragment_shader_text = orig_priv->fragment_shader_text;
+
+  if (orig_priv->defines)
+    {
+      clone_priv->defines = g_ptr_array_new_with_free_func (g_free);
+      for (i = 0; i < orig_priv->defines->len; i++)
+        g_ptr_array_add (clone_priv->defines, g_strdup (g_ptr_array_index (orig_priv->defines, i)));
+    }
 
   clone_priv->hash = orig_priv->hash;
 
@@ -374,6 +404,7 @@ parse_text_with_includes (const char *text)
 GthreeShader *
 gthree_shader_new_from_definitions (const char **lib_uniforms,
                                     GthreeUniformsDefinition *uniform_defs, int defs_len,
+                                    const char **defines,
                                     const char *vertex_shader_name,
                                     const char *fragment_shader_name)
 {
@@ -411,6 +442,14 @@ gthree_shader_new_from_definitions (const char **lib_uniforms,
   g_assert (fragment_bytes != NULL);
   priv->fragment_shader_text = parse_text_with_includes (g_bytes_get_data (fragment_bytes, NULL));
   g_assert (priv->fragment_shader_text != NULL);
+
+  if (defines)
+    {
+      priv->defines = g_ptr_array_new_with_free_func (g_free);
+      for (i = 0; defines[i] != NULL; i++)
+        g_ptr_array_add (priv->defines, g_strdup (defines[i]));
+      g_assert (i % 2 == 0); // Must be (key, value) * n
+    }
 
   gthree_shader_init_hash (shader);
 
@@ -532,70 +571,87 @@ gthree_shader_init_libs ()
 
   basic = gthree_shader_new_from_definitions (basic_uniform_libs,
                                               NULL, 0,
+                                              NULL,
                                               "meshbasic_vert", "meshbasic_frag");
 
   lambert = gthree_shader_new_from_definitions (lambert_uniform_libs,
                                                 lambert_uniforms, G_N_ELEMENTS (lambert_uniforms),
+                                                NULL,
                                                 "meshlambert_vert", "meshlambert_frag");
 
   phong = gthree_shader_new_from_definitions (phong_uniform_libs,
                                               phong_uniforms, G_N_ELEMENTS (phong_uniforms),
+                                              NULL,
                                               "meshphong_vert", "meshphong_frag");
 
   standard = gthree_shader_new_from_definitions (standard_uniform_libs,
                                                  standard_uniforms, G_N_ELEMENTS (standard_uniforms),
+                                                 NULL,
                                                  "meshphysical_vert", "meshphysical_frag");
 
   matcap = gthree_shader_new_from_definitions (matcap_uniform_libs,
                                                matcap_uniforms, G_N_ELEMENTS (matcap_uniforms),
+                                               NULL,
                                                "meshmatcap_vert", "meshmatcap_frag");
 
   points = gthree_shader_new_from_definitions (points_uniform_libs,
                                                NULL, 0,
+                                               NULL,
                                               "points_vert", "points_frag");
 
   dashed = gthree_shader_new_from_definitions (dashed_uniform_libs,
                                                dashed_uniforms, G_N_ELEMENTS (dashed_uniforms),
+                                               NULL,
                                                "linedashed_vert", "linedashed_frag");
 
   depth = gthree_shader_new_from_definitions (depth_uniform_libs,
                                               NULL, 0,
+                                              NULL,
                                               "depth_vert", "depth_frag");
 
   normal = gthree_shader_new_from_definitions (normal_uniform_libs,
                                                normal_uniforms, G_N_ELEMENTS (normal_uniforms),
+                                               NULL,
                                                "normal_vert", "normal_frag");
 
   sprite = gthree_shader_new_from_definitions (sprite_uniform_libs,
                                                NULL, 0,
+                                               NULL,
                                               "sprite_vert", "sprite_frag");
 
   background = gthree_shader_new_from_definitions (background_uniform_libs,
                                                    background_uniforms, G_N_ELEMENTS (background_uniforms),
+                                                   NULL,
                                                    "background_vert", "background_frag");
 
   cube = gthree_shader_new_from_definitions (cube_uniform_libs,
                                              cube_uniforms, G_N_ELEMENTS (cube_uniforms),
+                                             NULL,
                                              "cube_vert", "cube_frag");
 
   equirect = gthree_shader_new_from_definitions (equirect_uniform_libs,
                                                  equirect_uniforms, G_N_ELEMENTS (equirect_uniforms),
+                                                 NULL,
                                                  "equirect_vert", "equirect_frag");
 
   distanceRGBA = gthree_shader_new_from_definitions (distanceRGBA_uniform_libs,
                                                      distanceRGBA_uniforms, G_N_ELEMENTS (distanceRGBA_uniforms),
+                                                     NULL,
                                                      "distanceRGBA_vert", "distanceRGBA_frag");
 
   shadow = gthree_shader_new_from_definitions (shadow_uniform_libs,
                                                shadow_uniforms, G_N_ELEMENTS (shadow_uniforms),
+                                               NULL,
                                                "shadow_vert", "shadow_frag");
 
   physical = gthree_shader_new_from_definitions (physical_uniform_libs,
                                                  physical_uniforms, G_N_ELEMENTS (physical_uniforms),
+                                                 NULL,
                                                  "meshphysical_vert", "meshphysical_frag");
 
   copy = gthree_shader_new_from_definitions (copy_uniform_libs,
                                              copy_uniforms, G_N_ELEMENTS (copy_uniforms),
+                                             NULL,
                                              "copy_vert", "copy_frag");
 
   initialized = TRUE;

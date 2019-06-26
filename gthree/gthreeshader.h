@@ -36,6 +36,8 @@ GthreeShader *  gthree_shader_new   (GPtrArray *defines,
 
 GthreeShader *  gthree_shader_clone                                (GthreeShader  *shader);
 GPtrArray      *gthree_shader_get_defines                          (GthreeShader  *shader);
+void            gthree_shader_set_defines                          (GthreeShader  *shader,
+                                                                    GPtrArray     *defines);
 GthreeUniforms *gthree_shader_get_uniforms                         (GthreeShader  *shader);
 const char *    gthree_shader_get_vertex_shader_text               (GthreeShader  *shader);
 const char *    gthree_shader_get_fragment_shader_text             (GthreeShader  *shader);
