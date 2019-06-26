@@ -10,6 +10,7 @@ GthreeEffectComposer *composer;
 GthreeScene *scene;
 GthreeMesh *mesh;
 GthreePerspectiveCamera *camera;
+GthreeMesh *wire;
 GthreeMesh *mesh2;
 GthreeScene *scene2;
 GthreePerspectiveCamera *camera2;
@@ -41,14 +42,22 @@ init_scene (void)
   texture = gthree_texture_new (crate_pixbuf);
 
   material = gthree_mesh_basic_material_new ();
-  gthree_mesh_basic_material_set_color (GTHREE_MESH_BASIC_MATERIAL (material), &yellow);
   gthree_mesh_basic_material_set_map (GTHREE_MESH_BASIC_MATERIAL (material), texture);
   mesh = gthree_mesh_new (geometry, GTHREE_MATERIAL (material));
   gthree_object_set_position (GTHREE_OBJECT (mesh),
-                              graphene_point3d_init (&pos, -20, 0, 0));
-
+                              graphene_point3d_init (&pos, 0, 20, 0));
 
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (mesh));
+
+  material = gthree_mesh_basic_material_new ();
+  gthree_mesh_material_set_is_wireframe (GTHREE_MESH_MATERIAL (material), TRUE);
+  gthree_mesh_material_set_wireframe_line_width (GTHREE_MESH_MATERIAL (material), 3.0);
+  gthree_mesh_basic_material_set_color (GTHREE_MESH_BASIC_MATERIAL (material), &yellow);
+  wire = gthree_mesh_new (geometry, GTHREE_MATERIAL (material));
+  gthree_object_set_position (GTHREE_OBJECT (wire),
+                              graphene_point3d_init (&pos, -80,20, 0));
+
+  gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (wire));
 
   camera = gthree_perspective_camera_new (30, 1, 1, 10000);
   gthree_object_set_position (GTHREE_OBJECT (camera),
@@ -70,20 +79,22 @@ init_scene2 (void)
   scene2 = gthree_scene_new ();
 
   material_phong = gthree_mesh_phong_material_new ();
-  gthree_mesh_phong_material_set_color (material_phong, &light_grey);
-  gthree_mesh_phong_material_set_specular_color (material_phong, &dark_green);
+  gthree_mesh_phong_material_set_color (material_phong, &orange);
+  gthree_mesh_phong_material_set_specular_color (material_phong, &red);
   gthree_mesh_phong_material_set_shininess (material_phong, 30);
 
   mesh2 = gthree_mesh_new (geometry, GTHREE_MATERIAL (material_phong));
+  gthree_object_set_scale (GTHREE_OBJECT (mesh2),
+                           graphene_point3d_init (&pos, 1.0, 1.4, 1.0));
   gthree_object_set_position (GTHREE_OBJECT (mesh2),
-                              graphene_point3d_init (&pos, 20, 0, 0));
+                              graphene_point3d_init (&pos, 40, -20, 0));
 
   gthree_object_add_child (GTHREE_OBJECT (scene2), GTHREE_OBJECT (mesh2));
 
   ambient_light = gthree_ambient_light_new (&dark_grey);
   gthree_object_add_child (GTHREE_OBJECT (scene2), GTHREE_OBJECT (ambient_light));
 
-  directional_light = gthree_directional_light_new (&white, 0.425);
+  directional_light = gthree_directional_light_new (&white, 0.65);
   gthree_object_set_position (GTHREE_OBJECT (directional_light),
                               graphene_point3d_init (&pos,
                                                      1, 1, -1));
@@ -133,7 +144,7 @@ static const char *fragment_psycho_shader =
   "  d=r/350.0;\n"
   "  d+=sin(d*d*8.0)*0.52;\n"
   "  f=(sin(a*g)+1.0)/2.0;\n"
-  "  gl_FragColor=vec4(vec3(f*i/1.6,i/2.0+d/13.0,i)*d*p.x+vec3(i/1.3+d/8.0,i/2.0+d/18.0,i)*d*(1.0-p.x),1.0);\n"
+  "  gl_FragColor=vec4(vec3(i/2.0+d/13.0,i,f*i/1.6)*d*p.x*0.5+vec3(i/1.2+d/18.0,i,i/1.3+d/8.0)*d*(1.0-p.x)*0.3,1.0);\n"
   "}\n";
 
 float f1 = 1;
@@ -177,7 +188,7 @@ init_composer (void)
   clear_pass = gthree_clear_pass_new (&black);
   psycho_pass = gthree_shader_pass_new (psycho_shader, NULL);
   gthree_pass_set_clear (psycho_pass, FALSE);
-  bloom_pass = gthree_bloom_pass_new (0.8, 4.0, 512);
+  bloom_pass = gthree_bloom_pass_new (2, 4.0, 256);
   gthree_pass_set_enabled (bloom_pass, FALSE);
   greyscale_pass = gthree_shader_pass_new (shader2, NULL);
   gthree_pass_set_enabled (greyscale_pass, FALSE);
@@ -226,6 +237,20 @@ tick (GtkWidget     *widget,
                                                    0.0 * relative_time,
                                                    2.0 * relative_time,
                                                    1.0 * relative_time
+                                                   ));
+
+  gthree_object_set_rotation (GTHREE_OBJECT (wire),
+                              graphene_euler_init (&euler,
+                                                   2.0 * relative_time,
+                                                   1.0 * relative_time,
+                                                   1.0 * relative_time
+                                                   ));
+
+  gthree_object_set_rotation (GTHREE_OBJECT (mesh2),
+                              graphene_euler_init (&euler,
+                                                   2.0 * relative_time,
+                                                   1.0 * relative_time,
+                                                   3.0 * relative_time
                                                    ));
 
   gtk_widget_queue_draw (widget);
