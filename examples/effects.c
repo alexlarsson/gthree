@@ -175,6 +175,7 @@ init_composer (void)
 
   clear_pass = gthree_clear_pass_new (&cyan);
   psycho_pass = gthree_shader_pass_new (psycho_shader, NULL);
+  gthree_pass_set_clear (psycho_pass, FALSE);
   greyscale_pass = gthree_shader_pass_new (shader2, NULL);
   gthree_pass_set_enabled (greyscale_pass, FALSE);
 
