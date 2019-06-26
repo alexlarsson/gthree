@@ -360,3 +360,91 @@ gthree_render_pass_set_clear_depth  (GthreeRenderPass *render_pass,
   render_pass->clear_depth = clear_depth;
 }
 
+struct _GthreeClearPass {
+  GthreePass parent;
+  GdkRGBA color;
+  gboolean color_set;
+  gboolean clear_depth;
+};
+
+typedef struct {
+  GthreePassClass parent_class;
+} GthreeClearPassClass;
+
+G_DEFINE_TYPE (GthreeClearPass, gthree_clear_pass, GTHREE_TYPE_PASS)
+
+static void
+gthree_clear_pass_init (GthreeClearPass *clear_pass)
+{
+  GthreePass *pass = GTHREE_PASS(clear_pass);
+
+  pass->clear = TRUE;
+  pass->need_swap = FALSE;
+  clear_pass->clear_depth = FALSE;
+}
+
+static void
+gthree_clear_pass_finalize (GObject *obj)
+{
+  G_OBJECT_CLASS (gthree_clear_pass_parent_class)->finalize (obj);
+}
+
+static void
+gthree_clear_pass_render (GthreePass *pass,
+                          GthreeRenderer *renderer,
+                          GthreeRenderTarget *write_buffer,
+                          GthreeRenderTarget *read_buffer,
+                          float delta_time,
+                          gboolean mask_active)
+{
+  GthreeClearPass *clear_pass = GTHREE_CLEAR_PASS (pass);
+  GdkRGBA old_clear_color;
+
+  if (clear_pass->color_set)
+    {
+      old_clear_color = *gthree_renderer_get_clear_color (renderer);
+      gthree_renderer_set_clear_color (renderer, &clear_pass->color);
+    }
+
+  gthree_renderer_set_render_target (renderer, pass->render_to_screen ? NULL : read_buffer, 0, 0);
+
+  if (clear_pass->clear_depth)
+    gthree_renderer_clear_depth (renderer);
+
+  if (pass->clear)
+    gthree_renderer_clear (renderer, TRUE, TRUE, TRUE);
+
+  if (clear_pass->color_set)
+    gthree_renderer_set_clear_color (renderer, &old_clear_color);
+}
+
+static void
+gthree_clear_pass_class_init (GthreeClearPassClass *klass)
+{
+  GthreePassClass *pass_class = GTHREE_PASS_CLASS(klass);
+
+  G_OBJECT_CLASS (klass)->finalize = gthree_clear_pass_finalize;
+
+  pass_class->render = gthree_clear_pass_render;
+}
+
+GthreePass *
+gthree_clear_pass_new (const GdkRGBA *color)
+{
+  GthreeClearPass *pass = g_object_new (GTHREE_TYPE_CLEAR_PASS, NULL);
+
+  if (color)
+    {
+      pass->color = *color;
+      pass->color_set = TRUE;
+    }
+
+  return GTHREE_PASS (pass);
+}
+
+void
+gthree_clear_pass_set_clear_depth  (GthreeClearPass *clear_pass,
+                                     gboolean clear_depth)
+{
+  clear_pass->clear_depth = clear_depth;
+}

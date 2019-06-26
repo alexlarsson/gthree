@@ -133,6 +133,23 @@ void gthree_render_pass_set_clear_depth (GthreeRenderPass *render_pass,
                                          gboolean          clear_depth);
 
 
+typedef struct _GthreeClearPass GthreeClearPass;
+
+#define GTHREE_TYPE_CLEAR_PASS      (gthree_clear_pass_get_type ())
+#define GTHREE_CLEAR_PASS(inst)     (G_TYPE_CHECK_INSTANCE_CAST ((inst),  \
+                                                  GTHREE_TYPE_CLEAR_PASS, \
+                                                  GthreeClearPass))
+#define GTHREE_CLEAR_PASS_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GTHREE_TYPE_PASS, GthreeClearPassClass))
+#define GTHREE_IS_CLEAR_PASS(inst)  (G_TYPE_CHECK_INSTANCE_TYPE ((inst),  \
+                                                  GTHREE_TYPE_CLEAR_PASS))
+#define GTHREE_CLEAR_PASS_GET_CLASS(inst) (G_TYPE_INSTANCE_GET_CLASS ((inst), GTHREE_TYPE_CLEAR_PASS, GthreeClearPassClass))
+
+GType gthree_clear_pass_get_type (void) G_GNUC_CONST;
+
+GthreePass *gthree_clear_pass_new  (const GdkRGBA *color);
+void gthree_clear_pass_set_clear_depth (GthreeClearPass *clear_pass,
+                                        gboolean clear_depth);
+
 G_END_DECLS
 
 #endif /* __GTHREE_PASS_H__ */
