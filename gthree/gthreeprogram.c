@@ -365,6 +365,7 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
   g_autofree char *fragment_unrolled = NULL;
   g_autofree char *vertex_expanded = NULL;
   g_autofree char *fragment_expanded = NULL;
+  const char *shader_name;
   GLuint glVertexShader, glFragmentShader;
   GLint status;
   char formatd_buffer[G_ASCII_DTOSTR_BUF_SIZE];
@@ -450,15 +451,16 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
   vertex = g_string_new ("");
   fragment = g_string_new ("");
 
+  shader_name = gthree_shader_get_name (shader);
+
   if (TRUE /*! material instanceof THREE.RawShaderMaterial */)
     {
       g_string_append (vertex, "#version 130\n");
       g_string_append_printf (vertex, "precision %s float;\n", precision_to_string (parameters->precision));
       g_string_append_printf (vertex, "precision %s int;\n", precision_to_string (parameters->precision));
 
-#if TODO
-      //"#define SHADER_NAME " + shader.name,
-#endif
+      if (shader_name)
+        g_string_append_printf (vertex, "#define SHADER_NAME %s\n", shader_name);
 
       if (defines)
         generate_defines (vertex, defines);
@@ -594,9 +596,8 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
       g_string_append_printf (fragment, "precision %s float;\n", precision_to_string (parameters->precision));
       g_string_append_printf (fragment, "precision %s int;\n", precision_to_string (parameters->precision));
 
-#if TODO
-      //"#define SHADER_NAME " + shader.name,
-#endif
+      if (shader_name)
+        g_string_append_printf (fragment, "#define SHADER_NAME %s\n", shader_name);
 
       if (defines)
         generate_defines (fragment, defines);
