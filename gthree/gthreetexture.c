@@ -94,6 +94,30 @@ gthree_texture_init (GthreeTexture *texture)
   graphene_vec2_init (&priv->repeat, 1, 1);
 }
 
+void
+gthree_texture_copy_settings (GthreeTexture        *texture,
+                              GthreeTexture        *source)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+  GthreeTexturePrivate *source_priv = gthree_texture_get_instance_private (source);
+
+  priv->mapping = source_priv->mapping;
+  priv->wrap_s = source_priv->wrap_s;
+  priv->wrap_t = source_priv->wrap_t;
+  priv->encoding = source_priv->encoding;
+  priv->format = source_priv->format;
+  priv->type = source_priv->type;
+  priv->min_filter = source_priv->min_filter;
+  priv->mag_filter = source_priv->mag_filter;
+  priv->anisotropy = source_priv->anisotropy;
+  priv->offset = source_priv->offset;
+  priv->repeat = source_priv->repeat;
+  priv->generate_mipmaps = source_priv->generate_mipmaps;
+  priv->premultiply_alpha = source_priv->premultiply_alpha;
+  priv->flip_y = source_priv->flip_y;
+  priv->unpack_alignment = source_priv->unpack_alignment;
+}
+
 static void
 gthree_texture_finalize (GObject *obj)
 {

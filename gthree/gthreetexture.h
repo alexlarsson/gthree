@@ -72,6 +72,8 @@ GthreeDataType         gthree_texture_get_data_type        (GthreeTexture       
 void                   gthree_texture_set_anisotropy       (GthreeTexture        *texture,
                                                             int                   anisotropy);
 int                    gthree_texture_get_anisotropy       (GthreeTexture        *texture);
+void                   gthree_texture_copy_settings        (GthreeTexture        *texture,
+                                                            GthreeTexture        *source);
 void                   gthree_texture_set_name             (GthreeTexture        *texture,
                                                             const char           *name);
 const char *           gthree_texture_get_name             (GthreeTexture        *texture);

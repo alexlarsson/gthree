@@ -156,24 +156,7 @@ gthree_render_target_clone (GthreeRenderTarget *target)
   if (priv->depth_texture)
     clone_priv->depth_texture = g_object_ref (priv->depth_texture);
 
-  gthree_texture_set_wrap_s (clone_priv->texture,
-                             gthree_texture_get_wrap_s (priv->texture));
-  gthree_texture_set_wrap_t (clone_priv->texture,
-                             gthree_texture_get_wrap_t (priv->texture));
-  gthree_texture_set_mag_filter (clone_priv->texture,
-                                 gthree_texture_get_mag_filter (priv->texture));
-  gthree_texture_set_min_filter (clone_priv->texture,
-                                 gthree_texture_get_min_filter (priv->texture));
-  gthree_texture_set_format (clone_priv->texture,
-                             gthree_texture_get_format (priv->texture));
-  gthree_texture_set_data_type (clone_priv->texture,
-                                gthree_texture_get_data_type (priv->texture));
-  gthree_texture_set_anisotropy (clone_priv->texture,
-                                 gthree_texture_get_anisotropy (priv->texture));
-  gthree_texture_set_encoding (clone_priv->texture,
-                               gthree_texture_get_encoding (priv->texture));
-  gthree_texture_set_generate_mipmaps (clone_priv->texture,
-                                       gthree_texture_get_generate_mipmaps (priv->texture));
+  gthree_texture_copy_settings (clone_priv->texture, priv->texture);
 
   return clone;
 }
