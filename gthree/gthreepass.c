@@ -197,24 +197,19 @@ gthree_shader_pass_render (GthreePass *pass,
                              shader_pass->time);
 
   if (pass->render_to_screen)
-    {
-      gthree_renderer_set_render_target (renderer, NULL, 0, 0);
-      gthree_pass_render (shader_pass->fs_quad, renderer,
-                          write_buffer, read_buffer,
-                          delta_time, mask_active);
-    }
+    gthree_renderer_set_render_target (renderer, NULL, 0, 0);
   else
-    {
-      gthree_renderer_set_render_target (renderer, write_buffer, 0, 0);
-      if (pass->clear)
-        gthree_renderer_clear (renderer,
-                               gthree_renderer_get_autoclear_color (renderer),
-                               gthree_renderer_get_autoclear_depth (renderer),
-                               gthree_renderer_get_autoclear_stencil (renderer));
-      gthree_pass_render (shader_pass->fs_quad, renderer,
-                          write_buffer, read_buffer,
-                          delta_time, mask_active);
-    }
+    gthree_renderer_set_render_target (renderer, write_buffer, 0, 0);
+
+  if (pass->clear)
+    gthree_renderer_clear (renderer,
+                           gthree_renderer_get_autoclear_color (renderer),
+                           gthree_renderer_get_autoclear_depth (renderer),
+                           gthree_renderer_get_autoclear_stencil (renderer));
+
+  gthree_pass_render (shader_pass->fs_quad, renderer,
+                      write_buffer, read_buffer,
+                      delta_time, mask_active);
 }
 
 static void
