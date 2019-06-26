@@ -49,6 +49,8 @@ typedef struct {
   gboolean           (*needs_camera_pos) (GthreeMaterial *material);
   gboolean           (*needs_lights)  (GthreeMaterial *material);
 
+  gboolean apply_common_uniforms;
+
 } GthreeMaterialClass;
 
 GType gthree_material_get_type (void) G_GNUC_CONST;

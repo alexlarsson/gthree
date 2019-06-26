@@ -206,6 +206,7 @@ gthree_shader_material_class_init (GthreeShaderMaterialClass *klass)
   gobject_class->get_property = gthree_shader_material_get_property;
   gobject_class->finalize = gthree_shader_material_finalize;
 
+  material_class->apply_common_uniforms = FALSE;
   material_class->get_shader = gthree_shader_material_real_get_shader;
   material_class->load_default_attribute = gthree_shader_material_real_load_default_attribute;
   material_class->set_params = gthree_shader_material_real_set_params;

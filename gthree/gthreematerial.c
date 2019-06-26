@@ -232,11 +232,12 @@ gthree_material_real_set_uniforms (GthreeMaterial *material,
                                    GthreeCamera   *camera)
 {
   GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
-  GthreeUniform *uni;
+  GthreeMaterialClass *class = GTHREE_MATERIAL_GET_CLASS(material);
 
-  uni = gthree_uniforms_lookup_from_string (uniforms, "opacity");
-  if (uni != NULL)
-    gthree_uniform_set_float (uni, priv->opacity);
+  if (class->apply_common_uniforms)
+    {
+      gthree_uniforms_set_float (uniforms, "opactity", priv->opacity);
+    }
 }
 
 gboolean
@@ -281,8 +282,9 @@ gthree_material_class_init (GthreeMaterialClass *klass)
   gobject_class->get_property = gthree_material_get_property;
   gobject_class->finalize = gthree_material_finalize;
 
-  GTHREE_MATERIAL_CLASS(klass)->set_params = gthree_material_real_set_params;
-  GTHREE_MATERIAL_CLASS(klass)->set_uniforms = gthree_material_real_set_uniforms;
+  klass->apply_common_uniforms = TRUE;
+  klass->set_params = gthree_material_real_set_params;
+  klass->set_uniforms = gthree_material_real_set_uniforms;
 
   obj_props[PROP_TRANSPARENT] =
     g_param_spec_boolean ("transparent", "Transparent", "Transparent",
