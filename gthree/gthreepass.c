@@ -16,6 +16,7 @@ gthree_pass_init (GthreePass *pass)
   pass->need_swap = TRUE;
   pass->need_source_texture = TRUE;
   pass->clear = FALSE;
+  pass->can_render_to_screen = TRUE;
   pass->render_to_screen = FALSE;
 }
 

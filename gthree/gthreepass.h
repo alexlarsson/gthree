@@ -35,6 +35,9 @@ typedef struct {
   // top the previous stage
   gboolean need_source_texture;
 
+  // if set to false the composer will do a final copy to the screen
+  gboolean can_render_to_screen;
+
   // if set to true, the pass clears its buffer before rendering
   gboolean clear;
 

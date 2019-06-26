@@ -111,14 +111,19 @@ should_render_pass_to_screen (GthreeEffectComposer *composer,
                               int index)
 {
   GthreeEffectComposerPrivate *priv = gthree_effect_composer_get_instance_private (composer);
+  GthreePass *pass = g_ptr_array_index (priv->passes, index);
   int i;
 
-  /* The last enabled pass should render to the screen, but also any
+  if (!pass->can_render_to_screen)
+    return FALSE;
+
+  /* The last enabled pass should render to the screen if possible, but also any
      directly previous passes that don't a source_texture. */
   for (i = index + 1; i < priv->passes->len; i++)
     {
-      GthreePass *pass = g_ptr_array_index (priv->passes, i);
-      if (pass->enabled && pass->need_source_texture)
+      pass = g_ptr_array_index (priv->passes, i);
+      if (pass->enabled &&
+          (pass->need_source_texture || !pass->can_render_to_screen))
         return FALSE;
     }
 
@@ -134,6 +139,7 @@ gthree_effect_composer_render (GthreeEffectComposer *composer,
   GthreeEffectComposerPrivate *priv = gthree_effect_composer_get_instance_private (composer);
   g_autoptr(GthreeRenderTarget) current_render_target = NULL;
   gboolean mask_active;
+  gboolean rendered_to_screen = FALSE;
   int i;
 
   if (priv->render_target1 == NULL)
@@ -151,7 +157,7 @@ gthree_effect_composer_render (GthreeEffectComposer *composer,
       if (!pass->enabled)
         continue;
 
-      pass->render_to_screen = priv->render_to_screen && should_render_pass_to_screen (composer, i);
+      rendered_to_screen = pass->render_to_screen = priv->render_to_screen && should_render_pass_to_screen (composer, i);
       gthree_pass_render (pass, renderer,
                           priv->write_buffer, priv->read_buffer,
                           delta_time, mask_active);
@@ -183,6 +189,14 @@ gthree_effect_composer_render (GthreeEffectComposer *composer,
             }
 #endif
         }
+    }
+
+  if (!rendered_to_screen && priv->render_to_screen)
+    {
+      priv->copy_pass->render_to_screen = TRUE;
+      gthree_pass_render (priv->copy_pass, renderer,
+                          priv->write_buffer, priv->read_buffer,
+                          delta_time, mask_active);
     }
 
   gthree_renderer_set_render_target (renderer, current_render_target, 0, 0);
