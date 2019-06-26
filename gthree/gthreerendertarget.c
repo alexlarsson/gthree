@@ -29,8 +29,26 @@ G_DEFINE_TYPE_WITH_PRIVATE (GthreeRenderTarget, gthree_render_target, GTHREE_TYP
 static void
 gthree_render_target_init (GthreeRenderTarget *target)
 {
-  //GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
+  GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
 
+  priv->scissor_test = FALSE;
+
+  priv->texture = gthree_texture_new (NULL);
+
+  gthree_texture_set_wrap_s (priv->texture, GTHREE_WRAPPING_CLAMP);
+  gthree_texture_set_wrap_t (priv->texture, GTHREE_WRAPPING_CLAMP);
+
+  gthree_texture_set_generate_mipmaps (priv->texture, FALSE);
+  gthree_texture_set_mag_filter (priv->texture, GTHREE_FILTER_LINEAR);
+  gthree_texture_set_min_filter (priv->texture, GTHREE_FILTER_LINEAR);
+
+  gthree_texture_set_encoding (priv->texture, GTHREE_ENCODING_FORMAT_SRGB);
+  gthree_texture_set_format (priv->texture, GTHREE_TEXTURE_FORMAT_RGBA);
+  gthree_texture_set_data_type (priv->texture, GTHREE_DATA_TYPE_UNSIGNED_BYTE);
+  gthree_texture_set_anisotropy (priv->texture, 1);
+
+  priv->depth_buffer = TRUE;
+  priv->stencil_buffer = TRUE;
 }
 
 static void
@@ -103,20 +121,8 @@ gthree_render_target_class_init (GthreeRenderTargetClass *klass)
 }
 
 GthreeRenderTarget *
-gthree_render_target_new_full (int width,
-                               int height,
-                               GthreeWrapping wrap_t,
-                               GthreeWrapping wrap_s,
-                               GthreeFilter mag_filter,
-                               GthreeFilter min_filter,
-                               GthreeTextureFormat format,
-                               GthreeDataType data_type,
-                               int anisotropy,
-                               GthreeEncodingFormat encoding,
-                               gboolean generate_mipmaps,
-                               gboolean depth_buffer,
-                               gboolean stencil_buffer,
-                               GthreeTexture *depth_texture)
+gthree_render_target_new (int width,
+                          int height)
 {
   GthreeRenderTarget *target = g_object_new (GTHREE_TYPE_RENDER_TARGET, NULL);
   GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
@@ -125,63 +131,51 @@ gthree_render_target_new_full (int width,
   priv->height = height;
 
   graphene_rect_init (&priv->scissor, 0, 0, width, height);
-  priv->scissor_test = FALSE;
-
   graphene_rect_init (&priv->viewport, 0, 0, width, height);
-
-  priv->texture = gthree_texture_new (NULL);
-
-  gthree_texture_set_wrap_s (priv->texture, wrap_s);
-  gthree_texture_set_wrap_t (priv->texture, wrap_t);
-
-  gthree_texture_set_mag_filter (priv->texture, mag_filter);
-  gthree_texture_set_min_filter (priv->texture, min_filter);
-  gthree_texture_set_encoding (priv->texture, encoding);
-  gthree_texture_set_format (priv->texture, format);
-  gthree_texture_set_data_type (priv->texture, data_type);
-  gthree_texture_set_anisotropy (priv->texture, anisotropy);
-  gthree_texture_set_generate_mipmaps (priv->texture, generate_mipmaps);
-
-  priv->depth_buffer = depth_buffer;
-  priv->stencil_buffer = stencil_buffer;
-
-  if (depth_texture)
-    priv->depth_texture = g_object_ref (depth_texture);
 
   return target;
 }
 
 GthreeRenderTarget *
-gthree_render_target_new (int width,
-                          int height)
-{
-  return gthree_render_target_new_full (width, height,
-                                        GTHREE_WRAPPING_CLAMP, GTHREE_WRAPPING_CLAMP,
-                                        GTHREE_FILTER_LINEAR, GTHREE_FILTER_LINEAR,
-                                        GTHREE_TEXTURE_FORMAT_RGBA, GTHREE_DATA_TYPE_UNSIGNED_BYTE,
-                                        1, GTHREE_ENCODING_FORMAT_SRGB,
-                                        FALSE, TRUE, TRUE,
-                                        NULL);
-}
-
-GthreeRenderTarget *
 gthree_render_target_clone (GthreeRenderTarget *target)
 {
+  GthreeRenderTarget *clone;
   GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
+  GthreeRenderTargetPrivate *clone_priv;
 
-  return gthree_render_target_new_full (priv->width, priv->height,
-                                        gthree_texture_get_wrap_s (priv->texture),
-                                        gthree_texture_get_wrap_t (priv->texture),
-                                        gthree_texture_get_mag_filter (priv->texture),
-                                        gthree_texture_get_min_filter (priv->texture),
-                                        gthree_texture_get_format (priv->texture),
-                                        gthree_texture_get_data_type (priv->texture),
-                                        gthree_texture_get_anisotropy (priv->texture),
-                                        gthree_texture_get_encoding (priv->texture),
-                                        gthree_texture_get_generate_mipmaps (priv->texture),
-                                        priv->depth_buffer,
-                                        priv->stencil_buffer,
-                                        priv->depth_texture);
+  clone = gthree_render_target_new (priv->width, priv->height);
+  clone_priv = gthree_render_target_get_instance_private (clone);
+
+  clone_priv->scissor = priv->scissor;
+  clone_priv->scissor_test = priv->scissor_test;
+
+  clone_priv->viewport = priv->viewport;
+  clone_priv->depth_buffer = priv->depth_buffer;
+  clone_priv->stencil_buffer = priv->stencil_buffer;
+
+  if (priv->depth_texture)
+    clone_priv->depth_texture = g_object_ref (priv->depth_texture);
+
+  gthree_texture_set_wrap_s (clone_priv->texture,
+                             gthree_texture_get_wrap_s (priv->texture));
+  gthree_texture_set_wrap_t (clone_priv->texture,
+                             gthree_texture_get_wrap_t (priv->texture));
+  gthree_texture_set_mag_filter (clone_priv->texture,
+                                 gthree_texture_get_mag_filter (priv->texture));
+  gthree_texture_set_min_filter (clone_priv->texture,
+                                 gthree_texture_get_min_filter (priv->texture));
+  gthree_texture_set_format (clone_priv->texture,
+                             gthree_texture_get_format (priv->texture));
+  gthree_texture_set_data_type (clone_priv->texture,
+                                gthree_texture_get_data_type (priv->texture));
+  gthree_texture_set_anisotropy (clone_priv->texture,
+                                 gthree_texture_get_anisotropy (priv->texture));
+  gthree_texture_set_encoding (clone_priv->texture,
+                               gthree_texture_get_encoding (priv->texture));
+  gthree_texture_set_generate_mipmaps (clone_priv->texture,
+                                       gthree_texture_get_generate_mipmaps (priv->texture));
+
+  return clone;
 }
 
 GthreeTexture *
@@ -216,6 +210,52 @@ gthree_render_target_set_size (GthreeRenderTarget *target,
 
   graphene_rect_init (&priv->scissor, 0, 0, width, height);
   graphene_rect_init (&priv->viewport, 0, 0, width, height);
+}
+
+gboolean
+gthree_render_target_get_depth_buffer (GthreeRenderTarget *target)
+{
+  GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
+  return priv->depth_buffer;
+}
+
+void
+gthree_render_target_set_depth_buffer (GthreeRenderTarget *target,
+                                       gboolean            depth_buffer)
+{
+  GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
+  priv->depth_buffer = depth_buffer;
+}
+
+gboolean
+gthree_render_target_get_stencil_buffer (GthreeRenderTarget *target)
+{
+  GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
+  return priv->stencil_buffer;
+}
+
+void
+gthree_render_target_set_stencil_buffer (GthreeRenderTarget *target,
+                                         gboolean            stencil_buffer)
+{
+  GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
+  priv->stencil_buffer = stencil_buffer;
+}
+
+GthreeTexture *
+gthree_render_target_get_depth_texture (GthreeRenderTarget *target)
+{
+  GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
+  return priv->depth_texture;
+}
+
+void
+gthree_render_target_set_depth_texture (GthreeRenderTarget *target,
+                                        GthreeTexture *texture)
+{
+  GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
+
+  g_set_object (&priv->depth_texture, texture);
 }
 
 // Setup storage for internal depth/stencil buffers and bind to correct framebuffer

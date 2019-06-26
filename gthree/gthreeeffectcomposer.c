@@ -217,16 +217,9 @@ gthree_effect_composer_reset (GthreeEffectComposer *composer,
       priv->width = gthree_renderer_get_width (renderer);
       priv->height = gthree_renderer_get_height (renderer);
 
-      priv->render_target1 = gthree_render_target_new_full (priv->width,
-                                                            priv->height,
-                                                            GTHREE_WRAPPING_CLAMP,
-                                                            GTHREE_WRAPPING_CLAMP,
-                                                            GTHREE_FILTER_LINEAR,
-                                                            GTHREE_FILTER_LINEAR,
-                                                            GTHREE_TEXTURE_FORMAT_RGBA,
-                                                            GTHREE_DATA_TYPE_UNSIGNED_BYTE,
-                                                            1, GTHREE_ENCODING_FORMAT_SRGB,
-                                                            FALSE, TRUE, FALSE, NULL);
+      priv->render_target1 = gthree_render_target_new (priv->width,
+                                                       priv->height);
+      gthree_render_target_set_stencil_buffer (priv->render_target1, FALSE);
     }
   else
     {

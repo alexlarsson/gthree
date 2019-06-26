@@ -62,7 +62,14 @@ void           gthree_render_target_set_size          (GthreeRenderTarget *targe
                                                        int                 height);
 GthreeTexture *gthree_render_target_get_texture       (GthreeRenderTarget *target);
 gboolean       gthree_render_target_get_depth_buffer  (GthreeRenderTarget *target);
+void           gthree_render_target_set_depth_buffer  (GthreeRenderTarget *target,
+                                                       gboolean            depth_buffer);
+gboolean       gthree_render_target_get_stencil_buffer  (GthreeRenderTarget *target);
+void           gthree_render_target_set_stencil_buffer  (GthreeRenderTarget *target,
+                                                       gboolean            stencil_buffer);
 GthreeTexture *gthree_render_target_get_depth_texture (GthreeRenderTarget *target);
+void           gthree_render_target_set_depth_texture (GthreeRenderTarget *target,
+                                                       GthreeTexture *texture);
 
 G_END_DECLS
 
