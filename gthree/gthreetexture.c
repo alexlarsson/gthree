@@ -465,11 +465,9 @@ gthree_texture_realize (GthreeTexture *texture)
     {
       gthree_resource_set_realized_for (GTHREE_RESOURCE (texture), gdk_gl_context_get_current ());
       glGenTextures (1, &priv->gl_texture);
-#ifdef DEBUG
-      {
-        g_autofree char *label = g_strdup_printf ("GthreeTexture %p", texture);
-        glObjectLabel (GL_TEXTURE, priv->gl_texture, strlen (label), label);
-      }
+#ifdef DEBUG_LABELS
+      if (priv->name)
+        glObjectLabel (GL_TEXTURE, priv->gl_texture, strlen (priv->name), priv->name);
 #endif
     }
 }

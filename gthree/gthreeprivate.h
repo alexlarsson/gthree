@@ -8,6 +8,9 @@
 #include <gthree/gthreekeyframetrack.h>
 #include <gthree/gthreerendertarget.h>
 
+//#define DEBUG_LABELS
+//#define DEBUG_GROUPS
+
 /* Each hash maps to a specific program (e.g. one with some set of lights), not a particular set of uniform values (like positions/colors/etc) */
 typedef struct {
   guint8 num_directional;

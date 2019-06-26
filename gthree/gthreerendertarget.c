@@ -6,6 +6,10 @@
 #include "gthreeprivate.h"
 
 typedef struct {
+#ifdef DEBUG_LABELS
+  int instance_id;
+#endif
+
   int width;
   int height;
 
@@ -31,9 +35,19 @@ gthree_render_target_init (GthreeRenderTarget *target)
 {
   GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
 
+#ifdef DEBUG_LABELS
+  static int instance_count = 0;
+  priv->instance_id = ++instance_count;
+  g_autofree char *texture_name = g_strdup_printf ("rendertarget.%d.TEX", priv->instance_id);
+#endif
+
   priv->scissor_test = FALSE;
 
   priv->texture = gthree_texture_new (NULL);
+
+#ifdef DEBUG_LABELS
+  gthree_texture_set_name (priv->texture, texture_name);
+#endif
 
   gthree_texture_set_wrap_s (priv->texture, GTHREE_WRAPPING_CLAMP);
   gthree_texture_set_wrap_t (priv->texture, GTHREE_WRAPPING_CLAMP);
@@ -333,6 +347,12 @@ setup_depth_renderbuffer (GthreeRenderTarget *render_target)
         {
           glBindFramebuffer (GL_FRAMEBUFFER, priv->gl_framebuffer);
           glGenRenderbuffers (1, &priv->gl_depthbuffer);
+#ifdef DEBUG_LABELS
+          {
+            g_autofree char *label = g_strdup_printf ("rendertarget.%d.RB.depth", priv->instance_id);
+            glObjectLabel (GL_RENDERBUFFER, priv->gl_depthbuffer, strlen (label), label);
+          }
+#endif
           setup_renderbuffer_storage (render_target, priv->gl_depthbuffer, FALSE);
         }
     }
@@ -419,6 +439,12 @@ gthree_render_target_realize (GthreeRenderTarget *target)
 
   gthree_resource_set_realized_for (GTHREE_RESOURCE (target), gdk_gl_context_get_current ());
   glGenFramebuffers (1, &priv->gl_framebuffer);
+#ifdef DEBUG_LABELS
+  {
+    g_autofree char *label = g_strdup_printf ("rendertarget.%d.FB", priv->instance_id);
+    glObjectLabel (GL_FRAMEBUFFER, priv->gl_framebuffer, strlen (label), label);
+  }
+#endif
 
   texture = priv->texture;
 

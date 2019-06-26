@@ -138,7 +138,7 @@ static void clear (gboolean color, gboolean depth, gboolean stencil);
 static void
 push_debug_group (const char   *format, ...)
 {
-#ifdef DEBUG
+#ifdef DEBUG_GROUPS
   gchar *message;
   va_list args;
   int msg_len;
@@ -147,7 +147,7 @@ push_debug_group (const char   *format, ...)
   message = g_strdup_vprintf (format, args);
   va_end (args);
 
-  msg_len = strlen (message) - 1;
+  msg_len = strlen (message);
   glPushDebugGroupKHR (GL_DEBUG_SOURCE_APPLICATION, 0, msg_len, message);
   g_free (message);
 #endif
@@ -156,7 +156,7 @@ push_debug_group (const char   *format, ...)
 static void
 pop_debug_group (void)
 {
-#ifdef DEBUG
+#ifdef DEBUG_GROUPS
   glPopDebugGroupKHR ();
 #endif
 }
@@ -189,6 +189,9 @@ gthree_renderer_init (GthreeRenderer *renderer)
 
   glGetIntegerv(GL_FRAMEBUFFER_BINDING, &fbo_id);
   priv->window_framebuffer = fbo_id;
+#ifdef DEBUG_LABELS
+  glObjectLabel (GL_FRAMEBUFFER, priv->window_framebuffer, strlen ("GthreeArea.FB"), "GthreeArea.FB");
+#endif
 
   priv->program_cache = gthree_program_cache_new ();
 

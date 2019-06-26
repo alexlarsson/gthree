@@ -5,6 +5,7 @@
 #include "gthreeuniforms.h"
 #include "gthreeshader.h"
 #include "gthreerenderer.h"
+#include "gthreeprivate.h"
 
 typedef struct {
   GHashTable *uniform_locations;
@@ -739,6 +740,17 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
 
   glAttachShader (gl_program, glVertexShader);
   glAttachShader (gl_program, glFragmentShader);
+
+#ifdef DEBUG_LABELS
+  if (shader_name)
+    {
+      g_autofree char *vlabel = g_strdup_printf ("%s.vert", shader_name);
+      g_autofree char *flabel = g_strdup_printf ("%s.frag", shader_name);
+      glObjectLabel (GL_SHADER, glVertexShader, strlen (vlabel), vlabel);
+      glObjectLabel (GL_SHADER, glFragmentShader, strlen (flabel), flabel);
+      glObjectLabel (GL_PROGRAM, gl_program, strlen (shader_name), shader_name);
+    }
+#endif
 
   if (index0AttributeName != NULL) {
 
