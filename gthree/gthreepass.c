@@ -1,4 +1,5 @@
 #include <math.h>
+#include <epoxy/gl.h>
 
 #include "gthreepass.h"
 #include "gthreerenderer.h"
@@ -446,4 +447,208 @@ gthree_clear_pass_set_clear_depth  (GthreeClearPass *clear_pass,
                                      gboolean clear_depth)
 {
   clear_pass->clear_depth = clear_depth;
+}
+
+struct _GthreeBloomPass {
+  GthreePass parent;
+
+  GthreeRenderTarget *render_target_x;
+  GthreeRenderTarget *render_target_y;
+
+  GthreeUniforms *copy_uniforms; // Owned by copy_material
+  GthreeShaderMaterial *copy_material;
+
+  GthreeUniforms *convolution_uniforms; // Owned by convolution_material
+  GthreeShaderMaterial *convolution_material;
+
+  GthreePass *fs_quad;
+};
+
+typedef struct {
+  GthreePassClass parent_class;
+} GthreeBloomPassClass;
+
+G_DEFINE_TYPE (GthreeBloomPass, gthree_bloom_pass, GTHREE_TYPE_PASS)
+
+static void
+gthree_bloom_pass_init (GthreeBloomPass *bloom_pass)
+{
+  GthreePass *pass = GTHREE_PASS(bloom_pass);
+
+  bloom_pass->fs_quad = gthree_fullscreen_quad_pass_new (NULL);
+
+  pass->need_swap = FALSE;
+  pass->need_source_texture = TRUE;
+  pass->can_render_to_screen = FALSE;
+}
+
+static void
+gthree_bloom_pass_finalize (GObject *obj)
+{
+  GthreeBloomPass *pass = GTHREE_BLOOM_PASS (obj);
+
+  gthree_resource_unuse (GTHREE_RESOURCE (pass->render_target_x));
+  g_clear_object (&pass->render_target_x);
+
+  gthree_resource_unuse (GTHREE_RESOURCE (pass->render_target_y));
+  g_clear_object (&pass->render_target_y);
+
+  g_clear_object (&pass->fs_quad);
+
+  g_clear_object (&pass->copy_material);
+  g_clear_object (&pass->convolution_material);
+
+  G_OBJECT_CLASS (gthree_bloom_pass_parent_class)->finalize (obj);
+}
+
+static void
+gthree_bloom_pass_render (GthreePass *pass,
+                          GthreeRenderer *renderer,
+                          GthreeRenderTarget *write_buffer,
+                          GthreeRenderTarget *read_buffer,
+                          float delta_time,
+                          gboolean mask_active)
+{
+  GthreeBloomPass *bloom_pass = GTHREE_BLOOM_PASS (pass);
+  graphene_vec2_t blurX, blurY;
+
+  graphene_vec2_init (&blurX, 0.001953125, 0.0);
+  graphene_vec2_init (&blurY, 0.0, 0.001953125);
+
+  if (mask_active)
+    {
+#ifdef TODO
+      renderer.context.disable( renderer.context.STENCIL_TEST );
+#endif
+    }
+
+  // Render quad with blured scene into texture (convolution pass 1)
+  gthree_fullscreen_quad_pass_set_material (GTHREE_FULLSCREEN_QUAD_PASS (bloom_pass->fs_quad),
+                                            GTHREE_MATERIAL (bloom_pass->convolution_material));
+
+  gthree_uniforms_set_texture (bloom_pass->convolution_uniforms,
+                               "tDiffuse",
+                               gthree_render_target_get_texture (read_buffer));
+  gthree_uniforms_set_vec2 (bloom_pass->convolution_uniforms,
+                            "uImageIncrement", &blurX);
+
+  gthree_renderer_set_render_target (renderer, bloom_pass->render_target_x, 0, 0);
+  gthree_renderer_clear (renderer, TRUE, TRUE, TRUE);
+  gthree_pass_render (bloom_pass->fs_quad, renderer,
+                      write_buffer, read_buffer,
+                      delta_time, mask_active);
+
+  // Render quad with blured scene into texture (convolution pass 2)
+  gthree_uniforms_set_texture (bloom_pass->convolution_uniforms,
+                               "tDiffuse",
+                               gthree_render_target_get_texture (bloom_pass->render_target_x));
+  gthree_uniforms_set_vec2 (bloom_pass->convolution_uniforms,
+                            "uImageIncrement", &blurY);
+
+  gthree_renderer_set_render_target (renderer, bloom_pass->render_target_y, 0, 0);
+  gthree_renderer_clear (renderer, TRUE, TRUE, TRUE);
+  gthree_pass_render (bloom_pass->fs_quad, renderer,
+                      write_buffer, read_buffer,
+                      delta_time, mask_active);
+
+  // Render original scene with superimposed blur to texture
+
+  gthree_fullscreen_quad_pass_set_material (GTHREE_FULLSCREEN_QUAD_PASS (bloom_pass->fs_quad),
+                                            GTHREE_MATERIAL (bloom_pass->copy_material));
+  gthree_uniforms_set_texture (bloom_pass->copy_uniforms,
+                               "tDiffuse",
+                               gthree_render_target_get_texture (bloom_pass->render_target_y));
+
+  if (mask_active)
+    {
+#ifdef TODO
+      renderer.context.enable( renderer.context.STENCIL_TEST );
+#endif
+    }
+
+  // Always render to read buffer, needs a final copy to screen because
+  // we need to overdraw the last rendered thing
+  gthree_renderer_set_render_target (renderer, read_buffer, 0, 0);
+
+  if (pass->clear)
+    gthree_renderer_clear (renderer,
+                           gthree_renderer_get_autoclear_color (renderer),
+                           gthree_renderer_get_autoclear_depth (renderer),
+                           gthree_renderer_get_autoclear_stencil (renderer));
+
+  gthree_pass_render (bloom_pass->fs_quad, renderer,
+                      write_buffer, read_buffer,
+                      delta_time, mask_active);
+}
+
+static void
+gthree_bloom_pass_class_init (GthreeBloomPassClass *klass)
+{
+  GthreePassClass *pass_class = GTHREE_PASS_CLASS(klass);
+
+  G_OBJECT_CLASS (klass)->finalize = gthree_bloom_pass_finalize;
+
+  pass_class->render = gthree_bloom_pass_render;
+}
+
+GthreePass *
+gthree_bloom_pass_new (float strength, float sigma, int resolution)
+{
+  GthreeBloomPass *pass = g_object_new (GTHREE_TYPE_BLOOM_PASS, NULL);
+  g_autoptr(GthreeShader) copy_shader = NULL;
+  g_autoptr(GthreeShader) convolution_shader = NULL;
+  graphene_vec2_t blurX, blurY;
+  g_autoptr(GArray) kernel = NULL;
+  g_autoptr(GPtrArray) defines = NULL;
+  int kernel_size;
+
+  graphene_vec2_init (&blurX, 0.001953125, 0.0);
+  graphene_vec2_init (&blurY, 0.0, 0.001953125);
+
+  kernel = gthree_convolution_shader_build_kernel (sigma);
+  kernel_size = kernel->len;
+
+  // render targets
+
+  pass->render_target_x = gthree_render_target_new (resolution, resolution);
+  gthree_resource_use (GTHREE_RESOURCE (pass->render_target_x));
+  gthree_texture_set_name (gthree_render_target_get_texture (pass->render_target_x), "BloomPass.x");
+
+  pass->render_target_y = gthree_render_target_new (resolution, resolution);
+  gthree_resource_use (GTHREE_RESOURCE (pass->render_target_y));
+  gthree_texture_set_name (gthree_render_target_get_texture (pass->render_target_y), "BloomPass.y");
+
+  // copy material
+
+  copy_shader = gthree_clone_shader_from_library ("copy");
+
+  pass->copy_uniforms = gthree_shader_get_uniforms (copy_shader);
+  gthree_uniforms_set_float (pass->copy_uniforms, "opacity", strength);
+
+  pass->copy_material = gthree_shader_material_new (copy_shader);
+  gthree_material_set_blend_mode (GTHREE_MATERIAL (pass->copy_material),
+                                  GTHREE_BLEND_ADDITIVE,
+                                  GL_FUNC_ADD,
+                                  GL_SRC_ALPHA,
+                                  GL_ONE_MINUS_SRC_ALPHA);
+  gthree_material_set_is_transparent (GTHREE_MATERIAL (pass->copy_material), TRUE);
+
+  // convolution material
+
+  convolution_shader = gthree_clone_shader_from_library ("convolution");
+  defines = g_ptr_array_new_with_free_func (g_free);
+  g_ptr_array_add (defines, g_strdup ("KERNEL_SIZE_FLOAT"));
+  g_ptr_array_add (defines, g_strdup_printf ("%d.0", kernel_size));
+  g_ptr_array_add (defines, g_strdup ("KERNEL_SIZE_INT"));
+  g_ptr_array_add (defines, g_strdup_printf ("%d", kernel_size));
+  gthree_shader_set_defines (convolution_shader, defines);
+
+  pass->convolution_uniforms = gthree_shader_get_uniforms (convolution_shader);
+  gthree_uniforms_set_vec2 (pass->convolution_uniforms, "uImageIncrement", &blurX);
+  gthree_uniforms_set_float_array (pass->convolution_uniforms,
+                                   "cKernel", kernel);
+
+  pass->convolution_material = gthree_shader_material_new (convolution_shader);
+
+  return GTHREE_PASS (pass);
 }
