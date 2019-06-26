@@ -70,6 +70,7 @@ void           gthree_render_target_set_stencil_buffer  (GthreeRenderTarget *tar
 GthreeTexture *gthree_render_target_get_depth_texture (GthreeRenderTarget *target);
 void           gthree_render_target_set_depth_texture (GthreeRenderTarget *target,
                                                        GthreeTexture *texture);
+void           gthree_render_target_update_mipmap     (GthreeRenderTarget *target);
 
 G_END_DECLS
 

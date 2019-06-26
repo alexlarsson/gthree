@@ -472,13 +472,6 @@ gthree_renderer_get_render_target (GthreeRenderer *renderer)
 
 
 static void
-update_render_target_mipmap (GthreeRenderer *renderer,
-                             GthreeRenderTarget *render_target)
-{
-  // TODO
-}
-
-static void
 update_multisample_render_target (GthreeRenderer *renderer,
                                   GthreeRenderTarget *render_target)
 {
@@ -1899,7 +1892,7 @@ gthree_renderer_render (GthreeRenderer *renderer,
   if (priv->current_render_target != NULL)
     {
       // Generate mipmap if we're using any kind of mipmap filtering
-      update_render_target_mipmap (renderer, priv->current_render_target);
+      gthree_render_target_update_mipmap (priv->current_render_target);
       // resolve multisample renderbuffers to a single-sample texture if necessary
       update_multisample_render_target (renderer, priv->current_render_target);
     }

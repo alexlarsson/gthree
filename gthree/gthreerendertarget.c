@@ -367,6 +367,46 @@ gthree_render_target_get_viewport (GthreeRenderTarget *target)
   return &priv->viewport;
 }
 
+static gboolean
+texture_needs_generate_mipmaps (GthreeTexture *texture, gboolean is_power_of_two)
+{
+  GthreeFilter min_filter = gthree_texture_get_min_filter (texture);
+
+  return
+    gthree_texture_get_generate_mipmaps (texture) &&
+    is_power_of_two &&
+    min_filter != GTHREE_FILTER_NEAREST &&
+    min_filter != GTHREE_FILTER_LINEAR;
+}
+
+static void
+generate_mipmap (guint target,
+                 GthreeTexture *texture,
+                 int width, int height)
+{
+  glGenerateMipmap (target);
+  gthree_texture_set_max_mip_level (texture, log2 (MAX (width, height)));
+}
+
+void
+gthree_render_target_update_mipmap (GthreeRenderTarget *target)
+{
+  GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
+  gboolean supports_mips = gthree_render_target_is_power_of_two (target);
+
+  if (texture_needs_generate_mipmaps (priv->texture, supports_mips))
+    {
+      guint target = GL_TEXTURE_2D;
+#ifdef TOOD
+      if (renderTarget.isWebGLRenderTargetCube)
+        target = GL_TEXTURE_CUBE_MAP;
+#endif
+      gthree_texture_bind (priv->texture, -1, target);
+      generate_mipmap (target, priv->texture, priv->width, priv->height);
+      glBindTexture (target, 0);
+    }
+}
+
 void
 gthree_render_target_realize (GthreeRenderTarget *target)
 {
@@ -456,10 +496,8 @@ gthree_render_target_realize (GthreeRenderTarget *target)
                                         priv->height,
                                         priv->gl_framebuffer,
                                         GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D);
-#ifdef TODO
-      if ( textureNeedsGenerateMipmaps( renderTarget.texture, supportsMips ) )
-        generateMipmap( _gl.TEXTURE_2D, renderTarget.texture, renderTarget.width, renderTarget.height );
-#endif
+      if (texture_needs_generate_mipmaps (texture, supports_mips))
+        generate_mipmap (GL_TEXTURE_2D, texture, priv->width, priv->height);
       glBindTexture (GL_TEXTURE_2D, 0);
     }
 
