@@ -385,6 +385,42 @@ gthree_uniform_set_location (GthreeUniform *uniform,
   uniform->location = location;
 }
 
+gboolean
+gthree_uniform_is_array (GthreeUniform *uniform)
+{
+  switch (uniform->type)
+    {
+    case GTHREE_UNIFORM_TYPE_INT_ARRAY:
+    case GTHREE_UNIFORM_TYPE_INT3_ARRAY:
+    case GTHREE_UNIFORM_TYPE_FLOAT_ARRAY:
+    case GTHREE_UNIFORM_TYPE_FLOAT2_ARRAY:
+    case GTHREE_UNIFORM_TYPE_FLOAT3_ARRAY:
+    case GTHREE_UNIFORM_TYPE_FLOAT4_ARRAY:
+    case GTHREE_UNIFORM_TYPE_VEC2_ARRAY:
+    case GTHREE_UNIFORM_TYPE_VEC3_ARRAY:
+    case GTHREE_UNIFORM_TYPE_VEC4_ARRAY:
+    case GTHREE_UNIFORM_TYPE_MATRIX3_ARRAY:
+    case GTHREE_UNIFORM_TYPE_MATRIX4_ARRAY:
+    case GTHREE_UNIFORM_TYPE_TEXTURE_ARRAY:
+    case GTHREE_UNIFORM_TYPE_UNIFORMS_ARRAY:
+      return TRUE;
+
+    case GTHREE_UNIFORM_TYPE_TEXTURE:
+    case GTHREE_UNIFORM_TYPE_INT:
+    case GTHREE_UNIFORM_TYPE_FLOAT:
+    case GTHREE_UNIFORM_TYPE_FLOAT2:
+    case GTHREE_UNIFORM_TYPE_FLOAT3:
+    case GTHREE_UNIFORM_TYPE_FLOAT4:
+    case GTHREE_UNIFORM_TYPE_VECTOR2:
+    case GTHREE_UNIFORM_TYPE_VECTOR3:
+    case GTHREE_UNIFORM_TYPE_VECTOR4:
+    case GTHREE_UNIFORM_TYPE_COLOR:
+    case GTHREE_UNIFORM_TYPE_MATRIX3:
+    case GTHREE_UNIFORM_TYPE_MATRIX4:
+      return FALSE;
+    }
+}
+
 void
 gthree_uniform_set_needs_update (GthreeUniform *uniform,
                                  gboolean needs_update)

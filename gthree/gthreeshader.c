@@ -3,6 +3,7 @@
 
 #include "gthreeshader.h"
 #include "gthreeprogram.h"
+#include "gthreeprivate.h"
 
 
 typedef struct {
@@ -184,9 +185,10 @@ gthree_shader_update_uniform_locations_for_program (GthreeShader *shader,
   for (l = unis; l != NULL; l = l->next)
     {
       GthreeUniform *uni = l->data;
+      GthreeUniformType uni_type = gthree_uniform_get_type (uni);
       gint location;
 
-      if (gthree_uniform_get_type (uni) == GTHREE_UNIFORM_TYPE_UNIFORMS_ARRAY)
+      if (uni_type == GTHREE_UNIFORM_TYPE_UNIFORMS_ARRAY)
         {
           GPtrArray *uarray = gthree_uniform_get_uarray (uni);
           int i;
@@ -219,7 +221,17 @@ gthree_shader_update_uniform_locations_for_program (GthreeShader *shader,
         }
       else
         {
-          location = gthree_program_lookup_uniform_location (program, gthree_uniform_get_qname (uni));
+          const char *u_name;
+          g_autofree char *real_name = NULL;
+
+          u_name = gthree_uniform_get_name (uni);
+          if (gthree_uniform_is_array (uni))
+            {
+              real_name = g_strdup_printf ("%s[0]", u_name);
+              u_name = real_name;
+            }
+
+          location = gthree_program_lookup_uniform_location_from_string (program, u_name);
           gthree_uniform_set_location (uni, location);
         }
     }

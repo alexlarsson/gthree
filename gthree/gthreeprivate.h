@@ -30,7 +30,10 @@ struct _GthreeMaterialProperties
 {
   GthreeProgram *program;
   GthreeLightSetupHash light_hash;
-} ;
+};
+
+gboolean gthree_uniform_is_array (GthreeUniform *uniform);
+
 
 GthreeRenderList *gthree_render_list_new ();
 void gthree_render_list_free (GthreeRenderList *list);
