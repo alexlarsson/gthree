@@ -53,7 +53,13 @@ init_scene (void)
                               graphene_point3d_init (&pos, 0, 0, 400));
   gthree_object_add_child (GTHREE_OBJECT (scene2), GTHREE_OBJECT (camera2));
 
-  render_target = gthree_render_target_new (256, 256);
+  // Ensure it is large so we hit mipmaps
+  render_target = gthree_render_target_new (1024, 1024);
+  gthree_texture_set_generate_mipmaps (gthree_render_target_get_texture (render_target),
+                                       TRUE);
+  gthree_texture_set_min_filter (gthree_render_target_get_texture (render_target),
+                                 GTHREE_FILTER_LINEAR_MIPMAP_LINEAR);
+
   gthree_resource_use (GTHREE_RESOURCE (render_target));
 }
 
