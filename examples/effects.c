@@ -15,10 +15,12 @@ GthreeScene *scene2;
 GthreePerspectiveCamera *camera2;
 GthreeMeshBasicMaterial *material;
 
+GthreePass *clear_pass;
 GthreePass *psycho_pass;
-GthreePass *greyscale_pass;
+GthreePass *clear_depth_pass;
 GthreePass *render_pass;
 GthreePass *render2_pass;
+GthreePass *greyscale_pass;
 
 GthreeRenderTarget *render_target;
 
@@ -171,19 +173,26 @@ init_composer (void)
                                vertex_shader,
                                fragment_greyscale_shader);
 
+  clear_pass = gthree_clear_pass_new (&cyan);
   psycho_pass = gthree_shader_pass_new (psycho_shader, NULL);
   greyscale_pass = gthree_shader_pass_new (shader2, NULL);
   gthree_pass_set_enabled (greyscale_pass, FALSE);
+
+  clear_depth_pass = gthree_clear_pass_new (NULL);
+  gthree_pass_set_clear (clear_depth_pass, FALSE);
+  gthree_clear_pass_set_clear_depth (GTHREE_CLEAR_PASS (clear_depth_pass), TRUE);
+
   render_pass = gthree_render_pass_new (scene, GTHREE_CAMERA (camera), NULL);
   gthree_pass_set_clear (render_pass, FALSE);
-  gthree_render_pass_set_clear_depth (GTHREE_RENDER_PASS (render_pass), TRUE);
 
   render2_pass = gthree_render_pass_new (scene2, GTHREE_CAMERA (camera2), NULL);
   gthree_pass_set_clear (render2_pass, FALSE);
 
   composer = gthree_effect_composer_new  ();
 
+  gthree_effect_composer_add_pass  (composer, clear_pass);
   gthree_effect_composer_add_pass  (composer, psycho_pass);
+  gthree_effect_composer_add_pass  (composer, clear_depth_pass);
   gthree_effect_composer_add_pass  (composer, render_pass);
   gthree_effect_composer_add_pass  (composer, render2_pass);
   gthree_effect_composer_add_pass  (composer, greyscale_pass);
@@ -243,33 +252,6 @@ pass_toggled (GtkToggleButton *toggle_button, GthreePass *pass)
   gboolean enabled = gtk_toggle_button_get_active (toggle_button);
 
   gthree_pass_set_enabled (pass, enabled);
-
-  /* Update clears based on new state, start with default */
-
-  gthree_pass_set_clear (render_pass, FALSE);
-  gthree_pass_set_clear (render2_pass, FALSE);
-  gthree_render_pass_set_clear_depth (GTHREE_RENDER_PASS (render_pass), TRUE);
-  gthree_render_pass_set_clear_depth (GTHREE_RENDER_PASS (render2_pass), FALSE);
-
-  if (!psycho_pass->enabled)
-    {
-      if (render_pass->enabled)
-        {
-          gthree_pass_set_clear (render_pass, TRUE);
-        }
-      else
-        {
-          gthree_render_pass_set_clear_depth (GTHREE_RENDER_PASS (render2_pass), TRUE);
-          gthree_pass_set_clear (render2_pass, TRUE);
-        }
-    }
-  else
-    {
-      if (!render_pass->enabled)
-        {
-          gthree_render_pass_set_clear_depth (GTHREE_RENDER_PASS (render2_pass), TRUE);
-        }
-    }
 }
 
 int
