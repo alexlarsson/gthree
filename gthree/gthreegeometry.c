@@ -14,6 +14,10 @@ typedef struct {
   GPtrArray *attributes;
   GArray *groups;
 
+  // map attributename e.g. "position" -> GPtrArray of alternate GthreeAttribute arrays for it
+  // where GthreeAttribute.name == name of "emote", and array is always in same order
+  GHashTable *morph_attributes;
+
   graphene_box_t bounding_box;
   graphene_sphere_t bounding_sphere;
 
@@ -61,6 +65,8 @@ gthree_geometry_finalize (GObject *obj)
     gthree_resource_unuse (GTHREE_RESOURCE (priv->wireframe_index));
   g_clear_object (&priv->wireframe_index);
   g_ptr_array_unref (priv->attributes);
+  if (priv->morph_attributes)
+    g_hash_table_unref (priv->morph_attributes);
   g_array_unref (priv->groups);
 
   G_OBJECT_CLASS (gthree_geometry_parent_class)->finalize (obj);
@@ -274,6 +280,55 @@ gthree_geometry_get_uv (GthreeGeometry  *geometry)
 }
 
 void
+gthree_geometry_add_morph_attributes (GthreeGeometry *geometry,
+                                      const char *name,
+                                      GPtrArray *attributes)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+
+  if (priv->morph_attributes == NULL)
+    priv->morph_attributes = g_hash_table_new_full (g_str_hash, g_str_equal,
+                                                    g_free, (GDestroyNotify)g_ptr_array_unref);
+
+  g_hash_table_insert (priv->morph_attributes, g_strdup (name), g_ptr_array_ref (attributes));
+}
+
+void
+gthree_geometry_remove_morph_attributes (GthreeGeometry *geometry,
+                                         const char *name)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+
+  if (priv->morph_attributes == NULL)
+    return;
+
+  g_hash_table_remove (priv->morph_attributes, name);
+}
+
+GPtrArray *
+gthree_geometry_get_morph_attributes (GthreeGeometry  *geometry,
+                                      const char *name)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+
+  if (priv->morph_attributes == NULL)
+    return NULL;
+
+  return g_hash_table_lookup (priv->morph_attributes, name);
+}
+
+GList *
+gthree_geometry_get_morph_attributes_names (GthreeGeometry  *geometry)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+
+  if (priv->morph_attributes == NULL)
+    return NULL;
+
+  return g_hash_table_get_keys (priv->morph_attributes);
+}
+
+void
 gthree_geometry_add_group (GthreeGeometry  *geometry,
                            int start,
                            int count,
@@ -353,6 +408,50 @@ distance_sq (const graphene_vec3_t *p1,
   return graphene_vec3_dot (&delta, &delta);
 }
 
+static void
+expand_box_from_points (graphene_box_t *box,
+                        GthreeAttribute *position)
+{
+  const float *floats, *f;
+  int n_points = gthree_attribute_get_count (position);
+  int stride = gthree_attribute_get_stride (position);
+  int i;
+
+  floats = gthree_attribute_peek_float (position);
+
+  for (f = floats, i = 0; i < n_points; i++, f += stride)
+    {
+      const graphene_point3d_t *point = (const graphene_point3d_t *)f;
+      graphene_vec3_t v;
+
+      graphene_point3d_to_vec3 (point, &v);
+      graphene_box_expand_vec3 (box, &v, box);
+    }
+}
+
+static float
+get_max_radius_sq_from_points (graphene_vec3_t *center,
+                               GthreeAttribute *position)
+{
+  const float *floats, *f;
+  int n_points = gthree_attribute_get_count (position);
+  int stride = gthree_attribute_get_stride (position);
+  int i;
+  float max_radius_sq = 0.f;
+
+  floats = gthree_attribute_peek_float (position);
+  for (f = floats, i = 0; i < n_points; i++, f += stride)
+    {
+      const graphene_point3d_t *point = (const graphene_point3d_t *)f;
+      graphene_vec3_t p;
+
+      graphene_point3d_to_vec3 (point, &p);
+      max_radius_sq = fmaxf (max_radius_sq, distance_sq (center, &p));
+    }
+  return max_radius_sq;
+}
+
+
 const graphene_sphere_t *
 gthree_geometry_get_bounding_sphere  (GthreeGeometry *geometry)
 {
@@ -361,13 +460,10 @@ gthree_geometry_get_bounding_sphere  (GthreeGeometry *geometry)
   if (!priv->bounding_sphere_set)
     {
       GthreeAttribute *position = gthree_geometry_get_position (geometry);
+      GPtrArray *morph_attributes =gthree_geometry_get_morph_attributes (geometry, "position");
 
       if (position)
         {
-          const float *floats, *f;
-          int n_points = gthree_attribute_get_count (position);
-          int stride = gthree_attribute_get_stride (position);
-          int i;
           graphene_vec3_t size;
           graphene_vec3_t center;
           graphene_vec3_t min;
@@ -375,16 +471,15 @@ gthree_geometry_get_bounding_sphere  (GthreeGeometry *geometry)
           graphene_box_t box;
           float max_radius_sq = 0.f;
 
-          floats = gthree_attribute_peek_float (position);
-
           graphene_box_init_from_box (&box, graphene_box_empty ());
-          for (f = floats, i = 0; i < n_points; i++, f += stride)
+          expand_box_from_points (&box, position);
+          if (morph_attributes)
             {
-              const graphene_point3d_t *point = (const graphene_point3d_t *)f;
-              graphene_vec3_t v;
-
-              graphene_point3d_to_vec3 (point, &v);
-              graphene_box_expand_vec3 (&box, &v, &box);
+              for (int i = 0; i < morph_attributes->len; i++)
+                {
+                  GthreeAttribute *attr = g_ptr_array_index (morph_attributes, i);
+                  expand_box_from_points (&box, attr);
+                }
             }
 
           graphene_box_get_size (&box, &size);
@@ -394,20 +489,19 @@ gthree_geometry_get_bounding_sphere  (GthreeGeometry *geometry)
           graphene_vec3_scale (&size, 0.5f, &center);
           graphene_vec3_add (&center, &min, &center);
 
-          for (f = floats, i = 0; i < n_points; i++, f += stride)
+          max_radius_sq = get_max_radius_sq_from_points (&center, position);
+          if (morph_attributes)
             {
-              const graphene_point3d_t *point = (const graphene_point3d_t *)f;
-              graphene_vec3_t p;
-
-              graphene_point3d_to_vec3 (point, &p);
-              max_radius_sq = fmaxf (max_radius_sq, distance_sq (&center, &p));
+              for (int i = 0; i < morph_attributes->len; i++)
+                {
+                  GthreeAttribute *attr = g_ptr_array_index (morph_attributes, i);
+                  max_radius_sq = fmaxf (max_radius_sq, get_max_radius_sq_from_points (&center, attr));
+                }
             }
 
           graphene_sphere_init (&priv->bounding_sphere,
                                 graphene_point3d_init_from_vec3 (&pt, &center),
                                 sqrtf (max_radius_sq));
-
-          /* TODO: The three.js code does a lot of special handling for morphing here too */
         }
       else
         {
