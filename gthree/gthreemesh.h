@@ -34,13 +34,14 @@ GType gthree_mesh_get_type (void) G_GNUC_CONST;
 GthreeMesh *gthree_mesh_new (GthreeGeometry *geometry,
                              GthreeMaterial *material);
 
-GthreeMaterial *gthree_mesh_get_material  (GthreeMesh     *mesh);
-void            gthree_mesh_set_material  (GthreeMesh     *mesh,
-                                           GthreeMaterial *material);
-GthreeGeometry *gthree_mesh_get_geometry  (GthreeMesh     *mesh);
-GthreeDrawMode  gthree_mesh_get_draw_mode (GthreeMesh     *mesh);
-void            gthree_mesh_set_draw_mode (GthreeMesh     *mesh,
-                                           GthreeDrawMode  mode);
+GthreeMaterial *gthree_mesh_get_material         (GthreeMesh     *mesh);
+void            gthree_mesh_set_material         (GthreeMesh     *mesh,
+                                                  GthreeMaterial *material);
+GthreeGeometry *gthree_mesh_get_geometry         (GthreeMesh     *mesh);
+GthreeDrawMode  gthree_mesh_get_draw_mode        (GthreeMesh     *mesh);
+void            gthree_mesh_set_draw_mode        (GthreeMesh     *mesh,
+                                                  GthreeDrawMode  mode);
+void            gthree_mesh_update_morph_targets (GthreeMesh     *mesh);
 
 G_END_DECLS
 

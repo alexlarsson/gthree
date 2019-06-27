@@ -11,6 +11,9 @@ typedef struct {
   GthreeGeometry *geometry;
   GthreeMaterial *material;
   GthreeDrawMode draw_mode;
+
+  GArray *morph_target_influences; /* array of floats */
+  GHashTable *morph_target_dictionary; /* Map from morph name to index in attributes for each name */
 } GthreeMeshPrivate;
 
 enum {
@@ -30,10 +33,15 @@ GthreeMesh *
 gthree_mesh_new (GthreeGeometry *geometry,
                  GthreeMaterial *material)
 {
-  return g_object_new (gthree_mesh_get_type (),
-                       "geometry", geometry,
-                       "material", material,
-                       NULL);
+  GthreeMesh *mesh =
+    g_object_new (gthree_mesh_get_type (),
+                  "geometry", geometry,
+                  "material", material,
+                  NULL);
+
+  gthree_mesh_update_morph_targets (mesh);
+
+  return mesh;
 }
 
 static void
@@ -53,6 +61,11 @@ gthree_mesh_finalize (GObject *obj)
   g_clear_object (&priv->geometry);
   g_clear_object (&priv->material);
 
+  if (priv->morph_target_influences)
+    g_array_unref (priv->morph_target_influences);
+  if (priv->morph_target_dictionary)
+    g_hash_table_unref (priv->morph_target_dictionary);
+
   G_OBJECT_CLASS (gthree_mesh_parent_class)->finalize (obj);
 }
 
@@ -68,6 +81,38 @@ gthree_mesh_update (GthreeObject *object)
 
   //material.attributes && clearCustomAttributes( material );
 }
+
+void
+gthree_mesh_update_morph_targets (GthreeMesh *mesh)
+{
+  GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
+  g_autoptr(GList) names = NULL;
+  const char *first_name;
+  GPtrArray *attributes;
+
+  names = gthree_geometry_get_morph_attributes_names (priv->geometry);
+  if (names == NULL)
+    return;
+  first_name = names->data;
+
+  attributes = gthree_geometry_get_morph_attributes (priv->geometry, first_name);
+  if (attributes)
+    {
+      priv->morph_target_influences = g_array_new (FALSE, FALSE, sizeof (float));
+      priv->morph_target_dictionary = g_hash_table_new (g_str_hash, g_str_equal);
+
+      for (int m = 0; m < attributes->len; m++)
+        {
+          GthreeAttribute *attribute = g_ptr_array_index (attributes, m);
+          const char *name = gthree_attribute_name_to_string (gthree_attribute_get_name (attribute));
+          float zero = 0;
+          g_array_append_val (priv->morph_target_influences, zero);
+          g_hash_table_insert (priv->morph_target_dictionary,
+                               (char *)name, GINT_TO_POINTER(m));
+        }
+    }
+}
+
 
 static void
 gthree_mesh_fill_render_list (GthreeObject   *object,
