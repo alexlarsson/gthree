@@ -283,6 +283,8 @@ GthreeAttribute *gthree_attribute_parse_json                 (JsonObject        
                                                               const char           *name);
 
 GthreeAttributeName   gthree_attribute_get_name           (GthreeAttribute      *attribute);
+void                  gthree_attribute_set_name           (GthreeAttribute      *attribute,
+                                                           GthreeAttributeName   name);
 GthreeAttributeArray *gthree_attribute_get_array          (GthreeAttribute      *attribute);
 void                  gthree_attribute_set_array          (GthreeAttribute      *attribute,
                                                            GthreeAttributeArray *array);

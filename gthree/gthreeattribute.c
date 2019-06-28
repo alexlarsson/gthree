@@ -1212,6 +1212,13 @@ gthree_attribute_get_name (GthreeAttribute *attribute)
   return attribute->name;
 }
 
+void
+gthree_attribute_set_name (GthreeAttribute      *attribute,
+                           GthreeAttributeName   name)
+{
+  attribute->name = name;
+}
+
 GthreeAttributeArray *
 gthree_attribute_get_array (GthreeAttribute *attribute)
 {
