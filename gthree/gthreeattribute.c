@@ -870,8 +870,7 @@ gthree_attribute_array_copy_at (GthreeAttributeArray *array,
   g_assert (attribute_type_size[array->type] == attribute_type_size[source->type]);
 
   src = (guint8*)&source->data[0] +  attribute_type_size[source->type] * (source_index * source->stride + source_offset);
-  src_stride = attribute_type_size[source->type] * source->stride;
-
+  src_stride = source->stride;
   gthree_attribute_array_copy_raw (array, index, offset,
                                    src, src_stride,
                                    n_elements,
@@ -1085,6 +1084,29 @@ gthree_attribute_new (const char           *name,
 
   return attribute;
 }
+
+GthreeAttribute *
+gthree_attribute_copy (const char           *name,
+                       GthreeAttribute      *source)
+{
+  GthreeAttribute *attribute;
+  GthreeAttributeArray *array = gthree_attribute_array_new (source->array->type,
+                                                            source->array->count,
+                                                            source->array->stride);
+
+  attribute = gthree_attribute_new_with_array_interleaved (name, array,
+                                                           source->normalized,
+                                                           source->item_size,
+                                                           source->item_offset,
+                                                           source->count);
+
+  gthree_attribute_array_unref (array);
+
+  gthree_attribute_copy_at (attribute, 0, source, 0, source->count);
+
+  return attribute;
+}
+
 
 GthreeAttribute *
 gthree_attribute_new_from_float (const char           *name,

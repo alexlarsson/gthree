@@ -256,6 +256,8 @@ GthreeAttribute *gthree_attribute_new                        (const char        
                                                               int                   count,
                                                               int                   item_size,
                                                               gboolean              normalized);
+GthreeAttribute *gthree_attribute_copy                       (const char           *name,
+                                                              GthreeAttribute      *source);
 GthreeAttribute *gthree_attribute_new_from_float             (const char           *name,
                                                               float                *data,
                                                               int                   count,
