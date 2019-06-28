@@ -13,6 +13,7 @@ examples = [
   'shader',
   'rendertarget',
   'effects',
+  'morphtargets',
 ]
 
 example_resources = gnome.compile_resources('gthree-example-resources',
