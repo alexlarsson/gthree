@@ -23,6 +23,9 @@ G_BEGIN_DECLS
 
 struct _GthreeGeometry {
   GObject parent;
+
+  // Used internally by renderer
+  GArray *influences;
 };
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeGeometry, g_object_unref)

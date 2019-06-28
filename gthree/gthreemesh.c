@@ -82,6 +82,22 @@ gthree_mesh_update (GthreeObject *object)
   //material.attributes && clearCustomAttributes( material );
 }
 
+gboolean
+gthree_mesh_has_morph_targets (GthreeMesh *mesh)
+{
+  GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
+
+  return priv->morph_target_influences != NULL;
+}
+
+GArray *
+gthree_mesh_get_morph_targets (GthreeMesh *mesh)
+{
+  GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
+
+  return priv->morph_target_influences;
+}
+
 void
 gthree_mesh_update_morph_targets (GthreeMesh *mesh)
 {

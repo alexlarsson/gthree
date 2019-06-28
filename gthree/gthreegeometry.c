@@ -69,6 +69,8 @@ gthree_geometry_finalize (GObject *obj)
     g_hash_table_unref (priv->morph_attributes);
   g_array_unref (priv->groups);
 
+  g_array_unref (geometry->influences);
+
   G_OBJECT_CLASS (gthree_geometry_parent_class)->finalize (obj);
 }
 
@@ -669,6 +671,26 @@ gthree_geometry_update (GthreeGeometry *geometry)
 
       // TODO: Only do this once per frame
       gthree_attribute_update (attribute, GL_ARRAY_BUFFER);
+    }
+
+  if (priv->morph_attributes != NULL)
+    {
+      GHashTableIter iter;
+      gpointer key, value;
+      int i;
+
+      g_hash_table_iter_init (&iter, priv->morph_attributes);
+      while (g_hash_table_iter_next (&iter, &key, &value))
+        {
+          GPtrArray *array = value;
+          for (i = 0; i < array->len; i++)
+            {
+              GthreeAttribute *attribute = g_ptr_array_index (array, i);
+
+              // TODO: Only do this once per frame
+              gthree_attribute_update (attribute, GL_ARRAY_BUFFER);
+            }
+        }
     }
 }
 

@@ -7,6 +7,7 @@
 #include <gthree/gthreeinterpolant.h>
 #include <gthree/gthreekeyframetrack.h>
 #include <gthree/gthreerendertarget.h>
+#include <gthree/gthreemesh.h>
 
 //#define DEBUG_LABELS
 //#define DEBUG_GROUPS
@@ -168,5 +169,11 @@ void _gthree_interpolant_set_cache_index (GthreeInterpolant *interpolant,
                                           int cache_index);
 
 char * ghtree_property_sanitize_name (const char *name);
+
+void gthree_mesh_material_set_num_supported_morph_targets (GthreeMeshMaterial *material,
+                                                           int num_supported);
+void gthree_mesh_material_set_num_supported_morph_normals (GthreeMeshMaterial *material,
+                                                           int num_supported);
+
 
 #endif /* __GTHREE_PRIVATE_H__ */

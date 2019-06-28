@@ -42,6 +42,8 @@ GthreeDrawMode  gthree_mesh_get_draw_mode        (GthreeMesh     *mesh);
 void            gthree_mesh_set_draw_mode        (GthreeMesh     *mesh,
                                                   GthreeDrawMode  mode);
 void            gthree_mesh_update_morph_targets (GthreeMesh     *mesh);
+gboolean        gthree_mesh_has_morph_targets    (GthreeMesh     *mesh);
+GArray *        gthree_mesh_get_morph_targets    (GthreeMesh     *mesh);
 
 G_END_DECLS
 

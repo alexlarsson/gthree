@@ -11,6 +11,8 @@ typedef struct {
   gboolean skinning;
   gboolean morph_targets;
   gboolean morph_normals;
+  guint num_supported_morph_targets;
+  guint num_supported_morph_normals;
 } GthreeMeshMaterialPrivate;
 
 enum {
@@ -256,6 +258,15 @@ gthree_mesh_material_set_morph_targets (GthreeMeshMaterial          *material,
     }
 }
 
+void
+gthree_mesh_material_set_num_supported_morph_targets (GthreeMeshMaterial *material,
+                                                      int num_supported)
+{
+  GthreeMeshMaterialPrivate *priv = gthree_mesh_material_get_instance_private (material);
+
+  priv->num_supported_morph_targets = num_supported;
+}
+
 gboolean
 gthree_mesh_material_get_morph_normals (GthreeMeshMaterial          *material)
 {
@@ -278,3 +289,13 @@ gthree_mesh_material_set_morph_normals (GthreeMeshMaterial          *material,
       gthree_material_set_needs_update (GTHREE_MATERIAL (material), TRUE);
     }
 }
+
+void
+gthree_mesh_material_set_num_supported_morph_normals (GthreeMeshMaterial *material,
+                                                      int num_supported)
+{
+  GthreeMeshMaterialPrivate *priv = gthree_mesh_material_get_instance_private (material);
+
+  priv->num_supported_morph_normals = num_supported;
+}
+
