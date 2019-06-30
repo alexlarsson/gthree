@@ -1212,7 +1212,9 @@ parse_meshes (GthreeLoader *loader, JsonObject *root, GError **error)
                                                                        accessor->item_size,
                                                                        accessor->item_offset,
                                                                        accessor->count);
-              gthree_geometry_add_attribute (primitive->geometry, attribute);
+              gthree_geometry_add_attribute (primitive->geometry,
+                                             gthree_name,
+                                             attribute);
             }
 
           if (json_object_has_member (primitive_j, "indices"))
@@ -1507,11 +1509,9 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
               cache_key.use_skinning = skin != NULL;
 
               cache_key.use_vertex_tangents =
-                gthree_geometry_has_attribute (primitive->geometry,
-                                               gthree_attribute_name_get_for_static ("tangent"));
+                gthree_geometry_has_attribute (primitive->geometry, "tangent");
               cache_key.use_vertex_colors =
-                gthree_geometry_has_attribute (primitive->geometry,
-                                               gthree_attribute_name_get_for_static ("color"));
+                gthree_geometry_has_attribute (primitive->geometry, "color");
 
               material = g_hash_table_lookup (priv->final_materials_hash, &cache_key);
               if (material == NULL)

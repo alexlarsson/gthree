@@ -21,7 +21,7 @@ static void
 colorise_faces (GthreeGeometry *geometry)
 {
   int count = gthree_geometry_get_position_count (geometry);
-  GthreeAttribute *color = gthree_geometry_add_attribute (geometry,
+  GthreeAttribute *color = gthree_geometry_add_attribute (geometry, "color",
                                                           gthree_attribute_new ("color", GTHREE_ATTRIBUTE_TYPE_FLOAT, count,
                                                                                 3, FALSE));
   int i, j;
@@ -62,7 +62,7 @@ static void
 colorise_vertices (GthreeGeometry *geometry)
 {
   int count = gthree_geometry_get_position_count (geometry);
-  GthreeAttribute *color = gthree_geometry_add_attribute (geometry,
+  GthreeAttribute *color = gthree_geometry_add_attribute (geometry, "color",
                                                           gthree_attribute_new ("color", GTHREE_ATTRIBUTE_TYPE_FLOAT, count,
                                                                                 3, FALSE));
   int i;

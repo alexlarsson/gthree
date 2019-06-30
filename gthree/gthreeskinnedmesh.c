@@ -181,7 +181,7 @@ gthree_skinned_mesh_normalize_skin_weights (GthreeSkinnedMesh *mesh)
 
   skin_weight =
     gthree_geometry_get_attribute (gthree_mesh_get_geometry (GTHREE_MESH (mesh)),
-                                   GTHREE_ATTRIBUTE_NAME_SKIN_WEIGHT);
+                                   "skinWeight");
   if (skin_weight == NULL)
     return;
 

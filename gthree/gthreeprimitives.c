@@ -144,15 +144,15 @@ gthree_geometry_new_box (float width, float height, float depth,
   g_object_unref (a_index);
 
   a_position = gthree_attribute_new_from_float ("position", (float *)vertices->data, vertices->len / 3, 3);
-  gthree_geometry_add_attribute (geometry, a_position);
+  gthree_geometry_add_attribute (geometry, "position", a_position);
   g_object_unref (a_position);
 
   a_normal = gthree_attribute_new_from_float ("normal", (float *)normals->data, normals->len / 3, 3);
-  gthree_geometry_add_attribute (geometry, a_normal);
+  gthree_geometry_add_attribute (geometry, "normal", a_normal);
   g_object_unref (a_normal);
 
   a_uv = gthree_attribute_new_from_float ("uv", (float *)uvs->data, uvs->len / 2, 2);
-  gthree_geometry_add_attribute (geometry, a_uv);
+  gthree_geometry_add_attribute (geometry, "uv", a_uv);
   g_object_unref (a_uv);
 
   g_array_free (vertices, TRUE);
@@ -185,15 +185,15 @@ gthree_geometry_new_plane (float width, float height,
   g_object_unref (a_index);
 
   a_position = gthree_attribute_new_from_float ("position", (float *)vertices->data, vertices->len / 3, 3);
-  gthree_geometry_add_attribute (geometry, a_position);
+  gthree_geometry_add_attribute (geometry, "position", a_position);
   g_object_unref (a_position);
 
   a_normal = gthree_attribute_new_from_float ("normal", (float *)normals->data, normals->len / 3, 3);
-  gthree_geometry_add_attribute (geometry, a_normal);
+  gthree_geometry_add_attribute (geometry, "normal", a_normal);
   g_object_unref (a_normal);
 
   a_uv = gthree_attribute_new_from_float ("uv", (float *)uvs->data, uvs->len / 2, 2);
-  gthree_geometry_add_attribute (geometry, a_uv);
+  gthree_geometry_add_attribute (geometry, "uv", a_uv);
   g_object_unref (a_uv);
 
   g_array_free (vertices, TRUE);
@@ -311,15 +311,15 @@ gthree_geometry_new_sphere_full (float radius,
   g_object_unref (a_index);
 
   a_position = gthree_attribute_new_from_float ("position", (float *)position, vertices_w * vertices_h, 3);
-  gthree_geometry_add_attribute (geometry, a_position);
+  gthree_geometry_add_attribute (geometry, "position", a_position);
   g_object_unref (a_position);
 
   a_normal = gthree_attribute_new_from_float ("normal", (float *)normal, vertices_w * vertices_h, 3);
-  gthree_geometry_add_attribute (geometry, a_normal);
+  gthree_geometry_add_attribute (geometry, "normal",a_normal);
   g_object_unref (a_normal);
 
   a_uv = gthree_attribute_new_from_float ("uv", (float *)uvs, vertices_w * vertices_h, 2);
-  gthree_geometry_add_attribute (geometry, a_uv);
+  gthree_geometry_add_attribute (geometry, "uv", a_uv);
   g_object_unref (a_uv);
 
   g_free (vertices);
@@ -384,13 +384,13 @@ gthree_geometry_new_cylinder_full (float    radiusTop,
     index_count += radialSegments * 3;
 
   a_position = gthree_attribute_new ("position", GTHREE_ATTRIBUTE_TYPE_FLOAT, vertex_count, 3, FALSE);
-  gthree_geometry_add_attribute (geometry, a_position);
+  gthree_geometry_add_attribute (geometry, "position", a_position);
 
   a_normal = gthree_attribute_new ("normal", GTHREE_ATTRIBUTE_TYPE_FLOAT, vertex_count, 3, FALSE);
-  gthree_geometry_add_attribute (geometry, a_normal);
+  gthree_geometry_add_attribute (geometry, "normal", a_normal);
 
   a_uv = gthree_attribute_new ("uv", GTHREE_ATTRIBUTE_TYPE_FLOAT, vertex_count, 2, FALSE);
-  gthree_geometry_add_attribute (geometry, a_uv);
+  gthree_geometry_add_attribute (geometry, "uv", a_uv);
 
   a_index = gthree_attribute_new ("index", GTHREE_ATTRIBUTE_TYPE_UINT16, index_count, 1, FALSE);
   gthree_geometry_set_index (geometry, a_index);
@@ -526,13 +526,13 @@ gthree_geometry_new_torus_full (float radius,
   index_index = 0;
 
   a_position = gthree_attribute_new ("position", GTHREE_ATTRIBUTE_TYPE_FLOAT, vertex_count, 3, FALSE);
-  gthree_geometry_add_attribute (geometry, a_position);
+  gthree_geometry_add_attribute (geometry, "position", a_position);
 
   a_normal = gthree_attribute_new ("normal", GTHREE_ATTRIBUTE_TYPE_FLOAT, vertex_count, 3, FALSE);
-  gthree_geometry_add_attribute (geometry, a_normal);
+  gthree_geometry_add_attribute (geometry, "normal", a_normal);
 
   a_uv = gthree_attribute_new ("uv", GTHREE_ATTRIBUTE_TYPE_FLOAT, vertex_count, 2, FALSE);
-  gthree_geometry_add_attribute (geometry, a_uv);
+  gthree_geometry_add_attribute (geometry, "uv", a_uv);
 
   a_index = gthree_attribute_new ("index", GTHREE_ATTRIBUTE_TYPE_UINT16, index_count, 1, FALSE);
   gthree_geometry_set_index (geometry, a_index);

@@ -120,7 +120,7 @@ gthree_mesh_update_morph_targets (GthreeMesh *mesh)
       for (int m = 0; m < attributes->len; m++)
         {
           GthreeAttribute *attribute = g_ptr_array_index (attributes, m);
-          const char *name = gthree_attribute_name_to_string (gthree_attribute_get_name (attribute));
+          const char *name = gthree_attribute_get_name (attribute);
           float zero = 0;
           g_array_append_val (priv->morph_target_influences, zero);
           g_hash_table_insert (priv->morph_target_dictionary,

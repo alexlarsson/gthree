@@ -11,7 +11,7 @@
 typedef struct {
   GthreeAttribute *index;
   GthreeAttribute *wireframe_index;
-  GPtrArray *attributes;
+  GHashTable *attributes; // intern string to GthreeAttribute
   GArray *groups;
 
   // map attributename e.g. "position" -> GPtrArray of alternate GthreeAttribute arrays for it
@@ -45,7 +45,7 @@ gthree_geometry_init (GthreeGeometry *geometry)
 {
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
 
-  priv->attributes = g_ptr_array_new_with_free_func ((GDestroyNotify)drop_attribute);
+  priv->attributes = g_hash_table_new_full (g_str_hash, g_str_equal, NULL, (GDestroyNotify)drop_attribute);
   priv->groups = g_array_new (FALSE, TRUE, sizeof (GthreeGeometryGroup));
 
   priv->draw_range_start = 0;
@@ -64,7 +64,7 @@ gthree_geometry_finalize (GObject *obj)
   if (priv->wireframe_index)
     gthree_resource_unuse (GTHREE_RESOURCE (priv->wireframe_index));
   g_clear_object (&priv->wireframe_index);
-  g_ptr_array_unref (priv->attributes);
+  g_hash_table_unref (priv->attributes);
   if (priv->morph_attributes)
     g_hash_table_unref (priv->morph_attributes);
   g_array_unref (priv->groups);
@@ -93,77 +93,44 @@ gthree_geometry_new ()
 
 GthreeAttribute *
 gthree_geometry_add_attribute (GthreeGeometry  *geometry,
+                               const char *name,
                                GthreeAttribute *attribute)
 {
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
-  GthreeAttributeName name;
-  GthreeAttribute *old_attribute;
 
-  name = gthree_attribute_get_name (attribute);
-  if (name == GTHREE_ATTRIBUTE_NAME_INDEX)
-    {
-      g_warning ("Use gthree_geometry_set_index to add an index");
-      gthree_geometry_set_index (geometry, attribute);
-      return attribute;
-    }
+  name = g_intern_string (name);
 
-  if (priv->attributes->len <= name)
-    g_ptr_array_set_size (priv->attributes, name + 1);
-
-  old_attribute = g_ptr_array_index (priv->attributes, name);
-  if (old_attribute)
-    {
-      gthree_resource_unuse (GTHREE_RESOURCE (old_attribute));
-      g_object_unref (old_attribute);
-    }
+  g_hash_table_insert (priv->attributes, (char *)name, g_object_ref (attribute));
   gthree_resource_use (GTHREE_RESOURCE (attribute));
-  g_ptr_array_index (priv->attributes, name) = g_object_ref (attribute);
 
   return attribute;
 }
 
 void
 gthree_geometry_remove_attribute (GthreeGeometry  *geometry,
-                                  GthreeAttributeName name)
+                                  const char *name)
 {
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
-  GthreeAttribute *old_attribute;
 
-  if (priv->attributes->len <= name)
-    return;
-
-  old_attribute = g_ptr_array_index (priv->attributes, name);
-  if (old_attribute)
-    {
-      gthree_resource_unuse (GTHREE_RESOURCE (old_attribute));
-      g_object_unref (old_attribute);
-    }
-  g_ptr_array_index (priv->attributes, name) = NULL;
+  g_hash_table_remove (priv->attributes, name);
 }
 
 GthreeAttribute *
 gthree_geometry_get_attribute (GthreeGeometry  *geometry,
-                               GthreeAttributeName name)
+                               const char *name)
 {
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
 
-  if (priv->attributes->len <= name)
-    return NULL;
-
-  return g_ptr_array_index (priv->attributes, name);
+  return g_hash_table_lookup (priv->attributes, name);
 }
-
 
 gboolean
 gthree_geometry_has_attribute (GthreeGeometry  *geometry,
-                               GthreeAttributeName name)
+                               const char *name)
 {
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
 
-  if (priv->attributes->len <= name)
-    return FALSE;
-
-  return g_ptr_array_index (priv->attributes, name) != NULL;
+  return g_hash_table_lookup (priv->attributes, name) != NULL;
 }
 
 
@@ -234,7 +201,7 @@ gthree_geometry_set_index (GthreeGeometry  *geometry,
 GthreeAttribute *
 gthree_geometry_get_position (GthreeGeometry  *geometry)
 {
-  return gthree_geometry_get_attribute (geometry, GTHREE_ATTRIBUTE_NAME_POSITION);
+  return gthree_geometry_get_attribute (geometry, "position");
 }
 
 int
@@ -266,19 +233,19 @@ gthree_geometry_get_vertex_count (GthreeGeometry *geometry)
 GthreeAttribute *
 gthree_geometry_get_normal (GthreeGeometry  *geometry)
 {
-  return gthree_geometry_get_attribute (geometry, GTHREE_ATTRIBUTE_NAME_NORMAL);
+  return gthree_geometry_get_attribute (geometry, "normal");
 }
 
 GthreeAttribute *
 gthree_geometry_get_color (GthreeGeometry  *geometry)
 {
-  return gthree_geometry_get_attribute (geometry, GTHREE_ATTRIBUTE_NAME_COLOR);
+  return gthree_geometry_get_attribute (geometry, "color");
 }
 
 GthreeAttribute *
 gthree_geometry_get_uv (GthreeGeometry  *geometry)
 {
-  return gthree_geometry_get_attribute (geometry, GTHREE_ATTRIBUTE_NAME_UV);
+  return gthree_geometry_get_attribute (geometry, "uv");
 }
 
 void
@@ -574,7 +541,7 @@ gthree_geometry_compute_vertex_normals (GthreeGeometry *geometry)
   if (normal == NULL)
     {
       normal = gthree_attribute_new ("normal", GTHREE_ATTRIBUTE_TYPE_FLOAT, vertex_count, 3, FALSE);
-      gthree_geometry_add_attribute (geometry, normal);
+      gthree_geometry_add_attribute (geometry, "normal", normal);
       g_object_unref (normal); // Its owned by geometry anyway
     }
   else
@@ -655,20 +622,17 @@ void
 gthree_geometry_update (GthreeGeometry *geometry)
 {
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
-  int i;
+  GthreeAttribute *attribute;
+  GHashTableIter iter;
 
   if (priv->index)
     gthree_attribute_update (priv->index, GL_ELEMENT_ARRAY_BUFFER);
   if (priv->wireframe_index)
     gthree_attribute_update (priv->wireframe_index, GL_ELEMENT_ARRAY_BUFFER);
 
-  for (i = 0; i < priv->attributes->len; i++)
+  g_hash_table_iter_init (&iter, priv->attributes);
+  while (g_hash_table_iter_next (&iter, NULL, (gpointer *)&attribute))
     {
-      GthreeAttribute *attribute = g_ptr_array_index (priv->attributes, i);
-
-      if (attribute == NULL)
-        continue;
-
       // TODO: Only do this once per frame
       gthree_attribute_update (attribute, GL_ARRAY_BUFFER);
     }
@@ -786,7 +750,7 @@ gthree_geometry_parse_json (JsonObject *root)
           const char *name = l->data;
           JsonObject *attribute_j = json_object_get_object_member (attributes, name);
           g_autoptr(GthreeAttribute) attribute = gthree_attribute_parse_json (attribute_j, name);
-          gthree_geometry_add_attribute (geometry, attribute);
+          gthree_geometry_add_attribute (geometry, name, attribute);
         }
     }
 

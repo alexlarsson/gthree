@@ -1416,7 +1416,7 @@ setup_vertex_attributes (GthreeRenderer *renderer,
 
       if (program_attribute >= 0)
         {
-          GthreeAttribute *geometry_attribute = gthree_geometry_get_attribute (geometry, gthree_attribute_name_get (name));
+          GthreeAttribute *geometry_attribute = gthree_geometry_get_attribute (geometry, name);
           if (geometry_attribute != NULL)
             {
               gboolean normalized = gthree_attribute_get_normalized (geometry_attribute);
@@ -1522,13 +1522,13 @@ update_morphtargets (GthreeRenderer *renderer,
           if (morphTargets)
             {
               g_autofree char *name = g_strdup_printf ("morphTarget%d", i);
-              gthree_geometry_remove_attribute (geometry, gthree_attribute_name_get (name));
+              gthree_geometry_remove_attribute (geometry, name);
             }
 
           if (morphNormals)
             {
               g_autofree char *name = g_strdup_printf ("morphNormal%d", i);
-              gthree_geometry_remove_attribute (geometry, gthree_attribute_name_get (name));
+              gthree_geometry_remove_attribute (geometry, name);
             }
         }
     }
@@ -1556,16 +1556,14 @@ update_morphtargets (GthreeRenderer *renderer,
                 {
                   g_autofree char *name = g_strdup_printf ("morphTarget%d", i);
                   GthreeAttribute *attribute = g_ptr_array_index (morphTargets, info->index);
-                  gthree_attribute_set_name (attribute, gthree_attribute_name_get (name));
-                  gthree_geometry_add_attribute (geometry, attribute);
+                  gthree_geometry_add_attribute (geometry, name, attribute);
                 }
 
               if (morphNormals)
                 {
                   g_autofree char *name = g_strdup_printf ("morphNormal%d", i);
                   GthreeAttribute *attribute = g_ptr_array_index (morphTargets, info->index);
-                  gthree_attribute_set_name (attribute, gthree_attribute_name_get (name));
-                  gthree_geometry_add_attribute (geometry, attribute);
+                  gthree_geometry_add_attribute (geometry, name, attribute);
                 }
 
               priv->morph_influences[i] = info->value;

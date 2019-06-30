@@ -224,21 +224,6 @@ void                  gthree_attribute_array_set_elements_from_float (GthreeAttr
                                                                       guint                 n_elements);
 
 
-/* Some pre-defined values for attribute names */
-#define GTHREE_ATTRIBUTE_NAME_POSITION      0
-#define GTHREE_ATTRIBUTE_NAME_COLOR         1
-#define GTHREE_ATTRIBUTE_NAME_NORMAL        2
-#define GTHREE_ATTRIBUTE_NAME_UV            3
-#define GTHREE_ATTRIBUTE_NAME_UV2           4
-#define GTHREE_ATTRIBUTE_NAME_SKIN_INDEX    5
-#define GTHREE_ATTRIBUTE_NAME_SKIN_WEIGHT   6
-#define GTHREE_ATTRIBUTE_NAME_LINE_DISTANCE 7
-#define GTHREE_ATTRIBUTE_NAME_INDEX         8
-
-GthreeAttributeName gthree_attribute_name_get_for_static (const char          *string);
-GthreeAttributeName gthree_attribute_name_get            (const char          *string);
-const char *        gthree_attribute_name_to_string      (GthreeAttributeName  name);
-
 #define GTHREE_TYPE_ATTRIBUTE      (gthree_attribute_get_type ())
 #define GTHREE_ATTRIBUTE(inst)     (G_TYPE_CHECK_INSTANCE_CAST ((inst), GTHREE_TYPE_ATTRIBUTE, GthreeAttribute))
 #define GTHREE_ATTRIBUTE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GTHREE_TYPE_ATTRIBUTE, GthreeAttributeClass))
@@ -282,9 +267,7 @@ GthreeAttribute *gthree_attribute_new_with_array_interleaved (const char        
 GthreeAttribute *gthree_attribute_parse_json                 (JsonObject           *root,
                                                               const char           *name);
 
-GthreeAttributeName   gthree_attribute_get_name           (GthreeAttribute      *attribute);
-void                  gthree_attribute_set_name           (GthreeAttribute      *attribute,
-                                                           GthreeAttributeName   name);
+const char *          gthree_attribute_get_name           (GthreeAttribute      *attribute);
 GthreeAttributeArray *gthree_attribute_get_array          (GthreeAttribute      *attribute);
 void                  gthree_attribute_set_array          (GthreeAttribute      *attribute,
                                                            GthreeAttributeArray *array);

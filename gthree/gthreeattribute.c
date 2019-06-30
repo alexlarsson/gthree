@@ -928,89 +928,12 @@ gthree_attribute_array_copy_uint16 (GthreeAttributeArray *array,
                                    n_items);
 }
 
-#define MAX_ATTRIBUTE_NAMES 1024 // This is a bit lame, and could be dynamic, but we want to keep the nr of names low anyway
-
-static GHashTable *attribute_name_ht = NULL;
-static const gchar **attribute_names = NULL;
-static gint attribute_names_seq_id = -1;
-
-static void
-attribute_names_init (void)
-{
-  struct {
-    char *name;
-    int id;
-  } predefined[] = {
-    { "position", GTHREE_ATTRIBUTE_NAME_POSITION },
-    { "color", GTHREE_ATTRIBUTE_NAME_COLOR },
-    { "normal", GTHREE_ATTRIBUTE_NAME_NORMAL },
-    { "uv", GTHREE_ATTRIBUTE_NAME_UV },
-    { "uv2", GTHREE_ATTRIBUTE_NAME_UV2 },
-    { "skinIndex", GTHREE_ATTRIBUTE_NAME_SKIN_INDEX },
-    { "skinWeight", GTHREE_ATTRIBUTE_NAME_SKIN_WEIGHT },
-    { "lineDistance", GTHREE_ATTRIBUTE_NAME_LINE_DISTANCE },
-    { "index", GTHREE_ATTRIBUTE_NAME_INDEX },
-  };
-  int i;
-
-  if (attribute_names_seq_id != -1)
-    return;
-
-  attribute_name_ht = g_hash_table_new (g_str_hash, g_str_equal);
-  attribute_names = g_new (const gchar*, MAX_ATTRIBUTE_NAMES);
-
-  for (i = 0; i < G_N_ELEMENTS(predefined); i++)
-    {
-      attribute_names[predefined[i].id] = predefined[i].name;
-      g_hash_table_insert (attribute_name_ht, (char *)predefined[i].name, GUINT_TO_POINTER (predefined[i].id));
-      attribute_names_seq_id = MAX (attribute_names_seq_id, predefined[i].id + 1);
-    }
-}
-
-static GthreeAttributeName
-gthree_attribute_name_get_helper (const char *string, gboolean dup)
-{
-  int name;
-  gpointer value;
-
-  attribute_names_init ();
-
-  if (g_hash_table_lookup_extended (attribute_name_ht, string, NULL, &value))
-    return GPOINTER_TO_UINT (value);
-
-  name = attribute_names_seq_id++;
-
-  attribute_names[name] = dup ? g_strdup (string) : string;
-  g_hash_table_insert (attribute_name_ht, (char *)attribute_names[name], GUINT_TO_POINTER (name));
-
-  return name;
-}
-
-GthreeAttributeName
-gthree_attribute_name_get_for_static (const char *string)
-{
-  return gthree_attribute_name_get_helper (string, FALSE);
-}
-
-GthreeAttributeName
-gthree_attribute_name_get (const char *string)
-{
-  return gthree_attribute_name_get_helper (string, TRUE);
-}
-
-const char *
-gthree_attribute_name_to_string (GthreeAttributeName name)
-{
-  g_assert (name < attribute_names_seq_id);
-  return attribute_names[name];
-}
-
 static void gthree_attribute_real_unrealize (GthreeResource *resource);
 
 struct _GthreeAttribute {
   GthreeResource parent;
 
-  GthreeAttributeName name;
+  const char *name_intern;
   GthreeAttributeArray *array;
   int item_size;    /* typically same as array->stride, but not of interleaved */
   int item_offset;  /* typically 0, but not if interleaved or stacked */
@@ -1046,7 +969,7 @@ gthree_attribute_new_with_array_interleaved (const char *name,
   attr = g_object_new (gthree_attribute_get_type (),
                        NULL);
 
-  attr->name = gthree_attribute_name_get (name);
+  attr->name_intern =  g_intern_string (name);
   attr->array = gthree_attribute_array_ref (array);
   attr->normalized = normalized;
   attr->item_size = item_size;
@@ -1206,17 +1129,10 @@ gthree_attribute_class_init (GthreeAttributeClass *klass)
 }
 
 
-GthreeAttributeName
+const char *
 gthree_attribute_get_name (GthreeAttribute *attribute)
 {
-  return attribute->name;
-}
-
-void
-gthree_attribute_set_name (GthreeAttribute      *attribute,
-                           GthreeAttributeName   name)
-{
-  attribute->name = name;
+  return attribute->name_intern;
 }
 
 GthreeAttributeArray *

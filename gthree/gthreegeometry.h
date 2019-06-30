@@ -48,13 +48,14 @@ GthreeGeometry *gthree_geometry_parse_json (JsonObject *object);
 GType gthree_geometry_get_type (void) G_GNUC_CONST;
 
 GthreeAttribute *        gthree_geometry_add_attribute              (GthreeGeometry          *geometry,
+                                                                     const char              *name,
                                                                      GthreeAttribute         *attribute);
 void                     gthree_geometry_remove_attribute           (GthreeGeometry          *geometry,
-                                                                     GthreeAttributeName      name);
+                                                                     const char              *name);
 GthreeAttribute *        gthree_geometry_get_attribute              (GthreeGeometry          *geometry,
-                                                                     GthreeAttributeName      name);
+                                                                     const char              *name);
 gboolean                 gthree_geometry_has_attribute              (GthreeGeometry          *geometry,
-                                                                     GthreeAttributeName      name);
+                                                                     const char              *name);
 GthreeAttribute *        gthree_geometry_get_position               (GthreeGeometry          *geometry);
 int                      gthree_geometry_get_position_count         (GthreeGeometry          *geometry);
 int                      gthree_geometry_get_vertex_count           (GthreeGeometry          *geometry);

@@ -19,7 +19,7 @@ static void
 colorise_faces (GthreeGeometry *geometry)
 {
   int count = gthree_geometry_get_position_count (geometry);
-  GthreeAttribute *color = gthree_geometry_add_attribute (geometry,
+  GthreeAttribute *color = gthree_geometry_add_attribute (geometry, "color",
                                                           gthree_attribute_new ("color", GTHREE_ATTRIBUTE_TYPE_FLOAT, count,
                                                                                 3, FALSE));
   int i, j;
@@ -93,8 +93,8 @@ init_scene (void)
                                        GTHREE_ATTRIBUTE_TYPE_FLOAT,
                                        n_vert, 4, FALSE);
 
-  gthree_geometry_add_attribute (geometry, skin_indices);
-  gthree_geometry_add_attribute (geometry, skin_weights);
+  gthree_geometry_add_attribute (geometry, "skinIndex", skin_indices);
+  gthree_geometry_add_attribute (geometry, "skinWeight", skin_weights);
 
   for (i = 0; i < n_vert; i++)
     {
