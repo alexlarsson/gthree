@@ -22,7 +22,7 @@
 /* TODO:
  * object.set_matrix need to decompose position, etc. or we can't expect e.g. get_position to work.
  * Try grouping primitives into geometry groups if possible
- * Handle morph targets
+ * Handle morph targets animations
  * Handle sparse accessors
  * Handle line materials
  * handle data: uris
@@ -166,6 +166,7 @@ typedef struct {
 typedef struct {
   char *name;
   GPtrArray *primitives;
+  GArray *weights;
 } Mesh;
 
 typedef struct {
@@ -228,6 +229,9 @@ mesh_free (Mesh *mesh)
   g_free (mesh->name);
   if (mesh->primitives)
     g_ptr_array_unref (mesh->primitives);
+  if (mesh->weights)
+    g_array_unref (mesh->weights);
+
   g_free (mesh);
 }
 
@@ -1160,6 +1164,99 @@ gltl_attribute_name_to_gthree (const char *attr_name)
     return attr_name;
 }
 
+static void
+add_morph_targets (GthreeLoader *loader,
+                   JsonObject *primitive_j,
+                   GthreeGeometry *geometry)
+{
+  GthreeLoaderPrivate *priv = gthree_loader_get_instance_private (loader);
+  JsonArray *targets =json_object_get_array_member (primitive_j, "targets");
+  int targets_len;
+  gboolean has_morph_positions = FALSE;
+  gboolean has_morph_normals = FALSE;
+  int i;
+
+  targets_len = json_array_get_length (targets);
+  for (i = 0; i < targets_len; i++)
+    {
+      JsonObject *target = json_array_get_object_element (targets, i);
+
+      if (json_object_has_member (target, "POSITION"))
+        has_morph_positions = TRUE;
+
+      if (json_object_has_member (target, "NORMAL"))
+        has_morph_normals = TRUE;
+
+      if (has_morph_positions && has_morph_normals)
+        break;
+    }
+
+  if (!has_morph_positions && !has_morph_normals)
+    return;
+
+  targets_len = json_array_get_length (targets);
+  for (i = 0; i < targets_len; i++)
+    {
+      JsonObject *target = json_array_get_object_element (targets, i);
+      g_autofree char *attribute_name = g_strdup_printf ("morphTarget%d", i);
+
+      if (has_morph_positions)
+        {
+          gint64 accessor_index = json_object_get_int_member (target, "POSITION");
+          Accessor *accessor = g_ptr_array_index (priv->accessors, accessor_index);
+          GthreeAttribute *position = gthree_geometry_get_position (geometry);
+          GthreeAttribute *morph_position = gthree_attribute_copy (attribute_name, position);
+          float x1,y1,z1;
+          float x2,y2,z2;
+          int j;
+
+          // Three.js morph position is absolute value. The formula is
+          //   basePosition
+          //     + weight0 * ( morphPosition0 - basePosition )
+          //     + weight1 * ( morphPosition1 - basePosition )
+          //     ...
+          // while the glTF one is relative
+          //   basePosition
+          //     + weight0 * glTFmorphPosition0
+          //     + weight1 * glTFmorphPosition1
+          //     ...
+          // then we need to convert from relative to absolute here.
+          for (j = 0; j < accessor->count; j++)
+            {
+              gthree_attribute_array_get_xyz (accessor->array, j, accessor->item_offset,
+                                              &x1, &y1, &z1);
+              gthree_attribute_get_xyz (morph_position, j, &x2, &y2, &z2);
+              gthree_attribute_set_xyz (morph_position, j, x1 + x2, y1 + y2, z1 + z2);
+            }
+
+          gthree_geometry_add_morph_attribute (geometry, "position", morph_position);
+        }
+
+      if (has_morph_normals)
+        {
+          gint64 accessor_index = json_object_get_int_member (target, "NORMAL");
+          Accessor *accessor = g_ptr_array_index (priv->accessors, accessor_index);
+          GthreeAttribute *normal = gthree_geometry_get_normal (geometry);
+          GthreeAttribute *morph_normal = gthree_attribute_copy (attribute_name, normal);
+          float x1,y1,z1;
+          float x2,y2,z2;
+          int j;
+
+          // Same here...
+
+          for (j = 0; j < accessor->count; j++)
+            {
+              gthree_attribute_array_get_xyz (accessor->array, j, accessor->item_offset,
+                                              &x1, &y1, &z1);
+              gthree_attribute_get_xyz (morph_normal, j, &x2, &y2, &z2);
+              gthree_attribute_set_xyz (morph_normal, j, x1 + x2, y1 + y2, z1 + z2);
+            }
+
+          gthree_geometry_add_morph_attribute (geometry, "normal", morph_normal);
+        }
+    }
+}
+
 static gboolean
 parse_meshes (GthreeLoader *loader, JsonObject *root, GError **error)
 {
@@ -1238,6 +1335,9 @@ parse_meshes (GthreeLoader *loader, JsonObject *root, GError **error)
           if (json_object_has_member (primitive_j, "material"))
             material = json_object_get_int_member (primitive_j, "material");
 
+          if (json_object_has_member (primitive_j, "targets"))
+            add_morph_targets (loader, primitive_j, primitive->geometry);
+
           if (material != -1)
             primitive->material = g_object_ref (g_ptr_array_index (priv->materials, material));
           else
@@ -1246,6 +1346,18 @@ parse_meshes (GthreeLoader *loader, JsonObject *root, GError **error)
           primitive->mode = mode;
 
           g_ptr_array_add (mesh->primitives, g_steal_pointer (&primitive));
+        }
+
+      if (json_object_has_member (mesh_j, "weights"))
+        {
+          JsonArray *weights_j = json_object_get_array_member (mesh_j, "weights");
+          int weights_len = json_array_get_length (weights_j);
+          mesh->weights = g_array_new (FALSE, FALSE, sizeof (float));
+          for (j = 0; j < weights_len; j++)
+            {
+              float w = (float)json_array_get_double_element (weights_j, j);
+              g_array_append_val (mesh->weights, w);
+            }
         }
 
       g_ptr_array_add (priv->meshes, g_steal_pointer (&mesh));
@@ -1513,6 +1625,10 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
               cache_key.use_vertex_colors =
                 gthree_geometry_has_attribute (primitive->geometry, "color");
 
+              cache_key.use_morph_targets = gthree_geometry_has_morph_attributes (primitive->geometry);
+              cache_key.use_morph_normals = cache_key.use_morph_targets &&
+                (gthree_geometry_get_morph_attributes (primitive->geometry, "normal") != NULL);
+
               material = g_hash_table_lookup (priv->final_materials_hash, &cache_key);
               if (material == NULL)
                 {
@@ -1523,17 +1639,21 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
                     gthree_material_set_vertex_colors (material, TRUE);
                   if (cache_key.use_skinning)
                     gthree_mesh_material_set_skinning (GTHREE_MESH_MATERIAL (material), TRUE);
+
                   //TODO: if (cache_key.use_vertex_tangents)
+
+                  if (cache_key.use_morph_targets)
+                    gthree_mesh_material_set_morph_targets (GTHREE_MESH_MATERIAL (material), TRUE);
+                  if (cache_key.use_morph_normals)
+                    gthree_mesh_material_set_morph_normals (GTHREE_MESH_MATERIAL (material), TRUE);
 
                   g_hash_table_insert (priv->final_materials_hash, cache_key_copy, material);
                   g_ptr_array_add (priv->final_materials, material);
                 }
 
+
               /* TODO: more cache keys
                * var useFlatShading = geometry.attributes.normal === undefined;
-               * var useSkinning = mesh.isSkinnedMesh === true;
-               * var useMorphTargets = Object.keys( geometry.morphAttributes ).length > 0;
-               * var useMorphNormals = useMorphTargets && geometry.morphAttributes.normal !== undefined;
                */
 
               if (skin != NULL)
@@ -1589,6 +1709,15 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
                   g_warning ("Unsupported primitive mode %d", primitive->mode);
                   break;
                 }
+
+
+              if (mesh_info->weights)
+                {
+                  GArray *morph_targets = gthree_mesh_get_morph_targets (mesh);
+                  for (int j = 0; j < mesh_info->weights->len; j++)
+                    g_array_index (morph_targets, float, j) = g_array_index (mesh_info->weights, float, j);
+                }
+
 
               gthree_object_add_child (parent, GTHREE_OBJECT (mesh));
               if (toplevel == NULL)
@@ -1747,8 +1876,9 @@ parse_animations (GthreeLoader *loader, JsonObject *root, GError **error)
             {
               gthree_target_path = "morphTargetInfluences";
               value_type = GTHREE_VALUE_TYPE_NUMBER;
+
               g_warning ("Unsupported animation target path %s", target_path);
-             continue;
+              continue;
             }
           else
             {
