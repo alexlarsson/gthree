@@ -456,6 +456,20 @@ gthree_attribute_array_set_xyz (GthreeAttributeArray *array,
 }
 
 void
+gthree_attribute_array_get_xyz (GthreeAttributeArray *array,
+                                guint                 index,
+                                guint                 offset,
+                                float                *x,
+                                float                *y,
+                                float                *z)
+{
+  float *p = gthree_attribute_array_peek_float_at (array, index, offset);
+  *x = p[0];
+  *y = p[1];
+  *z = p[2];
+}
+
+void
 gthree_attribute_array_set_xyzw (GthreeAttributeArray *array,
                                  guint                 index,
                                  guint                 offset,
@@ -1436,6 +1450,17 @@ gthree_attribute_set_xyz (GthreeAttribute      *attribute,
 {
   g_assert (attribute->array);
   gthree_attribute_array_set_xyz  (attribute->array, index, attribute->item_offset, x, y, z);
+}
+
+void
+gthree_attribute_get_xyz (GthreeAttribute      *attribute,
+                          guint                 index,
+                          float                 *x,
+                          float                 *y,
+                          float                 *z)
+{
+  g_assert (attribute->array);
+  gthree_attribute_array_get_xyz (attribute->array, index, attribute->item_offset, x, y, z);
 }
 
 void

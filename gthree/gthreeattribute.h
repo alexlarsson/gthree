@@ -134,6 +134,12 @@ void                  gthree_attribute_array_set_xyz            (GthreeAttribute
                                                                  float                 x,
                                                                  float                 y,
                                                                  float                 z);
+void                  gthree_attribute_array_get_xyz            (GthreeAttributeArray *array,
+                                                                 guint                 index,
+                                                                 guint                 offset,
+                                                                 float                *x,
+                                                                 float                *y,
+                                                                 float                *z);
 void                  gthree_attribute_array_set_xyzw           (GthreeAttributeArray *array,
                                                                  guint                 index,
                                                                  guint                 offset,
@@ -336,6 +342,11 @@ void                  gthree_attribute_set_xyz            (GthreeAttribute      
                                                            float                 x,
                                                            float                 y,
                                                            float                 z);
+void                  gthree_attribute_get_xyz            (GthreeAttribute      *attribute,
+                                                           guint                 index,
+                                                           float                *x,
+                                                           float                *y,
+                                                           float                *z);
 void                  gthree_attribute_set_xyzw           (GthreeAttribute      *attribute,
                                                            guint                 index,
                                                            float                 x,
