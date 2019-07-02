@@ -10,6 +10,7 @@ static GPtrArray *env_maps;
 static GPtrArray *model_paths;
 static GtkWidget *models_combo;
 static GtkWidget *animations_combo;
+static GtkWidget *morph_scale;
 
 static int current_env_map;
 static int current_model;
@@ -450,10 +451,27 @@ open_model (GtkButton *button)
   gtk_native_dialog_show (GTK_NATIVE_DIALOG (native));
 }
 
+static void
+morph_scale_changed (GtkRange *range)
+{
+  g_autoptr(GList) meshes = gthree_object_find_by_type (GTHREE_OBJECT (scene), GTHREE_TYPE_MESH);
+  gdouble v = gtk_range_get_value (range);
+  GList *l;
+
+  for (l = meshes; l != NULL; l = l->next)
+    {
+      GthreeMesh *mesh = l->data;
+      GArray *morph_targets = gthree_mesh_get_morph_targets (mesh);
+      if (morph_targets != NULL && morph_targets->len > 0)
+        g_array_index (morph_targets, float, 0) = (float)v;
+    }
+
+}
+
 int
 main (int argc, char *argv[])
 {
-  GtkWidget *window, *box, *hbox, *button, *area, *combo, *check;
+  GtkWidget *window, *box, *hbox, *button, *area, *combo, *check, *scale;
   int i, j;
   struct {
     char *path;
@@ -584,6 +602,12 @@ main (int argc, char *argv[])
   gtk_container_add (GTK_CONTAINER (hbox), check);
   gtk_widget_show (check);
   g_signal_connect (check, "toggled", G_CALLBACK (fade_animations_toggled), NULL);
+
+  morph_scale =scale = gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL, 0, 1.0, 0.01);
+  gtk_widget_set_size_request (scale, 100, -1);
+  gtk_container_add (GTK_CONTAINER (hbox), scale);
+  gtk_widget_show (scale);
+  g_signal_connect (morph_scale, "value-changed", G_CALLBACK (morph_scale_changed), NULL);
 
   button = gtk_button_new_with_label ("Quit");
   gtk_widget_set_hexpand (button, TRUE);
