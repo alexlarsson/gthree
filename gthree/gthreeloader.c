@@ -4,6 +4,7 @@
 #include "gthreeattribute.h"
 #include "gthreemeshstandardmaterial.h"
 #include "gthreeperspectivecamera.h"
+#include "gthreeorthographiccamera.h"
 #include "gthreemeshbasicmaterial.h"
 #include "gthreemesh.h"
 #include "gthreeskinnedmesh.h"
@@ -20,7 +21,6 @@
 
 /* TODO:
  * object.set_matrix need to decompose position, etc. or we can't expect e.g. get_position to work.
- * Orthographic cameras
  * Try grouping primitives into geometry groups if possible
  * Handle morph targets
  * Handle sparse accessors
@@ -1609,7 +1609,12 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
             camera_node = (GthreeCamera *)gthree_perspective_camera_new (rad_to_deg (camera->yfov), camera->aspect_ratio,
                                                                          camera->znear, camera->zfar);
           else
-            g_warning ("Unsupported orthographic camera");
+            camera_node = (GthreeCamera *)gthree_orthographic_camera_new (camera->xmag / -2.0,
+                                                                          camera->xmag / 2.0,
+                                                                          camera->ymag / 2.0,
+                                                                          camera->ymag / -2.0,
+                                                                          camera->znear,
+                                                                          camera->zfar);
 
           if (camera_node)
             {
