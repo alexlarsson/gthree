@@ -66,14 +66,15 @@ void                     gthree_geometry_set_index                  (GthreeGeome
                                                                      GthreeAttribute         *index);
 GthreeAttribute *        gthree_geometry_get_index                  (GthreeGeometry          *geometry);
 GthreeAttribute *        gthree_geometry_get_wireframe_index        (GthreeGeometry          *geometry);
-void                     gthree_geometry_add_morph_attributes       (GthreeGeometry          *geometry,
-                                                                     const char              *name,
-                                                                     GPtrArray               *attributes);
+void                     gthree_geometry_add_morph_attribute        (GthreeGeometry          *geometry,
+                                                                    const char               *name,
+                                                                    GthreeAttribute          *attribute);
 void                     gthree_geometry_remove_morph_attributes    (GthreeGeometry          *geometry,
                                                                      const char              *name);
 GPtrArray *              gthree_geometry_get_morph_attributes       (GthreeGeometry          *geometry,
                                                                      const char              *name);
 GList *                  gthree_geometry_get_morph_attributes_names (GthreeGeometry          *geometry);
+gboolean                 gthree_geometry_has_morph_attributes       (GthreeGeometry          *geometry);
 void                     gthree_geometry_add_group                  (GthreeGeometry          *geometry,
                                                                      int                      start,
                                                                      int                      count,

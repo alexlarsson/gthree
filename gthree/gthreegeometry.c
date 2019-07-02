@@ -249,17 +249,26 @@ gthree_geometry_get_uv (GthreeGeometry  *geometry)
 }
 
 void
-gthree_geometry_add_morph_attributes (GthreeGeometry *geometry,
-                                      const char *name,
-                                      GPtrArray *attributes)
+gthree_geometry_add_morph_attribute (GthreeGeometry *geometry,
+                                     const char *name,
+                                     GthreeAttribute *attribute)
 {
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+  GPtrArray *attributes;
 
   if (priv->morph_attributes == NULL)
     priv->morph_attributes = g_hash_table_new_full (g_str_hash, g_str_equal,
                                                     g_free, (GDestroyNotify)g_ptr_array_unref);
 
-  g_hash_table_insert (priv->morph_attributes, g_strdup (name), g_ptr_array_ref (attributes));
+  attributes = g_hash_table_lookup (priv->morph_attributes, name);
+  if (attributes == NULL)
+    {
+      attributes = g_ptr_array_new_with_free_func ((GDestroyNotify)drop_attribute);
+      g_hash_table_insert (priv->morph_attributes, g_strdup (name), attributes);
+    }
+
+  g_ptr_array_add (attributes, g_object_ref (attribute));
+  gthree_resource_use (GTHREE_RESOURCE (attribute));
 }
 
 void
@@ -284,6 +293,14 @@ gthree_geometry_get_morph_attributes (GthreeGeometry  *geometry,
     return NULL;
 
   return g_hash_table_lookup (priv->morph_attributes, name);
+}
+
+gboolean
+gthree_geometry_has_morph_attributes (GthreeGeometry          *geometry)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+
+  return (priv->morph_attributes != NULL);
 }
 
 GList *

@@ -15,7 +15,6 @@ GthreeScene *
 init_scene (void)
 {
   GthreeGeometry *geometry;
-  g_autoptr(GPtrArray) attributes = g_ptr_array_new_with_free_func (g_object_unref);
   GthreeAttribute *morph1;
 
   material_wireframe = gthree_mesh_basic_material_new ();
@@ -37,10 +36,9 @@ init_scene (void)
   gthree_attribute_set_xyz (morph1, 2, 20, -20, 20);
   gthree_attribute_set_xyz (morph1, 13, 20, -20, 20);
   gthree_attribute_set_xyz (morph1, 19, 20, -20, 20);
-  g_ptr_array_add (attributes, morph1);
 
-  gthree_geometry_add_morph_attributes (geometry, "position",
-                                        attributes);
+  gthree_geometry_add_morph_attribute (geometry, "position",
+                                       morph1);
 
   gthree_mesh_material_set_morph_targets (GTHREE_MESH_MATERIAL (material_wireframe), TRUE);
 
