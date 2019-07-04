@@ -29,9 +29,6 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeMaterial, g_object_unref)
 typedef struct {
   GObjectClass parent_class;
 
-  GthreeMaterial * (*resolve) (GthreeMaterial *material,
-                               int index);
-
   GthreeShader * (*get_shader) (GthreeMaterial *material);
 
   void          (*set_params) (GthreeMaterial *material,
@@ -98,8 +95,6 @@ void              gthree_material_set_vertex_colors        (GthreeMaterial      
                                                             gboolean                 vertex_colors);
 gboolean          gthree_material_get_vertex_colors        (GthreeMaterial         *material);
 GthreeShader *    gthree_material_get_shader               (GthreeMaterial          *material);
-GthreeMaterial *  gthree_material_resolve                  (GthreeMaterial          *material,
-                                                            int                      index);
 void              gthree_material_set_params               (GthreeMaterial          *material,
                                                             GthreeProgramParameters *params);
 void              gthree_material_set_uniforms             (GthreeMaterial          *material,

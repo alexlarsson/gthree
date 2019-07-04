@@ -74,7 +74,7 @@ init_scene (void)
 {
   GthreeGeometry *floor_geometry, *geometry, *geometry_light;
   GthreeMeshBasicMaterial *material_wireframe, *material_light, *material_basic;
-  GthreeMultiMaterial *multi_material;
+  GPtrArray *multi_materials;
   GthreeMeshNormalMaterial *material_normal;
   GthreeMeshDepthMaterial *material_depth;
   GthreeMeshLambertMaterial *material_lambert;
@@ -204,12 +204,13 @@ init_scene (void)
     gthree_geometry_add_group (geometry, 3*i, 3*2,
                                g_random_int_range (0, n_materials));
 
-  multi_material = gthree_multi_material_new ();
+
+  multi_materials = g_ptr_array_new_with_free_func (g_object_unref);
   for (i = 0; i < n_materials; i++)
-    gthree_multi_material_set_index (multi_material, i, materials[i]);
+    g_ptr_array_add (multi_materials, g_object_ref (materials[i]));
 
   geometries[n_materials] = geometry;
-  materials[n_materials++] = GTHREE_MATERIAL (multi_material);
+  materials[n_materials++] = NULL; // Multi materials
 
   floor_geometry = gthree_geometry_new_box (1000, 10, 1000,
                                             40, 1, 40);
@@ -228,6 +229,8 @@ init_scene (void)
   for (i = 0; i < n_materials; i++)
     {
       GthreeMesh *sphere = gthree_mesh_new (geometries[i], materials[i]);
+      if (materials[i] == NULL)
+        gthree_mesh_set_materials (sphere, multi_materials);
       gthree_object_set_position (GTHREE_OBJECT (sphere),
                                   graphene_point3d_init (&pos,
                                                          (i % 4 ) * 200 - 400,

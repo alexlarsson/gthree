@@ -2,7 +2,6 @@
 #include <epoxy/gl.h>
 
 #include "gthreelinesegments.h"
-#include "gthreemultimaterial.h"
 #include "gthreemeshbasicmaterial.h"
 #include "gthreeobjectprivate.h"
 #include "gthreeprivate.h"
@@ -73,7 +72,7 @@ gthree_line_segments_fill_render_list (GthreeObject   *object,
   GthreeLineSegments *line_segments = GTHREE_LINE_SEGMENTS (object);
   GthreeLineSegmentsPrivate *priv = gthree_line_segments_get_instance_private (line_segments);
 
-  gthree_geometry_fill_render_list (priv->geometry, list, priv->material, object);
+  gthree_geometry_fill_render_list (priv->geometry, list, priv->material, NULL, object);
 }
 
 static gboolean

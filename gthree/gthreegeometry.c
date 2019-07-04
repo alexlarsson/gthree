@@ -3,7 +3,6 @@
 
 #include "gthreegeometry.h"
 #include "gthreeprivate.h"
-#include "gthreemultimaterial.h"
 #include "gthreelinebasicmaterial.h"
 #include "gthreeobjectprivate.h"
 #include "gthreeattribute.h"
@@ -679,27 +678,39 @@ void
 gthree_geometry_fill_render_list (GthreeGeometry   *geometry,
                                   GthreeRenderList *list,
                                   GthreeMaterial   *material,
+                                  GPtrArray        *materials,
                                   GthreeObject     *object)
 {
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
-  GthreeMaterial *resolved_material;
+  GthreeMaterial *resolved_material = NULL;
   int i;
 
-  if (GTHREE_IS_MULTI_MATERIAL (material) && priv->groups->len > 0)
+
+  if (materials != NULL && materials->len > 1 &&
+      priv->groups->len > 0)
     {
       for (i = 0; i < priv->groups->len; i++)
         {
           GthreeGeometryGroup *group = &g_array_index (priv->groups, GthreeGeometryGroup, i);
 
-          resolved_material = gthree_material_resolve (material, group->material_index);
+          resolved_material = NULL;
+          if (group->material_index < materials->len)
+            resolved_material = g_ptr_array_index (materials, group->material_index);
+
           if (resolved_material)
             gthree_render_list_push (list, object, geometry, resolved_material, group);
         }
     }
   else
     {
-      resolved_material = gthree_material_resolve (material, 0);
-      gthree_render_list_push (list, object, geometry, resolved_material, NULL);
+      if (materials && materials->len > 0)
+        resolved_material = g_ptr_array_index (materials, 0);
+
+      if (resolved_material == NULL)
+        resolved_material = material;
+
+      if (resolved_material)
+        gthree_render_list_push (list, object, geometry, resolved_material, NULL);
     }
 }
 

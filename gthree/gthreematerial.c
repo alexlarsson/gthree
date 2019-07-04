@@ -182,18 +182,6 @@ gthree_material_get_property (GObject *obj,
 }
 
 
-GthreeMaterial *
-gthree_material_resolve (GthreeMaterial *material,
-                         int index)
-{
-  GthreeMaterialClass *class = GTHREE_MATERIAL_GET_CLASS(material);
-
-  if (class->resolve)
-    return class->resolve (material, index);
-
-  return material;
-}
-
 void
 gthree_material_set_params (GthreeMaterial *material,
                             GthreeProgramParameters *params)

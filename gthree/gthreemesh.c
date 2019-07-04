@@ -2,14 +2,13 @@
 #include <epoxy/gl.h>
 
 #include "gthreemesh.h"
-#include "gthreemultimaterial.h"
 #include "gthreemeshbasicmaterial.h"
 #include "gthreeobjectprivate.h"
 #include "gthreeprivate.h"
 
 typedef struct {
   GthreeGeometry *geometry;
-  GthreeMaterial *material;
+  GPtrArray *materials;
   GthreeDrawMode draw_mode;
 
   GArray *morph_target_influences; /* array of floats */
@@ -20,7 +19,7 @@ enum {
   PROP_0,
 
   PROP_GEOMETRY,
-  PROP_MATERIAL,
+  PROP_MATERIALS,
 
   N_PROPS
 };
@@ -33,10 +32,15 @@ GthreeMesh *
 gthree_mesh_new (GthreeGeometry *geometry,
                  GthreeMaterial *material)
 {
+  g_autoptr(GPtrArray) materials = g_ptr_array_new_with_free_func (g_object_unref);
+
+  if (material)
+    g_ptr_array_add (materials, g_object_ref (material));
+
   GthreeMesh *mesh =
     g_object_new (gthree_mesh_get_type (),
                   "geometry", geometry,
-                  "material", material,
+                  "materials", materials,
                   NULL);
 
   gthree_mesh_update_morph_targets (mesh);
@@ -49,6 +53,7 @@ gthree_mesh_init (GthreeMesh *mesh)
 {
   GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
 
+  priv->materials = g_ptr_array_new_with_free_func (g_object_unref);
   priv->draw_mode = GTHREE_DRAW_MODE_TRIANGLES;
 }
 
@@ -59,7 +64,7 @@ gthree_mesh_finalize (GObject *obj)
   GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
 
   g_clear_object (&priv->geometry);
-  g_clear_object (&priv->material);
+  g_ptr_array_unref (priv->materials);
 
   if (priv->morph_target_influences)
     g_array_unref (priv->morph_target_influences);
@@ -149,7 +154,6 @@ gthree_mesh_update_morph_targets (GthreeMesh *mesh)
     }
 }
 
-
 static void
 gthree_mesh_fill_render_list (GthreeObject   *object,
                               GthreeRenderList *list)
@@ -157,7 +161,7 @@ gthree_mesh_fill_render_list (GthreeObject   *object,
   GthreeMesh *mesh = GTHREE_MESH (object);
   GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
 
-  gthree_geometry_fill_render_list (priv->geometry, list, priv->material, object);
+  gthree_geometry_fill_render_list (priv->geometry, list, NULL, priv->materials, object);
 }
 
 static gboolean
@@ -193,8 +197,8 @@ gthree_mesh_set_property (GObject *obj,
       g_set_object (&priv->geometry, g_value_get_object (value));
       break;
 
-    case PROP_MATERIAL:
-      g_set_object (&priv->material, g_value_get_object (value));
+    case PROP_MATERIALS:
+      gthree_mesh_set_materials (mesh, g_value_get_boxed (value));
       break;
 
     default:
@@ -217,8 +221,8 @@ gthree_mesh_get_property (GObject *obj,
       g_value_set_object (value, priv->geometry);
       break;
 
-    case PROP_MATERIAL:
-      g_value_set_object (value, priv->material);
+    case PROP_MATERIALS:
+      g_value_set_boxed (value, priv->materials);
       break;
 
     default:
@@ -227,24 +231,66 @@ gthree_mesh_get_property (GObject *obj,
 }
 
 GthreeMaterial *
-gthree_mesh_get_material (GthreeMesh *mesh)
+gthree_mesh_get_material (GthreeMesh *mesh,
+                          int index)
 {
   GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
 
-  return priv->material;
+  if (index >= priv->materials->len)
+    return NULL;
+
+  return g_ptr_array_index (priv->materials, index);
+}
+
+int
+gthree_mesh_get_n_materials (GthreeMesh *mesh)
+{
+  GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
+
+  return priv->materials->len;
+}
+
+void
+gthree_mesh_set_materials (GthreeMesh *mesh,
+                           GPtrArray *materials)
+{
+  GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
+  int i;
+
+  // Clear all
+  g_ptr_array_set_size (priv->materials, 0);
+
+  g_ptr_array_set_size (priv->materials, materials->len);
+  for (i = 0; i < materials->len; i++)
+    {
+      GthreeMaterial *src = g_ptr_array_index (materials, i);
+      if (src)
+        g_ptr_array_index (priv->materials, i) = g_object_ref (src);
+    }
+}
+
+void
+gthree_mesh_add_material (GthreeMesh *mesh,
+                          GthreeMaterial *material)
+{
+  GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
+  g_ptr_array_add (priv->materials, g_object_ref (material));
 }
 
 void
 gthree_mesh_set_material (GthreeMesh *mesh,
+                          int index,
                           GthreeMaterial *material)
 {
   GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
+  g_autoptr(GthreeMaterial) old_material = NULL;
 
-  g_object_ref (material);
-  g_clear_object (&priv->material);
-  priv->material = material;
+  if (priv->materials->len < index + 1)
+    g_ptr_array_set_size (priv->materials, index + 1);
+
+  old_material = g_ptr_array_index (priv->materials, index);
+  g_ptr_array_index (priv->materials, index) = g_object_ref (material);
 }
-
 
 GthreeGeometry *
 gthree_mesh_get_geometry (GthreeMesh *mesh)
@@ -272,10 +318,10 @@ gthree_mesh_class_init (GthreeMeshClass *klass)
     g_param_spec_object ("geometry", "Geometry", "Geometry",
                          GTHREE_TYPE_GEOMETRY,
                          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
-  obj_props[PROP_MATERIAL] =
-    g_param_spec_object ("material", "Material", "Material",
-                         GTHREE_TYPE_MATERIAL,
-                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_MATERIALS] =
+    g_param_spec_boxed ("materials", "Materials", "Materials",
+                        G_TYPE_PTR_ARRAY,
+                        G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, N_PROPS, obj_props);
 }

@@ -147,7 +147,7 @@ void
 gthree_fullscreen_quad_pass_set_material (GthreeFullscreenQuadPass *pass,
                                           GthreeMaterial *material)
 {
-  gthree_mesh_set_material (pass->mesh, material);
+  gthree_mesh_set_material (pass->mesh, 0, material);
 }
 
 struct _GthreeShaderPass {

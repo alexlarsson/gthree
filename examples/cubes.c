@@ -11,7 +11,7 @@ GthreeMeshBasicMaterial *material_simple;
 GthreeMeshBasicMaterial *material_texture;
 GthreeMeshBasicMaterial *material_vertex_color;
 GthreeMeshBasicMaterial *material_wireframe;
-GthreeMultiMaterial *multi_material;
+GPtrArray *multi_materials;
 GthreeMesh *mesh;
 double rot = 0;
 
@@ -79,7 +79,7 @@ colorise_vertices (GthreeGeometry *geometry)
 }
 
 static GthreeObject *
-new_cube (GthreeMaterial *material, gboolean vertex_colors)
+new_cube (GthreeMaterial *material, GPtrArray *materials, gboolean vertex_colors)
 {
   GthreeGeometry *geometry = NULL, *sub_geometry = NULL;
   static GthreeGeometry *geometry_face = NULL, *sub_geometry_face = NULL;
@@ -115,8 +115,12 @@ new_cube (GthreeMaterial *material, gboolean vertex_colors)
     }
 
   mesh = gthree_mesh_new (geometry, material);
+  if (materials)
+    gthree_mesh_set_materials (mesh, materials);
 
   sub_mesh = gthree_mesh_new (sub_geometry, material);
+  if (materials)
+    gthree_mesh_set_materials (sub_mesh, materials);
 
   pos.y = 25;
   gthree_object_add_child (GTHREE_OBJECT (mesh), GTHREE_OBJECT (sub_mesh));
@@ -157,28 +161,28 @@ init_scene (void)
 
   scene = gthree_scene_new ();
 
-  multi_material = gthree_multi_material_new ();
+  multi_materials = g_ptr_array_new_with_free_func (g_object_unref);
   for (i = 0; i < 3; i++)
-    gthree_multi_material_set_index (multi_material, i, GTHREE_MATERIAL (material_simple));
+    g_ptr_array_add (multi_materials, g_object_ref (material_simple));
   for (i = 3; i < 6; i++)
-    gthree_multi_material_set_index (multi_material, i, GTHREE_MATERIAL (material_texture));
+    g_ptr_array_add (multi_materials, g_object_ref (material_simple));
 
   pos.x = -60;
   pos.y = 40;
 
-  cube = new_cube (GTHREE_MATERIAL (material_simple), FALSE);
+  cube = new_cube (GTHREE_MATERIAL (material_simple), NULL, FALSE);
   gthree_object_add_child (GTHREE_OBJECT (scene), cube);
   gthree_object_set_position (GTHREE_OBJECT (cube), &pos);
   cubes = g_list_prepend (cubes, cube);
 
   pos.x += 60;
-  cube = new_cube (GTHREE_MATERIAL (material_vertex_color), FALSE);
+  cube = new_cube (GTHREE_MATERIAL (material_vertex_color), NULL, FALSE);
   gthree_object_add_child (GTHREE_OBJECT (scene), cube);
   gthree_object_set_position (GTHREE_OBJECT (cube), &pos);
   cubes = g_list_prepend (cubes, cube);
 
   pos.x += 60;
-  cube = new_cube (GTHREE_MATERIAL (material_texture), FALSE);
+  cube = new_cube (GTHREE_MATERIAL (material_texture), NULL, FALSE);
   gthree_object_add_child (GTHREE_OBJECT (scene), cube);
   gthree_object_set_position (GTHREE_OBJECT (cube), &pos);
   cubes = g_list_prepend (cubes, cube);
@@ -186,19 +190,19 @@ init_scene (void)
   pos.y -= 80;
   pos.x -= 2*60;
 
-  cube = new_cube (GTHREE_MATERIAL (material_wireframe), FALSE);
+  cube = new_cube (GTHREE_MATERIAL (material_wireframe), NULL, FALSE);
   gthree_object_add_child (GTHREE_OBJECT (scene), cube);
   gthree_object_set_position (GTHREE_OBJECT (cube), &pos);
   cubes = g_list_prepend (cubes, cube);
 
   pos.x += 60;
-  cube = new_cube (GTHREE_MATERIAL (material_vertex_color), TRUE);
+  cube = new_cube (GTHREE_MATERIAL (material_vertex_color), NULL, TRUE);
   gthree_object_add_child (GTHREE_OBJECT (scene), cube);
   gthree_object_set_position (GTHREE_OBJECT (cube), &pos);
   cubes = g_list_prepend (cubes, cube);
 
   pos.x += 60;
-  cube = new_cube (GTHREE_MATERIAL (multi_material), FALSE);
+  cube = new_cube (NULL, multi_materials, FALSE);
   gthree_object_add_child (GTHREE_OBJECT (scene), cube);
   gthree_object_set_position (GTHREE_OBJECT (cube), &pos);
   cubes = g_list_prepend (cubes, cube);

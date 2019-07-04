@@ -89,6 +89,7 @@ void gthree_geometry_update           (GthreeGeometry   *geometry);
 void gthree_geometry_fill_render_list (GthreeGeometry   *geometry,
                                        GthreeRenderList *list,
                                        GthreeMaterial   *material,
+                                       GPtrArray        *materials,
                                        GthreeObject     *object);
 
 gboolean gthree_light_setup_hash_equal (GthreeLightSetupHash *a,

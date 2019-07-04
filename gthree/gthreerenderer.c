@@ -1874,7 +1874,7 @@ gthree_renderer_render_background (GthreeRenderer *renderer,
 
       if (priv->current_bg_texture != bg_texture)
         {
-          GthreeMaterial *material = gthree_mesh_get_material (priv->bg_box_mesh);
+          GthreeMaterial *material = gthree_mesh_get_material (priv->bg_box_mesh, 0);
           GthreeShader *shader = gthree_material_get_shader (material);
           GthreeUniforms *uniforms = gthree_shader_get_uniforms (shader);
           GthreeUniform *uni = gthree_uniforms_lookup_from_string (uniforms, "tCube");
@@ -1916,7 +1916,7 @@ gthree_renderer_render_background (GthreeRenderer *renderer,
 
       if (priv->current_bg_texture != bg_texture)
         {
-          GthreeMaterial *material = gthree_mesh_get_material (priv->bg_plane_mesh);
+          GthreeMaterial *material = gthree_mesh_get_material (priv->bg_plane_mesh, 0);
           GthreeShader *shader = gthree_material_get_shader (material);
           GthreeUniforms *uniforms = gthree_shader_get_uniforms (shader);
           GthreeUniform *uni = gthree_uniforms_lookup_from_string (uniforms, "t2D");

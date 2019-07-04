@@ -9,14 +9,17 @@
 static GthreeObject *logo;
 
 static GthreeObject *
-new_cube (GthreeMaterial *material)
+new_cube (GPtrArray *materials)
 {
   static GthreeGeometry *geometry = NULL;
+  GthreeMesh *cube;
 
   if (geometry == NULL)
     geometry = gthree_geometry_new_box (60, 60, 60, 1, 1, 1);
 
-  return GTHREE_OBJECT (gthree_mesh_new (geometry, material));
+  cube = gthree_mesh_new (geometry, NULL);
+  gthree_mesh_set_materials (cube, materials);
+  return GTHREE_OBJECT (cube);
 }
 
 static GthreeObject *
@@ -43,14 +46,14 @@ new_ball (GthreeMaterial *material)
 static GthreeObject *
 gtk_logo (void)
 {
-  GthreeMultiMaterial *multi_material;
+  GPtrArray *materials;
   GthreeMeshLambertMaterial *material;
   GthreeObject *cube, *ball, *tube;
   GthreeMeshPhongMaterial *ball_material;
   graphene_point3d_t p;
   graphene_euler_t e;
 
-  multi_material = gthree_multi_material_new ();
+  materials = g_ptr_array_new_with_free_func (g_object_unref);
 
   material = gthree_mesh_lambert_material_new ();
   gthree_mesh_lambert_material_set_color (material, &red);
@@ -58,8 +61,8 @@ gtk_logo (void)
   gthree_material_set_side (GTHREE_MATERIAL (material), GTHREE_SIDE_DOUBLE);
   gthree_material_set_is_transparent (GTHREE_MATERIAL (material), TRUE);
   gthree_material_set_opacity (GTHREE_MATERIAL (material), 0.75);
-  gthree_multi_material_set_index (multi_material, 0, GTHREE_MATERIAL (material));
-  gthree_multi_material_set_index (multi_material, 1, GTHREE_MATERIAL (material));
+  g_ptr_array_add (materials, g_object_ref (material));
+  g_ptr_array_add (materials, g_object_ref (material));
   g_object_unref (material);
 
   material = gthree_mesh_lambert_material_new ();
@@ -68,8 +71,8 @@ gtk_logo (void)
   gthree_material_set_side (GTHREE_MATERIAL (material), GTHREE_SIDE_DOUBLE);
   gthree_material_set_is_transparent (GTHREE_MATERIAL (material), TRUE);
   gthree_material_set_opacity (GTHREE_MATERIAL (material), 0.75);
-  gthree_multi_material_set_index (multi_material, 2, GTHREE_MATERIAL (material));
-  gthree_multi_material_set_index (multi_material, 3, GTHREE_MATERIAL (material));
+  g_ptr_array_add (materials, g_object_ref (material));
+  g_ptr_array_add (materials, g_object_ref (material));
   g_object_unref (material);
 
   material = gthree_mesh_lambert_material_new ();
@@ -78,11 +81,11 @@ gtk_logo (void)
   gthree_material_set_side (GTHREE_MATERIAL (material), GTHREE_SIDE_DOUBLE);
   gthree_material_set_is_transparent (GTHREE_MATERIAL (material), TRUE);
   gthree_material_set_opacity (GTHREE_MATERIAL (material), 0.75);
-  gthree_multi_material_set_index (multi_material, 4, GTHREE_MATERIAL (material));
-  gthree_multi_material_set_index (multi_material, 5, GTHREE_MATERIAL (material));
+  g_ptr_array_add (materials, g_object_ref (material));
+  g_ptr_array_add (materials, g_object_ref (material));
   g_object_unref (material);
 
-  cube = new_cube (GTHREE_MATERIAL (multi_material));
+  cube = new_cube (materials);
 
   ball_material = gthree_mesh_phong_material_new ();
   gthree_mesh_phong_material_set_emissive_color (ball_material, &white);

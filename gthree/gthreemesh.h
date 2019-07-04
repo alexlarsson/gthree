@@ -34,8 +34,15 @@ GType gthree_mesh_get_type (void) G_GNUC_CONST;
 GthreeMesh *gthree_mesh_new (GthreeGeometry *geometry,
                              GthreeMaterial *material);
 
-GthreeMaterial *gthree_mesh_get_material         (GthreeMesh     *mesh);
+GthreeMaterial *gthree_mesh_get_material         (GthreeMesh     *mesh,
+                                                  int             index);
+int             gthree_mesh_get_n_materials      (GthreeMesh     *mesh);
+void            gthree_mesh_set_materials        (GthreeMesh     *mesh,
+                                                  GPtrArray      *materials);
 void            gthree_mesh_set_material         (GthreeMesh     *mesh,
+                                                  int             index,
+                                                  GthreeMaterial *material);
+void            gthree_mesh_add_material         (GthreeMesh     *mesh,
                                                   GthreeMaterial *material);
 GthreeGeometry *gthree_mesh_get_geometry         (GthreeMesh     *mesh);
 GthreeDrawMode  gthree_mesh_get_draw_mode        (GthreeMesh     *mesh);
@@ -45,7 +52,8 @@ void            gthree_mesh_update_morph_targets (GthreeMesh     *mesh);
 gboolean        gthree_mesh_has_morph_targets    (GthreeMesh     *mesh);
 GArray *        gthree_mesh_get_morph_targets    (GthreeMesh     *mesh);
 void            gthree_mesh_set_morph_targets    (GthreeMesh     *mesh,
-                                                  GArray *        morph_targets);
+                                                  GArray         *morph_targets);
+
 
 G_END_DECLS
 

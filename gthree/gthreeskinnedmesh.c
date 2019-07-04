@@ -30,9 +30,14 @@ GthreeSkinnedMesh *
 gthree_skinned_mesh_new (GthreeGeometry *geometry,
                          GthreeMaterial *material)
 {
+  g_autoptr(GPtrArray) materials = g_ptr_array_new_with_free_func (g_object_unref);
+
+  if (material)
+    g_ptr_array_add (materials, g_object_ref (material));
+
   return g_object_new (gthree_skinned_mesh_get_type (),
                        "geometry", geometry,
-                       "material", material,
+                       "materials", materials,
                        NULL);
 }
 

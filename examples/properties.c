@@ -234,7 +234,7 @@ material_combo_changed (GtkComboBox *combo_box)
     {
       GthreeObject * obj = objects[i];
 
-      gthree_mesh_set_material (GTHREE_MESH (obj), current_material);
+      gthree_mesh_set_material (GTHREE_MESH (obj), 0, current_material);
     }
   update_property_pane ();
 }
