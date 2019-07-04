@@ -22,7 +22,6 @@
 /* TODO:
  * object.set_matrix need to decompose position, etc. or we can't expect e.g. get_position to work.
  * Try grouping primitives into geometry groups if possible
- * Handle morph targets animations
  * Handle sparse accessors
  * Handle line materials
  * handle data: uris
@@ -1583,8 +1582,6 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
       JsonObject *node_j = json_array_get_object_element (nodes_j, i);
       GthreeObject *node = g_ptr_array_index (priv->nodes, i);
 
-      // TODO: weights (morph targets)
-
       if (json_object_has_member (node_j, "mesh"))
         {
           gint64 mesh_id = json_object_get_int_member (node_j, "mesh");
@@ -1876,9 +1873,6 @@ parse_animations (GthreeLoader *loader, JsonObject *root, GError **error)
             {
               gthree_target_path = "morphTargetInfluences";
               value_type = GTHREE_VALUE_TYPE_NUMBER;
-
-              g_warning ("Unsupported animation target path %s", target_path);
-              continue;
             }
           else
             {
@@ -1912,19 +1906,23 @@ parse_animations (GthreeLoader *loader, JsonObject *root, GError **error)
           if (target_name == NULL)
             target_name = gthree_object_get_uuid (target_node);
 
-#ifdef TODO
           if (strcmp (target_path, "weights") == 0)
             {
               // Node may be a THREE.Group (glTF mesh with several primitives) or a THREE.Mesh.
-              node.traverse( function ( object ) {
-
-                  if ( object.isMesh === true && object.morphTargetInfluences ) {
-                    targetNames.push( object.name ? object.name : object.uuid );
-                  }
-                } );
+              g_autoptr(GList) meshes = gthree_object_find_by_type (target_node, GTHREE_TYPE_MESH);
+              for (GList *l = meshes; l != NULL; l = l->next)
+                {
+                  GthreeMesh *mesh = l->data;
+                  if (gthree_mesh_has_morph_targets (mesh))
+                    {
+                      const char *n = gthree_object_get_name (GTHREE_OBJECT (mesh));
+                      if (n == NULL)
+                        n = gthree_object_get_uuid (GTHREE_OBJECT (mesh));
+                      g_ptr_array_add (target_names, (char *)n);
+                    }
+                }
             }
           else
-#endif
             g_ptr_array_add (target_names, (char *)target_name);
 
           for (k = 0; k < target_names->len; k++)
@@ -1934,6 +1932,7 @@ parse_animations (GthreeLoader *loader, JsonObject *root, GError **error)
               g_autofree char *track_name = g_strdup_printf ("%s.%s", target_name, gthree_target_path);
               g_autoptr(GthreeAttributeArray) input_array = NULL;
               g_autoptr(GthreeAttributeArray) output_array = NULL;
+              int output_per_input = output_accessor->count / input_accessor->count;
 
               input_array = gthree_attribute_array_reshape (input_accessor->array,
                                                             0, input_accessor->item_offset,
@@ -1943,8 +1942,8 @@ parse_animations (GthreeLoader *loader, JsonObject *root, GError **error)
 
               output_array = gthree_attribute_array_reshape (output_accessor->array,
                                                             0, output_accessor->item_offset,
-                                                            output_accessor->count,
-                                                            output_accessor->item_size,
+                                                            output_accessor->count / output_per_input,
+                                                            output_accessor->item_size * output_per_input,
                                                             TRUE);
 
 
