@@ -387,6 +387,25 @@ ghtree_property_binding_get_value_quaternion (GthreePropertyBinding *binding,
   }
 }
 
+void
+ghtree_property_binding_get_value_floatarray (GthreePropertyBinding *binding,
+                                              gpointer property,
+                                              int property_index,
+                                              float *buffer,
+                                              int offset)
+{
+  const GArray *array = property;
+  int i;
+
+  if (property_index == -1)
+    {
+      for (i = 0; i < array->len; i++)
+        buffer[i] = g_array_index (array, float, i);
+    }
+  else
+    buffer[property_index] = g_array_index (array, float, property_index);
+}
+
 static void
 ghtree_property_binding_set_value_point3d (GthreePropertyBinding *binding,
                                            float *buffer,
@@ -501,6 +520,34 @@ ghtree_property_binding_set_value_quaternion (GthreePropertyBinding *binding,
   priv->set_property (priv->resolved_object, &quaternion);
 }
 
+static void
+ghtree_property_binding_set_value_floatarray (GthreePropertyBinding *binding,
+                                              float *buffer,
+                                              int offset)
+{
+  GthreePropertyBindingPrivate *priv = gthree_property_binding_get_instance_private (binding);
+  GArray *array = priv->get_property (priv->resolved_object);
+  g_autoptr(GArray) new_array = g_array_new (FALSE, FALSE, sizeof (float));
+  int i;
+
+  g_array_set_size (new_array, array->len);
+
+  if (priv->resolved_prop_index != -1)
+    {
+      for (i = 0; i < array->len; i++)
+        g_array_index (new_array, float, i) = g_array_index (array, float, i);
+
+      g_array_index (new_array, float, priv->resolved_prop_index) = buffer[offset + 0];
+    }
+  else
+    {
+      for (i = 0; i < new_array->len; i++)
+        g_array_index (new_array, float, i) = buffer[offset + i];
+    }
+
+  priv->set_property (priv->resolved_object, new_array);
+}
+
 
 static void
 ghtree_property_binding_bind (GthreePropertyBinding *binding)
@@ -583,6 +630,36 @@ ghtree_property_binding_bind (GthreePropertyBinding *binding)
           get_value = ghtree_property_binding_get_value_quaternion;
           set_property = (GthreePropertySetter)gthree_object_set_quaternion;
           set_value = ghtree_property_binding_set_value_quaternion;
+        }
+      else if (strcmp (property_name, "morphTargetInfluences") == 0)
+        {
+          GthreeMesh *mesh;
+          GArray *morph_targets;
+
+          if (!GTHREE_IS_MESH (target_object))
+            {
+              g_warning ("morphTargetInfluences binding not supported for non-mesh type %s",
+                         g_type_name_from_instance ((GTypeInstance *)target_object));
+              return;
+            }
+
+          mesh = GTHREE_MESH (target_object);
+          morph_targets = gthree_mesh_get_morph_targets (mesh);
+
+
+          if (morph_targets == NULL)
+            {
+              g_warning ("morphTargetInfluences binding not supported with no morph targets");
+              return;
+            }
+
+          resolved_object = (GObject *)g_object_ref (target_object);
+          max_index = morph_targets->len;
+
+          get_property = (GthreePropertyGetter)gthree_mesh_get_morph_targets;
+          get_value = ghtree_property_binding_get_value_floatarray;
+          set_property = (GthreePropertySetter)gthree_mesh_set_morph_targets;
+          set_value = ghtree_property_binding_set_value_floatarray;
         }
       else
         {
