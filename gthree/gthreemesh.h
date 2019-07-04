@@ -44,6 +44,8 @@ void            gthree_mesh_set_draw_mode        (GthreeMesh     *mesh,
 void            gthree_mesh_update_morph_targets (GthreeMesh     *mesh);
 gboolean        gthree_mesh_has_morph_targets    (GthreeMesh     *mesh);
 GArray *        gthree_mesh_get_morph_targets    (GthreeMesh     *mesh);
+void            gthree_mesh_set_morph_targets    (GthreeMesh     *mesh,
+                                                  GArray *        morph_targets);
 
 G_END_DECLS
 

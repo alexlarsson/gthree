@@ -99,6 +99,26 @@ gthree_mesh_get_morph_targets (GthreeMesh *mesh)
 }
 
 void
+gthree_mesh_set_morph_targets (GthreeMesh     *mesh,
+                               GArray *morph_targets)
+{
+  GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
+  int i;
+  int len;
+
+  if (priv->morph_target_influences == NULL ||
+      morph_targets == NULL)
+    return;
+
+  len = MIN (morph_targets->len, priv->morph_target_influences->len);
+  for (i = 0; i < len; i++)
+    {
+      float v = g_array_index (morph_targets, float, i);
+      g_array_index (priv->morph_target_influences, float, i) = v;
+    }
+}
+
+void
 gthree_mesh_update_morph_targets (GthreeMesh *mesh)
 {
   GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
