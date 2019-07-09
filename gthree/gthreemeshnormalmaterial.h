@@ -26,11 +26,15 @@ typedef struct {
 
 } GthreeMeshNormalMaterialClass;
 
+GTHREE_API
 GType gthree_mesh_normal_material_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 GthreeMeshNormalMaterial *gthree_mesh_normal_material_new ();
 
+GTHREE_API
 GthreeShadingType gthree_mesh_normal_material_get_shading_type (GthreeMeshNormalMaterial *normal);
+GTHREE_API
 void              gthree_mesh_normal_material_set_shading_type (GthreeMeshNormalMaterial *normal,
                                                                 GthreeShadingType         shading_type);
 

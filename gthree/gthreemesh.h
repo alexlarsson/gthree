@@ -29,28 +29,42 @@ typedef struct {
 
 } GthreeMeshClass;
 
+GTHREE_API
 GType gthree_mesh_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 GthreeMesh *gthree_mesh_new (GthreeGeometry *geometry,
                              GthreeMaterial *material);
 
+GTHREE_API
 GthreeMaterial *gthree_mesh_get_material         (GthreeMesh     *mesh,
                                                   int             index);
+GTHREE_API
 int             gthree_mesh_get_n_materials      (GthreeMesh     *mesh);
+GTHREE_API
 void            gthree_mesh_set_materials        (GthreeMesh     *mesh,
                                                   GPtrArray      *materials);
+GTHREE_API
 void            gthree_mesh_set_material         (GthreeMesh     *mesh,
                                                   int             index,
                                                   GthreeMaterial *material);
+GTHREE_API
 void            gthree_mesh_add_material         (GthreeMesh     *mesh,
                                                   GthreeMaterial *material);
+GTHREE_API
 GthreeGeometry *gthree_mesh_get_geometry         (GthreeMesh     *mesh);
+GTHREE_API
 GthreeDrawMode  gthree_mesh_get_draw_mode        (GthreeMesh     *mesh);
+GTHREE_API
 void            gthree_mesh_set_draw_mode        (GthreeMesh     *mesh,
                                                   GthreeDrawMode  mode);
+GTHREE_API
 void            gthree_mesh_update_morph_targets (GthreeMesh     *mesh);
+GTHREE_API
 gboolean        gthree_mesh_has_morph_targets    (GthreeMesh     *mesh);
+GTHREE_API
 GArray *        gthree_mesh_get_morph_targets    (GthreeMesh     *mesh);
+GTHREE_API
 void            gthree_mesh_set_morph_targets    (GthreeMesh     *mesh,
                                                   GArray         *morph_targets);
 

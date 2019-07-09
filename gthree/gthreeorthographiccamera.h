@@ -26,23 +26,33 @@ typedef struct {
 
 } GthreeOrthographicCameraClass;
 
+GTHREE_API
 GType gthree_orthographic_camera_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 GthreeOrthographicCamera *gthree_orthographic_camera_new (float left, float right,
                                                           float top, float bottom,
                                                           float near, float far);
 
+GTHREE_API
 void  gthree_orthographic_camera_set_left   (GthreeOrthographicCamera *orthographic,
                                              float                     left);
+GTHREE_API
 float gthree_orthographic_camera_get_left   (GthreeOrthographicCamera *orthographic);
+GTHREE_API
 void  gthree_orthographic_camera_set_right  (GthreeOrthographicCamera *orthographic,
                                              float                     right);
+GTHREE_API
 float gthree_orthographic_camera_get_right  (GthreeOrthographicCamera *orthographic);
+GTHREE_API
 void  gthree_orthographic_camera_set_top    (GthreeOrthographicCamera *orthographic,
                                              float                     top);
+GTHREE_API
 float gthree_orthographic_camera_get_top    (GthreeOrthographicCamera *orthographic);
+GTHREE_API
 void  gthree_orthographic_camera_set_bottom (GthreeOrthographicCamera *orthographic,
                                              float                     bottom);
+GTHREE_API
 float gthree_orthographic_camera_get_bottom (GthreeOrthographicCamera *orthographic);
 
 G_END_DECLS

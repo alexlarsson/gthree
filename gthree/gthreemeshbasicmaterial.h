@@ -27,25 +27,39 @@ typedef struct {
 
 } GthreeMeshBasicMaterialClass;
 
+GTHREE_API
 GthreeMeshBasicMaterial *gthree_mesh_basic_material_new ();
+GTHREE_API
 GType gthree_mesh_basic_material_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 const GdkRGBA *   gthree_mesh_basic_material_get_color            (GthreeMeshBasicMaterial *basic);
+GTHREE_API
 void              gthree_mesh_basic_material_set_color            (GthreeMeshBasicMaterial *basic,
                                                                    const GdkRGBA           *color);
+GTHREE_API
 void              gthree_mesh_basic_material_set_map              (GthreeMeshBasicMaterial *basic,
                                                                    GthreeTexture           *texture);
+GTHREE_API
 GthreeTexture  *  gthree_mesh_basic_material_get_map              (GthreeMeshBasicMaterial *basic);
+GTHREE_API
 void              gthree_mesh_basic_material_set_env_map          (GthreeMeshBasicMaterial *basic,
                                                                    GthreeTexture           *texture);
+GTHREE_API
 GthreeTexture  *  gthree_mesh_basic_material_get_env_map          (GthreeMeshBasicMaterial *basic);
+GTHREE_API
 float             gthree_mesh_basic_material_get_refraction_ratio (GthreeMeshBasicMaterial *basic);
+GTHREE_API
 void              gthree_mesh_basic_material_set_refraction_ratio (GthreeMeshBasicMaterial *basic,
                                                                    float                    ratio);
+GTHREE_API
 float             gthree_mesh_basic_material_get_reflectivity     (GthreeMeshBasicMaterial *basic);
+GTHREE_API
 void              gthree_mesh_basic_material_set_reflectivity     (GthreeMeshBasicMaterial *basic,
                                                                    float                    reflectivity);
+GTHREE_API
 GthreeOperation   gthree_mesh_basic_material_get_combine          (GthreeMeshBasicMaterial *basic);
+GTHREE_API
 void              gthree_mesh_basic_material_set_combine          (GthreeMeshBasicMaterial *basic,
                                                                    GthreeOperation          combine);
 

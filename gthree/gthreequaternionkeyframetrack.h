@@ -28,8 +28,10 @@ typedef struct {
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeQuaternionKeyframeTrack, g_object_unref)
 
+GTHREE_API
 GType gthree_quaternion_keyframe_track_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 GthreeKeyframeTrack *gthree_quaternion_keyframe_track_new (const char *name,
                                                            GthreeAttributeArray *times,
                                                            GthreeAttributeArray *values);

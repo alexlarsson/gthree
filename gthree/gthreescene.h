@@ -29,15 +29,22 @@ typedef struct {
 
 } GthreeSceneClass;
 
+GTHREE_API
 GType  gthree_scene_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 GthreeScene *gthree_scene_new ();
 
+GTHREE_API
 GthreeMaterial *gthree_scene_get_override_material  (GthreeScene   *scene);
+GTHREE_API
 const GdkRGBA * gthree_scene_get_background_color   (GthreeScene   *scene);
+GTHREE_API
 void            gthree_scene_set_background_color   (GthreeScene   *scene,
                                                      GdkRGBA       *color);
+GTHREE_API
 GthreeTexture * gthree_scene_get_background_texture (GthreeScene   *scene);
+GTHREE_API
 void            gthree_scene_set_background_texture (GthreeScene   *scene,
                                                      GthreeTexture *texture);
 

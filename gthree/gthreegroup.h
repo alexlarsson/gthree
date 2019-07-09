@@ -28,8 +28,10 @@ typedef struct {
 
 } GthreeGroupClass;
 
+GTHREE_API
 GType gthree_group_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 GthreeGroup *gthree_group_new (void);
 
 G_END_DECLS

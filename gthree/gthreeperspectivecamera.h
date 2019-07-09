@@ -26,15 +26,21 @@ typedef struct {
 
 } GthreePerspectiveCameraClass;
 
+GTHREE_API
 GType gthree_perspective_camera_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 GthreePerspectiveCamera *gthree_perspective_camera_new (float fov, float aspect, float near, float far);
 
+GTHREE_API
 void  gthree_perspective_camera_set_aspect (GthreePerspectiveCamera *perspective,
                                             float                    aspect);
+GTHREE_API
 float gthree_perspective_camera_get_aspect (GthreePerspectiveCamera *perspective);
+GTHREE_API
 void  gthree_perspective_camera_set_fov    (GthreePerspectiveCamera *perspective,
                                             float                    aspect);
+GTHREE_API
 float gthree_perspective_camera_get_fov    (GthreePerspectiveCamera *perspective);
 
 G_END_DECLS

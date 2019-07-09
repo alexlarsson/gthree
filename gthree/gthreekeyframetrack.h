@@ -39,20 +39,32 @@ typedef struct {
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeKeyframeTrack, g_object_unref)
 
+GTHREE_API
 GType gthree_keyframe_track_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 const char *          gthree_keyframe_track_get_name           (GthreeKeyframeTrack     *track);
+GTHREE_API
 float                 gthree_keyframe_track_get_end_time       (GthreeKeyframeTrack     *track);
+GTHREE_API
 GthreeAttributeArray *gthree_keyframe_track_get_times          (GthreeKeyframeTrack     *track);
+GTHREE_API
 GthreeValueType       gthree_keyframe_track_get_value_type     (GthreeKeyframeTrack     *track);
+GTHREE_API
 int                   gthree_keyframe_track_get_value_size     (GthreeKeyframeTrack     *track);
+GTHREE_API
 GthreeAttributeArray *gthree_keyframe_track_get_values         (GthreeKeyframeTrack     *track);
+GTHREE_API
 GthreeInterpolant *   gthree_keyframe_track_create_interpolant (GthreeKeyframeTrack     *track);
+GTHREE_API
 void                  gthree_keyframe_track_optimize           (GthreeKeyframeTrack     *track);
+GTHREE_API
 void                  gthree_keyframe_track_scale              (GthreeKeyframeTrack     *track,
                                                                 float                    time_scale);
+GTHREE_API
 void                  gthree_keyframe_track_set_interpolation  (GthreeKeyframeTrack     *track,
                                                                 GthreeInterpolationMode  interpolation);
+GTHREE_API
 void                  gthree_keyframe_track_trim               (GthreeKeyframeTrack     *track,
                                                                 float                    start_time,
                                                                 float                    end_time);

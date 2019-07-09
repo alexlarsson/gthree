@@ -30,18 +30,25 @@ typedef struct {
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeSkeleton, g_object_unref)
 
+GTHREE_API
 GType gthree_skeleton_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 GthreeSkeleton *gthree_skeleton_new  (GthreeBone **bones,
                                       int n_bones,
                                       graphene_matrix_t *bone_inverses);
 
+GTHREE_API
 int         gthree_skeleton_get_n_bones        (GthreeSkeleton *skeleton);
+GTHREE_API
 GthreeBone *gthree_skeleton_get_bone           (GthreeSkeleton *skeleton,
                                                 int             index);
+GTHREE_API
 GthreeBone *gthree_skeleton_get_bone_by_name   (GthreeSkeleton *skeleton,
                                                 const char     *name);
+GTHREE_API
 void        gthree_skeleton_calculate_inverses (GthreeSkeleton *skeleton);
+GTHREE_API
 void        gthree_skeleton_pose               (GthreeSkeleton *skeleton);
 
 

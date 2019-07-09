@@ -21,6 +21,7 @@ G_BEGIN_DECLS
 
 typedef struct _GthreeInterpolantSettings GthreeInterpolantSettings;
 
+GTHREE_API
 GType gthree_interpolant_settings_get_type (void) G_GNUC_CONST;
 
 typedef struct {
@@ -38,26 +39,42 @@ typedef struct {
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeInterpolant, g_object_unref)
 
+GTHREE_API
 GType gthree_interpolant_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 int                        gthree_interpolant_get_n_positions         (GthreeInterpolant *interpolant);
+GTHREE_API
 int                        gthree_interpolant_get_sample_size         (GthreeInterpolant *interpolant);
+GTHREE_API
 GthreeAttributeType        gthree_interpolant_get_sample_type         (GthreeInterpolant *interpolant);
+GTHREE_API
 GthreeAttributeArray *     gthree_interpolant_get_parameter_positions (GthreeInterpolant *interpolant);
+GTHREE_API
 GthreeAttributeArray *     gthree_interpolant_get_sample_values       (GthreeInterpolant *interpolant);
+GTHREE_API
 GthreeAttributeArray *     gthree_interpolant_evaluate                (GthreeInterpolant *interpolant,
                                                                        float              t);
+GTHREE_API
 GthreeEndingMode           gthree_interpolant_get_start_ending_mode   (GthreeInterpolant *interpolant);
+GTHREE_API
 GthreeEndingMode           gthree_interpolant_get_end_ending_mode     (GthreeInterpolant *interpolant);
+GTHREE_API
 GthreeInterpolantSettings *gthree_interpolant_get_settings            (GthreeInterpolant *interpolant);
+GTHREE_API
 void                       gthree_interpolant_set_settings            (GthreeInterpolant *interpolant,
                                                                        GthreeInterpolantSettings *settings);
 
+GTHREE_API
 GthreeInterpolantSettings *gthree_interpolant_settings_new (void);
+GTHREE_API
 GthreeEndingMode      gthree_interpolant_settings_get_start_ending_mode   (GthreeInterpolantSettings *settings);
+GTHREE_API
 void                  gthree_interpolant_settings_set_start_ending_mode   (GthreeInterpolantSettings *settings,
                                                                            GthreeEndingMode   mode);
+GTHREE_API
 GthreeEndingMode      gthree_interpolant_settings_get_end_ending_mode     (GthreeInterpolantSettings *settings);
+GTHREE_API
 void                  gthree_interpolant_settings_set_end_ending_mode     (GthreeInterpolantSettings *settings,
                                                                            GthreeEndingMode   mode);
 

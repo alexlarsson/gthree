@@ -60,15 +60,20 @@ typedef struct {
 } GthreePassClass;
 
 
+GTHREE_API
 GType gthree_pass_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 void gthree_pass_set_enabled (GthreePass         *pass,
                               gboolean            enabled);
+GTHREE_API
 void gthree_pass_set_clear   (GthreePass         *pass,
                               gboolean            clear);
+GTHREE_API
 void gthree_pass_resize      (GthreePass         *pass,
                               int                 width,
                               int                 height);
+GTHREE_API
 void gthree_pass_render      (GthreePass         *pass,
                               GthreeRenderer     *renderer,
                               GthreeRenderTarget *write_buffer,
@@ -89,9 +94,12 @@ typedef struct _GthreeFullscreenQuadPass GthreeFullscreenQuadPass;
                                                   GTHREE_TYPE_FULLSCREEN_QUAD_PASS))
 #define GTHREE_FULLSCREEN_QUAD_PASS_GET_CLASS(inst) (G_TYPE_INSTANCE_GET_CLASS ((inst), GTHREE_TYPE_FULLSCREEN_QUAD_PASS, GthreeFullscreenQuadPassClass))
 
+GTHREE_API
 GType gthree_fullscreen_quad_pass_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 GthreePass *gthree_fullscreen_quad_pass_new  (GthreeMaterial *material);
+GTHREE_API
 void        gthree_fullscreen_quad_pass_set_material (GthreeFullscreenQuadPass *pass,
                                                       GthreeMaterial *material);
 
@@ -115,8 +123,10 @@ typedef struct _GthreeShaderPass GthreeShaderPass;
                                                   GTHREE_TYPE_SHADER_PASS))
 #define GTHREE_SHADER_PASS_GET_CLASS(inst) (G_TYPE_INSTANCE_GET_CLASS ((inst), GTHREE_TYPE_SHADER_PASS, GthreeShaderPassClass))
 
+GTHREE_API
 GType gthree_shader_pass_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 GthreePass *gthree_shader_pass_new  (GthreeShader *shader, const char *texture_id);
 
 typedef struct _GthreeRenderPass GthreeRenderPass;
@@ -130,12 +140,15 @@ typedef struct _GthreeRenderPass GthreeRenderPass;
                                                   GTHREE_TYPE_RENDER_PASS))
 #define GTHREE_RENDER_PASS_GET_CLASS(inst) (G_TYPE_INSTANCE_GET_CLASS ((inst), GTHREE_TYPE_RENDER_PASS, GthreeRenderPassClass))
 
+GTHREE_API
 GType gthree_render_pass_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 GthreePass *gthree_render_pass_new  (GthreeScene *scene,
                                      GthreeCamera *camera,
                                      GthreeMaterial *override_material);
 
+GTHREE_API
 void gthree_render_pass_set_clear_depth (GthreeRenderPass *render_pass,
                                          gboolean          clear_depth);
 
@@ -151,9 +164,12 @@ typedef struct _GthreeClearPass GthreeClearPass;
                                                   GTHREE_TYPE_CLEAR_PASS))
 #define GTHREE_CLEAR_PASS_GET_CLASS(inst) (G_TYPE_INSTANCE_GET_CLASS ((inst), GTHREE_TYPE_CLEAR_PASS, GthreeClearPassClass))
 
+GTHREE_API
 GType gthree_clear_pass_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 GthreePass *gthree_clear_pass_new  (const GdkRGBA *color);
+GTHREE_API
 void gthree_clear_pass_set_clear_depth (GthreeClearPass *clear_pass,
                                         gboolean clear_depth);
 
@@ -168,8 +184,10 @@ typedef struct _GthreeBloomPass GthreeBloomPass;
                                                   GTHREE_TYPE_BLOOM_PASS))
 #define GTHREE_BLOOM_PASS_GET_CLASS(inst) (G_TYPE_INSTANCE_GET_CLASS ((inst), GTHREE_TYPE_BLOOM_PASS, GthreeBloomPassClass))
 
+GTHREE_API
 GType gthree_bloom_pass_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 GthreePass *gthree_bloom_pass_new  (float strength, float sigma, int resolution);
 
 G_END_DECLS

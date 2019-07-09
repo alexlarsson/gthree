@@ -27,21 +27,32 @@ typedef struct {
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeMeshMaterial, g_object_unref)
 
+GTHREE_API
 GType gthree_mesh_material_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 gboolean gthree_mesh_material_get_is_wireframe         (GthreeMeshMaterial *material);
+GTHREE_API
 void     gthree_mesh_material_set_is_wireframe         (GthreeMeshMaterial *material,
                                                         gboolean            is_wireframe);
+GTHREE_API
 float    gthree_mesh_material_get_wireframe_line_width (GthreeMeshMaterial *material);
+GTHREE_API
 void     gthree_mesh_material_set_wireframe_line_width (GthreeMeshMaterial *material,
                                                         float               line_width);
+GTHREE_API
 gboolean gthree_mesh_material_get_skinning             (GthreeMeshMaterial *material);
+GTHREE_API
 void     gthree_mesh_material_set_skinning             (GthreeMeshMaterial *material,
                                                         gboolean            value);
+GTHREE_API
 gboolean gthree_mesh_material_get_morph_targets        (GthreeMeshMaterial *material);
+GTHREE_API
 void     gthree_mesh_material_set_morph_targets        (GthreeMeshMaterial *material,
                                                         gboolean            value);
+GTHREE_API
 gboolean gthree_mesh_material_get_morph_normals        (GthreeMeshMaterial *material);
+GTHREE_API
 void     gthree_mesh_material_set_morph_normals        (GthreeMeshMaterial *material,
                                                         gboolean            value);
 
