@@ -70,6 +70,9 @@ static GQuark unused_list_head_q;
 static void
 gl_context_init (void)
 {
+  if (used_list_head_q != 0)
+    return;
+
   used_list_head_q = g_quark_from_static_string ("gthree-resource-used-head");
   unused_list_head_q = g_quark_from_static_string ("gthree-resource-unused-head");
 }
@@ -182,6 +185,8 @@ gthree_resources_unrealize_all_for (GdkGLContext *context)
 {
   ListNode *head, *node;
 
+  gl_context_init ();
+
   g_assert (gdk_gl_context_get_current () == context);
 
   gthree_resources_unrealize_unused_for (context);
@@ -203,6 +208,8 @@ void
 gthree_resources_unrealize_unused_for (GdkGLContext *context)
 {
   ListNode *head, *node;
+
+  gl_context_init ();
 
   g_assert (gdk_gl_context_get_current () == context);
 
