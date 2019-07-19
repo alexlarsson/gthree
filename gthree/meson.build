@@ -87,6 +87,7 @@ gthree_headers = [
     'gthreeperspectivecamera.h',
     'gthreeorthographiccamera.h',
     'gthreemeshphongmaterial.h',
+    'gthreemeshstandardmaterial.h',
     'gthreepointlight.h',
     'gthreeprimitives.h',
     'gthreeprogram.h',
@@ -111,6 +112,7 @@ gthree_headers = [
     'gthreeanimationclip.h',
     'gthreeanimationaction.h',
     'gthreeanimationmixer.h',
+    'gthreekeyframetrack.h',
 ]
 
 gthree_private_headers = [

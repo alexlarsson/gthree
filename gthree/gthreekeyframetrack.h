@@ -6,8 +6,8 @@
 #endif
 
 #include <gio/gio.h>
-#include <gthreeenums.h>
-#include <gthreeinterpolant.h>
+#include <gthree/gthreeenums.h>
+#include <gthree/gthreeinterpolant.h>
 
 G_BEGIN_DECLS
 

@@ -6,8 +6,8 @@
 #endif
 
 #include <gio/gio.h>
-#include <gthreeenums.h>
-#include <gthreekeyframetrack.h>
+#include <gthree/gthreeenums.h>
+#include <gthree/gthreekeyframetrack.h>
 
 G_BEGIN_DECLS
 

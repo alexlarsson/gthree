@@ -6,7 +6,7 @@
 #endif
 
 #include <gio/gio.h>
-#include <gthreebone.h>
+#include <gthree/gthreebone.h>
 
 G_BEGIN_DECLS
 
