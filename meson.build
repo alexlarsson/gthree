@@ -6,7 +6,7 @@ project('gthree', 'c',
           'c_std=gnu99',
         ],
         meson_version : '>= 0.48.0',
-        license: 'LGPLv2.1+')
+        license: 'MIT')
 
 version = meson.project_version().split('.')
 gthree_major_version = version[0].to_int()
