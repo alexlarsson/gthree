@@ -445,7 +445,7 @@ gthree_geometry_get_bounding_sphere  (GthreeGeometry *geometry)
   if (!priv->bounding_sphere_set)
     {
       GthreeAttribute *position = gthree_geometry_get_position (geometry);
-      GPtrArray *morph_attributes =gthree_geometry_get_morph_attributes (geometry, "position");
+      GPtrArray *morph_attributes = gthree_geometry_get_morph_attributes (geometry, "position");
 
       if (position)
         {
@@ -453,22 +453,11 @@ gthree_geometry_get_bounding_sphere  (GthreeGeometry *geometry)
           graphene_vec3_t center;
           graphene_vec3_t min;
           graphene_point3d_t pt;
-          graphene_box_t box;
           float max_radius_sq = 0.f;
+          const graphene_box_t *bbox = gthree_geometry_get_bounding_box (geometry);
 
-          graphene_box_init_from_box (&box, graphene_box_empty ());
-          expand_box_from_points (&box, position);
-          if (morph_attributes)
-            {
-              for (int i = 0; i < morph_attributes->len; i++)
-                {
-                  GthreeAttribute *attr = g_ptr_array_index (morph_attributes, i);
-                  expand_box_from_points (&box, attr);
-                }
-            }
-
-          graphene_box_get_size (&box, &size);
-          graphene_box_get_min (&box, &pt);
+          graphene_box_get_size (bbox, &size);
+          graphene_box_get_min (bbox, &pt);
           graphene_point3d_to_vec3 (&pt, &min);
 
           graphene_vec3_scale (&size, 0.5f, &center);
@@ -490,7 +479,7 @@ gthree_geometry_get_bounding_sphere  (GthreeGeometry *geometry)
         }
       else
         {
-          graphene_point3d_t zero = { 0, 0, 0};
+          graphene_point3d_t zero = { 0, 0, 0 };
           graphene_sphere_init (&priv->bounding_sphere, &zero, 0);
         }
 
@@ -508,6 +497,49 @@ gthree_geometry_set_bounding_sphere  (GthreeGeometry          *geometry,
 
   priv->bounding_sphere_set = TRUE;
   priv->bounding_sphere = *sphere;
+}
+
+const graphene_box_t *
+gthree_geometry_get_bounding_box  (GthreeGeometry *geometry)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+
+  if (!priv->bounding_box_set)
+    {
+      GthreeAttribute *position = gthree_geometry_get_position (geometry);
+      GPtrArray *morph_attributes = gthree_geometry_get_morph_attributes (geometry, "position");
+      graphene_box_t box;
+
+      graphene_box_init_from_box (&box, graphene_box_empty ());
+
+      if (position)
+        {
+          expand_box_from_points (&box, position);
+          if (morph_attributes)
+            {
+              for (int i = 0; i < morph_attributes->len; i++)
+                {
+                  GthreeAttribute *attr = g_ptr_array_index (morph_attributes, i);
+                  expand_box_from_points (&box, attr);
+                }
+            }
+
+        }
+      priv->bounding_box = box;
+      priv->bounding_box_set = TRUE;
+    }
+
+  return &priv->bounding_box;
+}
+
+void
+gthree_geometry_set_bounding_box  (GthreeGeometry       *geometry,
+                                   const graphene_box_t *box)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+
+  priv->bounding_box = *box;
+  priv->bounding_box_set = TRUE;
 }
 
 void
