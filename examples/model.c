@@ -15,7 +15,7 @@ static GtkWidget *morph_scale;
 static int current_env_map;
 static int current_model;
 
-static float current_distance = 2;
+static float current_distance = 3;
 static float current_angle_y, current_angle_x;
 static float press_angle_y, press_angle_x;
 static float press_y, press_x;

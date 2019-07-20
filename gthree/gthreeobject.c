@@ -1045,14 +1045,11 @@ _gthree_object_get_mesh_extents (GthreeObject *object,
   if (GTHREE_IS_MESH (object))
     {
       GthreeGeometry *geometry = gthree_mesh_get_geometry (GTHREE_MESH (object));
-      graphene_sphere_t bounding_sphere;
       graphene_box_t bounding_box;
 
-      graphene_matrix_transform_sphere (gthree_object_get_world_matrix (object),
-                                        gthree_geometry_get_bounding_sphere (geometry),
-                                        &bounding_sphere);
-      graphene_sphere_get_bounding_box (&bounding_sphere, &bounding_box);
-
+      graphene_matrix_transform_box (gthree_object_get_world_matrix (object),
+                                     gthree_geometry_get_bounding_box (geometry),
+                                     &bounding_box);
       graphene_box_union (box, &bounding_box, box);
     }
 
@@ -1061,6 +1058,7 @@ _gthree_object_get_mesh_extents (GthreeObject *object,
     _gthree_object_get_mesh_extents (child, box);
 }
 
+/* Note: This relies on the world matrix being up-to-date */
 void
 gthree_object_get_mesh_extents (GthreeObject *object,
                                 graphene_box_t *box)
