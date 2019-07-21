@@ -106,44 +106,43 @@ typedef enum {
 typedef enum {
   GTHREE_NORMAL_MAP_TYPE_TANGENT_SPACE,
   GTHREE_NORMAL_MAP_TYPE_OBJECT_SPACE,
-}  GthreeNormalMapType;
+} GthreeNormalMapType;
 
 typedef enum {
   GTHREE_BIND_MODE_ATTACHED,
   GTHREE_BIND_MODE_DETACHED,
-}  GthreeBindMode;
+} GthreeBindMode;
 
 typedef enum {
   GTHREE_INTERPOLATION_MODE_DISCRETE,
   GTHREE_INTERPOLATION_MODE_LINEAR,
   GTHREE_INTERPOLATION_MODE_SMOOTH,
-}  GthreeInterpolationMode;
+} GthreeInterpolationMode;
 
 typedef enum {
   GTHREE_LOOP_MODE_ONCE,
   GTHREE_LOOP_MODE_REPEAT,
   GTHREE_LOOP_MODE_PINGPONG,
-}  GthreeLoopMode;
+} GthreeLoopMode;
 
 typedef enum {
   GTHREE_ENDING_MODE_ZERO_CURVATURE,
   GTHREE_ENDING_MODE_ZERO_SLOPE,
   GTHREE_ENDING_MODE_WRAP_AROUND,
-}  GthreeEndingMode;
+} GthreeEndingMode;
 
 typedef enum {
  GTHREE_VALUE_TYPE_COLOR,
  GTHREE_VALUE_TYPE_NUMBER,
  GTHREE_VALUE_TYPE_QUATERNION,
  GTHREE_VALUE_TYPE_VECTOR,
-}  GthreeValueType;
+} GthreeValueType;
 
 typedef enum {
  GTHREE_DRAW_MODE_TRIANGLES,
  GTHREE_DRAW_MODE_TRIANGLE_STRIP,
  GTHREE_DRAW_MODE_TRIANGLE_FAN,
-}  GthreeDrawMode;
-
+} GthreeDrawMode;
 
 G_END_DECLS
 
