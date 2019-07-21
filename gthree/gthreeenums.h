@@ -109,6 +109,11 @@ typedef enum {
 } GthreeNormalMapType;
 
 typedef enum {
+  GTHREE_DEPTH_PACKING_FORMAT_BASIC,
+  GTHREE_DEPTH_PACKING_FORMAT_RGBA,
+} GthreeDepthPackingFormat;
+
+typedef enum {
   GTHREE_BIND_MODE_ATTACHED,
   GTHREE_BIND_MODE_DETACHED,
 } GthreeBindMode;

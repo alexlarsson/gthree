@@ -69,7 +69,7 @@ typedef struct {
   guint physically_correct_lights : 1;
   guint double_sided : 1;
   guint flip_sided : 1;
-  guint depth_packing : 1;
+  guint depth_packing : 2;
   guint dithering : 1;
 
   guint8 alpha_test;

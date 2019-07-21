@@ -5,7 +5,7 @@
 #include "gthreecamera.h"
 
 typedef struct {
-  int dummy;
+  int format;
 } GthreeMeshDepthMaterialPrivate;
 
 
@@ -25,6 +25,8 @@ gthree_mesh_depth_material_new ()
 static void
 gthree_mesh_depth_material_init (GthreeMeshDepthMaterial *depth)
 {
+  GthreeMeshDepthMaterialPrivate *priv = gthree_mesh_depth_material_get_instance_private (depth);
+  priv->format = GTHREE_DEPTH_PACKING_FORMAT_BASIC;
 }
 
 static void
@@ -42,22 +44,42 @@ gthree_mesh_depth_material_real_get_shader (GthreeMaterial *material)
 
 static void
 gthree_mesh_depth_material_real_set_params (GthreeMaterial *material,
-                                       GthreeProgramParameters *params)
+                                            GthreeProgramParameters *params)
 {
+  GthreeMeshDepthMaterial *depth = GTHREE_MESH_DEPTH_MATERIAL (material);
+  GthreeMeshDepthMaterialPrivate *priv = gthree_mesh_depth_material_get_instance_private (depth);
 
-  params->depth_packing = TRUE;
+  params->depth_packing = 1 + priv->format;
 
   GTHREE_MATERIAL_CLASS (gthree_mesh_depth_material_parent_class)->set_params (material, params);
 }
 
 static void
 gthree_mesh_depth_material_real_set_uniforms (GthreeMaterial *material,
-                                         GthreeUniforms *uniforms,
-                                         GthreeCamera *camera)
+                                              GthreeUniforms *uniforms,
+                                              GthreeCamera *camera)
 {
   GTHREE_MATERIAL_CLASS (gthree_mesh_depth_material_parent_class)->set_uniforms (material, uniforms, camera);
 
 }
+
+GthreeDepthPackingFormat
+gthree_mesh_depth_material_get_depth_packing_format (GthreeMeshDepthMaterial  *depth)
+{
+  GthreeMeshDepthMaterialPrivate *priv = gthree_mesh_depth_material_get_instance_private (depth);
+
+  return priv->format;
+}
+
+void
+gthree_mesh_depth_material_set_depth_packing_format (GthreeMeshDepthMaterial  *depth,
+                                                     GthreeDepthPackingFormat  format)
+{
+  GthreeMeshDepthMaterialPrivate *priv = gthree_mesh_depth_material_get_instance_private (depth);
+
+  priv->format = format;
+}
+
 
 static void
 gthree_mesh_depth_material_class_init (GthreeMeshDepthMaterialClass *klass)

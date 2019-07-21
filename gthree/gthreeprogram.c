@@ -705,9 +705,14 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
       get_texel_decoding_function (fragment, "emissiveMapTexelToLinear", parameters->emissive_map_encoding);
       get_texel_encoding_function (fragment, "linearToOutputTexel", parameters->output_encoding);
 
-      // TODO: Just supports one (basic) format for now
-      if (parameters->depth_packing)
-        g_string_append_printf (fragment, "#define DEPTH_PACKING 3200\n");
+      if (parameters->depth_packing > 0)
+        {
+          GthreeDepthPackingFormat format = parameters->depth_packing - 1;
+          if (format == GTHREE_DEPTH_PACKING_FORMAT_BASIC)
+            g_string_append_printf (fragment, "#define DEPTH_PACKING 3200\n");
+          else
+            g_string_append_printf (fragment, "#define DEPTH_PACKING 3201\n");
+        }
   }
 
   g_string_append (vertex, vertex_shader);

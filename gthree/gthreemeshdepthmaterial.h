@@ -10,12 +10,12 @@
 G_BEGIN_DECLS
 
 
-#define GTHREE_TYPE_DEPTH_MATERIAL      (gthree_mesh_depth_material_get_type ())
-#define GTHREE_DEPTH_MATERIAL(inst)     (G_TYPE_CHECK_INSTANCE_CAST ((inst), \
-                                                                     GTHREE_TYPE_DEPTH_MATERIAL, \
+#define GTHREE_TYPE_MESH_DEPTH_MATERIAL      (gthree_mesh_depth_material_get_type ())
+#define GTHREE_MESH_DEPTH_MATERIAL(inst)     (G_TYPE_CHECK_INSTANCE_CAST ((inst), \
+                                                                     GTHREE_TYPE_MESH_DEPTH_MATERIAL, \
                                                                      GthreeMeshDepthMaterial))
-#define GTHREE_IS_DEPTH_MATERIAL(inst)  (G_TYPE_CHECK_INSTANCE_TYPE ((inst), \
-                                                                     GTHREE_TYPE_DEPTH_MATERIAL))
+#define GTHREE_IS_MESH_DEPTH_MATERIAL(inst)  (G_TYPE_CHECK_INSTANCE_TYPE ((inst), \
+                                                                     GTHREE_TYPE_MESH_DEPTH_MATERIAL))
 
 struct _GthreeMeshDepthMaterial {
   GthreeMeshMaterial parent;
@@ -31,9 +31,9 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeMeshDepthMaterial, g_object_unref)
 GthreeMeshDepthMaterial *gthree_mesh_depth_material_new ();
 GType gthree_mesh_depth_material_get_type (void) G_GNUC_CONST;
 
-GthreeShadingType gthree_mesh_depth_material_get_shading_type (GthreeMeshDepthMaterial *depth);
-void              gthree_mesh_depth_material_set_shading_type (GthreeMeshDepthMaterial *depth,
-                                                               GthreeShadingType        shading_type);
+GthreeDepthPackingFormat gthree_mesh_depth_material_get_depth_packing_format (GthreeMeshDepthMaterial  *depth);
+void                     gthree_mesh_depth_material_set_depth_packing_format (GthreeMeshDepthMaterial  *depth,
+                                                                              GthreeDepthPackingFormat  format);
 
 G_END_DECLS
 
