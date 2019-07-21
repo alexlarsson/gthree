@@ -27,6 +27,8 @@ typedef struct {
 
 } GthreeLineBasicMaterialClass;
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeLineBasicMaterial, g_object_unref)
+
 GType gthree_line_basic_material_get_type (void) G_GNUC_CONST;
 
 GthreeLineBasicMaterial *gthree_line_basic_material_new ();

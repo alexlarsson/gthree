@@ -26,6 +26,8 @@ typedef struct {
 
 } GthreeMeshNormalMaterialClass;
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeMeshNormalMaterial, g_object_unref)
+
 GType gthree_mesh_normal_material_get_type (void) G_GNUC_CONST;
 
 GthreeMeshNormalMaterial *gthree_mesh_normal_material_new ();

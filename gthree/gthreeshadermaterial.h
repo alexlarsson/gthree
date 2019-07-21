@@ -26,6 +26,8 @@ typedef struct {
 
 } GthreeShaderMaterialClass;
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeShaderMaterial, g_object_unref)
+
 GType gthree_shader_material_get_type (void) G_GNUC_CONST;
 
 GthreeShaderMaterial *gthree_shader_material_new (GthreeShader *shader);

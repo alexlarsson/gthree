@@ -26,6 +26,8 @@ typedef struct {
 
 } GthreeMeshDepthMaterialClass;
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeMeshDepthMaterial, g_object_unref)
+
 GthreeMeshDepthMaterial *gthree_mesh_depth_material_new ();
 GType gthree_mesh_depth_material_get_type (void) G_GNUC_CONST;
 

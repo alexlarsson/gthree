@@ -27,6 +27,8 @@ typedef struct {
 
 } GthreeMeshLambertMaterialClass;
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeMeshLambertMaterial, g_object_unref)
+
 GthreeMeshLambertMaterial *gthree_mesh_lambert_material_new ();
 GType gthree_mesh_lambert_material_get_type (void) G_GNUC_CONST;
 
