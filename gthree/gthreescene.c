@@ -10,6 +10,7 @@ typedef struct {
   GdkRGBA bg_color;
   gboolean bg_color_is_set;
   GthreeTexture *bg_texture;
+  GthreeMaterial *override_material;
 } GthreeScenePrivate;
 
 
@@ -43,6 +44,8 @@ gthree_scene_finalize (GObject *obj)
       gthree_resource_unuse (GTHREE_RESOURCE (priv->bg_texture));
       g_clear_object (&priv->bg_texture);
     }
+
+  g_clear_object (&priv->override_material);
 
   G_OBJECT_CLASS (gthree_scene_parent_class)->finalize (obj);
 }
@@ -97,8 +100,21 @@ gthree_scene_set_background_texture (GthreeScene   *scene,
 GthreeMaterial *
 gthree_scene_get_override_material (GthreeScene *scene)
 {
-  // TODO
-  return NULL;
+  GthreeScenePrivate *priv = gthree_scene_get_instance_private (scene);
+
+  return priv->override_material;
+}
+
+void
+gthree_scene_set_override_material (GthreeScene *scene,
+                                    GthreeMaterial *material)
+{
+  GthreeScenePrivate *priv = gthree_scene_get_instance_private (scene);
+
+  if (material)
+    g_object_ref (material);
+  g_clear_object (&priv->override_material);
+  priv->override_material = material;
 }
 
 static void
