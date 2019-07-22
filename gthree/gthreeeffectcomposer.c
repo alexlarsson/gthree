@@ -41,16 +41,10 @@ gthree_effect_composer_finalize (GObject *obj)
   GthreeEffectComposerPrivate *priv = gthree_effect_composer_get_instance_private (composer);
 
   if (priv->render_target1)
-    {
-      gthree_resource_unuse (GTHREE_RESOURCE (priv->render_target1));
       g_object_unref (priv->render_target1);
-    }
 
   if (priv->render_target2)
-    {
-      gthree_resource_unuse (GTHREE_RESOURCE (priv->render_target2));
-      g_object_unref (priv->render_target2);
-    }
+    g_object_unref (priv->render_target2);
 
   g_ptr_array_unref (priv->passes);
 
@@ -214,16 +208,10 @@ gthree_effect_composer_reset (GthreeEffectComposer *composer,
   old_height = priv->height;
 
   if (priv->render_target1)
-    {
-      gthree_resource_unuse (GTHREE_RESOURCE (priv->render_target1));
-      g_object_unref (priv->render_target1);
-    }
+    g_object_unref (priv->render_target1);
 
   if (priv->render_target2)
-    {
-      gthree_resource_unuse (GTHREE_RESOURCE (priv->render_target2));
-      g_object_unref (priv->render_target2);
-    }
+    g_object_unref (priv->render_target2);
 
   if (render_target == NULL)
     {
@@ -241,10 +229,7 @@ gthree_effect_composer_reset (GthreeEffectComposer *composer,
       priv->height = gthree_render_target_get_height (render_target);
     }
 
-  gthree_resource_use (GTHREE_RESOURCE (priv->render_target1));
-
   priv->render_target2 = gthree_render_target_clone (priv->render_target1);
-  gthree_resource_use (GTHREE_RESOURCE (priv->render_target2));
 
   priv->write_buffer = priv->render_target1;
   priv->read_buffer = priv->render_target2;

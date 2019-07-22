@@ -73,17 +73,8 @@ gthree_mesh_lambert_material_finalize (GObject *obj)
   GthreeMeshLambertMaterial *lambert = GTHREE_LAMBERT_MATERIAL (obj);
   GthreeMeshLambertMaterialPrivate *priv = gthree_mesh_lambert_material_get_instance_private (lambert);
 
-  if (priv->map)
-    {
-      gthree_resource_unuse (GTHREE_RESOURCE (priv->map));
-      g_clear_object (&priv->map);
-    }
-
-  if (priv->env_map)
-    {
-      gthree_resource_unuse (GTHREE_RESOURCE (priv->env_map));
-      g_clear_object (&priv->env_map);
-    }
+  g_clear_object (&priv->map);
+  g_clear_object (&priv->env_map);
 
   G_OBJECT_CLASS (gthree_mesh_lambert_material_parent_class)->finalize (obj);
 }
@@ -410,11 +401,6 @@ gthree_mesh_lambert_material_set_map (GthreeMeshLambertMaterial *lambert,
 {
   GthreeMeshLambertMaterialPrivate *priv = gthree_mesh_lambert_material_get_instance_private (lambert);
 
-  if (texture)
-    gthree_resource_use (GTHREE_RESOURCE (texture));
-  if (priv->map)
-    gthree_resource_unuse (GTHREE_RESOURCE (priv->map));
-
   if (g_set_object (&priv->map, texture))
     {
       gthree_material_set_needs_update (GTHREE_MATERIAL (lambert), TRUE);
@@ -436,11 +422,6 @@ gthree_mesh_lambert_material_set_env_map (GthreeMeshLambertMaterial *lambert,
                                           GthreeTexture *texture)
 {
   GthreeMeshLambertMaterialPrivate *priv = gthree_mesh_lambert_material_get_instance_private (lambert);
-
-  if (texture)
-    gthree_resource_use (GTHREE_RESOURCE (texture));
-  if (priv->env_map)
-    gthree_resource_unuse (GTHREE_RESOURCE (priv->env_map));
 
   if (g_set_object (&priv->env_map, texture))
     {

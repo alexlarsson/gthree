@@ -33,10 +33,7 @@ static void
 drop_attribute (GthreeAttribute *attribute)
 {
   if (attribute)
-    {
-      gthree_resource_unuse (GTHREE_RESOURCE (attribute));
-      g_object_unref (attribute);
-    }
+    g_object_unref (attribute);
 }
 
 static void
@@ -57,11 +54,7 @@ gthree_geometry_finalize (GObject *obj)
   GthreeGeometry *geometry = GTHREE_GEOMETRY (obj);
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
 
-  if (priv->index)
-    gthree_resource_unuse (GTHREE_RESOURCE (priv->index));
   g_clear_object (&priv->index);
-  if (priv->wireframe_index)
-    gthree_resource_unuse (GTHREE_RESOURCE (priv->wireframe_index));
   g_clear_object (&priv->wireframe_index);
   g_hash_table_unref (priv->attributes);
   if (priv->morph_attributes)
@@ -100,7 +93,6 @@ gthree_geometry_add_attribute (GthreeGeometry  *geometry,
   name = g_intern_string (name);
 
   g_hash_table_insert (priv->attributes, (char *)name, g_object_ref (attribute));
-  gthree_resource_use (GTHREE_RESOURCE (attribute));
 
   return attribute;
 }
@@ -155,7 +147,6 @@ gthree_geometry_get_wireframe_index (GthreeGeometry *geometry)
           priv->wireframe_index = gthree_attribute_new ("wireframeIndex",
                                                         GTHREE_ATTRIBUTE_TYPE_UINT32,
                                                         orig_count * 2, 1, FALSE);
-          gthree_resource_use (GTHREE_RESOURCE (priv->wireframe_index));
           for (i = 0; i < orig_count; i += 3)
             {
               int a = gthree_attribute_get_uint (priv->index, i + 0);
@@ -186,13 +177,8 @@ gthree_geometry_set_index (GthreeGeometry  *geometry,
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
 
   g_object_ref (index);
-  gthree_resource_use (GTHREE_RESOURCE (index));
 
-  if (priv->index)
-    gthree_resource_unuse (GTHREE_RESOURCE (priv->index));
   g_clear_object (&priv->index);
-  if (priv->wireframe_index)
-    gthree_resource_unuse (GTHREE_RESOURCE (priv->wireframe_index));
   g_clear_object (&priv->wireframe_index);
   priv->index = index;
 }
@@ -267,7 +253,6 @@ gthree_geometry_add_morph_attribute (GthreeGeometry *geometry,
     }
 
   g_ptr_array_add (attributes, g_object_ref (attribute));
-  gthree_resource_use (GTHREE_RESOURCE (attribute));
 }
 
 void

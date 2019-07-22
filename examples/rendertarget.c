@@ -59,8 +59,6 @@ init_scene (void)
                                        TRUE);
   gthree_texture_set_min_filter (gthree_render_target_get_texture (render_target),
                                  GTHREE_FILTER_LINEAR_MIPMAP_LINEAR);
-
-  gthree_resource_use (GTHREE_RESOURCE (render_target));
 }
 
 static gboolean

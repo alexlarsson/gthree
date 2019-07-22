@@ -177,4 +177,15 @@ void gthree_mesh_material_set_num_supported_morph_normals (GthreeMeshMaterial *m
                                                            int num_supported);
 
 
+typedef enum {
+  GTHREE_RESOURCE_KIND_TEXTURE,
+  GTHREE_RESOURCE_KIND_BUFFER,
+  GTHREE_RESOURCE_KIND_FRAMEBUFFER,
+  GTHREE_RESOURCE_KIND_RENDERBUFFER,
+} GthreeResourceKind;
+
+void gthree_resource_lazy_delete (GthreeResource *resource,
+                                  GthreeResourceKind kind,
+                                  guint           id);
+
 #endif /* __GTHREE_PRIVATE_H__ */

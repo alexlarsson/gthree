@@ -172,16 +172,6 @@ gthree_attribute_array_get_stride (GthreeAttributeArray *array)
 }
 
 static void
-gthree_attribute_array_destroy_buffer (GthreeAttributeArray *array)
-{
-  if (array->gl_buffer != 0)
-    {
-      glDeleteBuffers (1, &array->gl_buffer);
-      array->gl_buffer = 0;
-    }
-}
-
-static void
 gthree_attribute_array_create_buffer (GthreeAttributeArray *array, int buffer_type)
 {
   int usage = array->dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
@@ -1241,8 +1231,13 @@ static void
 gthree_attribute_real_unrealize (GthreeResource *resource)
 {
   GthreeAttribute *attribute = GTHREE_ATTRIBUTE (resource);
+  GthreeAttributeArray *array = attribute->array;
 
-  gthree_attribute_array_destroy_buffer (attribute->array);
+  if (array->gl_buffer != 0)
+    {
+      gthree_resource_lazy_delete (resource, GTHREE_RESOURCE_KIND_BUFFER, array->gl_buffer);
+      array->gl_buffer = 0;
+    }
 }
 
 guint8 *

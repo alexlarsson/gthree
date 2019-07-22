@@ -130,65 +130,16 @@ gthree_mesh_standard_material_finalize (GObject *obj)
   GthreeMeshStandardMaterial *standard = GTHREE_STANDARD_MATERIAL (obj);
   GthreeMeshStandardMaterialPrivate *priv = gthree_mesh_standard_material_get_instance_private (standard);
 
-  if (priv->map)
-    {
-      gthree_resource_unuse (GTHREE_RESOURCE (priv->map));
-      g_clear_object (&priv->map);
-    }
-
-  if (priv->env_map)
-    {
-      gthree_resource_unuse (GTHREE_RESOURCE (priv->env_map));
-      g_clear_object (&priv->env_map);
-    }
-
-  if (priv->light_map)
-    {
-      gthree_resource_unuse (GTHREE_RESOURCE (priv->light_map));
-      g_clear_object (&priv->light_map);
-    }
-
-  if (priv->ao_map)
-    {
-      gthree_resource_unuse (GTHREE_RESOURCE (priv->ao_map));
-      g_clear_object (&priv->ao_map);
-    }
-
-  if (priv->bump_map)
-    {
-      gthree_resource_unuse (GTHREE_RESOURCE (priv->bump_map));
-      g_clear_object (&priv->bump_map);
-    }
-
-  if (priv->normal_map)
-    {
-      gthree_resource_unuse (GTHREE_RESOURCE (priv->normal_map));
-      g_clear_object (&priv->normal_map);
-    }
-
-  if (priv->displacement_map)
-    {
-      gthree_resource_unuse (GTHREE_RESOURCE (priv->displacement_map));
-      g_clear_object (&priv->displacement_map);
-    }
-
-  if (priv->roughness_map)
-    {
-      gthree_resource_unuse (GTHREE_RESOURCE (priv->roughness_map));
-      g_clear_object (&priv->roughness_map);
-    }
-
-  if (priv->metalness_map)
-    {
-      gthree_resource_unuse (GTHREE_RESOURCE (priv->metalness_map));
-      g_clear_object (&priv->metalness_map);
-    }
-
-  if (priv->alpha_map)
-    {
-      gthree_resource_unuse (GTHREE_RESOURCE (priv->alpha_map));
-      g_clear_object (&priv->alpha_map);
-    }
+  g_clear_object (&priv->map);
+  g_clear_object (&priv->env_map);
+  g_clear_object (&priv->light_map);
+  g_clear_object (&priv->ao_map);
+  g_clear_object (&priv->bump_map);
+  g_clear_object (&priv->normal_map);
+  g_clear_object (&priv->displacement_map);
+  g_clear_object (&priv->roughness_map);
+  g_clear_object (&priv->metalness_map);
+  g_clear_object (&priv->alpha_map);
 
   G_OBJECT_CLASS (gthree_mesh_standard_material_parent_class)->finalize (obj);
 }
@@ -790,11 +741,6 @@ gthree_mesh_standard_material_set_emissive_map (GthreeMeshStandardMaterial *stan
 {
   GthreeMeshStandardMaterialPrivate *priv = gthree_mesh_standard_material_get_instance_private (standard);
 
-  if (texture)
-    gthree_resource_use (GTHREE_RESOURCE (texture));
-  if (priv->emissive_map)
-    gthree_resource_unuse (GTHREE_RESOURCE (priv->emissive_map));
-
   if (g_set_object (&priv->emissive_map, texture))
     {
       gthree_material_set_needs_update (GTHREE_MATERIAL (standard), TRUE);
@@ -876,11 +822,6 @@ gthree_mesh_standard_material_set_map (GthreeMeshStandardMaterial *standard,
 {
   GthreeMeshStandardMaterialPrivate *priv = gthree_mesh_standard_material_get_instance_private (standard);
 
-  if (texture)
-    gthree_resource_use (GTHREE_RESOURCE (texture));
-  if (priv->map)
-    gthree_resource_unuse (GTHREE_RESOURCE (priv->map));
-
   if (g_set_object (&priv->map, texture))
     {
       gthree_material_set_needs_update (GTHREE_MATERIAL (standard), TRUE);
@@ -902,11 +843,6 @@ gthree_mesh_standard_material_set_env_map (GthreeMeshStandardMaterial *standard,
                                            GthreeTexture *texture)
 {
   GthreeMeshStandardMaterialPrivate *priv = gthree_mesh_standard_material_get_instance_private (standard);
-
-  if (texture)
-    gthree_resource_use (GTHREE_RESOURCE (texture));
-  if (priv->env_map)
-    gthree_resource_unuse (GTHREE_RESOURCE (priv->env_map));
 
   if (g_set_object (&priv->env_map, texture))
     {
@@ -980,12 +916,6 @@ gthree_mesh_standard_material_set_light_map (GthreeMeshStandardMaterial *standar
 {
   GthreeMeshStandardMaterialPrivate *priv = gthree_mesh_standard_material_get_instance_private (standard);
 
-
-  if (texture)
-    gthree_resource_use (GTHREE_RESOURCE (texture));
-  if (priv->light_map)
-    gthree_resource_unuse (GTHREE_RESOURCE (priv->light_map));
-
   if (g_set_object (&priv->light_map, texture))
     {
       gthree_material_set_needs_update (GTHREE_MATERIAL (standard), TRUE);
@@ -1028,11 +958,6 @@ gthree_mesh_standard_material_set_ao_map (GthreeMeshStandardMaterial *standard,
                                           GthreeTexture              *texture)
 {
   GthreeMeshStandardMaterialPrivate *priv = gthree_mesh_standard_material_get_instance_private (standard);
-
-  if (texture)
-    gthree_resource_use (GTHREE_RESOURCE (texture));
-  if (priv->ao_map)
-    gthree_resource_unuse (GTHREE_RESOURCE (priv->ao_map));
 
   if (g_set_object (&priv->ao_map, texture))
     {
@@ -1078,11 +1003,6 @@ gthree_mesh_standard_material_set_bump_map (GthreeMeshStandardMaterial *standard
 {
   GthreeMeshStandardMaterialPrivate *priv = gthree_mesh_standard_material_get_instance_private (standard);
 
-  if (texture)
-    gthree_resource_use (GTHREE_RESOURCE (texture));
-  if (priv->bump_map)
-    gthree_resource_unuse (GTHREE_RESOURCE (priv->bump_map));
-
   if (g_set_object (&priv->bump_map, texture))
     {
       gthree_material_set_needs_update (GTHREE_MATERIAL (standard), TRUE);
@@ -1125,11 +1045,6 @@ gthree_mesh_standard_material_set_normal_map (GthreeMeshStandardMaterial *standa
                                               GthreeTexture              *texture)
 {
   GthreeMeshStandardMaterialPrivate *priv = gthree_mesh_standard_material_get_instance_private (standard);
-
- if (texture)
-    gthree_resource_use (GTHREE_RESOURCE (texture));
-  if (priv->normal_map)
-    gthree_resource_unuse (GTHREE_RESOURCE (priv->normal_map));
 
   if (g_set_object (&priv->normal_map, texture))
     {
@@ -1194,11 +1109,6 @@ gthree_mesh_standard_material_set_displacement_map (GthreeMeshStandardMaterial *
                                                     GthreeTexture              *texture)
 {
   GthreeMeshStandardMaterialPrivate *priv = gthree_mesh_standard_material_get_instance_private (standard);
-
-  if (texture)
-    gthree_resource_use (GTHREE_RESOURCE (texture));
-  if (priv->displacement_map)
-    gthree_resource_unuse (GTHREE_RESOURCE (priv->displacement_map));
 
   if (g_set_object (&priv->displacement_map, texture))
     {
@@ -1265,11 +1175,6 @@ gthree_mesh_standard_material_set_roughness_map (GthreeMeshStandardMaterial *sta
 {
   GthreeMeshStandardMaterialPrivate *priv = gthree_mesh_standard_material_get_instance_private (standard);
 
-  if (texture)
-    gthree_resource_use (GTHREE_RESOURCE (texture));
-  if (priv->roughness_map)
-    gthree_resource_unuse (GTHREE_RESOURCE (priv->roughness_map));
-
   if (g_set_object (&priv->roughness_map, texture))
     {
       gthree_material_set_needs_update (GTHREE_MATERIAL (standard), TRUE);
@@ -1292,11 +1197,6 @@ gthree_mesh_standard_material_set_metalness_map (GthreeMeshStandardMaterial *sta
 {
   GthreeMeshStandardMaterialPrivate *priv = gthree_mesh_standard_material_get_instance_private (standard);
 
-  if (texture)
-    gthree_resource_use (GTHREE_RESOURCE (texture));
-  if (priv->metalness_map)
-    gthree_resource_unuse (GTHREE_RESOURCE (priv->metalness_map));
-
   if (g_set_object (&priv->metalness_map, texture))
     {
       gthree_material_set_needs_update (GTHREE_MATERIAL (standard), TRUE);
@@ -1318,11 +1218,6 @@ gthree_mesh_standard_material_set_alpha_map (GthreeMeshStandardMaterial *standar
                                              GthreeTexture              *texture)
 {
   GthreeMeshStandardMaterialPrivate *priv = gthree_mesh_standard_material_get_instance_private (standard);
-
-  if (texture)
-    gthree_resource_use (GTHREE_RESOURCE (texture));
-  if (priv->alpha_map)
-    gthree_resource_unuse (GTHREE_RESOURCE (priv->alpha_map));
 
   if (g_set_object (&priv->alpha_map, texture))
     {

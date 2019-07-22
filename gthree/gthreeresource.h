@@ -25,23 +25,25 @@ struct _GthreeResource {
 typedef struct {
   GObjectClass parent_class;
 
-  void (*used) (GthreeResource *resource);
-  void (*unused) (GthreeResource *resource);
+  void (*set_used) (GthreeResource *resource,
+                    gboolean        used);
   void (*unrealize) (GthreeResource *resource);
 } GthreeResourceClass;
 
 GType gthree_resource_get_type (void) G_GNUC_CONST;
 
+void gthree_resources_flush_deletes        (GdkGLContext *context);
 void gthree_resources_unrealize_all_for    (GdkGLContext *context);
+void gthree_resources_set_all_unused_for   (GdkGLContext *context);
 void gthree_resources_unrealize_unused_for (GdkGLContext *context);
 
 void     gthree_resource_set_realized_for (GthreeResource *resource,
                                            GdkGLContext   *context);
-gboolean gtahree_resource_is_realized      (GthreeResource *resource);
+gboolean gtahree_resource_is_realized     (GthreeResource *resource);
 void     gthree_resource_unrealize        (GthreeResource *resource);
-gboolean gtahree_resource_is_used         (GthreeResource *resource);
-void     gthree_resource_use              (GthreeResource *resource);
-void     gthree_resource_unuse            (GthreeResource *resource);
+gboolean gtahree_resource_get_used        (GthreeResource *resource);
+void     gthree_resource_set_used         (GthreeResource *resource,
+                                           gboolean        used);
 
 G_END_DECLS
 

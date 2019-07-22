@@ -79,29 +79,19 @@ gthree_render_target_finalize (GObject *obj)
 
 
 static void
-gthree_render_target_used (GthreeResource *resource)
+gthree_render_target_set_used (GthreeResource *resource,
+                               gboolean        used)
 {
   GthreeRenderTarget *target = GTHREE_RENDER_TARGET (resource);
   GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
 
-  if (priv->texture)
-    gthree_resource_use (GTHREE_RESOURCE (priv->texture));
-
-  if (priv->depth_texture)
-    gthree_resource_use (GTHREE_RESOURCE (priv->depth_texture));
-}
-
-static void
-gthree_render_target_unused (GthreeResource *resource)
-{
-  GthreeRenderTarget *target = GTHREE_RENDER_TARGET (resource);
-  GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
+  GTHREE_RESOURCE_CLASS (gthree_render_target_parent_class)->set_used (resource, used);
 
   if (priv->texture)
-    gthree_resource_unuse (GTHREE_RESOURCE (priv->texture));
+    gthree_resource_set_used (GTHREE_RESOURCE (priv->texture), used);
 
   if (priv->depth_texture)
-    gthree_resource_unuse (GTHREE_RESOURCE (priv->depth_texture));
+    gthree_resource_set_used (GTHREE_RESOURCE (priv->depth_texture), used);
 }
 
 static void
@@ -112,13 +102,13 @@ gthree_render_target_unrealize (GthreeResource *resource)
 
   if (priv->gl_framebuffer)
     {
-      glDeleteFramebuffers (1, &priv->gl_framebuffer);
+      gthree_resource_lazy_delete (resource, GTHREE_RESOURCE_KIND_FRAMEBUFFER, priv->gl_framebuffer);
       priv->gl_framebuffer = 0;
     }
 
   if (priv->gl_depthbuffer)
     {
-      glDeleteRenderbuffers (1, &priv->gl_depthbuffer);
+      gthree_resource_lazy_delete (resource, GTHREE_RESOURCE_KIND_RENDERBUFFER, priv->gl_depthbuffer);
       priv->gl_depthbuffer = 0;
     }
 }
@@ -130,8 +120,7 @@ gthree_render_target_class_init (GthreeRenderTargetClass *klass)
 
   G_OBJECT_CLASS (klass)->finalize = gthree_render_target_finalize;
   resource_class->unrealize = gthree_render_target_unrealize;
-  resource_class->unused = gthree_render_target_unused;
-  resource_class->used = gthree_render_target_used;
+  resource_class->set_used = gthree_render_target_set_used;
 }
 
 GthreeRenderTarget *

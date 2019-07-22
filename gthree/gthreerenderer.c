@@ -1984,8 +1984,8 @@ gthree_renderer_render (GthreeRenderer *renderer,
   gthree_camera_get_proj_screen_matrix (camera, &priv->proj_screen_matrix);
   graphene_frustum_init_from_matrix (&priv->frustum, &priv->proj_screen_matrix);
 
-  /* Unrealize unused resources to avoid leaking forever */
-  gthree_resources_unrealize_unused_for (priv->gl_context);
+  /* Flush lazily deleted resources to avoid leaking until widget unrealize */
+  gthree_resources_flush_deletes (priv->gl_context);
 
   gthree_render_list_init (priv->current_render_list);
 

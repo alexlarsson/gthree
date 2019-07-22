@@ -487,10 +487,7 @@ gthree_bloom_pass_finalize (GObject *obj)
 {
   GthreeBloomPass *pass = GTHREE_BLOOM_PASS (obj);
 
-  gthree_resource_unuse (GTHREE_RESOURCE (pass->render_target_x));
   g_clear_object (&pass->render_target_x);
-
-  gthree_resource_unuse (GTHREE_RESOURCE (pass->render_target_y));
   g_clear_object (&pass->render_target_y);
 
   g_clear_object (&pass->fs_quad);
@@ -611,11 +608,9 @@ gthree_bloom_pass_new (float strength, float sigma, int resolution)
   // render targets
 
   pass->render_target_x = gthree_render_target_new (resolution, resolution);
-  gthree_resource_use (GTHREE_RESOURCE (pass->render_target_x));
   gthree_texture_set_name (gthree_render_target_get_texture (pass->render_target_x), "BloomPass.x");
 
   pass->render_target_y = gthree_render_target_new (resolution, resolution);
-  gthree_resource_use (GTHREE_RESOURCE (pass->render_target_y));
   gthree_texture_set_name (gthree_render_target_get_texture (pass->render_target_y), "BloomPass.y");
 
   // copy material

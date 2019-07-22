@@ -88,17 +88,8 @@ gthree_mesh_phong_material_finalize (GObject *obj)
   GthreeMeshPhongMaterial *phong = GTHREE_PHONG_MATERIAL (obj);
   GthreeMeshPhongMaterialPrivate *priv = gthree_mesh_phong_material_get_instance_private (phong);
 
-  if (priv->map)
-    {
-      gthree_resource_unuse (GTHREE_RESOURCE (priv->map));
-      g_clear_object (&priv->map);
-    }
-
-  if (priv->env_map)
-    {
-      gthree_resource_unuse (GTHREE_RESOURCE (priv->env_map));
-      g_clear_object (&priv->env_map);
-    }
+  g_clear_object (&priv->map);
+  g_clear_object (&priv->env_map);
 
   G_OBJECT_CLASS (gthree_mesh_phong_material_parent_class)->finalize (obj);
 }
@@ -527,11 +518,6 @@ gthree_mesh_phong_material_set_map (GthreeMeshPhongMaterial *phong,
 {
   GthreeMeshPhongMaterialPrivate *priv = gthree_mesh_phong_material_get_instance_private (phong);
 
-  if (texture)
-    gthree_resource_use (GTHREE_RESOURCE (texture));
-  if (priv->map)
-    gthree_resource_unuse (GTHREE_RESOURCE (priv->map));
-
   if (g_set_object (&priv->map, texture))
     {
       gthree_material_set_needs_update (GTHREE_MATERIAL (phong), TRUE);
@@ -553,11 +539,6 @@ gthree_mesh_phong_material_set_env_map (GthreeMeshPhongMaterial *phong,
                                           GthreeTexture *texture)
 {
   GthreeMeshPhongMaterialPrivate *priv = gthree_mesh_phong_material_get_instance_private (phong);
-
-  if (texture)
-    gthree_resource_use (GTHREE_RESOURCE (texture));
-  if (priv->env_map)
-    gthree_resource_unuse (GTHREE_RESOURCE (priv->env_map));
 
   if (g_set_object (&priv->env_map, texture))
     {
