@@ -803,3 +803,11 @@ gthree_texture_get_anisotropy (GthreeTexture *texture)
 
   return priv->anisotropy;
 }
+
+int
+gthree_texture_get_gl_texture (GthreeTexture *texture)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  return priv->gl_texture;
+}

@@ -71,6 +71,13 @@ GthreeTexture *gthree_render_target_get_depth_texture (GthreeRenderTarget *targe
 void           gthree_render_target_set_depth_texture (GthreeRenderTarget *target,
                                                        GthreeTexture *texture);
 void           gthree_render_target_update_mipmap     (GthreeRenderTarget *target);
+void           gthree_render_target_download          (GthreeRenderTarget *target,
+                                                       guchar     *data,
+                                                       gsize       stride);
+void           gthree_render_target_download_area     (GthreeRenderTarget *target,
+                                                       const GdkRectangle *area,
+                                                       guchar     *data,
+                                                       gsize       stride);
 
 G_END_DECLS
 

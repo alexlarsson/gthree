@@ -531,3 +531,53 @@ gthree_render_target_realize (GthreeRenderTarget *target)
   if (priv->depth_buffer)
     setup_depth_renderbuffer (target);
 }
+
+void
+gthree_render_target_download (GthreeRenderTarget *target,
+                               guchar     *data,
+                               gsize       stride)
+{
+  GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
+  GdkRectangle all = { 0, 0, priv->width, priv->height };
+
+  gthree_render_target_download_area (target, &all, data, stride);
+}
+
+void
+gthree_render_target_download_area (GthreeRenderTarget *target,
+                                    const GdkRectangle *area,
+                                    guchar     *data,
+                                    gsize       stride)
+{
+  GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
+  cairo_surface_t *surface;
+  int alpha_size = 0;
+  gboolean is_gles = gdk_gl_context_get_use_es (gdk_gl_context_get_current ());
+
+  if (is_gles)
+    alpha_size = 1;
+  else
+    glGetTexLevelParameteriv (GL_TEXTURE_2D, 0, GL_TEXTURE_ALPHA_SIZE,  &alpha_size);
+
+  surface = cairo_image_surface_create_for_data (data,
+                                                 (alpha_size == 0) ? CAIRO_FORMAT_RGB24 : CAIRO_FORMAT_ARGB32,
+                                                 area->width, area->height, stride);
+
+
+  gthree_texture_bind (priv->texture, 0, GL_TEXTURE_2D);
+
+  glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
+                             GL_TEXTURE_2D, gthree_texture_get_gl_texture (priv->texture), 0);
+  glPixelStorei (GL_PACK_ALIGNMENT, 4);
+  glPixelStorei (GL_PACK_ROW_LENGTH, cairo_image_surface_get_stride (surface) / 4);
+
+  if (!is_gles)
+    glReadPixels (area->x, area->y, area->width, area->height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
+                  cairo_image_surface_get_data (surface));
+  else
+    glReadPixels (area->x, area->y, area->width, area->height, GL_RGBA, GL_UNSIGNED_BYTE,
+                  cairo_image_surface_get_data (surface));
+
+  glPixelStorei (GL_PACK_ROW_LENGTH, 0);
+  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
+}

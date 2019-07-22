@@ -80,6 +80,8 @@ const char *           gthree_texture_get_name             (GthreeTexture       
 void                   gthree_texture_set_uuid             (GthreeTexture        *texture,
                                                             const char           *uuid);
 const char *           gthree_texture_get_uuid             (GthreeTexture        *texture);
+int                    gthree_texture_get_gl_texture       (GthreeTexture        *texture);
+
 
 G_END_DECLS
 
