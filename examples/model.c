@@ -181,6 +181,7 @@ tick (GtkWidget     *widget,
   graphene_point3d_t pos;
   graphene_euler_t rot;
   static gint64 last_frame_time_i = 0;
+  static gint64 first_frame_time_i = 0;
   gint64 frame_time_i;
   float frame_time;
 
@@ -190,10 +191,12 @@ tick (GtkWidget     *widget,
       float delta_time_sec = (frame_time_i - last_frame_time_i) / (float) G_USEC_PER_SEC;
       gthree_animation_mixer_update (mixer, delta_time_sec);
     }
+  else
+    first_frame_time_i = frame_time_i;
   last_frame_time_i = frame_time_i;
 
   // Scale to some random useful float value
-  frame_time = frame_time_i / 100000.0;
+  frame_time = (frame_time_i - first_frame_time_i) / 100000.0;
 
   gthree_object_set_rotation (GTHREE_OBJECT (point_light_group),
                               graphene_euler_init (&rot,

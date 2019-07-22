@@ -178,11 +178,14 @@ tick (GtkWidget     *widget,
   graphene_euler_t rot;
   graphene_point3d_t pos;
   gint64 frame_time;
+  static gint64 first_frame_time = 0;
   float angle;
   int i;
 
   frame_time = gdk_frame_clock_get_frame_time (frame_clock);
-  angle = frame_time / 40000.0;
+  if (first_frame_time == 0)
+    first_frame_time = frame_time;
+  angle = (frame_time - first_frame_time)/ 40000.0;
 
   for (i = 0; i < N_SEGMENTS+1; i++)
     {

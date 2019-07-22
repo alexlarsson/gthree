@@ -277,11 +277,14 @@ tick (GtkWidget     *widget,
   graphene_euler_t rot;
   GList *l;
   gint64 frame_time;
+  static gint64 first_frame_time = 0;
   float angle;
   GdkRGBA color;
 
   frame_time = gdk_frame_clock_get_frame_time (frame_clock);
-  angle = frame_time / 4000000.0;
+  if (first_frame_time == 0)
+    first_frame_time = frame_time;
+  angle = (frame_time - first_frame_time) / 4000000.0;
 
   gthree_object_set_position (GTHREE_OBJECT (camera),
                               graphene_point3d_init (&pos,
