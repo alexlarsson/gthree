@@ -238,8 +238,8 @@ update_scene (GthreeArea *area)
 
   active_action = NULL;
   g_clear_object (&mixer);
-  //g_clear_object (&scene);
-  //g_clear_object (&loader);
+  g_clear_object (&scene);
+  g_clear_object (&loader);
 
   load_scene ();
   get_scene_size ();
