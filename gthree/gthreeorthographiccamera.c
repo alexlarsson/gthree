@@ -36,8 +36,8 @@ gthree_orthographic_camera_update (GthreeCamera *camera)
   graphene_matrix_init_ortho (m,
                               priv->left,
                               priv->right,
-                              priv->top,
                               priv->bottom,
+                              priv->top,
                               gthree_camera_get_near (camera),
                               gthree_camera_get_far (camera));
 }
