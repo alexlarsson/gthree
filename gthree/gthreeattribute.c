@@ -137,11 +137,14 @@ gthree_attribute_array_ref (GthreeAttributeArray *array)
 void
 gthree_attribute_array_unref (GthreeAttributeArray *array)
 {
-  g_assert (array->gl_buffer == 0);
   g_assert (array->ref_count > 0);
   array->ref_count--;
+
   if (array->ref_count == 0)
-    g_free (array);
+    {
+      g_assert (array->gl_buffer == 0);
+      g_free (array);
+    }
 }
 
 GthreeAttributeType
