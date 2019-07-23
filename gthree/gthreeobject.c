@@ -362,6 +362,18 @@ gthree_object_set_visible (GthreeObject *object,
   g_object_notify_by_pspec (G_OBJECT (object), obj_props[PROP_VISIBLE]);
 }
 
+void
+gthree_object_show (GthreeObject *object)
+{
+  gthree_object_set_visible (object, TRUE);
+}
+
+void
+gthree_object_hide (GthreeObject *object)
+{
+  gthree_object_set_visible (object, FALSE);
+}
+
 gboolean
 gthree_object_get_is_frustum_culled (GthreeObject *object)
 {
