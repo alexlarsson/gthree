@@ -55,6 +55,9 @@ typedef void (*GthreeBeforeRenderCallback) (GthreeObject                *object,
                                             GthreeScene                 *scene,
                                             GthreeCamera                *camera);
 
+typedef void (*GthreeTraverseCallback) (GthreeObject                *object,
+                                        gpointer                     user_data);
+
 
 
 const char *                 gthree_object_get_name                     (GthreeObject                *object);
@@ -118,10 +121,19 @@ GthreeObject *               gthree_object_get_previous_sibling         (GthreeO
 void                         gthree_object_destroy_all_children         (GthreeObject                *object);
 void                         gthree_object_set_before_render_callback   (GthreeObject                *object,
                                                                          GthreeBeforeRenderCallback   callback);
-GList *                      gthree_object_find_by_type                 (GthreeObject                *object,
-                                                                         GType                        g_type);
 void                         gthree_object_get_mesh_extents             (GthreeObject                *object,
                                                                          graphene_box_t              *box);
+void                         gthree_object_traverse                     (GthreeObject                *object,
+                                                                         GthreeTraverseCallback       callback,
+                                                                         gpointer                     user_data);
+void                         gthree_object_traverse_visible             (GthreeObject                *object,
+                                                                         GthreeTraverseCallback       callback,
+                                                                         gpointer                     user_data);
+void                         gthree_object_traverse_ancestors           (GthreeObject                *object,
+                                                                         GthreeTraverseCallback       callback,
+                                                                         gpointer                     user_data);
+GList *                      gthree_object_find_by_type                 (GthreeObject                *object,
+                                                                         GType                        g_type);
 
 
 typedef struct _GthreeObjectIter GthreeObjectIter;

@@ -987,6 +987,54 @@ gthree_object_iter_destroy (GthreeObjectIter *iter)
     }
 }
 
+void
+gthree_object_traverse (GthreeObject                *object,
+                        GthreeTraverseCallback       callback,
+                        gpointer                     user_data)
+{
+  GthreeObjectIter iter;
+  GthreeObject *child;
+
+  callback (object, user_data);
+
+  gthree_object_iter_init (&iter, object);
+  while (gthree_object_iter_next (&iter, &child))
+    gthree_object_traverse (child, callback, user_data);
+}
+
+void
+gthree_object_traverse_visible (GthreeObject                *object,
+                                GthreeTraverseCallback       callback,
+                                gpointer                     user_data)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+  GthreeObjectIter iter;
+  GthreeObject *child;
+
+  if (!priv->visible)
+    return;
+
+  callback (object, user_data);
+
+  gthree_object_iter_init (&iter, object);
+  while (gthree_object_iter_next (&iter, &child))
+    gthree_object_traverse_visible (child, callback, user_data);
+}
+
+void
+gthree_object_traverse_ancestors (GthreeObject                *object,
+                                  GthreeTraverseCallback       callback,
+                                  gpointer                     user_data)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  if (priv->parent != NULL)
+    {
+      callback (priv->parent, user_data);
+      gthree_object_traverse_ancestors (priv->parent, callback, user_data);
+    }
+}
+
 static void
 _gthree_object_find_by_type (GthreeObject *object,
                              GType g_type,
