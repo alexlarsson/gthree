@@ -58,8 +58,6 @@ typedef void (*GthreeBeforeRenderCallback) (GthreeObject                *object,
 typedef void (*GthreeTraverseCallback) (GthreeObject                *object,
                                         gpointer                     user_data);
 
-
-
 const char *                 gthree_object_get_name                     (GthreeObject                *object);
 void                         gthree_object_set_name                     (GthreeObject                *object,
                                                                          const char                  *name);
@@ -106,6 +104,17 @@ void                         gthree_object_set_visible                  (GthreeO
                                                                          gboolean                     visible);
 void                         gthree_object_show                         (GthreeObject                *object);
 void                         gthree_object_hide                         (GthreeObject                *object);
+guint32                      gthree_object_get_layer_mask               (GthreeObject                *object);
+void                         gthree_object_set_layer                    (GthreeObject                *object,
+                                                                         guint                        layer);
+void                         gthree_object_enable_layer                 (GthreeObject                *object,
+                                                                         guint                        layer);
+void                         gthree_object_disable_layer                (GthreeObject                *object,
+                                                                         guint                        layer);
+void                         gthree_object_toggle_layer                 (GthreeObject                *object,
+                                                                         guint                        layer);
+gboolean                     gthree_object_check_layer                  (GthreeObject                *object,
+                                                                         guint32                      layer_mask);
 gboolean                     gthree_object_get_is_frustum_culled        (GthreeObject                *object);
 gboolean                     gthree_object_is_in_frustum                (GthreeObject                *object,
                                                                          const graphene_frustum_t    *frustum);
@@ -138,6 +147,7 @@ GList *                      gthree_object_find_by_type                 (GthreeO
                                                                          GType                        g_type);
 GList *                      gthree_object_find_by_name                 (GthreeObject                *object,
                                                                          const char                  *name);
+
 
 
 typedef struct _GthreeObjectIter GthreeObjectIter;

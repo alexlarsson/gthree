@@ -821,57 +821,60 @@ project_object (GthreeRenderer *renderer,
   if (!gthree_object_get_visible (object))
     return;
 
-  if (GTHREE_IS_GROUP (object))
+  if (gthree_object_check_layer (object, gthree_object_get_layer_mask (GTHREE_OBJECT (camera))))
     {
+      if (GTHREE_IS_GROUP (object))
+        {
 #if 0
-      groupOrder = object.renderOrder;
+          groupOrder = object.renderOrder;
 #endif
-    }
-  else if (GTHREE_IS_LIGHT (object))
-    {
-      priv->lights = g_list_append (priv->lights, object);
-#if TODO
-      if (object.castShadow)
-        currentRenderState.pushShadow ( );
-#endif
-    }
-  else if (GTHREE_IS_MESH (object) || GTHREE_IS_LINE_SEGMENTS (object))
-    {
-      if (GTHREE_IS_SKINNED_MESH (object))
-        {
-          GthreeSkeleton *skeleton = gthree_skinned_mesh_get_skeleton (GTHREE_SKINNED_MESH (object));
-          if (skeleton)
-            gthree_skeleton_update (skeleton);
         }
-
-      if (!gthree_object_get_is_frustum_culled (object) || gthree_object_is_in_frustum (object, &priv->frustum))
+      else if (GTHREE_IS_LIGHT (object))
         {
-          gthree_object_update (object);
-
-          if (priv->sort_objects)
-            {
+          priv->lights = g_list_append (priv->lights, object);
 #if TODO
-              if (object.renderDepth != null)
-                {
-                  z = object.renderDepth;
-                }
-              else
+          if (object.castShadow)
+            currentRenderState.pushShadow ( );
 #endif
-                {
-                  graphene_vec4_t vector;
-
-                  /* Get position */
-                  graphene_matrix_get_row (gthree_object_get_world_matrix (object), 3, &vector);
-
-                  /* project object position to screen */
-                  graphene_matrix_transform_vec4 (&priv->proj_screen_matrix, &vector, &vector);
-
-                  z = graphene_vec4_get_z (&vector) / graphene_vec4_get_w (&vector);
-                }
+        }
+      else if (GTHREE_IS_MESH (object) || GTHREE_IS_LINE_SEGMENTS (object))
+        {
+          if (GTHREE_IS_SKINNED_MESH (object))
+            {
+              GthreeSkeleton *skeleton = gthree_skinned_mesh_get_skeleton (GTHREE_SKINNED_MESH (object));
+              if (skeleton)
+                gthree_skeleton_update (skeleton);
             }
-          priv->current_render_list->current_z = z;
 
-          gthree_object_fill_render_list (object, priv->current_render_list);
+          if (!gthree_object_get_is_frustum_culled (object) || gthree_object_is_in_frustum (object, &priv->frustum))
+            {
+              gthree_object_update (object);
+
+              if (priv->sort_objects)
+                {
+#if TODO
+                  if (object.renderDepth != null)
+                    {
+                      z = object.renderDepth;
+                    }
+                  else
+#endif
+                    {
+                      graphene_vec4_t vector;
+
+                      /* Get position */
+                      graphene_matrix_get_row (gthree_object_get_world_matrix (object), 3, &vector);
+
+                      /* project object position to screen */
+                      graphene_matrix_transform_vec4 (&priv->proj_screen_matrix, &vector, &vector);
+
+                      z = graphene_vec4_get_z (&vector) / graphene_vec4_get_w (&vector);
+                    }
+                }
+              priv->current_render_list->current_z = z;
+
+              gthree_object_fill_render_list (object, priv->current_render_list);
+            }
         }
     }
 

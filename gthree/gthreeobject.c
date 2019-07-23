@@ -33,6 +33,7 @@ typedef struct {
   graphene_matrix_t normal_matrix;
 
   gboolean visible;
+  guint32 layer_mask;
 
   GthreeBeforeRenderCallback before_render_cb;
 
@@ -121,6 +122,7 @@ gthree_object_init (GthreeObject *object)
   priv->matrix_auto_update = TRUE;
   priv->matrix_need_update = TRUE;
   priv->visible = TRUE;
+  priv->layer_mask = 1;
   priv->frustum_culled = TRUE;
 
   graphene_matrix_init_identity (&priv->matrix);
@@ -372,6 +374,59 @@ void
 gthree_object_hide (GthreeObject *object)
 {
   gthree_object_set_visible (object, FALSE);
+}
+
+guint32
+gthree_object_get_layer_mask (GthreeObject *object)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  return priv->layer_mask;
+}
+
+void
+gthree_object_set_layer (GthreeObject *object,
+                         guint layer)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  priv->layer_mask = 1 << layer;
+}
+
+void
+gthree_object_enable_layer (GthreeObject *object,
+                            guint layer)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  priv->layer_mask |= 1 << layer;
+}
+
+void
+gthree_object_disable_layer (GthreeObject *object,
+                             guint layer)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  priv->layer_mask &= ~ (1 << layer);
+}
+
+void
+gthree_object_toggle_layer (GthreeObject *object,
+                            guint layer)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  priv->layer_mask ^= ~ 1 << layer;
+}
+
+gboolean
+gthree_object_check_layer (GthreeObject *object,
+                           guint32 layer_mask)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  return (priv->layer_mask & layer_mask) != 0;
 }
 
 gboolean
