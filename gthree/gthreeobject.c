@@ -1035,31 +1035,56 @@ gthree_object_traverse_ancestors (GthreeObject                *object,
     }
 }
 
+struct FindByType {
+  GType g_type;
+  GList *list;
+};
+
 static void
-_gthree_object_find_by_type (GthreeObject *object,
-                             GType g_type,
-                             GList **list)
+find_by_type_cb (GthreeObject *object,
+                 gpointer user_data)
 {
+  struct FindByType *data = user_data;
 
-  GthreeObjectIter iter;
-  GthreeObject *child;
-
-  if (G_TYPE_CHECK_INSTANCE_TYPE (object, g_type))
-    *list = g_list_prepend (*list, object);
-
-  gthree_object_iter_init (&iter, object);
-  while (gthree_object_iter_next (&iter, &child))
-    _gthree_object_find_by_type (child, g_type, list);
+  if (G_TYPE_CHECK_INSTANCE_TYPE (object, data->g_type))
+    data->list = g_list_prepend (data->list, object);
 }
 
 GList *
 gthree_object_find_by_type (GthreeObject *object,
                             GType  g_type)
 {
-  GList *list = NULL;
+  struct FindByType data = { g_type, NULL};
 
-  _gthree_object_find_by_type (object, g_type, &list);
-  return g_list_reverse (list);
+  gthree_object_traverse (object,  find_by_type_cb, &data);
+  return g_list_reverse (data.list);
+}
+
+struct FindByName {
+  const char *name;
+  GList *list;
+};
+
+static void
+find_by_name_cb (GthreeObject *object,
+                 gpointer user_data)
+{
+  struct FindByName *data = user_data;
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  if (g_strcmp0 (data->name, priv->name) == 0 ||
+      g_strcmp0 (data->name, priv->uuid) == 0)
+    data->list = g_list_prepend (data->list, object);
+}
+
+GList *
+gthree_object_find_by_name (GthreeObject *object,
+                            const char *name)
+{
+  struct FindByName data = { name, NULL};
+
+  gthree_object_traverse (object, find_by_name_cb, &data);
+  return g_list_reverse (data.list);
 }
 
 void

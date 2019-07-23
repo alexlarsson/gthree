@@ -134,6 +134,8 @@ void                         gthree_object_traverse_ancestors           (GthreeO
                                                                          gpointer                     user_data);
 GList *                      gthree_object_find_by_type                 (GthreeObject                *object,
                                                                          GType                        g_type);
+GList *                      gthree_object_find_by_name                 (GthreeObject                *object,
+                                                                         const char                  *name);
 
 
 typedef struct _GthreeObjectIter GthreeObjectIter;
