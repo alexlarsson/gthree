@@ -545,11 +545,10 @@ gthree_renderer_set_render_target (GthreeRenderer *renderer,
 #endif
     }
 
-  if (priv->current_framebuffer != framebuffer)
-    {
-      glBindFramebuffer (GL_FRAMEBUFFER, framebuffer);
-      priv->current_framebuffer = framebuffer;
-    }
+  /* We always set the framebuffer, because something other than the renderer may have changed it
+     inbetween. For instance, a gthree_render_target_download() will do so */
+  glBindFramebuffer (GL_FRAMEBUFFER, framebuffer);
+  priv->current_framebuffer = framebuffer;
 
   glViewport (graphene_rect_get_x (&priv->current_viewport),
               graphene_rect_get_y (&priv->current_viewport),
