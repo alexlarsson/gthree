@@ -483,6 +483,47 @@ gthree_object_set_position_vec3 (GthreeObject *object,
   priv->matrix_need_update = TRUE;
 }
 
+void
+gthree_object_translate_on_axis (GthreeObject                *object,
+                                 const graphene_vec3_t       *axis,
+                                 float                        distance)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+  graphene_matrix_t m;
+  graphene_vec3_t rotated_axis;
+
+  // translate object by distance along axis in object space
+  // axis is assumed to be normalized
+
+  graphene_quaternion_to_matrix (&priv->quaternion, &m);
+  graphene_matrix_transform_vec3 (&m, axis, &rotated_axis);
+  graphene_vec3_scale (&rotated_axis, distance, &rotated_axis);
+  graphene_vec3_add (&priv->position, &rotated_axis, &priv->position);
+  priv->matrix_need_update = TRUE;
+}
+
+void
+gthree_object_translate_x (GthreeObject                *object,
+                           float                        distance)
+{
+  gthree_object_translate_on_axis (object, graphene_vec3_x_axis (), distance);
+}
+
+void
+gthree_object_translate_y (GthreeObject                *object,
+                           float                        distance)
+{
+  gthree_object_translate_on_axis (object, graphene_vec3_y_axis (), distance);
+}
+
+void
+gthree_object_translate_z (GthreeObject                *object,
+                           float                        distance)
+{
+  gthree_object_translate_on_axis (object, graphene_vec3_z_axis (), distance);
+}
+
+
 const graphene_vec3_t *
 gthree_object_get_position (GthreeObject *object)
 {

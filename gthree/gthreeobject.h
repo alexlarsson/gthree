@@ -84,6 +84,15 @@ void                         gthree_object_set_position                 (GthreeO
 void                         gthree_object_set_position_vec3            (GthreeObject                *object,
                                                                          const graphene_vec3_t       *vec);
 const graphene_vec3_t *      gthree_object_get_position                 (GthreeObject                *object);
+void                         gthree_object_translate_on_axis            (GthreeObject                *object,
+                                                                         const graphene_vec3_t       *axis,
+                                                                         float                        distance);
+void                         gthree_object_translate_x                  (GthreeObject                *object,
+                                                                         float                        distance);
+void                         gthree_object_translate_y                  (GthreeObject                *object,
+                                                                         float                        distance);
+void                         gthree_object_translate_z                  (GthreeObject                *object,
+                                                                         float                        distance);
 void                         gthree_object_set_scale                    (GthreeObject                *object,
                                                                          const graphene_point3d_t    *scale);
 const graphene_vec3_t *      gthree_object_get_scale                    (GthreeObject                *object);
