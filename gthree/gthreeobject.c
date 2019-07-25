@@ -473,6 +473,16 @@ gthree_object_set_position (GthreeObject *object,
   priv->matrix_need_update = TRUE;
 }
 
+void
+gthree_object_set_position_vec3 (GthreeObject *object,
+                                 const graphene_vec3_t *vec)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  priv->position = *vec;
+  priv->matrix_need_update = TRUE;
+}
+
 const graphene_vec3_t *
 gthree_object_get_position (GthreeObject *object)
 {
