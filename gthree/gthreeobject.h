@@ -79,6 +79,8 @@ void                         gthree_object_look_at                      (GthreeO
 const graphene_matrix_t *    gthree_object_get_matrix                   (GthreeObject                *object);
 void                         gthree_object_set_matrix                   (GthreeObject                *object,
                                                                          const graphene_matrix_t     *matrix);
+void                        gthree_object_apply_matrix                  (GthreeObject                *object,
+                                                                         const graphene_matrix_t     *matrix);
 void                         gthree_object_set_position                 (GthreeObject                *object,
                                                                          const graphene_point3d_t    *pos);
 void                         gthree_object_set_position_vec3            (GthreeObject                *object,

@@ -604,6 +604,18 @@ gthree_object_get_matrix (GthreeObject *object)
   return &priv->matrix;
 }
 
+static void
+gthree_object_decompose_matrix (GthreeObject                *object)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+  graphene_vec4_t transl;
+
+  // TODO: This should fully decompose the matrix into pos, scale, quat
+  // We do just position for now
+  graphene_matrix_get_row (&priv->matrix, 3, &transl);
+  graphene_vec4_get_xyz (&transl, &priv->position);
+}
+
 /* Only useful if auto-update are off, otherwise its overwritten the next frame */
 void
 gthree_object_set_matrix (GthreeObject                *object,
@@ -612,6 +624,28 @@ gthree_object_set_matrix (GthreeObject                *object,
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
 
   graphene_matrix_init_from_matrix  (&priv->matrix, matrix);
+
+  gthree_object_decompose_matrix (object);
+
+  priv->world_matrix_need_update = TRUE;
+  priv->matrix_need_update = FALSE;
+}
+
+void
+gthree_object_apply_matrix (GthreeObject                *object,
+                            const graphene_matrix_t     *matrix)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  if (priv->matrix_auto_update)
+    gthree_object_update_matrix (object);
+
+  graphene_matrix_multiply (matrix,
+                            &priv->matrix,
+                            &priv->matrix);
+
+  gthree_object_decompose_matrix (object);
+
   priv->world_matrix_need_update = TRUE;
   priv->matrix_need_update = FALSE;
 }
