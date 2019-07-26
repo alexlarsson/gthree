@@ -542,6 +542,8 @@ gthree_render_target_download_area (GthreeRenderTarget *target,
   cairo_surface_t *surface;
   int alpha_size = 0;
   gboolean is_gles = gdk_gl_context_get_use_es (gdk_gl_context_get_current ());
+  g_autofree guchar *row = g_malloc (stride);
+  int i;
 
   if (is_gles)
     alpha_size = 1;
@@ -566,6 +568,16 @@ gthree_render_target_download_area (GthreeRenderTarget *target,
   else
     glReadPixels (area->x, area->y, area->width, area->height, GL_RGBA, GL_UNSIGNED_BYTE,
                   cairo_image_surface_get_data (surface));
+
+  /* y flip */
+  for (i = 0; i < area->height / 2; i++)
+    {
+      guchar *top_row = cairo_image_surface_get_data (surface) + i * stride;
+      guchar *bottom_row = cairo_image_surface_get_data (surface) + (area->height - 1 - i) * stride;
+      memcpy (row, top_row, stride);
+      memcpy (top_row, bottom_row, stride);
+      memcpy (bottom_row, row, stride);
+    }
 
   glPixelStorei (GL_PACK_ROW_LENGTH, 0);
   glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
