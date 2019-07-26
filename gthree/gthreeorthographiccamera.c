@@ -36,6 +36,8 @@ gthree_orthographic_camera_update (GthreeCamera *camera)
   graphene_matrix_init_ortho (m,
                               priv->left,
                               priv->right,
+                              // TODO: For whatever reason we have to flip the top/bottom here to match
+                              // what e.g. three.js gets, even though is seems wrong??? figure this out
                               priv->bottom,
                               priv->top,
                               gthree_camera_get_near (camera),
