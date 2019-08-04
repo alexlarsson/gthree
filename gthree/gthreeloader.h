@@ -39,21 +39,31 @@ typedef enum {
 #define GTHREE_LOADER_ERROR               (gthree_loader_error_quark ())
 
 
+GTHREE_API
 GQuark gthree_loader_error_quark (void);
+GTHREE_API
 GType gthree_loader_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 int                  gthree_loader_get_n_scenes     (GthreeLoader *loader);
+GTHREE_API
 GthreeScene *        gthree_loader_get_scene        (GthreeLoader *loader,
                                                      int           index);
+GTHREE_API
 int                  gthree_loader_get_n_materials  (GthreeLoader *loader);
+GTHREE_API
 GthreeMaterial *     gthree_loader_get_material     (GthreeLoader *loader,
                                                      int           index);
+GTHREE_API
 int                  gthree_loader_get_n_animations (GthreeLoader *loader);
+GTHREE_API
 GthreeAnimationClip *gthree_loader_get_animation    (GthreeLoader *loader,
                                                      int           index);
 
+GTHREE_API
 GthreeLoader *gthree_loader_parse_gltf (GBytes *data, GFile *base_path, GError **error);
 
+GTHREE_API
 GthreeGeometry *gthree_load_geometry_from_json (const char *data, GError **error);
 G_END_DECLS
 

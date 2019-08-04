@@ -30,18 +30,28 @@ typedef struct {
   void (*unrealize) (GthreeResource *resource);
 } GthreeResourceClass;
 
+GTHREE_API
 GType gthree_resource_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 void gthree_resources_flush_deletes        (GdkGLContext *context);
+GTHREE_API
 void gthree_resources_unrealize_all_for    (GdkGLContext *context);
+GTHREE_API
 void gthree_resources_set_all_unused_for   (GdkGLContext *context);
+GTHREE_API
 void gthree_resources_unrealize_unused_for (GdkGLContext *context);
 
+GTHREE_API
 void     gthree_resource_set_realized_for (GthreeResource *resource,
                                            GdkGLContext   *context);
-gboolean gtahree_resource_is_realized     (GthreeResource *resource);
+GTHREE_API
+gboolean gthree_resource_is_realized      (GthreeResource *resource);
+GTHREE_API
 void     gthree_resource_unrealize        (GthreeResource *resource);
+GTHREE_API
 gboolean gtahree_resource_get_used        (GthreeResource *resource);
+GTHREE_API
 void     gthree_resource_set_used         (GthreeResource *resource,
                                            gboolean        used);
 

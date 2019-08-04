@@ -28,10 +28,14 @@ typedef struct {
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeMeshDepthMaterial, g_object_unref)
 
+GTHREE_API
 GthreeMeshDepthMaterial *gthree_mesh_depth_material_new ();
+GTHREE_API
 GType gthree_mesh_depth_material_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 GthreeDepthPackingFormat gthree_mesh_depth_material_get_depth_packing_format (GthreeMeshDepthMaterial  *depth);
+GTHREE_API
 void                     gthree_mesh_depth_material_set_depth_packing_format (GthreeMeshDepthMaterial  *depth,
                                                                               GthreeDepthPackingFormat  format);
 

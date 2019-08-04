@@ -28,8 +28,10 @@ typedef struct {
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeQuaternionInterpolant, g_object_unref)
 
+GTHREE_API
 GType gthree_quaternion_interpolant_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 GthreeInterpolant * gthree_quaternion_interpolant_new (GthreeAttributeArray *parameter_positions,
                                                        GthreeAttributeArray *sample_values);
 

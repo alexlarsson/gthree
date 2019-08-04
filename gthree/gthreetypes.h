@@ -36,4 +36,10 @@ typedef struct _GthreeAnimationAction GthreeAnimationAction;
 typedef struct _GthreeAnimationMixer GthreeAnimationMixer;
 typedef int GthreeAttributeName;
 
+#if defined (_MSC_VER) && defined (GTHREE_COMPILATION)
+# define GTHREE_API __declspec(dllexport)
+#else
+# define GTHREE_API
+#endif
+
 #endif /* __GTHREE_TYPES_H__ */

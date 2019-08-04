@@ -27,17 +27,24 @@ typedef struct {
   GtkGLAreaClass parent_class;
 } GthreeAreaClass;
 
+GTHREE_API
 GType gthree_area_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 GtkWidget *gthree_area_new (GthreeScene *scene,
                             GthreeCamera *camera);
 
+GTHREE_API
 GthreeScene *   gthree_area_get_scene    (GthreeArea   *area);
+GTHREE_API
 void            gthree_area_set_scene    (GthreeArea   *area,
                                           GthreeScene  *scene);
+GTHREE_API
 GthreeCamera *  gthree_area_get_camera   (GthreeArea   *area);
+GTHREE_API
 void            gthree_area_set_camera   (GthreeArea   *area,
                                           GthreeCamera *camera);
+GTHREE_API
 GthreeRenderer *gthree_area_get_renderer (GthreeArea   *area);
 
 G_END_DECLS

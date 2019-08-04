@@ -22,18 +22,24 @@ typedef struct {
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeEffectComposer, g_object_unref)
 
+GTHREE_API
 GType gthree_effect_composer_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 GthreeEffectComposer *gthree_effect_composer_new  (void);
 
+GTHREE_API
 void gthree_effect_composer_add_pass     (GthreeEffectComposer *composer,
                                           GthreePass     *pass);
+GTHREE_API
 void gthree_effect_composer_render       (GthreeEffectComposer *composer,
                                           GthreeRenderer       *renderer,
                                           float                 delta_time);
+GTHREE_API
 void gthree_effect_composer_reset        (GthreeEffectComposer *composer,
                                           GthreeRenderer       *renderer,
                                           GthreeRenderTarget   *render_target);
+GTHREE_API
 void gthree_effect_composer_set_size     (GthreeEffectComposer *composer,
                                           int                   width,
                                           int                   height);

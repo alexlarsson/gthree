@@ -34,8 +34,10 @@ typedef struct {
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeRenderTarget, g_object_unref)
 
+GTHREE_API
 GType gthree_render_target_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 GthreeRenderTarget *gthree_render_target_new_full (int width,
                                                    int height,
                                                    GthreeWrapping wrap_t,
@@ -51,25 +53,38 @@ GthreeRenderTarget *gthree_render_target_new_full (int width,
                                                    gboolean stencil_buffer,
                                                    GthreeTexture *depth_texture);
 
+GTHREE_API
 GthreeRenderTarget *gthree_render_target_new (int width,
                                               int height);
+GTHREE_API
 GthreeRenderTarget *gthree_render_target_clone (GthreeRenderTarget *target);
 
+GTHREE_API
 int            gthree_render_target_get_width         (GthreeRenderTarget *target);
+GTHREE_API
 int            gthree_render_target_get_height        (GthreeRenderTarget *target);
+GTHREE_API
 void           gthree_render_target_set_size          (GthreeRenderTarget *target,
                                                        int                 width,
                                                        int                 height);
+GTHREE_API
 GthreeTexture *gthree_render_target_get_texture       (GthreeRenderTarget *target);
+GTHREE_API
 gboolean       gthree_render_target_get_depth_buffer  (GthreeRenderTarget *target);
+GTHREE_API
 void           gthree_render_target_set_depth_buffer  (GthreeRenderTarget *target,
                                                        gboolean            depth_buffer);
+GTHREE_API
 gboolean       gthree_render_target_get_stencil_buffer  (GthreeRenderTarget *target);
+GTHREE_API
 void           gthree_render_target_set_stencil_buffer  (GthreeRenderTarget *target,
                                                        gboolean            stencil_buffer);
+GTHREE_API
 GthreeTexture *gthree_render_target_get_depth_texture (GthreeRenderTarget *target);
+GTHREE_API
 void           gthree_render_target_set_depth_texture (GthreeRenderTarget *target,
                                                        GthreeTexture *texture);
+GTHREE_API
 void           gthree_render_target_update_mipmap     (GthreeRenderTarget *target);
 void           gthree_render_target_download          (GthreeRenderTarget *target,
                                                        guchar     *data,

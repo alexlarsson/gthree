@@ -35,32 +35,46 @@ typedef struct {
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeAnimationMixer, g_object_unref)
 
+GTHREE_API
 GType gthree_animation_mixer_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 GthreeAnimationMixer *gthree_animation_mixer_new (GthreeObject *root);
 
+GTHREE_API
 GthreeAnimationAction *gthree_animation_mixer_clip_action     (GthreeAnimationMixer *mixer,
                                                                GthreeAnimationClip  *clip,
                                                                GthreeObject         *optional_root);
+GTHREE_API
 GthreeAnimationAction *gthree_animation_mixer_existing_action (GthreeAnimationMixer *mixer,
                                                                GthreeAnimationClip  *clip,
                                                                GthreeObject         *optional_root);
+GTHREE_API
 void                   gthree_animation_mixer_stop_all_action (GthreeAnimationMixer *mixer);
+GTHREE_API
 void                   gthree_animation_mixer_update          (GthreeAnimationMixer *mixer,
                                                                float                 delta_time);
+GTHREE_API
 void                   gthree_animation_mixer_uncache_clip    (GthreeAnimationMixer *mixer,
                                                                GthreeAnimationClip  *clip);
+GTHREE_API
 void                   gthree_animation_mixer_uncache_root    (GthreeAnimationMixer *mixer,
                                                                GthreeObject         *object);
+GTHREE_API
 void                   gthree_animation_mixer_uncache_action  (GthreeAnimationMixer *mixer,
                                                                GthreeAnimationClip  *clip,
                                                                GthreeObject         *optional_root);
+GTHREE_API
 float                  gthree_animation_mixer_get_time        (GthreeAnimationMixer *mixer);
+GTHREE_API
 void                   gthree_animation_mixer_set_time        (GthreeAnimationMixer *mixer,
                                                                float                 time);
+GTHREE_API
 float                  gthree_animation_mixer_get_time_scale  (GthreeAnimationMixer *mixer);
+GTHREE_API
 void                   gthree_animation_mixer_set_time_scale  (GthreeAnimationMixer *mixer,
                                                                float                 time_scale);
+GTHREE_API
 GthreeObject *         gthree_animation_mixer_get_root        (GthreeAnimationMixer *mixer);
 
 G_END_DECLS

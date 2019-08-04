@@ -87,27 +87,38 @@ typedef struct {
 
 } GthreeProgramParameters;
 
+GTHREE_API
 GType gthree_program_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 GthreeProgram *gthree_program_new (GthreeShader *shader,
                                    GthreeProgramParameters *parameters,
                                    GthreeRenderer *renderer);
 
+GTHREE_API
 void gthree_program_use                                   (GthreeProgram *program);
+GTHREE_API
 gint gthree_program_lookup_uniform_location               (GthreeProgram *program,
                                                            GQuark         uniform);
+GTHREE_API
 gint gthree_program_lookup_attribute_location             (GthreeProgram *program,
                                                            GQuark         attribute);
+GTHREE_API
 GHashTable * gthree_program_get_attribute_locations (GthreeProgram *program);
+GTHREE_API
 gint gthree_program_lookup_uniform_location_from_string   (GthreeProgram *program,
                                                            const char    *uniform);
+GTHREE_API
 gint gthree_program_lookup_attribute_location_from_string (GthreeProgram *program,
                                                            const char    *attribute);
 
 typedef struct _GthreeProgramCache GthreeProgramCache;
 
+GTHREE_API
 GthreeProgramCache *gthree_program_cache_new  (void);
+GTHREE_API
 void                gthree_program_cache_free (GthreeProgramCache      *cache);
+GTHREE_API
 GthreeProgram *     gthree_program_cache_get  (GthreeProgramCache      *cache,
                                                GthreeShader            *shader,
                                                GthreeProgramParameters *parameters,

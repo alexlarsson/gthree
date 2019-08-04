@@ -26,14 +26,17 @@ typedef struct {
 
 } GthreeCubeTextureClass;
 
+GTHREE_API
 GType gthree_cube_texture_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 GthreeCubeTexture *gthree_cube_texture_new (GdkPixbuf *px,
                                             GdkPixbuf *nx,
                                             GdkPixbuf *py,
                                             GdkPixbuf *ny,
                                             GdkPixbuf *pz,
                                             GdkPixbuf *nz);
+GTHREE_API
 GthreeCubeTexture *gthree_cube_texture_new_from_array (GdkPixbuf *pixbufs[6]);
 
 G_END_DECLS

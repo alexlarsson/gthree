@@ -28,18 +28,26 @@ typedef struct {
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeShaderMaterial, g_object_unref)
 
+GTHREE_API
 GType gthree_shader_material_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 GthreeShaderMaterial *gthree_shader_material_new (GthreeShader *shader);
 
+GTHREE_API
 GthreeShadingType gthree_shader_material_get_shading_type  (GthreeShaderMaterial *shader);
+GTHREE_API
 void              gthree_shader_material_set_shading_type  (GthreeShaderMaterial *shader,
                                                             GthreeShadingType     shading_type);
+GTHREE_API
 void              gthree_shader_material_set_vertex_colors (GthreeShaderMaterial *shader,
                                                             gboolean              vertex_color);
+GTHREE_API
 gboolean          gthree_shader_material_get_vertex_colors (GthreeShaderMaterial *shader);
+GTHREE_API
 void              gthree_shader_material_set_use_lights    (GthreeShaderMaterial *shader,
                                                             gboolean              use_lights);
+GTHREE_API
 gboolean          gthree_shader_material_get_use_lights    (GthreeShaderMaterial *shader);
 
 G_END_DECLS

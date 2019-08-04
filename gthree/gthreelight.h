@@ -33,14 +33,20 @@ typedef struct {
                           GthreeLightSetup *light_setup);
 } GthreeLightClass;
 
+GTHREE_API
 GType gthree_light_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 GthreeLight *gthree_light_new (void);
 
+GTHREE_API
 const GdkRGBA *gthree_light_get_color          (GthreeLight   *light);
+GTHREE_API
 void           gthree_light_set_color          (GthreeLight   *light,
                                                 const GdkRGBA *color);
+GTHREE_API
 float          gthree_light_get_intensity      (GthreeLight   *light);
+GTHREE_API
 void           gthree_light_set_intensity      (GthreeLight   *light,
                                                 float          intensity);
 

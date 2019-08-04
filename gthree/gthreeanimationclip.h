@@ -32,18 +32,28 @@ typedef struct {
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeAnimationClip, g_object_unref)
 
+GTHREE_API
 GType gthree_animation_clip_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 GthreeAnimationClip *gthree_animation_clip_new          (const char          *name,
                                                          float                duration);
+GTHREE_API
 void                 gthree_animation_clip_add_track    (GthreeAnimationClip *clip,
                                                          GthreeKeyframeTrack *track);
+GTHREE_API
 void                 gthree_animation_reset_duration    (GthreeAnimationClip *clip);
+GTHREE_API
 void                 gthree_animation_optimize          (GthreeAnimationClip *clip);
+GTHREE_API
 void                 gthree_animation_trim              (GthreeAnimationClip *clip);
+GTHREE_API
 const char *         gthree_animation_clip_get_name     (GthreeAnimationClip *clip);
+GTHREE_API
 float                gthree_animation_clip_get_duration (GthreeAnimationClip *clip);
+GTHREE_API
 int                  gthree_animation_clip_get_n_tracks (GthreeAnimationClip *clip);
+GTHREE_API
 GthreeKeyframeTrack *gthree_animation_clip_get_track    (GthreeAnimationClip *clip,
                                                          int                  i);
 

@@ -28,20 +28,29 @@ typedef struct {
 
 } GthreeSkinnedMeshClass;
 
+GTHREE_API
 GType gthree_skinned_mesh_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 GthreeSkinnedMesh *gthree_skinned_mesh_new (GthreeGeometry *geometry,
                                             GthreeMaterial *material);
 
+GTHREE_API
 GthreeSkeleton *         gthree_skinned_mesh_get_skeleton            (GthreeSkinnedMesh       *mesh);
+GTHREE_API
 const graphene_matrix_t *gthree_skinned_mesh_get_bind_matrix         (GthreeSkinnedMesh       *mesh);
+GTHREE_API
 const graphene_matrix_t *gthree_skinned_mesh_get_inverse_bind_matrix (GthreeSkinnedMesh       *mesh);
+GTHREE_API
 void                     gthree_skinned_mesh_set_bind_mode           (GthreeSkinnedMesh       *mesh,
                                                                       GthreeBindMode           bind_mode);
+GTHREE_API
 void                     gthree_skinned_mesh_normalize_skin_weights  (GthreeSkinnedMesh       *mesh);
+GTHREE_API
 void                     gthree_skinned_mesh_bind                    (GthreeSkinnedMesh       *mesh,
                                                                       GthreeSkeleton          *skeleton,
                                                                       const graphene_matrix_t *bind_matrix);
+GTHREE_API
 void                     gthree_skinned_mesh_pose                    (GthreeSkinnedMesh       *mesh);
 
 

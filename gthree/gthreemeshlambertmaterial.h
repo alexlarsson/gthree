@@ -29,29 +29,45 @@ typedef struct {
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeMeshLambertMaterial, g_object_unref)
 
+GTHREE_API
 GthreeMeshLambertMaterial *gthree_mesh_lambert_material_new ();
+GTHREE_API
 GType gthree_mesh_lambert_material_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 const GdkRGBA * gthree_mesh_lambert_material_get_emissive_color   (GthreeMeshLambertMaterial *lambert);
+GTHREE_API
 void            gthree_mesh_lambert_material_set_emissive_color   (GthreeMeshLambertMaterial *lambert,
                                                                    const GdkRGBA             *color);
+GTHREE_API
 const GdkRGBA * gthree_mesh_lambert_material_get_color            (GthreeMeshLambertMaterial *lambert);
+GTHREE_API
 void            gthree_mesh_lambert_material_set_color            (GthreeMeshLambertMaterial *lambert,
                                                                    const GdkRGBA             *color);
+GTHREE_API
 float           gthree_mesh_lambert_material_get_refraction_ratio (GthreeMeshLambertMaterial *lambert);
+GTHREE_API
 void            gthree_mesh_lambert_material_set_refraction_ratio (GthreeMeshLambertMaterial *lambert,
                                                                    float                      ratio);
+GTHREE_API
 float           gthree_mesh_lambert_material_get_reflectivity     (GthreeMeshLambertMaterial *lambert);
+GTHREE_API
 void            gthree_mesh_lambert_material_set_reflectivity     (GthreeMeshLambertMaterial *lambert,
                                                                    float                      reflectivity);
+GTHREE_API
 void            gthree_mesh_lambert_material_set_map              (GthreeMeshLambertMaterial *lambert,
                                                                    GthreeTexture             *texture);
+GTHREE_API
 GthreeTexture * gthree_mesh_lambert_material_get_map              (GthreeMeshLambertMaterial *lambert);
+GTHREE_API
 void            gthree_mesh_lambert_material_set_env_map          (GthreeMeshLambertMaterial *lambert,
                                                                    GthreeTexture             *texture);
+GTHREE_API
 GthreeTexture * gthree_mesh_lambert_material_get_env_map          (GthreeMeshLambertMaterial *lambert);
+GTHREE_API
 void            gthree_mesh_lambert_material_set_combine          (GthreeMeshLambertMaterial *lambert,
                                                                    GthreeOperation            combine);
+GTHREE_API
 GthreeOperation gthree_mesh_lambert_material_get_combine          (GthreeMeshLambertMaterial *lambert);
 
 G_END_DECLS

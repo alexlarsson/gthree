@@ -28,8 +28,10 @@ typedef struct {
 
 } GthreeBoneClass;
 
+GTHREE_API
 GType gthree_bone_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
 GthreeBone *gthree_bone_new (void);
 
 G_END_DECLS
