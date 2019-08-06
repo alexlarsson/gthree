@@ -1047,25 +1047,6 @@ print_matrix4 (float *s)
 #endif
 
 static void
-load_uniforms_matrices (GthreeRenderer *renderer,
-                        GthreeProgram *program,
-                        GthreeObject *object)
-{
-  float matrix[16];
-  int mvm_location = gthree_program_lookup_uniform_location (program, q_modelViewMatrix);
-  int nm_location = gthree_program_lookup_uniform_location (program, q_normalMatrix);
-
-  gthree_object_get_model_view_matrix_floats (object, matrix);
-  glUniformMatrix4fv (mvm_location, 1, FALSE, matrix);
-
-  if (nm_location >= 0)
-    {
-      gthree_object_get_normal_matrix3_floats (object, matrix);
-      glUniformMatrix3fv (nm_location, 1, FALSE, matrix);
-    }
-}
-
-static void
 setup_lights (GthreeRenderer *renderer, GthreeCamera *camera)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
@@ -1135,7 +1116,6 @@ set_program (GthreeRenderer *renderer,
   GthreeShader *shader;
   GthreeUniforms *m_uniforms;
   GthreeMaterialProperties *material_properties = gthree_material_get_properties (material);
-  int location;
 
   priv->used_texture_units = 0;
 
@@ -1342,15 +1322,7 @@ set_program (GthreeRenderer *renderer,
       gthree_uniforms_load (m_uniforms, renderer);
     }
 
-  load_uniforms_matrices (renderer, program, object);
-
-  location = gthree_program_lookup_uniform_location (program, q_modelMatrix);
-  if (location >= 0)
-    {
-      float matrix[16];
-      gthree_object_get_world_matrix_floats (object, matrix);
-      glUniformMatrix4fv (location, 1, FALSE, matrix);
-    }
+  gthree_object_set_direct_uniforms (object, program, renderer);
 
   return program;
 }

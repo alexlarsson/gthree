@@ -14,6 +14,11 @@ enum
   LAST_SIGNAL
 };
 
+static GQuark q_modelMatrix;
+static GQuark q_modelViewMatrix;
+static GQuark q_normalMatrix;
+
+
 static guint object_signals[LAST_SIGNAL] = { 0, };
 
 typedef struct {
@@ -80,7 +85,9 @@ G_DEFINE_TYPE_WITH_PRIVATE (GthreeObject, gthree_object, G_TYPE_OBJECT);
 
 static gboolean gthree_object_real_update_matrix_world (GthreeObject *object,
                                                         gboolean force);
-
+static void gthree_object_real_set_direct_uniforms  (GthreeObject *object,
+                                                     GthreeProgram *program,
+                                                     GthreeRenderer *renderer);
 
 GthreeObject *
 gthree_object_new ()
@@ -241,6 +248,11 @@ gthree_object_class_init (GthreeObjectClass *klass)
 {
   GObjectClass *obj_class = G_OBJECT_CLASS (klass);
 
+#define INIT_QUARK(name) q_##name = g_quark_from_static_string (#name)
+  INIT_QUARK(modelMatrix);
+  INIT_QUARK(modelViewMatrix);
+  INIT_QUARK(normalMatrix);
+
   obj_class->set_property = gthree_object_set_property;
   obj_class->get_property = gthree_object_get_property;
   obj_class->dispose = gthree_object_dispose;
@@ -248,6 +260,7 @@ gthree_object_class_init (GthreeObjectClass *klass)
 
   klass->destroy = gthree_object_real_destroy;
   klass->update_matrix_world = gthree_object_real_update_matrix_world;
+  klass->set_direct_uniforms = gthree_object_real_set_direct_uniforms;
 
   object_signals[DESTROY] =
     g_signal_new ("destroy",
@@ -985,6 +998,44 @@ gthree_object_fill_render_list (GthreeObject   *object,
 
   if (class->fill_render_list)
     return class->fill_render_list (object, list);
+}
+
+static void
+gthree_object_real_set_direct_uniforms  (GthreeObject *object,
+                                         GthreeProgram *program,
+                                         GthreeRenderer *renderer)
+{
+  float matrix[16];
+  int mvm_location = gthree_program_lookup_uniform_location (program, q_modelViewMatrix);
+  int nm_location = gthree_program_lookup_uniform_location (program, q_normalMatrix);
+  int mm_location;
+
+  gthree_object_get_model_view_matrix_floats (object, matrix);
+  glUniformMatrix4fv (mvm_location, 1, FALSE, matrix);
+
+  if (nm_location >= 0)
+    {
+      gthree_object_get_normal_matrix3_floats (object, matrix);
+      glUniformMatrix3fv (nm_location, 1, FALSE, matrix);
+    }
+
+  mm_location = gthree_program_lookup_uniform_location (program, q_modelMatrix);
+  if (mm_location >= 0)
+    {
+      float matrix[16];
+      gthree_object_get_world_matrix_floats (object, matrix);
+      glUniformMatrix4fv (mm_location, 1, FALSE, matrix);
+    }
+}
+
+void
+gthree_object_set_direct_uniforms  (GthreeObject *object,
+                                    GthreeProgram *program,
+                                    GthreeRenderer *renderer)
+{
+  GthreeObjectClass *class = GTHREE_OBJECT_GET_CLASS(object);
+
+  class->set_direct_uniforms (object, program, renderer);
 }
 
 void

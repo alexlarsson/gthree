@@ -45,6 +45,9 @@ typedef struct {
 
   void (* fill_render_list)      (GthreeObject          *object,
                                   GthreeRenderList      *list);
+  void (* set_direct_uniforms)   (GthreeObject          *object,
+                                  GthreeProgram         *program,
+                                  GthreeRenderer *renderer);
 } GthreeObjectClass;
 
 GTHREE_API

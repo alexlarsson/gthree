@@ -6,6 +6,9 @@
 
 G_BEGIN_DECLS
 
+void       gthree_object_set_direct_uniforms  (GthreeObject          *object,
+                                               GthreeProgram         *program,
+                                               GthreeRenderer *renderer);
 void       gthree_object_fill_render_list (GthreeObject   *object,
                                            GthreeRenderList *list);
 void       gthree_object_call_before_render_callback (GthreeObject   *object,
