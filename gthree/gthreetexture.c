@@ -199,6 +199,14 @@ gthree_texture_class_init (GthreeTextureClass *klass)
   g_object_class_install_properties (gobject_class, N_PROPS, obj_props);
 }
 
+GdkPixbuf *
+gthree_texture_get_pixbuf (GthreeTexture *texture)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  return priv->pixbuf;
+}
+
 gboolean
 gthree_texture_get_needs_update (GthreeTexture *texture)
 {
@@ -335,12 +343,30 @@ gthree_texture_set_generate_mipmaps (GthreeTexture *texture,
   priv->generate_mipmaps = generate_mipmaps;
 }
 
+void
+gthree_texture_set_repeat (GthreeTexture *texture,
+                           const graphene_vec2_t *repeat)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  priv->repeat = *repeat;
+}
+
 const graphene_vec2_t *
 gthree_texture_get_repeat (GthreeTexture *texture)
 {
   GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
 
   return &priv->repeat;
+}
+
+void
+gthree_texture_set_offset (GthreeTexture *texture,
+                           const graphene_vec2_t *offset)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  priv->offset = *offset;
 }
 
 const graphene_vec2_t *

@@ -40,9 +40,17 @@ GTHREE_API
 GthreeTexture *gthree_texture_new (GdkPixbuf *pixbuf);
 
 GTHREE_API
+GdkPixbuf             *gthree_texture_get_pixbuf           (GthreeTexture        *texture);
+GTHREE_API
 const graphene_vec2_t *gthree_texture_get_repeat           (GthreeTexture        *texture);
 GTHREE_API
+void                   gthree_texture_set_repeat           (GthreeTexture *texture,
+                                                            const graphene_vec2_t *repeat);
+GTHREE_API
 const graphene_vec2_t *gthree_texture_get_offset           (GthreeTexture        *texture);
+GTHREE_API
+void                   gthree_texture_set_offset           (GthreeTexture *texture,
+                                                            const graphene_vec2_t *offset);
 GTHREE_API
 gboolean               gthree_texture_get_generate_mipmaps (GthreeTexture        *texture);
 GTHREE_API
