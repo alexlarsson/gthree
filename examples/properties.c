@@ -153,9 +153,15 @@ tick (GtkWidget     *widget,
   float angle;
   graphene_euler_t euler;
   graphene_point3d_t pos;
+  static gint64 first_frame_time_i = 0;
   int i;
 
   frame_time = gdk_frame_clock_get_frame_time (frame_clock);
+  if (first_frame_time_i == 0)
+    first_frame_time_i = frame_time;
+
+  frame_time -= first_frame_time_i;
+
   angle = frame_time / 4000000.0;
 
   rot.x += 1.8;
