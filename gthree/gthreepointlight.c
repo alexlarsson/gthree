@@ -190,7 +190,7 @@ gthree_point_light_class_init (GthreePointLightClass *klass)
 
   obj_props[PROP_DISTANCE] =
     g_param_spec_float ("distance", "Distance", "Distance",
-                        0.0f, 10.0f, 0.f,
+                        0.0f, G_MAXFLOAT, 0.f,
                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   obj_props[PROP_DECAY] =
