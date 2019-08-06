@@ -38,6 +38,8 @@
 #include <gthree/gthreemeshnormalmaterial.h>
 #include <gthree/gthreemeshdepthmaterial.h>
 #include <gthree/gthreeshadermaterial.h>
+#include <gthree/gthreesprite.h>
+#include <gthree/gthreespritematerial.h>
 #include <gthree/gthreeprimitives.h>
 #include <gthree/gthreebone.h>
 #include <gthree/gthreelinearinterpolant.h>

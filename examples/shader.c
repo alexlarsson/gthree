@@ -12,7 +12,6 @@ GthreeMeshBasicMaterial *material_texture;
 GthreeMeshBasicMaterial *material_face_color;
 GthreeMeshBasicMaterial *material_vertex_color;
 GthreeMeshBasicMaterial *material_wireframe;
-GthreeMultiMaterial *multi_material;
 GthreeMesh *mesh;
 double rot = 0;
 

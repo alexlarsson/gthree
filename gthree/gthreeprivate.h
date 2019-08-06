@@ -8,6 +8,7 @@
 #include <gthree/gthreekeyframetrack.h>
 #include <gthree/gthreerendertarget.h>
 #include <gthree/gthreemesh.h>
+#include <gthree/gthreesprite.h>
 
 //#define DEBUG_LABELS
 //#define DEBUG_GROUPS
@@ -187,5 +188,7 @@ typedef enum {
 void gthree_resource_lazy_delete (GthreeResource *resource,
                                   GthreeResourceKind kind,
                                   guint           id);
+
+GthreeGeometry *gthree_sprite_get_geometry (GthreeSprite *sprite);
 
 #endif /* __GTHREE_PRIVATE_H__ */

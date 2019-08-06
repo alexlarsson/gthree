@@ -16,6 +16,7 @@
 #include "gthreeprimitives.h"
 #include "gthreegroup.h"
 #include "gthreeattribute.h"
+#include "gthreesprite.h"
 
 #define MAX_MORPH_TARGETS 8
 #define MAX_MORPH_NORMALS 4
@@ -836,7 +837,7 @@ project_object (GthreeRenderer *renderer,
             currentRenderState.pushShadow ( );
 #endif
         }
-      else if (GTHREE_IS_MESH (object) || GTHREE_IS_LINE_SEGMENTS (object))
+      else if (GTHREE_IS_MESH (object) || GTHREE_IS_LINE_SEGMENTS (object) || GTHREE_IS_SPRITE (object))
         {
           if (GTHREE_IS_SKINNED_MESH (object))
             {
@@ -851,25 +852,17 @@ project_object (GthreeRenderer *renderer,
 
               if (priv->sort_objects)
                 {
-#if TODO
-                  if (object.renderDepth != null)
-                    {
-                      z = object.renderDepth;
-                    }
-                  else
-#endif
-                    {
-                      graphene_vec4_t vector;
+                  graphene_vec4_t vector;
 
-                      /* Get position */
-                      graphene_matrix_get_row (gthree_object_get_world_matrix (object), 3, &vector);
+                  /* Get position */
+                  graphene_matrix_get_row (gthree_object_get_world_matrix (object), 3, &vector);
 
-                      /* project object position to screen */
-                      graphene_matrix_transform_vec4 (&priv->proj_screen_matrix, &vector, &vector);
+                  /* project object position to screen */
+                  graphene_matrix_transform_vec4 (&priv->proj_screen_matrix, &vector, &vector);
 
-                      z = graphene_vec4_get_z (&vector) / graphene_vec4_get_w (&vector);
-                    }
+                  z = graphene_vec4_get_z (&vector) / graphene_vec4_get_w (&vector);
                 }
+
               priv->current_render_list->current_z = z;
 
               gthree_object_fill_render_list (object, priv->current_render_list);
@@ -1682,6 +1675,10 @@ render_item (GthreeRenderer *renderer,
         width = gthree_line_basic_material_get_line_width (GTHREE_LINE_BASIC_MATERIAL (material));
       set_line_width (renderer, width);
       draw_mode = GL_LINES;
+    }
+  else if (GTHREE_IS_SPRITE (object))
+    {
+      draw_mode = GL_TRIANGLES;
     }
 
   if (index)
