@@ -1541,9 +1541,9 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
               parse_quaternion (rotation_j, &rotate);
             }
 
-          gthree_object_set_position (node, &translate);
+          gthree_object_set_position_point3d (node, &translate);
           gthree_object_set_quaternion (node, &rotate);
-          gthree_object_set_scale (node, &scale);
+          gthree_object_set_scale_point3d (node, &scale);
         }
 
       if (json_object_has_member (node_j, "name"))

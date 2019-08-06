@@ -99,7 +99,7 @@ init_scene (void)
 
   camera = gthree_perspective_camera_new (45, 1, 1, 2000);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
-  gthree_object_set_position (GTHREE_OBJECT (camera),
+  gthree_object_set_position_point3d (GTHREE_OBJECT (camera),
                               graphene_point3d_init (&pos, 0, 200, 2000));
 
   material_lambert = gthree_mesh_lambert_material_new ();
@@ -222,7 +222,7 @@ init_scene (void)
   floor = gthree_mesh_new (floor_geometry, GTHREE_MATERIAL (material_wireframe));
 
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (floor));
-  gthree_object_set_position (GTHREE_OBJECT (floor),
+  gthree_object_set_position_point3d (GTHREE_OBJECT (floor),
                               graphene_point3d_init (&pos, 0, -75, 0));
 
 
@@ -231,7 +231,7 @@ init_scene (void)
       GthreeMesh *sphere = gthree_mesh_new (geometries[i], materials[i]);
       if (materials[i] == NULL)
         gthree_mesh_set_materials (sphere, multi_materials);
-      gthree_object_set_position (GTHREE_OBJECT (sphere),
+      gthree_object_set_position_point3d (GTHREE_OBJECT (sphere),
                                   graphene_point3d_init (&pos,
                                                          (i % 4 ) * 200 - 400,
                                                          0,
@@ -261,7 +261,7 @@ init_scene (void)
   gthree_object_add_child (GTHREE_OBJECT (point_light), GTHREE_OBJECT (particle_light));
 
   directional_light = gthree_directional_light_new (&white, 0.125);
-  gthree_object_set_position (GTHREE_OBJECT (directional_light),
+  gthree_object_set_position_point3d (GTHREE_OBJECT (directional_light),
                               graphene_point3d_init (&pos,
                                                      1, 1, -1));
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (directional_light));
@@ -286,7 +286,7 @@ tick (GtkWidget     *widget,
     first_frame_time = frame_time;
   angle = (frame_time - first_frame_time) / 4000000.0;
 
-  gthree_object_set_position (GTHREE_OBJECT (camera),
+  gthree_object_set_position_point3d (GTHREE_OBJECT (camera),
                               graphene_point3d_init (&pos,
                                                      cos (angle) * 1000,
                                                      200,
@@ -320,7 +320,7 @@ tick (GtkWidget     *widget,
       gthree_mesh_phong_material_set_emissive_color (GTHREE_PHONG_MATERIAL (materials[anim_material2]), &color);
     }
 
-  gthree_object_set_position (GTHREE_OBJECT (point_light),
+  gthree_object_set_position_point3d (GTHREE_OBJECT (point_light),
                               graphene_point3d_init (&pos,
                                                      sin (angle * 7) * 300,
                                                      cos (angle * 5) * 400,

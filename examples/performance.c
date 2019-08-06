@@ -42,9 +42,9 @@ init_scene (void)
       pos.x = g_random_double_range (-4000, 4000);
       pos.y = g_random_double_range (-4000, 4000);
       pos.z = g_random_double_range (-4000, 4000);
-      gthree_object_set_position (GTHREE_OBJECT (mesh), &pos);
+      gthree_object_set_position_point3d (GTHREE_OBJECT (mesh), &pos);
       scale.x = scale.y = scale.z = g_random_double_range (0, 50) + 100;
-      gthree_object_set_scale (GTHREE_OBJECT (mesh), &scale);
+      gthree_object_set_scale_point3d (GTHREE_OBJECT (mesh), &scale);
       graphene_euler_init (&rot,
                            g_random_double_range (0, 360.0),
                            g_random_double_range (0, 360.0),
@@ -71,7 +71,7 @@ tick (GtkWidget     *widget,
 
   pos.x += (pointer_x * 8000 - pos.x) * 0.5;
   pos.y += (pointer_y * 8000 - pos.y) * 0.5;
-  gthree_object_set_position (GTHREE_OBJECT (camera), &pos);
+  gthree_object_set_position_point3d (GTHREE_OBJECT (camera), &pos);
   gthree_object_look_at (GTHREE_OBJECT (camera),
                          graphene_point3d_init (&pos, 0, 0, 0));
 
@@ -139,7 +139,7 @@ main (int argc, char *argv[])
   camera = gthree_perspective_camera_new (60, 1, 1, 10000);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
 
-  gthree_object_set_position (GTHREE_OBJECT (camera),
+  gthree_object_set_position_point3d (GTHREE_OBJECT (camera),
                               graphene_point3d_init (&pos, 0, 0, 3200));
 
   area = gthree_area_new (scene, GTHREE_CAMERA (camera));

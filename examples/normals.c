@@ -109,7 +109,7 @@ init_scene (void)
       objects = g_list_prepend (objects, obj);
 
       gthree_object_add_child (GTHREE_OBJECT (scene), obj);
-      gthree_object_set_position (obj, graphene_point3d_init (&pos, i * 70 - 100, 0, 0));
+      gthree_object_set_position_point3d (obj, graphene_point3d_init (&pos, i * 70 - 100, 0, 0));
       gthree_object_add_child (obj, face_normals (GTHREE_MESH (obj), 10, &red, 1));
     }
 
@@ -180,7 +180,7 @@ main (int argc, char *argv[])
   camera = gthree_perspective_camera_new (30, 1, 1, 10000);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
 
-  gthree_object_set_position (GTHREE_OBJECT (camera),
+  gthree_object_set_position_point3d (GTHREE_OBJECT (camera),
                               graphene_point3d_init (&pos, 0, 0, 400));
 
   area = gthree_area_new (scene, GTHREE_CAMERA (camera));

@@ -44,7 +44,7 @@ init_scene (void)
   material = gthree_mesh_basic_material_new ();
   gthree_mesh_basic_material_set_map (GTHREE_MESH_BASIC_MATERIAL (material), texture);
   mesh = gthree_mesh_new (geometry, GTHREE_MATERIAL (material));
-  gthree_object_set_position (GTHREE_OBJECT (mesh),
+  gthree_object_set_position_point3d (GTHREE_OBJECT (mesh),
                               graphene_point3d_init (&pos, 0, 20, 0));
 
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (mesh));
@@ -54,13 +54,13 @@ init_scene (void)
   gthree_mesh_material_set_wireframe_line_width (GTHREE_MESH_MATERIAL (material), 3.0);
   gthree_mesh_basic_material_set_color (GTHREE_MESH_BASIC_MATERIAL (material), &yellow);
   wire = gthree_mesh_new (geometry, GTHREE_MATERIAL (material));
-  gthree_object_set_position (GTHREE_OBJECT (wire),
+  gthree_object_set_position_point3d (GTHREE_OBJECT (wire),
                               graphene_point3d_init (&pos, -80,20, 0));
 
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (wire));
 
   camera = gthree_perspective_camera_new (30, 1, 1, 10000);
-  gthree_object_set_position (GTHREE_OBJECT (camera),
+  gthree_object_set_position_point3d (GTHREE_OBJECT (camera),
                               graphene_point3d_init (&pos, 0, 0, 400));
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
 }
@@ -84,9 +84,9 @@ init_scene2 (void)
   gthree_mesh_phong_material_set_shininess (material_phong, 30);
 
   mesh2 = gthree_mesh_new (geometry, GTHREE_MATERIAL (material_phong));
-  gthree_object_set_scale (GTHREE_OBJECT (mesh2),
+  gthree_object_set_scale_point3d (GTHREE_OBJECT (mesh2),
                            graphene_point3d_init (&pos, 1.0, 1.4, 1.0));
-  gthree_object_set_position (GTHREE_OBJECT (mesh2),
+  gthree_object_set_position_point3d (GTHREE_OBJECT (mesh2),
                               graphene_point3d_init (&pos, 40, -20, 0));
 
   gthree_object_add_child (GTHREE_OBJECT (scene2), GTHREE_OBJECT (mesh2));
@@ -95,13 +95,13 @@ init_scene2 (void)
   gthree_object_add_child (GTHREE_OBJECT (scene2), GTHREE_OBJECT (ambient_light));
 
   directional_light = gthree_directional_light_new (&white, 0.65);
-  gthree_object_set_position (GTHREE_OBJECT (directional_light),
+  gthree_object_set_position_point3d (GTHREE_OBJECT (directional_light),
                               graphene_point3d_init (&pos,
                                                      1, 1, -1));
   gthree_object_add_child (GTHREE_OBJECT (scene2), GTHREE_OBJECT (directional_light));
 
   camera2 = gthree_perspective_camera_new (30, 1, 1, 10000);
-  gthree_object_set_position (GTHREE_OBJECT (camera2),
+  gthree_object_set_position_point3d (GTHREE_OBJECT (camera2),
                               graphene_point3d_init (&pos, 0, 0, 400));
   gthree_object_add_child (GTHREE_OBJECT (scene2), GTHREE_OBJECT (camera2));
 }

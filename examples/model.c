@@ -58,14 +58,14 @@ light_scene (void)
   gthree_mesh_basic_material_set_color (material_light, &white);
 
   point_light_group = gthree_group_new  ();
-  gthree_object_set_position (GTHREE_OBJECT (point_light_group), &scene_center);
+  gthree_object_set_position_point3d (GTHREE_OBJECT (point_light_group), &scene_center);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (point_light_group));
 
   point_light = gthree_point_light_new (&white, 1, 0);
   gthree_object_add_child (GTHREE_OBJECT (point_light_group), GTHREE_OBJECT (point_light));
-  gthree_object_set_position (GTHREE_OBJECT (point_light),
+  gthree_object_set_position_point3d (GTHREE_OBJECT (point_light),
                               graphene_point3d_init (&pos, scene_radius, 0, 0));
-  gthree_object_set_scale (GTHREE_OBJECT (point_light),
+  gthree_object_set_scale_point3d (GTHREE_OBJECT (point_light),
                            graphene_point3d_init (&pos,
                                                   scene_radius / 40,
                                                   scene_radius / 40,
@@ -75,7 +75,7 @@ light_scene (void)
   gthree_object_add_child (GTHREE_OBJECT (point_light), GTHREE_OBJECT (particle_light));
 
   directional_light = gthree_directional_light_new (&white, 0.125);
-  gthree_object_set_position (GTHREE_OBJECT (directional_light),
+  gthree_object_set_position_point3d (GTHREE_OBJECT (directional_light),
                               graphene_point3d_init (&pos,
                                                      1, 1, -1));
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (directional_light));
@@ -150,7 +150,7 @@ add_camera (void)
   /* Generate default camera */
   camera_group = gthree_group_new ();
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera_group));
-  gthree_object_set_position (GTHREE_OBJECT (camera_group), &scene_center);
+  gthree_object_set_position_point3d (GTHREE_OBJECT (camera_group), &scene_center);
 
   camera = gthree_perspective_camera_new (37, 1.5, scene_radius / 1000, scene_radius * 1000);
   gthree_object_add_child (GTHREE_OBJECT (camera_group), GTHREE_OBJECT (camera));
@@ -212,7 +212,7 @@ tick (GtkWidget     *widget,
                                                      current_angle_x,
                                                      current_angle_y,
                                                      0));
-  gthree_object_set_position (GTHREE_OBJECT (camera),
+  gthree_object_set_position_point3d (GTHREE_OBJECT (camera),
                               graphene_point3d_init (&pos, 0, 0, current_distance * scene_radius));
 
 

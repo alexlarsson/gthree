@@ -39,7 +39,7 @@ init_scene (void)
 
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (cube));
 
-  gthree_object_set_position (GTHREE_OBJECT (cube), &pos);
+  gthree_object_set_position_point3d (GTHREE_OBJECT (cube), &pos);
 
   return scene;
 }
@@ -93,7 +93,7 @@ clicked_z (GtkWidget      *widget,
   point.y = a.y + u * (b.y - a.y);
   point.z = pos.z;
 
-  gthree_object_set_position (GTHREE_OBJECT (cube), &point);
+  gthree_object_set_position_point3d (GTHREE_OBJECT (cube), &point);
 
   return TRUE;
 }
@@ -125,7 +125,7 @@ clicked_y (GtkWidget      *widget,
   point.y = pos.y;
   point.z = a.z + u * (b.z - a.z);
 
-  gthree_object_set_position (GTHREE_OBJECT (cube), &point);
+  gthree_object_set_position_point3d (GTHREE_OBJECT (cube), &point);
 
   return TRUE;
 }
@@ -157,7 +157,7 @@ clicked_x (GtkWidget      *widget,
   point.y = a.y + u * (b.y - a.y);
   point.z = a.z + u * (b.z - a.z);
 
-  gthree_object_set_position (GTHREE_OBJECT (cube), &point);
+  gthree_object_set_position_point3d (GTHREE_OBJECT (cube), &point);
 
   return TRUE;
 }
@@ -211,7 +211,7 @@ main (int argc, char *argv[])
   camera_z = gthree_perspective_camera_new (45, 1, 1, 2000);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera_z));
 
-  gthree_object_set_position (GTHREE_OBJECT (camera_z),
+  gthree_object_set_position_point3d (GTHREE_OBJECT (camera_z),
                               graphene_point3d_init (&pos, 0, 0, 1000));
 
   area_z = gthree_area_new (scene, GTHREE_CAMERA (camera_z));
@@ -227,7 +227,7 @@ main (int argc, char *argv[])
   camera_y = gthree_perspective_camera_new (45, 1, 1, 2000);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera_y));
 
-  gthree_object_set_position (GTHREE_OBJECT (camera_y),
+  gthree_object_set_position_point3d (GTHREE_OBJECT (camera_y),
                               graphene_point3d_init (&pos, 0, 1000, 0));
   gthree_object_set_rotation (GTHREE_OBJECT (camera_y),
                               graphene_euler_init (&euler, -90, 0, 0));
@@ -245,7 +245,7 @@ main (int argc, char *argv[])
   camera_x = gthree_perspective_camera_new (45, 1, 1, 2000);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera_x));
 
-  gthree_object_set_position (GTHREE_OBJECT (camera_x),
+  gthree_object_set_position_point3d (GTHREE_OBJECT (camera_x),
                               graphene_point3d_init (&pos, 1000, 0, 0));
   gthree_object_set_rotation (GTHREE_OBJECT (camera_x),
                               graphene_euler_init (&euler, 0, 90, 0));

@@ -102,10 +102,10 @@ void                         gthree_object_apply_matrix                 (GthreeO
                                                                          const graphene_matrix_t     *matrix);
 GTHREE_API
 void                         gthree_object_set_position                 (GthreeObject                *object,
-                                                                         const graphene_point3d_t    *pos);
-GTHREE_API
-void                         gthree_object_set_position_vec3            (GthreeObject                *object,
                                                                          const graphene_vec3_t       *vec);
+GTHREE_API
+void                         gthree_object_set_position_point3d         (GthreeObject                *object,
+                                                                         const graphene_point3d_t    *pos);
 GTHREE_API
 const graphene_vec3_t *      gthree_object_get_position                 (GthreeObject                *object);
 GTHREE_API
@@ -123,6 +123,9 @@ void                         gthree_object_translate_z                  (GthreeO
                                                                          float                        distance);
 GTHREE_API
 void                         gthree_object_set_scale                    (GthreeObject                *object,
+                                                                         const graphene_vec3_t       *scale);
+GTHREE_API
+void                         gthree_object_set_scale_point3d            (GthreeObject                *object,
                                                                          const graphene_point3d_t    *scale);
 GTHREE_API
 const graphene_vec3_t *      gthree_object_get_scale                    (GthreeObject                *object);

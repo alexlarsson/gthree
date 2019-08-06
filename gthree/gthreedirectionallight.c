@@ -56,7 +56,7 @@ gthree_directional_light_init (GthreeDirectionalLight *directional)
   priv->target = g_object_ref_sink (gthree_object_new ());
   priv->uniforms = gthree_uniforms_new_from_definitions (light_uniforms, G_N_ELEMENTS (light_uniforms));
 
-  gthree_object_set_position (GTHREE_OBJECT (directional), &pos);
+  gthree_object_set_position_point3d (GTHREE_OBJECT (directional), &pos);
 }
 
 void

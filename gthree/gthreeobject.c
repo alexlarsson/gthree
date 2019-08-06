@@ -478,22 +478,22 @@ gthree_object_look_at (GthreeObject *object,
 
 void
 gthree_object_set_position (GthreeObject *object,
-                            const graphene_point3d_t *pos)
-{
-  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
-
-  graphene_point3d_to_vec3 (pos, &priv->position);
-  priv->matrix_need_update = TRUE;
-}
-
-void
-gthree_object_set_position_vec3 (GthreeObject *object,
-                                 const graphene_vec3_t *vec)
+                            const graphene_vec3_t *vec)
 {
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
 
   priv->position = *vec;
   priv->matrix_need_update = TRUE;
+}
+
+void
+gthree_object_set_position_point3d (GthreeObject *object,
+                                    const graphene_point3d_t *pos)
+{
+  graphene_vec3_t vec;
+
+  graphene_point3d_to_vec3 (pos, &vec);
+  gthree_object_set_position (object, &vec);
 }
 
 void
@@ -546,13 +546,22 @@ gthree_object_get_position (GthreeObject *object)
 }
 
 void
-gthree_object_set_scale (GthreeObject                *object,
-                         const graphene_point3d_t    *scale)
+gthree_object_set_scale (GthreeObject             *object,
+                         const graphene_vec3_t    *scale)
 {
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
 
-  graphene_point3d_to_vec3 (scale, &priv->scale);
+  priv->scale = *scale;
   priv->matrix_need_update = TRUE;
+}
+
+void
+gthree_object_set_scale_point3d (GthreeObject                *object,
+                                 const graphene_point3d_t    *scale)
+{
+  graphene_vec3_t v;
+  graphene_point3d_to_vec3 (scale, &v);
+  gthree_object_set_scale (object, &v);
 }
 
 void

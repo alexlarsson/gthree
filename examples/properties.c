@@ -117,7 +117,7 @@ init_scene (void)
   gthree_object_add_child (GTHREE_OBJECT (point_light), GTHREE_OBJECT (particle_light));
 
   directional_light = gthree_directional_light_new (&blue, 1.2);
-  gthree_object_set_position (GTHREE_OBJECT (directional_light),
+  gthree_object_set_position_point3d (GTHREE_OBJECT (directional_light),
                               graphene_point3d_init (&pos,
                                                      1, 1, -1));
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (directional_light));
@@ -134,7 +134,7 @@ init_scene (void)
       objects[j] = obj;
 
       gthree_object_add_child (GTHREE_OBJECT (scene), obj);
-      gthree_object_set_position (obj, graphene_point3d_init (&pos,
+      gthree_object_set_position_point3d (obj, graphene_point3d_init (&pos,
                                                               140 * (j - 1.5),
                                                               0,
                                                               0));
@@ -175,7 +175,7 @@ tick (GtkWidget     *widget,
       gthree_object_set_rotation (obj, graphene_euler_init (&euler, rot.x, rot.y, rot.z));
     }
 
-  gthree_object_set_position (GTHREE_OBJECT (point_light),
+  gthree_object_set_position_point3d (GTHREE_OBJECT (point_light),
                               graphene_point3d_init (&pos,
                                                      sin (angle * 7) * 300,
                                                      cos (angle * 5) * 400,
@@ -276,7 +276,7 @@ main (int argc, char *argv[])
   camera = gthree_perspective_camera_new (30, 1, 1, 10000);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
 
-  gthree_object_set_position (GTHREE_OBJECT (camera),
+  gthree_object_set_position_point3d (GTHREE_OBJECT (camera),
                               graphene_point3d_init (&pos, 0, 0, 400));
 
   area = gthree_area_new (scene, GTHREE_CAMERA (camera));

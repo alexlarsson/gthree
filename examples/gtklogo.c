@@ -91,91 +91,91 @@ gtk_logo (void)
   gthree_mesh_phong_material_set_emissive_color (ball_material, &white);
 
   ball = new_ball (GTHREE_MATERIAL (ball_material));
-  gthree_object_set_position (ball, graphene_point3d_init (&p, 30, 30, 30));
+  gthree_object_set_position_point3d (ball, graphene_point3d_init (&p, 30, 30, 30));
   gthree_object_add_child (cube, ball);
 
   ball = new_ball (GTHREE_MATERIAL (ball_material));
-  gthree_object_set_position (ball, graphene_point3d_init (&p, -30, 30, 30));
+  gthree_object_set_position_point3d (ball, graphene_point3d_init (&p, -30, 30, 30));
   gthree_object_add_child (cube, ball);
 
   ball = new_ball (GTHREE_MATERIAL (ball_material));
-  gthree_object_set_position (ball, graphene_point3d_init (&p, 30, -30, 30));
+  gthree_object_set_position_point3d (ball, graphene_point3d_init (&p, 30, -30, 30));
   gthree_object_add_child (cube, ball);
 
   ball = new_ball (GTHREE_MATERIAL (ball_material));
-  gthree_object_set_position (ball, graphene_point3d_init (&p, 30, 30, -30));
+  gthree_object_set_position_point3d (ball, graphene_point3d_init (&p, 30, 30, -30));
   gthree_object_add_child (cube, ball);
 
   ball = new_ball (GTHREE_MATERIAL (ball_material));
-  gthree_object_set_position (ball, graphene_point3d_init (&p, -30, -30, -30));
+  gthree_object_set_position_point3d (ball, graphene_point3d_init (&p, -30, -30, -30));
   gthree_object_add_child (cube, ball);
 
   ball = new_ball (GTHREE_MATERIAL (ball_material));
-  gthree_object_set_position (ball, graphene_point3d_init (&p, 30, -30, -30));
+  gthree_object_set_position_point3d (ball, graphene_point3d_init (&p, 30, -30, -30));
   gthree_object_add_child (cube, ball);
 
   ball = new_ball (GTHREE_MATERIAL (ball_material));
-  gthree_object_set_position (ball, graphene_point3d_init (&p, -30, 30, -30));
+  gthree_object_set_position_point3d (ball, graphene_point3d_init (&p, -30, 30, -30));
   gthree_object_add_child (cube, ball);
 
   ball = new_ball (GTHREE_MATERIAL (ball_material));
-  gthree_object_set_position (ball, graphene_point3d_init (&p, -30, -30, 30));
+  gthree_object_set_position_point3d (ball, graphene_point3d_init (&p, -30, -30, 30));
   gthree_object_add_child (cube, ball);
 
   tube = new_cylinder (GTHREE_MATERIAL (ball_material));
-  gthree_object_set_position (tube, graphene_point3d_init (&p, -30, 0, 30));
+  gthree_object_set_position_point3d (tube, graphene_point3d_init (&p, -30, 0, 30));
   gthree_object_add_child (cube, tube);
 
   tube = new_cylinder (GTHREE_MATERIAL (ball_material));
-  gthree_object_set_position (tube, graphene_point3d_init (&p, 30, 0, 30));
+  gthree_object_set_position_point3d (tube, graphene_point3d_init (&p, 30, 0, 30));
   gthree_object_add_child (cube, tube);
 
   tube = new_cylinder (GTHREE_MATERIAL (ball_material));
-  gthree_object_set_position (tube, graphene_point3d_init (&p, 30, 0, -30));
+  gthree_object_set_position_point3d (tube, graphene_point3d_init (&p, 30, 0, -30));
   gthree_object_add_child (cube, tube);
 
   tube = new_cylinder (GTHREE_MATERIAL (ball_material));
-  gthree_object_set_position (tube, graphene_point3d_init (&p, -30, 0, -30));
+  gthree_object_set_position_point3d (tube, graphene_point3d_init (&p, -30, 0, -30));
   gthree_object_add_child (cube, tube);
 
   tube = new_cylinder (GTHREE_MATERIAL (ball_material));
   gthree_object_set_rotation (tube, graphene_euler_init (&e, 90, 0, 0));
-  gthree_object_set_position (tube, graphene_point3d_init (&p, 30, 30, 0));
+  gthree_object_set_position_point3d (tube, graphene_point3d_init (&p, 30, 30, 0));
   gthree_object_add_child (cube, tube);
 
   tube = new_cylinder (GTHREE_MATERIAL (ball_material));
   gthree_object_set_rotation (tube, graphene_euler_init (&e, 90, 0, 0));
-  gthree_object_set_position (tube, graphene_point3d_init (&p, -30, 30, 0));
+  gthree_object_set_position_point3d (tube, graphene_point3d_init (&p, -30, 30, 0));
   gthree_object_add_child (cube, tube);
 
   tube = new_cylinder (GTHREE_MATERIAL (ball_material));
   gthree_object_set_rotation (tube, graphene_euler_init (&e, 90, 0, 0));
-  gthree_object_set_position (tube, graphene_point3d_init (&p, 30, -30, 0));
+  gthree_object_set_position_point3d (tube, graphene_point3d_init (&p, 30, -30, 0));
   gthree_object_add_child (cube, tube);
 
   tube = new_cylinder (GTHREE_MATERIAL (ball_material));
   gthree_object_set_rotation (tube, graphene_euler_init (&e, 90, 0, 0));
-  gthree_object_set_position (tube, graphene_point3d_init (&p, -30, -30, 0));
+  gthree_object_set_position_point3d (tube, graphene_point3d_init (&p, -30, -30, 0));
   gthree_object_add_child (cube, tube);
 
   tube = new_cylinder (GTHREE_MATERIAL (ball_material));
   gthree_object_set_rotation (tube, graphene_euler_init (&e, 0, 0, 90));
-  gthree_object_set_position (tube, graphene_point3d_init (&p, 0, 30, 30));
+  gthree_object_set_position_point3d (tube, graphene_point3d_init (&p, 0, 30, 30));
   gthree_object_add_child (cube, tube);
 
   tube = new_cylinder (GTHREE_MATERIAL (ball_material));
   gthree_object_set_rotation (tube, graphene_euler_init (&e, 0, 0, 90));
-  gthree_object_set_position (tube, graphene_point3d_init (&p, 0, -30, 30));
+  gthree_object_set_position_point3d (tube, graphene_point3d_init (&p, 0, -30, 30));
   gthree_object_add_child (cube, tube);
 
   tube = new_cylinder (GTHREE_MATERIAL (ball_material));
   gthree_object_set_rotation (tube, graphene_euler_init (&e, 0, 0, 90));
-  gthree_object_set_position (tube, graphene_point3d_init (&p, 0, 30, -30));
+  gthree_object_set_position_point3d (tube, graphene_point3d_init (&p, 0, 30, -30));
   gthree_object_add_child (cube, tube);
 
   tube = new_cylinder (GTHREE_MATERIAL (ball_material));
   gthree_object_set_rotation (tube, graphene_euler_init (&e, 0, 0, 90));
-  gthree_object_set_position (tube, graphene_point3d_init (&p, 0, -30, -30));
+  gthree_object_set_position_point3d (tube, graphene_point3d_init (&p, 0, -30, -30));
   gthree_object_add_child (cube, tube);
 
   return cube;
@@ -197,7 +197,7 @@ init_scene (void)
 
   logo = gtk_logo ();
   gthree_object_add_child (GTHREE_OBJECT (scene), logo);
-  gthree_object_set_position (GTHREE_OBJECT (logo), graphene_point3d_init (&pos, 0, 0, 0));
+  gthree_object_set_position_point3d (GTHREE_OBJECT (logo), graphene_point3d_init (&pos, 0, 0, 0));
 
   return scene;
 }
@@ -260,7 +260,7 @@ main (int argc, char *argv[])
   camera = gthree_perspective_camera_new (30, 1, 1, 10000);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
 
-  gthree_object_set_position (GTHREE_OBJECT (camera),
+  gthree_object_set_position_point3d (GTHREE_OBJECT (camera),
                               graphene_point3d_init (&pos, 0, 0, 400));
 
   area = gthree_area_new (scene, GTHREE_CAMERA (camera));

@@ -598,7 +598,7 @@ ghtree_property_binding_bind (GthreePropertyBinding *binding)
 
           get_property = (GthreePropertyGetter)gthree_object_get_position;
           get_value = ghtree_property_binding_get_value_vec3;
-          set_property = (GthreePropertySetter)gthree_object_set_position;
+          set_property = (GthreePropertySetter)gthree_object_set_position_point3d;
           set_value = ghtree_property_binding_set_value_point3d;
         }
       else if (strcmp (property_name, "scale") == 0)
@@ -608,7 +608,7 @@ ghtree_property_binding_bind (GthreePropertyBinding *binding)
 
           get_property = (GthreePropertyGetter)gthree_object_get_scale;
           get_value = ghtree_property_binding_get_value_vec3;
-          set_property = (GthreePropertySetter)gthree_object_set_scale;
+          set_property = (GthreePropertySetter)gthree_object_set_scale_point3d;
           set_value = ghtree_property_binding_set_value_point3d;
         }
       else if (strcmp (property_name, "rotation") == 0)

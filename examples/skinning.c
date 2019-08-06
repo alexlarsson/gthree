@@ -144,10 +144,10 @@ init_scene (void)
       g_ptr_array_add (bones, bone);
 
       if (i == 0)
-        gthree_object_set_position (GTHREE_OBJECT (bone),
+        gthree_object_set_position_point3d (GTHREE_OBJECT (bone),
                                     graphene_point3d_init (&p, 0, - (N_SEGMENTS) * SEGMENT_HEIGHT / 2, 0));
       else
-        gthree_object_set_position (GTHREE_OBJECT (bone),
+        gthree_object_set_position_point3d (GTHREE_OBJECT (bone),
                                     graphene_point3d_init (&p, 0, SEGMENT_HEIGHT, 0));
 
       dot = gthree_mesh_new (dot_geometry, GTHREE_MATERIAL (dot_material));
@@ -198,7 +198,7 @@ tick (GtkWidget     *widget,
       graphene_point3d_init_from_vec3 (&pos,
                                        gthree_object_get_position (GTHREE_OBJECT (bone)));
       pos.x = sin (angle / 40) * 1;
-      gthree_object_set_position (GTHREE_OBJECT (bone), &pos);
+      gthree_object_set_position_point3d (GTHREE_OBJECT (bone), &pos);
     }
 
   gtk_widget_queue_draw (widget);
@@ -249,7 +249,7 @@ main (int argc, char *argv[])
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));
 
   directional_light = gthree_directional_light_new (&white, 0.125);
-  gthree_object_set_position (GTHREE_OBJECT (directional_light),
+  gthree_object_set_position_point3d (GTHREE_OBJECT (directional_light),
                               graphene_point3d_init (&pos,
                                                      1, 1, -1));
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (directional_light));
@@ -257,7 +257,7 @@ main (int argc, char *argv[])
   camera = gthree_perspective_camera_new (30, 1, 1, 10000);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
 
-  gthree_object_set_position (GTHREE_OBJECT (camera),
+  gthree_object_set_position_point3d (GTHREE_OBJECT (camera),
                               graphene_point3d_init (&pos, 0, 13, 50));
   gthree_object_look_at (GTHREE_OBJECT (camera),
                          graphene_point3d_init (&pos, 0, 0, 0));

@@ -111,15 +111,15 @@ update_hud_sprites (int width,
   width /= 2;
   height /= 2;
 
-  gthree_object_set_position_vec3 (GTHREE_OBJECT (spriteTL),
+  gthree_object_set_position (GTHREE_OBJECT (spriteTL),
                                    graphene_vec3_init (&pos, -width, height, 1));
-  gthree_object_set_position_vec3 (GTHREE_OBJECT (spriteTR),
+  gthree_object_set_position (GTHREE_OBJECT (spriteTR),
                                    graphene_vec3_init (&pos, width, height, 1));
-  gthree_object_set_position_vec3 (GTHREE_OBJECT (spriteBL),
+  gthree_object_set_position (GTHREE_OBJECT (spriteBL),
                                    graphene_vec3_init (&pos, -width, -height, 1));
-  gthree_object_set_position_vec3 (GTHREE_OBJECT (spriteBR),
+  gthree_object_set_position (GTHREE_OBJECT (spriteBR),
                                    graphene_vec3_init (&pos, width, -height, 1));
-  gthree_object_set_position_vec3 (GTHREE_OBJECT (spriteC),
+  gthree_object_set_position (GTHREE_OBJECT (spriteC),
                                    graphene_vec3_init (&pos, 0, 0, 1));
 }
 
@@ -190,7 +190,7 @@ init_scene (GtkWidget *window)
       graphene_vec3_normalize (&pos, &pos);
       graphene_vec3_scale (&pos, radius, &pos);
 
-      gthree_object_set_position_vec3 (GTHREE_OBJECT (sprite), &pos);
+      gthree_object_set_position (GTHREE_OBJECT (sprite), &pos);
 
       gthree_object_add_child (group, GTHREE_OBJECT (sprite));
     }
@@ -212,7 +212,7 @@ init_scene (GtkWidget *window)
   spriteTL = gthree_sprite_new (GTHREE_MATERIAL (material));
   gthree_sprite_set_center (spriteTL,
                             graphene_vec2_init (&v2, 0.0, 1.0));
-  gthree_object_set_scale (GTHREE_OBJECT (spriteTL),
+  gthree_object_set_scale_point3d (GTHREE_OBJECT (spriteTL),
                            graphene_point3d_init (&s,
                                                   width, height, 1));
   gthree_object_add_child (GTHREE_OBJECT (ortho_scene), GTHREE_OBJECT (spriteTL));
@@ -220,7 +220,7 @@ init_scene (GtkWidget *window)
   spriteTR = gthree_sprite_new (GTHREE_MATERIAL (material));
   gthree_sprite_set_center (spriteTR,
                             graphene_vec2_init (&v2, 1.0, 1.0));
-  gthree_object_set_scale (GTHREE_OBJECT (spriteTR),
+  gthree_object_set_scale_point3d (GTHREE_OBJECT (spriteTR),
                            graphene_point3d_init (&s,
                                                   width, height, 1));
   gthree_object_add_child (GTHREE_OBJECT (ortho_scene), GTHREE_OBJECT (spriteTR));
@@ -228,7 +228,7 @@ init_scene (GtkWidget *window)
   spriteBL = gthree_sprite_new (GTHREE_MATERIAL (material));
   gthree_sprite_set_center (spriteBL,
                             graphene_vec2_init (&v2, 0.0, 0.0));
-  gthree_object_set_scale (GTHREE_OBJECT (spriteBL),
+  gthree_object_set_scale_point3d (GTHREE_OBJECT (spriteBL),
                            graphene_point3d_init (&s,
                                                   width, height, 1));
   gthree_object_add_child (GTHREE_OBJECT (ortho_scene), GTHREE_OBJECT (spriteBL));
@@ -236,7 +236,7 @@ init_scene (GtkWidget *window)
   spriteBR = gthree_sprite_new (GTHREE_MATERIAL (material));
   gthree_sprite_set_center (spriteBR,
                             graphene_vec2_init (&v2, 1.0, 0.0));
-  gthree_object_set_scale (GTHREE_OBJECT (spriteBR),
+  gthree_object_set_scale_point3d (GTHREE_OBJECT (spriteBR),
                            graphene_point3d_init (&s,
                                                   width, height, 1));
   gthree_object_add_child (GTHREE_OBJECT (ortho_scene), GTHREE_OBJECT (spriteBR));
@@ -244,7 +244,7 @@ init_scene (GtkWidget *window)
   spriteC = gthree_sprite_new (GTHREE_MATERIAL (material));
   gthree_sprite_set_center (spriteC,
                             graphene_vec2_init (&v2, 0.5, 0.5));
-  gthree_object_set_scale (GTHREE_OBJECT (spriteC),
+  gthree_object_set_scale_point3d (GTHREE_OBJECT (spriteC),
                            graphene_point3d_init (&s,
                                                   width, height, 1));
   gthree_object_add_child (GTHREE_OBJECT (ortho_scene), GTHREE_OBJECT (spriteC));
@@ -297,7 +297,7 @@ tick (GtkWidget     *widget,
       gthree_sprite_material_set_rotation (GTHREE_SPRITE_MATERIAL (material),
                                            gthree_sprite_material_get_rotation (GTHREE_SPRITE_MATERIAL (material)) + 0.1 * ( i / (float)len ));
 
-      gthree_object_set_scale (sprite,
+      gthree_object_set_scale_point3d (sprite,
                                graphene_point3d_init (&s,
                                                       imageWidth * scale, imageHeight * scale, 1.0));
 
@@ -372,14 +372,14 @@ main (int argc, char *argv[])
   scene = init_scene (window);
   camera = gthree_perspective_camera_new (60, 1, 1, 2100);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
-  gthree_object_set_position (GTHREE_OBJECT (camera),
+  gthree_object_set_position_point3d (GTHREE_OBJECT (camera),
                               graphene_point3d_init (&pos, 0, 0, 1500));
 
   int width = 100;
   int height = 100;
   ortho_camera = gthree_orthographic_camera_new ( - width / 2, width / 2, height / 2, - height / 2, 1, 10);
   gthree_object_add_child (GTHREE_OBJECT (ortho_scene), GTHREE_OBJECT (ortho_camera));
-  gthree_object_set_position (GTHREE_OBJECT (ortho_camera),
+  gthree_object_set_position_point3d (GTHREE_OBJECT (ortho_camera),
                               graphene_point3d_init (&pos, 0, 0, 10));
 
 
