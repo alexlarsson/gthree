@@ -1271,6 +1271,38 @@ gthree_object_find_by_name (GthreeObject *object,
   return g_list_reverse (data.list);
 }
 
+struct FindFirstByName {
+  const char *name;
+  GthreeObject *object;
+};
+
+static gboolean
+find_first_by_name_cb (GthreeObject *object,
+                       gpointer user_data)
+{
+  struct FindFirstByName *data = user_data;
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  if (g_strcmp0 (data->name, priv->name) == 0 ||
+      g_strcmp0 (data->name, priv->uuid) == 0)
+    {
+      data->object = object;
+      return FALSE;
+    }
+
+  return TRUE;
+}
+
+GthreeObject *
+gthree_object_find_first_by_name (GthreeObject *object,
+                                  const char *name)
+{
+  struct FindFirstByName data = { name, NULL};
+
+  gthree_object_traverse (object, find_first_by_name_cb, &data);
+  return data.object;
+}
+
 void
 gthree_object_print_tree (GthreeObject *object, int depth)
 {

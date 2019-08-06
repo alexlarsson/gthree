@@ -222,6 +222,9 @@ GList *                      gthree_object_find_by_type                 (GthreeO
 GTHREE_API
 GList *                      gthree_object_find_by_name                 (GthreeObject                *object,
                                                                          const char                  *name);
+GTHREE_API
+GthreeObject                *gthree_object_find_first_by_name           (GthreeObject                *object,
+                                                                         const char                  *name);
 
 
 
