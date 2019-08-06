@@ -11,6 +11,7 @@ examples = [
   'normals',
   'performance',
   'shader',
+  'sprites',
   'rendertarget',
   'effects',
   'morphtargets',
