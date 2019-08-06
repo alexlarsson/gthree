@@ -936,6 +936,20 @@ gthree_object_get_last_child (GthreeObject *object)
   return priv->last_child;
 }
 
+int
+gthree_object_get_n_children (GthreeObject *object)
+{
+  GthreeObjectIter iter;
+  GthreeObject *child;
+  int len = 0;
+
+  gthree_object_iter_init (&iter, object);
+  while (gthree_object_iter_next (&iter, &child))
+    len++;
+
+  return len;
+}
+
 GthreeObject *
 gthree_object_get_previous_sibling (GthreeObject *object)
 {

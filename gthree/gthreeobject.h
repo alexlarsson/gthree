@@ -196,6 +196,8 @@ GthreeObject *               gthree_object_get_first_child              (GthreeO
 GTHREE_API
 GthreeObject *               gthree_object_get_last_child               (GthreeObject                *object);
 GTHREE_API
+int                          gthree_object_get_n_children               (GthreeObject                *object);
+GTHREE_API
 GthreeObject *               gthree_object_get_next_sibling             (GthreeObject                *object);
 GTHREE_API
 GthreeObject *               gthree_object_get_previous_sibling         (GthreeObject                *object);
