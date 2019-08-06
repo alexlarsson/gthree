@@ -57,8 +57,8 @@ typedef void (*GthreeBeforeRenderCallback) (GthreeObject                *object,
                                             GthreeScene                 *scene,
                                             GthreeCamera                *camera);
 
-typedef void (*GthreeTraverseCallback) (GthreeObject                *object,
-                                        gpointer                     user_data);
+typedef gboolean (*GthreeTraverseCallback) (GthreeObject                *object,
+                                            gpointer                     user_data);
 
 GTHREE_API
 const char *                 gthree_object_get_name                     (GthreeObject                *object);

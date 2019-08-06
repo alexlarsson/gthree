@@ -1139,19 +1139,58 @@ gthree_object_iter_destroy (GthreeObjectIter *iter)
     }
 }
 
-void
-gthree_object_traverse (GthreeObject                *object,
+static gboolean
+_gthree_object_traverse (GthreeObject                *object,
                         GthreeTraverseCallback       callback,
                         gpointer                     user_data)
 {
   GthreeObjectIter iter;
   GthreeObject *child;
 
-  callback (object, user_data);
+  if (!callback (object, user_data))
+    return FALSE;
 
   gthree_object_iter_init (&iter, object);
   while (gthree_object_iter_next (&iter, &child))
-    gthree_object_traverse (child, callback, user_data);
+    {
+      if (!_gthree_object_traverse (child, callback, user_data))
+        return FALSE;
+    }
+
+  return TRUE;
+}
+
+void
+gthree_object_traverse (GthreeObject                *object,
+                        GthreeTraverseCallback       callback,
+                        gpointer                     user_data)
+{
+  _gthree_object_traverse (object, callback, user_data);
+}
+
+static gboolean
+_gthree_object_traverse_visible (GthreeObject                *object,
+                                 GthreeTraverseCallback       callback,
+                                 gpointer                     user_data)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+  GthreeObjectIter iter;
+  GthreeObject *child;
+
+  if (!priv->visible)
+    return TRUE;
+
+  if (!callback (object, user_data))
+    return FALSE;
+
+  gthree_object_iter_init (&iter, object);
+  while (gthree_object_iter_next (&iter, &child))
+    {
+      if (!_gthree_object_traverse (child, callback, user_data))
+        return FALSE;
+    }
+
+  return TRUE;
 }
 
 void
@@ -1159,18 +1198,7 @@ gthree_object_traverse_visible (GthreeObject                *object,
                                 GthreeTraverseCallback       callback,
                                 gpointer                     user_data)
 {
-  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
-  GthreeObjectIter iter;
-  GthreeObject *child;
-
-  if (!priv->visible)
-    return;
-
-  callback (object, user_data);
-
-  gthree_object_iter_init (&iter, object);
-  while (gthree_object_iter_next (&iter, &child))
-    gthree_object_traverse_visible (child, callback, user_data);
+  _gthree_object_traverse_visible (object, callback, user_data);
 }
 
 void
@@ -1192,7 +1220,7 @@ struct FindByType {
   GList *list;
 };
 
-static void
+static gboolean
 find_by_type_cb (GthreeObject *object,
                  gpointer user_data)
 {
@@ -1200,6 +1228,8 @@ find_by_type_cb (GthreeObject *object,
 
   if (G_TYPE_CHECK_INSTANCE_TYPE (object, data->g_type))
     data->list = g_list_prepend (data->list, object);
+
+  return TRUE;
 }
 
 GList *
@@ -1217,7 +1247,7 @@ struct FindByName {
   GList *list;
 };
 
-static void
+static gboolean
 find_by_name_cb (GthreeObject *object,
                  gpointer user_data)
 {
@@ -1227,6 +1257,8 @@ find_by_name_cb (GthreeObject *object,
   if (g_strcmp0 (data->name, priv->name) == 0 ||
       g_strcmp0 (data->name, priv->uuid) == 0)
     data->list = g_list_prepend (data->list, object);
+
+  return TRUE;
 }
 
 GList *
