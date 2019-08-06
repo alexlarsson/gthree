@@ -127,7 +127,7 @@ gthree_mesh_standard_material_init (GthreeMeshStandardMaterial *standard)
 static void
 gthree_mesh_standard_material_finalize (GObject *obj)
 {
-  GthreeMeshStandardMaterial *standard = GTHREE_STANDARD_MATERIAL (obj);
+  GthreeMeshStandardMaterial *standard = GTHREE_MESH_STANDARD_MATERIAL (obj);
   GthreeMeshStandardMaterialPrivate *priv = gthree_mesh_standard_material_get_instance_private (standard);
 
   g_clear_object (&priv->map);
@@ -154,7 +154,7 @@ static void
 gthree_mesh_standard_material_real_set_params (GthreeMaterial *material,
                                                GthreeProgramParameters *params)
 {
-  GthreeMeshStandardMaterial *standard = GTHREE_STANDARD_MATERIAL (material);
+  GthreeMeshStandardMaterial *standard = GTHREE_MESH_STANDARD_MATERIAL (material);
   GthreeMeshStandardMaterialPrivate *priv = gthree_mesh_standard_material_get_instance_private (standard);
 
   params->map = priv->map != NULL;
@@ -191,7 +191,7 @@ gthree_mesh_standard_material_real_set_uniforms (GthreeMaterial *material,
                                                  GthreeUniforms *uniforms,
                                                  GthreeCamera   *camera)
 {
-  GthreeMeshStandardMaterial *standard = GTHREE_STANDARD_MATERIAL (material);
+  GthreeMeshStandardMaterial *standard = GTHREE_MESH_STANDARD_MATERIAL (material);
   GthreeMeshStandardMaterialPrivate *priv = gthree_mesh_standard_material_get_instance_private (standard);
   GthreeUniform *uni;
 
@@ -353,7 +353,7 @@ gthree_mesh_standard_material_set_property (GObject *obj,
                                             const GValue *value,
                                             GParamSpec *pspec)
 {
-  GthreeMeshStandardMaterial *standard = GTHREE_STANDARD_MATERIAL (obj);
+  GthreeMeshStandardMaterial *standard = GTHREE_MESH_STANDARD_MATERIAL (obj);
 
   switch (prop_id)
     {
@@ -470,7 +470,7 @@ gthree_mesh_standard_material_get_property (GObject *obj,
                                          GValue *value,
                                          GParamSpec *pspec)
 {
-  GthreeMeshStandardMaterial *standard = GTHREE_STANDARD_MATERIAL (obj);
+  GthreeMeshStandardMaterial *standard = GTHREE_MESH_STANDARD_MATERIAL (obj);
   GthreeMeshStandardMaterialPrivate *priv = gthree_mesh_standard_material_get_instance_private (standard);
 
   switch (prop_id)

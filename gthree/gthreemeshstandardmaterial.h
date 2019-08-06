@@ -11,12 +11,12 @@
 G_BEGIN_DECLS
 
 
-#define GTHREE_TYPE_STANDARD_MATERIAL      (gthree_mesh_standard_material_get_type ())
-#define GTHREE_STANDARD_MATERIAL(inst)     (G_TYPE_CHECK_INSTANCE_CAST ((inst), \
-                                                                     GTHREE_TYPE_STANDARD_MATERIAL, \
-                                                                     GthreeMeshStandardMaterial))
-#define GTHREE_IS_STANDARD_MATERIAL(inst)  (G_TYPE_CHECK_INSTANCE_TYPE ((inst), \
-                                                                     GTHREE_TYPE_STANDARD_MATERIAL))
+#define GTHREE_TYPE_MESH_STANDARD_MATERIAL      (gthree_mesh_standard_material_get_type ())
+#define GTHREE_MESH_STANDARD_MATERIAL(inst)     (G_TYPE_CHECK_INSTANCE_CAST ((inst), \
+                                                                             GTHREE_TYPE_MESH_STANDARD_MATERIAL, \
+                                                                             GthreeMeshStandardMaterial))
+#define GTHREE_IS_MESH_STANDARD_MATERIAL(inst)  (G_TYPE_CHECK_INSTANCE_TYPE ((inst), \
+                                                                             GTHREE_TYPE_MESH_STANDARD_MATERIAL))
 
 struct _GthreeMeshStandardMaterial {
   GthreeMeshMaterial parent;

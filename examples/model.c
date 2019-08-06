@@ -168,8 +168,8 @@ apply_env_map (void)
   for (i = 0; i < n_materials; i++)
     {
       GthreeMaterial *m = gthree_loader_get_material (loader, i);
-      if (GTHREE_IS_STANDARD_MATERIAL (m))
-        gthree_mesh_standard_material_set_env_map (GTHREE_STANDARD_MATERIAL (m), texture);
+      if (GTHREE_IS_MESH_STANDARD_MATERIAL (m))
+        gthree_mesh_standard_material_set_env_map (GTHREE_MESH_STANDARD_MATERIAL (m), texture);
     }
 }
 
