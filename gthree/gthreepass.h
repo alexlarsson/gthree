@@ -149,6 +149,9 @@ GthreePass *gthree_render_pass_new  (GthreeScene *scene,
                                      GthreeMaterial *override_material);
 
 GTHREE_API
+void gthree_render_pass_set_clipping_planes  (GthreeRenderPass *render_pass,
+                                              GArray *clipping_planes);
+GTHREE_API
 void gthree_render_pass_set_clear_depth (GthreeRenderPass *render_pass,
                                          gboolean          clear_depth);
 

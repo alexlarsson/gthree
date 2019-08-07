@@ -256,6 +256,7 @@ struct _GthreeRenderPass {
   GdkRGBA clear_color;
   float clear_alpha;
   gboolean clear_depth;
+  GArray *clipping_planes;
 };
 
 typedef struct {
@@ -284,6 +285,9 @@ gthree_render_pass_finalize (GObject *obj)
   g_clear_object (&pass->camera);
   g_clear_object (&pass->override_material);
 
+  if (pass->clipping_planes)
+    g_array_unref (pass->clipping_planes);
+
   G_OBJECT_CLASS (gthree_render_pass_parent_class)->finalize (obj);
 }
 
@@ -297,6 +301,7 @@ gthree_render_pass_render (GthreePass *pass,
 {
   GthreeRenderPass *render_pass = GTHREE_RENDER_PASS (pass);
   gboolean old_auto_clear = gthree_renderer_get_autoclear (renderer);
+  g_autoptr(GArray) old_clipping_planes = NULL;
 
   gthree_renderer_set_autoclear (renderer, FALSE);
 
@@ -313,6 +318,12 @@ gthree_render_pass_render (GthreePass *pass,
 
   gthree_renderer_set_render_target (renderer, pass->render_to_screen ? NULL : read_buffer, 0, 0);
 
+  if (render_pass->clipping_planes)
+    {
+      old_clipping_planes = g_array_ref (gthree_renderer_get_clipping_planes (renderer));
+      gthree_renderer_set_clipping_planes (renderer, render_pass->clipping_planes);
+    }
+
   if (render_pass->clear_depth)
     gthree_renderer_clear_depth (renderer);
 
@@ -323,6 +334,9 @@ gthree_render_pass_render (GthreePass *pass,
                            gthree_renderer_get_autoclear_stencil (renderer));
 
   gthree_renderer_render (renderer, render_pass->scene, render_pass->camera);
+
+  if (old_clipping_planes)
+    gthree_renderer_set_clipping_planes (renderer, old_clipping_planes);
 
   gthree_renderer_set_autoclear (renderer, old_auto_clear);
 }
@@ -350,6 +364,16 @@ gthree_render_pass_new (GthreeScene *scene,
     pass->override_material = g_object_ref (override_material);
 
   return GTHREE_PASS (pass);
+}
+
+void
+gthree_render_pass_set_clipping_planes  (GthreeRenderPass *render_pass,
+                                         GArray *clipping_planes)
+{
+  g_array_ref (clipping_planes);
+  if (render_pass->clipping_planes)
+    g_array_unref (render_pass->clipping_planes);
+  render_pass->clipping_planes = clipping_planes;
 }
 
 void
