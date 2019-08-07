@@ -156,6 +156,9 @@ GTHREE_API
 void        gthree_uniform_set_float3_array (GthreeUniform   *uniform,
                                              GArray          *array);
 GTHREE_API
+void        gthree_uniform_set_float4_array (GthreeUniform   *uniform,
+                                             GArray          *array);
+GTHREE_API
 void        gthree_uniform_set_int          (GthreeUniform   *uniform,
                                              int              value);
 GTHREE_API
