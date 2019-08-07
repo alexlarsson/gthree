@@ -82,6 +82,11 @@ GTHREE_API
 const graphene_plane_t *gthree_renderer_get_clipping_plane    (GthreeRenderer     *renderer,
                                                                int                 index);
 GTHREE_API
+GArray             *gthree_renderer_get_clipping_planes       (GthreeRenderer     *renderer);
+GTHREE_API
+void                gthree_renderer_set_clipping_planes       (GthreeRenderer     *renderer,
+                                                               GArray             *clipping_planes);
+GTHREE_API
 void                gthree_renderer_set_clipping_plane        (GthreeRenderer     *renderer,
                                                                int                 index,
                                                                const graphene_plane_t *plane);

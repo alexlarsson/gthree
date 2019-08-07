@@ -493,6 +493,29 @@ gthree_renderer_get_n_clipping_planes (GthreeRenderer *renderer)
   return priv->clipping_planes->len;
 }
 
+GArray *
+gthree_renderer_get_clipping_planes (GthreeRenderer     *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  return priv->clipping_planes;
+}
+
+void
+gthree_renderer_set_clipping_planes (GthreeRenderer     *renderer,
+                                     GArray             *clipping_planes)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  if (clipping_planes)
+    g_array_ref (clipping_planes);
+  else
+    clipping_planes = g_array_new (FALSE, FALSE, sizeof (graphene_plane_t));
+
+  g_array_unref (priv->clipping_planes);
+  priv->clipping_planes = clipping_planes;
+}
+
 const graphene_plane_t *
 gthree_renderer_get_clipping_plane (GthreeRenderer     *renderer,
                                     int                 index)
