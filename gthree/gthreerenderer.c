@@ -1482,6 +1482,17 @@ set_program (GthreeRenderer *renderer,
           }
     }
 
+  if (priv->clipping_enabled)
+    {
+      // We always update the clipping planes because they changes outside of the material
+      GthreeUniform *uni =  gthree_uniforms_lookup (m_uniforms, q_clippingPlanes);
+      if (uni)
+        {
+          gthree_uniform_set_float4_array (uni, priv->clipping_state);
+          gthree_uniform_set_needs_update (uni, TRUE);
+        }
+    }
+
   if ( refreshMaterial )
     {
       if (gthree_material_needs_lights (material))
@@ -1495,15 +1506,6 @@ set_program (GthreeRenderer *renderer,
                */
               material_apply_light_setup (m_uniforms, &priv->light_setup, TRUE);
             }
-
-          {
-            GthreeUniform *uni =  gthree_uniforms_lookup (m_uniforms, q_clippingPlanes);
-            if (uni)
-              {
-                gthree_uniform_set_float4_array (uni, priv->clipping_state);
-                gthree_uniform_set_needs_update (uni, TRUE);
-              }
-          }
         }
 
       gthree_material_set_uniforms (material, m_uniforms, camera);
@@ -1541,6 +1543,14 @@ set_program (GthreeRenderer *renderer,
       // load common uniforms
       gthree_uniforms_load (m_uniforms, renderer);
     }
+  else
+    {
+      // We always reload the clipping planes because it may change outside of the material
+      GthreeUniform *uni =  gthree_uniforms_lookup (m_uniforms, q_clippingPlanes);
+      if (uni)
+        gthree_uniform_load (uni, renderer);
+    }
+
 
   gthree_object_set_direct_uniforms (object, program, renderer);
 
