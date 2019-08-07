@@ -54,6 +54,8 @@ typedef struct {
   float gamma_factor;
   gboolean physically_correct_lights;
 
+  GArray *clipping_planes;
+
   graphene_rect_t viewport;
 
   /* Render state */
@@ -61,6 +63,7 @@ typedef struct {
 
   graphene_frustum_t frustum;
   graphene_matrix_t proj_screen_matrix;
+  gboolean clipping_enabled;
 
   guint used_texture_units;
 
@@ -79,6 +82,7 @@ typedef struct {
   guint old_blend_equation;
   guint old_blend_src;
   guint old_blend_dst;
+  guint old_num_global_planes;
   GdkRGBA old_clear_color;
   GthreeRenderTarget *current_render_target;
   GthreeProgram *current_program;
@@ -86,6 +90,8 @@ typedef struct {
   GthreeCamera *current_camera;
   graphene_rect_t current_viewport;
   guint current_framebuffer;
+  GArray *clipping_state;
+  guint num_clipping_planes;
 
   GthreeGeometry *current_geometry_program_geometry;
   GthreeProgram *current_geometry_program_program;
@@ -129,6 +135,7 @@ static GQuark q_modelViewMatrix;
 static GQuark q_normalMatrix;
 static GQuark q_projectionMatrix;
 static GQuark q_cameraPosition;
+static GQuark q_clippingPlanes;
 static GQuark q_ambientLightColor;
 static GQuark q_directionalLights;
 static GQuark q_pointLights;
@@ -211,6 +218,9 @@ gthree_renderer_init (GthreeRenderer *renderer)
   priv->gamma_factor = 2.2; // Differs from three.js default 2.0
   priv->physically_correct_lights = FALSE;
 
+  priv->clipping_planes = g_array_new (FALSE, FALSE, sizeof (graphene_plane_t));
+  priv->clipping_state = g_array_new (FALSE, FALSE, sizeof (float));
+
   priv->current_framebuffer = 0;
 
   priv->light_setup.directional = g_ptr_array_new ();
@@ -262,6 +272,9 @@ gthree_renderer_finalize (GObject *obj)
 
   gthree_program_cache_free (priv->program_cache);
 
+  g_array_free (priv->clipping_planes, TRUE);
+  g_array_free (priv->clipping_state, TRUE);
+
   g_list_free (priv->lights);
   g_ptr_array_free (priv->light_setup.directional, TRUE);
   g_ptr_array_free (priv->light_setup.point, TRUE);
@@ -294,6 +307,7 @@ gthree_renderer_class_init (GthreeRendererClass *klass)
   INIT_QUARK(normalMatrix);
   INIT_QUARK(projectionMatrix);
   INIT_QUARK(cameraPosition);
+  INIT_QUARK(clippingPlanes);
   INIT_QUARK(ambientLightColor);
   INIT_QUARK(directionalLights);
   INIT_QUARK(pointLights);
@@ -469,6 +483,68 @@ gthree_renderer_get_gamma_factor (GthreeRenderer *renderer)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
   return priv->gamma_factor;
+}
+
+int
+gthree_renderer_get_n_clipping_planes (GthreeRenderer *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  return priv->clipping_planes->len;
+}
+
+const graphene_plane_t *
+gthree_renderer_get_clipping_plane (GthreeRenderer     *renderer,
+                                    int                 index)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  if (index < 0 || index >= priv->clipping_planes->len)
+    return NULL;
+
+  return &g_array_index (priv->clipping_planes, graphene_plane_t, index);
+}
+
+void
+gthree_renderer_set_clipping_plane (GthreeRenderer     *renderer,
+                                    int                 index,
+                                    const graphene_plane_t *plane)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  if (index < 0 || index >= priv->clipping_planes->len)
+    return;
+
+  g_array_index (priv->clipping_planes, graphene_plane_t, index) = *plane;
+}
+
+void
+gthree_renderer_add_clipping_plane (GthreeRenderer     *renderer,
+                                    const graphene_plane_t *plane)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  g_array_append_val (priv->clipping_planes, *plane);
+}
+
+void
+gthree_renderer_remove_clipping_plane (GthreeRenderer *renderer,
+                                       int             index)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  if (index < 0 || index >= priv->clipping_planes->len)
+    return;
+
+  g_array_remove_index (priv->clipping_planes, index);
+}
+
+void
+gthree_renderer_remove_all_clipping_planes (GthreeRenderer *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  g_array_set_size (priv->clipping_planes, 0);
 }
 
 GthreeRenderTarget *
@@ -933,6 +1009,8 @@ init_material (GthreeRenderer *renderer,
   parameters.morph_targets = GTHREE_IS_MESH_MATERIAL (material) && gthree_mesh_material_get_morph_targets (GTHREE_MESH_MATERIAL (material));
   parameters.morph_normals = GTHREE_IS_MESH_MATERIAL (material) && gthree_mesh_material_get_morph_normals (GTHREE_MESH_MATERIAL (material));
 
+  parameters.num_clipping_planes = priv->num_clipping_planes;
+
 #ifdef TODO
   parameters =
     {
@@ -946,7 +1024,6 @@ init_material (GthreeRenderer *renderer,
     useFog: material.fog,
     fogExp: fog instanceof THREE.FogExp2,
 
-    sizeAttenuation: material.sizeAttenuation,
     logarithmicDepthBuffer: _logarithmicDepthBuffer,
 
     useVertexTexture: _supportsBoneTextures && object && object.skeleton && object.skeleton.useVertexTexture,
@@ -1005,6 +1082,20 @@ init_material (GthreeRenderer *renderer,
 
   // store the light setup it was created for
   material_properties->light_hash = priv->light_setup.hash;
+
+  if (!GTHREE_IS_SHADER_MATERIAL (material)
+#ifdef TODO
+      || material.clipping === true
+#endif
+      )
+    {
+      GthreeUniform *uni =  gthree_uniforms_lookup (m_uniforms, q_clippingPlanes);
+      if (uni == NULL)
+        {
+          uni = gthree_uniform_newq (q_clippingPlanes, GTHREE_UNIFORM_TYPE_FLOAT4_ARRAY);
+          gthree_uniforms_add (m_uniforms, uni); // takes ownership
+        }
+    }
 
   if (priv->lights)
     material_apply_light_setup (m_uniforms, &priv->light_setup, FALSE);
@@ -1065,6 +1156,124 @@ setup_lights (GthreeRenderer *renderer, GthreeCamera *camera)
   setup->hash.num_point = setup->point->len;
 }
 
+static void
+transform_plane (const graphene_plane_t *plane,
+                 const graphene_matrix_t *matrix,
+                 const graphene_matrix_t *normal_matrix,
+                 graphene_plane_t *dest)
+{
+  graphene_vec3_t normal, coplanar_point, reference_point;
+  graphene_vec4_t coplanar_point_v4, reference_point_v4;
+  float constant;
+
+  graphene_plane_get_normal (plane, &normal);
+  constant = graphene_plane_get_constant (plane);
+
+  /* Get other point on plane */
+  graphene_vec3_scale (&normal, -constant, &coplanar_point);
+  graphene_vec4_init_from_vec3 (&coplanar_point_v4, &coplanar_point, 1.0);
+
+  /* Transform other point (including translations, so vec4) */
+  graphene_matrix_transform_vec4 (matrix, &coplanar_point_v4, &reference_point_v4);
+  graphene_vec4_get_xyz (&reference_point_v4, &reference_point);
+
+  /* Transform normal */
+  graphene_matrix_transform_vec3 (normal_matrix, &normal, &normal);
+  graphene_vec3_normalize (&normal, &normal);
+
+  constant = -graphene_vec3_dot (&normal, &reference_point);
+
+  graphene_plane_init (dest, &normal, constant);
+}
+
+static void *
+project_planes (GthreeRenderer *renderer,
+                const graphene_plane_t *planes,
+                int n_planes,
+                GthreeCamera *camera,
+                int dst_offset,
+                gboolean skip_transform)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  if (n_planes != 0)
+    {
+      guint flat_size = dst_offset + n_planes * 4;
+      graphene_matrix_t viewNormalMatrix;
+      float *dst_array;
+
+      g_array_set_size (priv->clipping_state, flat_size);
+      dst_array = (float *)priv->clipping_state->data;
+
+      if (!skip_transform)
+        {
+          const graphene_matrix_t *viewMatrix = gthree_camera_get_world_inverse_matrix (camera);
+
+          /* Get normal matrix */
+          graphene_matrix_inverse (viewMatrix, &viewNormalMatrix);
+          graphene_matrix_transpose (&viewNormalMatrix, &viewNormalMatrix);
+
+          for (int i = 0, i4 = dst_offset; i != n_planes; i++, i4 += 4)
+            {
+              graphene_plane_t transformed_plane;
+              graphene_vec3_t normal;
+
+              transform_plane (&planes[i], viewMatrix, &viewNormalMatrix, &transformed_plane);
+              graphene_plane_get_normal (&transformed_plane, &normal);
+
+              dst_array[i4+0] = graphene_vec3_get_x (&normal);
+              dst_array[i4+1] = graphene_vec3_get_y (&normal);
+              dst_array[i4+2] = graphene_vec3_get_z (&normal);
+              dst_array[i4+3] = graphene_plane_get_constant (&transformed_plane);
+            }
+        }
+      else
+        {
+          for (int i = 0, i4 = dst_offset; i != n_planes; i++, i4 += 4)
+            {
+              graphene_vec3_t normal;
+              float constant;
+
+              graphene_plane_get_normal (&planes[i], &normal);
+              constant = graphene_plane_get_constant (&planes[i]);
+
+              dst_array[i4+0] = graphene_vec3_get_x (&normal);
+              dst_array[i4+1] = graphene_vec3_get_y (&normal);
+              dst_array[i4+2] = graphene_vec3_get_z (&normal);
+              dst_array[i4+3] = constant;
+            }
+        }
+    }
+
+  priv->num_clipping_planes = n_planes;
+
+  return NULL;
+}
+
+static gboolean
+clipping_init (GthreeRenderer *renderer,
+               GthreeCamera *camera)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  gboolean enabled;
+
+  enabled =
+    priv->clipping_planes->len != 0 ||
+    // enable state of previous frame - the clipping code has to
+    // run another frame in order to reset the state:
+    priv->old_num_global_planes != 0;
+
+  project_planes (renderer,
+                  (const graphene_plane_t *)priv->clipping_planes->data,
+                  priv->clipping_planes->len,
+                  camera,
+                  0, FALSE);
+
+  priv->old_num_global_planes = priv->clipping_planes->len;
+
+  return enabled;
+}
+
 // If uniforms are marked as clean, they don't need to be loaded to the GPU.
 static void
 mark_uniforms_lights_needs_update (GthreeUniforms *uniforms, gboolean needs_update)
@@ -1109,6 +1318,15 @@ set_program (GthreeRenderer *renderer,
   GthreeShader *shader;
   GthreeUniforms *m_uniforms;
   GthreeMaterialProperties *material_properties = gthree_material_get_properties (material);
+
+#ifdef TODO
+  // This is only needed for local clipping
+  if (priv->clipping_enabled)
+    {
+      if (camera !== priv->current_camera)
+        clipping_set_state (renderer, camera);
+    }
+#endif
 
   priv->used_texture_units = 0;
 
@@ -1277,6 +1495,15 @@ set_program (GthreeRenderer *renderer,
                */
               material_apply_light_setup (m_uniforms, &priv->light_setup, TRUE);
             }
+
+          {
+            GthreeUniform *uni =  gthree_uniforms_lookup (m_uniforms, q_clippingPlanes);
+            if (uni)
+              {
+                gthree_uniform_set_float4_array (uni, priv->clipping_state);
+                gthree_uniform_set_needs_update (uni, TRUE);
+              }
+          }
         }
 
       gthree_material_set_uniforms (material, m_uniforms, camera);
@@ -1955,6 +2182,8 @@ gthree_renderer_render (GthreeRenderer *renderer,
   gthree_camera_get_proj_screen_matrix (camera, &priv->proj_screen_matrix);
   graphene_frustum_init_from_matrix (&priv->frustum, &priv->proj_screen_matrix);
 
+  priv->clipping_enabled = clipping_init (renderer, camera);
+
   /* Flush lazily deleted resources to avoid leaking until widget unrealize */
   gthree_resources_flush_deletes (priv->gl_context);
 
@@ -1965,7 +2194,22 @@ gthree_renderer_render (GthreeRenderer *renderer,
   if (priv->sort_objects)
     gthree_render_list_sort (priv->current_render_list);
 
+  if (priv->clipping_enabled )
+    {
+      //TODO: _clipping.beginShadows();
+    }
+
+#ifdef TODO
+  var shadowsArray = currentRenderState.state.shadowsArray;
+  shadowMap.render( shadowsArray, scene, camera );
+#endif
+
   setup_lights (renderer, camera);
+
+  if (priv->clipping_enabled)
+    {
+      //TODO: _clipping.endShadows();
+    }
 
   gthree_renderer_set_render_target (renderer, priv->current_render_target, 0, 0);
 

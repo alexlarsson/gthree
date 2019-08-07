@@ -77,6 +77,23 @@ void                gthree_renderer_set_gamma_factor          (GthreeRenderer   
 GTHREE_API
 float               gthree_renderer_get_gamma_factor          (GthreeRenderer     *renderer);
 GTHREE_API
+int                 gthree_renderer_get_n_clipping_planes     (GthreeRenderer     *renderer);
+GTHREE_API
+const graphene_plane_t *gthree_renderer_get_clipping_plane    (GthreeRenderer     *renderer,
+                                                               int                 index);
+GTHREE_API
+void                gthree_renderer_set_clipping_plane        (GthreeRenderer     *renderer,
+                                                               int                 index,
+                                                               const graphene_plane_t *plane);
+GTHREE_API
+void                gthree_renderer_add_clipping_plane        (GthreeRenderer     *renderer,
+                                                               const graphene_plane_t *plane);
+GTHREE_API
+void                gthree_renderer_remove_clipping_plane     (GthreeRenderer     *renderer,
+                                                               int                 index);
+GTHREE_API
+void                gthree_renderer_remove_all_clipping_planes(GthreeRenderer     *renderer);
+GTHREE_API
 void                gthree_renderer_set_render_target         (GthreeRenderer     *renderer,
                                                                GthreeRenderTarget *target,
                                                                int                 active_cube_target,

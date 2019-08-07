@@ -38,7 +38,7 @@ struct _GthreeMaterialProperties
 };
 
 gboolean gthree_uniform_is_array (GthreeUniform *uniform);
-
+GthreeUniform *gthree_uniform_newq (GQuark name, GthreeUniformType type);
 
 GthreeRenderList *gthree_render_list_new ();
 void gthree_render_list_free (GthreeRenderList *list);
