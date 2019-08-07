@@ -28,14 +28,21 @@ GthreeSprite *
 gthree_sprite_new (GthreeMaterial *material)
 {
   GthreeSprite *sprite;
+  gboolean free_material = FALSE;
 
   if (material == NULL)
-    material = GTHREE_MATERIAL (gthree_sprite_material_new ());
+    {
+      material = GTHREE_MATERIAL (gthree_sprite_material_new ());
+      free_material = TRUE;
+    }
 
   sprite =
     g_object_new (gthree_sprite_get_type (),
                   "material", material,
                   NULL);
+
+  if (free_material)
+    g_object_unref (material);
 
   return sprite;
 }
