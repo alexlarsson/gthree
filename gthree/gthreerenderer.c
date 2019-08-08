@@ -1179,36 +1179,6 @@ setup_lights (GthreeRenderer *renderer, GthreeCamera *camera)
   setup->hash.num_point = setup->point->len;
 }
 
-static void
-transform_plane (const graphene_plane_t *plane,
-                 const graphene_matrix_t *matrix,
-                 const graphene_matrix_t *normal_matrix,
-                 graphene_plane_t *dest)
-{
-  graphene_vec3_t normal, coplanar_point, reference_point;
-  graphene_vec4_t coplanar_point_v4, reference_point_v4;
-  float constant;
-
-  graphene_plane_get_normal (plane, &normal);
-  constant = graphene_plane_get_constant (plane);
-
-  /* Get other point on plane */
-  graphene_vec3_scale (&normal, -constant, &coplanar_point);
-  graphene_vec4_init_from_vec3 (&coplanar_point_v4, &coplanar_point, 1.0);
-
-  /* Transform other point (including translations, so vec4) */
-  graphene_matrix_transform_vec4 (matrix, &coplanar_point_v4, &reference_point_v4);
-  graphene_vec4_get_xyz (&reference_point_v4, &reference_point);
-
-  /* Transform normal */
-  graphene_matrix_transform_vec3 (normal_matrix, &normal, &normal);
-  graphene_vec3_normalize (&normal, &normal);
-
-  constant = -graphene_vec3_dot (&normal, &reference_point);
-
-  graphene_plane_init (dest, &normal, constant);
-}
-
 static void *
 project_planes (GthreeRenderer *renderer,
                 const graphene_plane_t *planes,
@@ -1241,7 +1211,7 @@ project_planes (GthreeRenderer *renderer,
               graphene_plane_t transformed_plane;
               graphene_vec3_t normal;
 
-              transform_plane (&planes[i], viewMatrix, &viewNormalMatrix, &transformed_plane);
+              graphene_plane_transform (&planes[i], viewMatrix, &viewNormalMatrix, &transformed_plane);
               graphene_plane_get_normal (&transformed_plane, &normal);
 
               dst_array[i4+0] = graphene_vec3_get_x (&normal);
