@@ -151,10 +151,10 @@ gthree_effect_composer_render (GthreeEffectComposer *composer,
       if (!pass->enabled)
         continue;
 
-      rendered_to_screen = pass->render_to_screen = priv->render_to_screen && should_render_pass_to_screen (composer, i);
+      rendered_to_screen = priv->render_to_screen && should_render_pass_to_screen (composer, i);
       gthree_pass_render (pass, renderer,
                           priv->write_buffer, priv->read_buffer,
-                          delta_time, mask_active);
+                          delta_time, rendered_to_screen, mask_active);
 
       if (pass->need_swap)
         {
@@ -187,10 +187,9 @@ gthree_effect_composer_render (GthreeEffectComposer *composer,
 
   if (!rendered_to_screen && priv->render_to_screen)
     {
-      priv->copy_pass->render_to_screen = TRUE;
       gthree_pass_render (priv->copy_pass, renderer,
                           priv->write_buffer, priv->read_buffer,
-                          delta_time, mask_active);
+                          delta_time, TRUE, mask_active);
     }
 
   gthree_renderer_set_render_target (renderer, current_render_target, 0, 0);

@@ -40,9 +40,6 @@ typedef struct {
 
   // if set to true, the pass clears its buffer before rendering
   gboolean clear;
-
-  // if set to true, the result of the pass is rendered to screen. This is set automatically by the composer.
-  gboolean render_to_screen;
 } GthreePass;
 
 typedef struct {
@@ -56,6 +53,7 @@ typedef struct {
                   GthreeRenderTarget *write_buffer,
                   GthreeRenderTarget *read_buffer,
                   float delta_time,
+                  gboolean render_to_screen,
                   gboolean mask_active);
 } GthreePassClass;
 
@@ -79,6 +77,7 @@ void gthree_pass_render      (GthreePass         *pass,
                               GthreeRenderTarget *write_buffer,
                               GthreeRenderTarget *read_buffer,
                               float               delta_time,
+                              gboolean            render_to_screen,
                               gboolean            mask_active);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreePass, g_object_unref)

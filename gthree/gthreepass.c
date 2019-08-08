@@ -18,7 +18,6 @@ gthree_pass_init (GthreePass *pass)
   pass->need_source_texture = TRUE;
   pass->clear = FALSE;
   pass->can_render_to_screen = TRUE;
-  pass->render_to_screen = FALSE;
 }
 
 static void
@@ -64,13 +63,14 @@ gthree_pass_render (GthreePass *pass,
                     GthreeRenderTarget *write_buffer,
                     GthreeRenderTarget *read_buffer,
                     float delta_time,
+                    gboolean render_to_screen,
                     gboolean mask_active)
 {
   GthreePassClass *class = GTHREE_PASS_GET_CLASS(pass);
   if (class->render)
     class->render (pass, renderer,
                    write_buffer, read_buffer,
-                   delta_time, mask_active);
+                   delta_time, render_to_screen, mask_active);
 }
 
 struct _GthreeFullscreenQuadPass {
@@ -101,12 +101,14 @@ gthree_fullscreen_quad_pass_finalize (GObject *obj)
   G_OBJECT_CLASS (gthree_fullscreen_quad_pass_parent_class)->finalize (obj);
 }
 
+// Note: This ignores render_to_screen, you need to set up the renderer render target ahead of time
 static void
 gthree_fullscreen_quad_pass_render (GthreePass *pass,
                                     GthreeRenderer *renderer,
                                     GthreeRenderTarget *write_buffer,
                                     GthreeRenderTarget *read_buffer,
                                     float delta_time,
+                                    gboolean render_to_screen,
                                     gboolean mask_active)
 {
   GthreeFullscreenQuadPass *fq_pass = GTHREE_FULLSCREEN_QUAD_PASS (pass);
@@ -188,6 +190,7 @@ gthree_shader_pass_render (GthreePass *pass,
                            GthreeRenderTarget *write_buffer,
                            GthreeRenderTarget *read_buffer,
                            float delta_time,
+                           gboolean render_to_screen,
                            gboolean mask_active)
 {
   GthreeShaderPass *shader_pass = GTHREE_SHADER_PASS (pass);
@@ -202,7 +205,7 @@ gthree_shader_pass_render (GthreePass *pass,
                              "time",
                              shader_pass->time);
 
-  if (pass->render_to_screen)
+  if (render_to_screen)
     gthree_renderer_set_render_target (renderer, NULL, 0, 0);
   else
     gthree_renderer_set_render_target (renderer, write_buffer, 0, 0);
@@ -215,7 +218,7 @@ gthree_shader_pass_render (GthreePass *pass,
 
   gthree_pass_render (shader_pass->fs_quad, renderer,
                       write_buffer, read_buffer,
-                      delta_time, mask_active);
+                      delta_time, FALSE, mask_active);
 }
 
 static void
@@ -297,6 +300,7 @@ gthree_render_pass_render (GthreePass *pass,
                            GthreeRenderTarget *write_buffer,
                            GthreeRenderTarget *read_buffer,
                            float delta_time,
+                           gboolean render_to_screen,
                            gboolean mask_active)
 {
   GthreeRenderPass *render_pass = GTHREE_RENDER_PASS (pass);
@@ -316,7 +320,7 @@ gthree_render_pass_render (GthreePass *pass,
   }
 #endif
 
-  gthree_renderer_set_render_target (renderer, pass->render_to_screen ? NULL : read_buffer, 0, 0);
+  gthree_renderer_set_render_target (renderer, render_to_screen ? NULL : read_buffer, 0, 0);
 
   if (render_pass->clipping_planes)
     {
@@ -419,6 +423,7 @@ gthree_clear_pass_render (GthreePass *pass,
                           GthreeRenderTarget *write_buffer,
                           GthreeRenderTarget *read_buffer,
                           float delta_time,
+                          gboolean render_to_screen,
                           gboolean mask_active)
 {
   GthreeClearPass *clear_pass = GTHREE_CLEAR_PASS (pass);
@@ -430,7 +435,7 @@ gthree_clear_pass_render (GthreePass *pass,
       gthree_renderer_set_clear_color (renderer, &clear_pass->color);
     }
 
-  gthree_renderer_set_render_target (renderer, pass->render_to_screen ? NULL : read_buffer, 0, 0);
+  gthree_renderer_set_render_target (renderer, render_to_screen ? NULL : read_buffer, 0, 0);
 
   if (clear_pass->clear_depth)
     gthree_renderer_clear_depth (renderer);
@@ -528,6 +533,7 @@ gthree_bloom_pass_render (GthreePass *pass,
                           GthreeRenderTarget *write_buffer,
                           GthreeRenderTarget *read_buffer,
                           float delta_time,
+                          gboolean render_to_screen,
                           gboolean mask_active)
 {
   GthreeBloomPass *bloom_pass = GTHREE_BLOOM_PASS (pass);
@@ -557,7 +563,7 @@ gthree_bloom_pass_render (GthreePass *pass,
   gthree_renderer_clear (renderer, TRUE, TRUE, TRUE);
   gthree_pass_render (bloom_pass->fs_quad, renderer,
                       write_buffer, read_buffer,
-                      delta_time, mask_active);
+                      delta_time, FALSE, mask_active);
 
   // Render quad with blured scene into texture (convolution pass 2)
   gthree_uniforms_set_texture (bloom_pass->convolution_uniforms,
@@ -570,7 +576,7 @@ gthree_bloom_pass_render (GthreePass *pass,
   gthree_renderer_clear (renderer, TRUE, TRUE, TRUE);
   gthree_pass_render (bloom_pass->fs_quad, renderer,
                       write_buffer, read_buffer,
-                      delta_time, mask_active);
+                      delta_time, FALSE, mask_active);
 
   // Render original scene with superimposed blur to texture
 
@@ -599,7 +605,7 @@ gthree_bloom_pass_render (GthreePass *pass,
 
   gthree_pass_render (bloom_pass->fs_quad, renderer,
                       write_buffer, read_buffer,
-                      delta_time, mask_active);
+                      delta_time, FALSE, mask_active);
 }
 
 static void
