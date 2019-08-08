@@ -17,6 +17,7 @@
 #include "gthreegroup.h"
 #include "gthreeattribute.h"
 #include "gthreesprite.h"
+#include "gthreepoints.h"
 
 #define MAX_MORPH_TARGETS 8
 #define MAX_MORPH_NORMALS 4
@@ -704,6 +705,8 @@ gthree_set_default_gl_state (GthreeRenderer *renderer)
   glClearDepth (1);
   glClearStencil (0);
 
+  glEnable (GL_VERTEX_PROGRAM_POINT_SIZE);
+
   glEnable (GL_DEPTH_TEST);
   glDepthFunc (GL_LEQUAL);
 
@@ -959,7 +962,7 @@ project_object (GthreeRenderer *renderer,
             currentRenderState.pushShadow ( );
 #endif
         }
-      else if (GTHREE_IS_MESH (object) || GTHREE_IS_LINE_SEGMENTS (object) || GTHREE_IS_SPRITE (object))
+      else if (GTHREE_IS_MESH (object) || GTHREE_IS_LINE_SEGMENTS (object) || GTHREE_IS_SPRITE (object) || GTHREE_IS_POINTS (object))
         {
           if (GTHREE_IS_SKINNED_MESH (object))
             {
@@ -1524,7 +1527,7 @@ set_program (GthreeRenderer *renderer,
             }
         }
 
-      gthree_material_set_uniforms (material, m_uniforms, camera);
+      gthree_material_set_uniforms (material, m_uniforms, camera, renderer);
 
 #if TODO
       // refresh uniforms common to several materials
@@ -1932,6 +1935,10 @@ render_item (GthreeRenderer *renderer,
   else if (GTHREE_IS_SPRITE (object))
     {
       draw_mode = GL_TRIANGLES;
+    }
+  else if (GTHREE_IS_POINTS (object))
+    {
+      draw_mode = GL_POINTS;
     }
 
   if (index)

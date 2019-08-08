@@ -125,14 +125,15 @@ gthree_mesh_phong_material_real_set_params (GthreeMaterial *material,
 
 static void
 gthree_mesh_phong_material_real_set_uniforms (GthreeMaterial *material,
-                                         GthreeUniforms *uniforms,
-                                         GthreeCamera   *camera)
+                                              GthreeUniforms *uniforms,
+                                              GthreeCamera   *camera,
+                                              GthreeRenderer *renderer)
 {
   GthreeMeshPhongMaterial *phong = GTHREE_PHONG_MATERIAL (material);
   GthreeMeshPhongMaterialPrivate *priv = gthree_mesh_phong_material_get_instance_private (phong);
   GthreeUniform *uni;
 
-  GTHREE_MATERIAL_CLASS (gthree_mesh_phong_material_parent_class)->set_uniforms (material, uniforms, camera);
+  GTHREE_MATERIAL_CLASS (gthree_mesh_phong_material_parent_class)->set_uniforms (material, uniforms, camera, renderer);
 
   uni = gthree_uniforms_lookup_from_string (uniforms, "diffuse");
   if (uni != NULL)

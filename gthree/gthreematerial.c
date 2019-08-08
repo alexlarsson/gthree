@@ -207,17 +207,19 @@ gthree_material_real_set_params (GthreeMaterial *material,
 void
 gthree_material_set_uniforms (GthreeMaterial *material,
                               GthreeUniforms *uniforms,
-                              GthreeCamera   *camera)
+                              GthreeCamera   *camera,
+                              GthreeRenderer *renderer)
 {
   GthreeMaterialClass *class = GTHREE_MATERIAL_GET_CLASS(material);
 
-  return class->set_uniforms (material, uniforms, camera);
+  return class->set_uniforms (material, uniforms, camera, renderer);
 }
 
 static void
 gthree_material_real_set_uniforms (GthreeMaterial *material,
                                    GthreeUniforms *uniforms,
-                                   GthreeCamera   *camera)
+                                   GthreeCamera   *camera,
+                                   GthreeRenderer *renderer)
 {
   GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
   GthreeMaterialClass *class = GTHREE_MATERIAL_GET_CLASS(material);

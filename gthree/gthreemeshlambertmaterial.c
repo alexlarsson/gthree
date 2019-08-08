@@ -109,13 +109,14 @@ gthree_mesh_lambert_material_real_set_params (GthreeMaterial *material,
 static void
 gthree_mesh_lambert_material_real_set_uniforms (GthreeMaterial *material,
                                                 GthreeUniforms *uniforms,
-                                                GthreeCamera   *camera)
+                                                GthreeCamera   *camera,
+                                                GthreeRenderer *renderer)
 {
   GthreeMeshLambertMaterial *lambert = GTHREE_LAMBERT_MATERIAL (material);
   GthreeMeshLambertMaterialPrivate *priv = gthree_mesh_lambert_material_get_instance_private (lambert);
   GthreeUniform *uni;
 
-  GTHREE_MATERIAL_CLASS (gthree_mesh_lambert_material_parent_class)->set_uniforms (material, uniforms, camera);
+  GTHREE_MATERIAL_CLASS (gthree_mesh_lambert_material_parent_class)->set_uniforms (material, uniforms, camera, renderer);
 
   uni = gthree_uniforms_lookup_from_string (uniforms, "diffuse");
   if (uni != NULL)

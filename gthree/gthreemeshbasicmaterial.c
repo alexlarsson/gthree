@@ -71,14 +71,15 @@ gthree_mesh_basic_material_real_set_params (GthreeMaterial *material,
 static void
 gthree_mesh_basic_material_real_set_uniforms (GthreeMaterial *material,
                                               GthreeUniforms *uniforms,
-                                              GthreeCamera   *camera)
+                                              GthreeCamera   *camera,
+                                              GthreeRenderer *renderer)
 {
   GthreeMeshBasicMaterial *basic = GTHREE_MESH_BASIC_MATERIAL (material);
   GthreeMeshBasicMaterialPrivate *priv = gthree_mesh_basic_material_get_instance_private (basic);
   GthreeTexture *scale_map;
   GthreeUniform *uni;
 
-  GTHREE_MATERIAL_CLASS (gthree_mesh_basic_material_parent_class)->set_uniforms (material, uniforms, camera);
+  GTHREE_MATERIAL_CLASS (gthree_mesh_basic_material_parent_class)->set_uniforms (material, uniforms, camera, renderer);
 
   uni = gthree_uniforms_lookup_from_string (uniforms, "diffuse");
   if (uni != NULL)

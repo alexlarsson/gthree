@@ -11,6 +11,7 @@ typedef struct _GthreeOrthographicCamera GthreeOrthographicCamera;
 typedef struct _GthreeRenderer GthreeRenderer;
 typedef struct _GthreeMaterial GthreeMaterial;
 typedef struct _GthreeSpriteMaterial GthreeSpriteMaterial;
+typedef struct _GthreePointsMaterial GthreePointsMaterial;
 typedef struct _GthreeMeshMaterial GthreeMeshMaterial;
 typedef struct _GthreeMeshBasicMaterial GthreeMeshBasicMaterial;
 typedef struct _GthreeMeshLambertMaterial GthreeMeshLambertMaterial;

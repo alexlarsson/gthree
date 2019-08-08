@@ -79,10 +79,11 @@ gthree_shader_material_real_set_params (GthreeMaterial *material,
 
 static void
 gthree_shader_material_real_set_uniforms (GthreeMaterial *material,
-                                         GthreeUniforms *uniforms,
-                                         GthreeCamera   *camera)
+                                          GthreeUniforms *uniforms,
+                                          GthreeCamera   *camera,
+                                          GthreeRenderer *renderer)
 {
-  GTHREE_MATERIAL_CLASS (gthree_shader_material_parent_class)->set_uniforms (material, uniforms, camera);
+  GTHREE_MATERIAL_CLASS (gthree_shader_material_parent_class)->set_uniforms (material, uniforms, camera, renderer);
 }
 
 static gboolean
