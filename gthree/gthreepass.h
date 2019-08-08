@@ -29,16 +29,24 @@ typedef struct {
   gboolean enabled;
 
   // if set to true, the pass indicates to swap read and write buffer after rendering
+  // default TRUE
   gboolean need_swap;
 
   // if set to true, the pass needs a texture to source from, i.e. it can't draw directly on the screen on
   // top the previous stage
+  // default TRUE
   gboolean need_source_texture;
 
+  // if the pass natively copies the source (FALSE for e.g. a draw geometry op)
+  // default TRUE
+  gboolean does_copy;
+
   // if set to false the composer will do a final copy to the screen
+  // default TRUE
   gboolean can_render_to_screen;
 
   // if set to true, the pass clears its buffer before rendering
+  // default FALSE
   gboolean clear;
 } GthreePass;
 

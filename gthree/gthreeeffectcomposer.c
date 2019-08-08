@@ -111,8 +111,9 @@ should_render_pass_to_screen (GthreeEffectComposer *composer,
   if (!pass->can_render_to_screen)
     return FALSE;
 
-  /* The last enabled pass should render to the screen if possible, but also any
-     directly previous passes that don't a source_texture. */
+  /* The last enabled pass should render to the screen if possible.
+     I.e. if all enabled passes after it also can render to the screen
+     and don't need a texture_source. */
   for (i = index + 1; i < priv->passes->len; i++)
     {
       pass = g_ptr_array_index (priv->passes, i);
@@ -133,7 +134,9 @@ gthree_effect_composer_render (GthreeEffectComposer *composer,
   GthreeEffectComposerPrivate *priv = gthree_effect_composer_get_instance_private (composer);
   g_autoptr(GthreeRenderTarget) current_render_target = NULL;
   gboolean mask_active;
+  gboolean should_render_to_screen = FALSE;
   gboolean rendered_to_screen = FALSE;
+  gboolean last_pass_rendered_to_buffer = FALSE;
   int i;
 
   if (priv->render_target1 == NULL)
@@ -151,7 +154,17 @@ gthree_effect_composer_render (GthreeEffectComposer *composer,
       if (!pass->enabled)
         continue;
 
-      rendered_to_screen = priv->render_to_screen && should_render_pass_to_screen (composer, i);
+      should_render_to_screen = priv->render_to_screen && should_render_pass_to_screen (composer, i);
+
+      rendered_to_screen = should_render_to_screen;
+      // If we already drew to a buffer and the pass doesn't copy (e.g. a render pass)
+      // then we can't draw to the screen because we would loose previously rendered
+      // passes to draw upon (unless the pass clears anyway)
+      if (last_pass_rendered_to_buffer && !pass->does_copy && !pass->clear)
+        rendered_to_screen = FALSE;
+
+      last_pass_rendered_to_buffer = !rendered_to_screen;
+
       gthree_pass_render (pass, renderer,
                           priv->write_buffer, priv->read_buffer,
                           delta_time, rendered_to_screen, mask_active);
