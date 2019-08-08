@@ -202,6 +202,7 @@ init_composer (void)
 
   render2_pass = gthree_render_pass_new (scene2, GTHREE_CAMERA (camera2), NULL);
   gthree_pass_set_clear (render2_pass, FALSE);
+  gthree_render_pass_set_clear_depth (GTHREE_RENDER_PASS (render2_pass), TRUE);
 
   composer = gthree_effect_composer_new  ();
 
@@ -209,8 +210,8 @@ init_composer (void)
   gthree_effect_composer_add_pass  (composer, psycho_pass);
   gthree_effect_composer_add_pass  (composer, clear_depth_pass);
   gthree_effect_composer_add_pass  (composer, render_pass);
-  gthree_effect_composer_add_pass  (composer, render2_pass);
   gthree_effect_composer_add_pass  (composer, bloom_pass);
+  gthree_effect_composer_add_pass  (composer, render2_pass);
   gthree_effect_composer_add_pass  (composer, greyscale_pass);
 }
 
@@ -338,17 +339,17 @@ main (int argc, char *argv[])
   gtk_widget_show (check);
   g_signal_connect (check, "toggled", G_CALLBACK (pass_toggled), render_pass);
 
-  check = gtk_check_button_new_with_label ("Scene 2");
-  gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (check), TRUE);
-  gtk_container_add (GTK_CONTAINER (hbox), check);
-  gtk_widget_show (check);
-  g_signal_connect (check, "toggled", G_CALLBACK (pass_toggled), render2_pass);
-
   check = gtk_check_button_new_with_label ("Bloom");
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (check), FALSE);
   gtk_container_add (GTK_CONTAINER (hbox), check);
   gtk_widget_show (check);
   g_signal_connect (check, "toggled", G_CALLBACK (pass_toggled), bloom_pass);
+
+  check = gtk_check_button_new_with_label ("Scene 2");
+  gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (check), TRUE);
+  gtk_container_add (GTK_CONTAINER (hbox), check);
+  gtk_widget_show (check);
+  g_signal_connect (check, "toggled", G_CALLBACK (pass_toggled), render2_pass);
 
   check = gtk_check_button_new_with_label ("Greyscale");
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (check), FALSE);
