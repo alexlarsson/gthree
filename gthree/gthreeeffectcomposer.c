@@ -16,6 +16,7 @@ typedef struct {
 
   int width;
   int height;
+  int pixel_ratio;
 
   GthreePass *copy_pass;
 
@@ -229,9 +230,10 @@ gthree_effect_composer_reset (GthreeEffectComposer *composer,
     {
       priv->width = gthree_renderer_get_width (renderer);
       priv->height = gthree_renderer_get_height (renderer);
+      priv->pixel_ratio = gthree_renderer_get_pixel_ratio (renderer);
 
-      priv->render_target1 = gthree_render_target_new (priv->width,
-                                                       priv->height);
+      priv->render_target1 = gthree_render_target_new (priv->width * priv->pixel_ratio,
+                                                       priv->height * priv->pixel_ratio);
       gthree_render_target_set_stencil_buffer (priv->render_target1, FALSE);
     }
   else
@@ -239,6 +241,7 @@ gthree_effect_composer_reset (GthreeEffectComposer *composer,
       priv->render_target1 = g_object_ref (render_target);
       priv->width = gthree_render_target_get_width (render_target);
       priv->height = gthree_render_target_get_height (render_target);
+      priv->pixel_ratio = 1;
     }
 
   priv->render_target2 = gthree_render_target_clone (priv->render_target1);
@@ -267,8 +270,8 @@ gthree_effect_composer_set_size (GthreeEffectComposer *composer,
   priv->width = width;
   priv->height = height;
 
-  effective_width = priv->width; // * this._pixelRatio;
-  effective_height = priv->height; // * this._pixelRatio;
+  effective_width = priv->width * priv->pixel_ratio;
+  effective_height = priv->height * priv->pixel_ratio;
 
   if (priv->render_target1)
     gthree_render_target_set_size (priv->render_target1,

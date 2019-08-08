@@ -43,6 +43,11 @@ int                 gthree_renderer_get_width                 (GthreeRenderer   
 GTHREE_API
 int                 gthree_renderer_get_height                (GthreeRenderer     *renderer);
 GTHREE_API
+void                gthree_renderer_set_pixel_ratio           (GthreeRenderer     *renderer,
+                                                               int                 pixel_ratio);
+GTHREE_API
+int                 gthree_renderer_get_pixel_ratio           (GthreeRenderer     *renderer);
+GTHREE_API
 int                 gthree_renderer_get_drawing_buffer_width  (GthreeRenderer     *renderer);
 GTHREE_API
 int                 gthree_renderer_get_drawing_buffer_height (GthreeRenderer     *renderer);

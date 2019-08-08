@@ -50,7 +50,7 @@ gboolean gthree_resource_is_realized      (GthreeResource *resource);
 GTHREE_API
 void     gthree_resource_unrealize        (GthreeResource *resource);
 GTHREE_API
-gboolean gtahree_resource_get_used        (GthreeResource *resource);
+gboolean gthree_resource_get_used        (GthreeResource *resource);
 GTHREE_API
 void     gthree_resource_set_used         (GthreeResource *resource,
                                            gboolean        used);

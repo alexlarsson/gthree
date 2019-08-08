@@ -43,6 +43,7 @@ typedef struct {
 
   int width;
   int height;
+  int pixel_ratio;
   guint window_framebuffer;
 
   gboolean auto_clear;
@@ -88,7 +89,7 @@ typedef struct {
   GthreeProgram *current_program;
   GthreeMaterial *current_material;
   GthreeCamera *current_camera;
-  graphene_rect_t current_viewport;
+  graphene_rect_t current_viewport; // Either ->viewport, or from the render target
   guint current_framebuffer;
   GArray *clipping_state;
   guint num_clipping_planes;
@@ -215,6 +216,7 @@ gthree_renderer_init (GthreeRenderer *renderer)
   priv->sort_objects = TRUE;
   priv->width = 1;
   priv->height = 1;
+  priv->pixel_ratio = 1;
   priv->gamma_factor = 2.2; // Differs from three.js default 2.0
   priv->physically_correct_lights = FALSE;
 
@@ -329,10 +331,10 @@ gthree_renderer_set_viewport (GthreeRenderer *renderer,
   graphene_rect_init (&priv->viewport, x, y, width, height);
   graphene_rect_init_from_rect (&priv->current_viewport, &priv->viewport);
 
-  glViewport (graphene_rect_get_x (&priv->current_viewport),
-              graphene_rect_get_y (&priv->current_viewport),
-              graphene_rect_get_width (&priv->current_viewport),
-              graphene_rect_get_height (&priv->current_viewport));
+  glViewport (graphene_rect_get_x (&priv->current_viewport) * priv->pixel_ratio,
+              graphene_rect_get_y (&priv->current_viewport) * priv->pixel_ratio,
+              graphene_rect_get_width (&priv->current_viewport) * priv->pixel_ratio,
+              graphene_rect_get_height (&priv->current_viewport) * priv->pixel_ratio);
 }
 
 void
@@ -346,6 +348,18 @@ gthree_renderer_set_size (GthreeRenderer *renderer,
   priv->height = height;
 
   gthree_renderer_set_viewport (renderer, 0, 0, width, height);
+}
+
+void
+gthree_renderer_set_pixel_ratio (GthreeRenderer     *renderer,
+                                 int                 pixel_ratio)
+{
+ GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  priv->pixel_ratio = pixel_ratio;
+
+  gthree_renderer_set_size (renderer, priv->width, priv->height);
+
 }
 
 int
@@ -365,12 +379,19 @@ gthree_renderer_get_height (GthreeRenderer     *renderer)
 }
 
 int
+gthree_renderer_get_pixel_ratio (GthreeRenderer     *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  return priv->pixel_ratio;
+}
+
+int
 gthree_renderer_get_drawing_buffer_width (GthreeRenderer     *renderer)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
 
-  // TODO: This should multiply with pixelration on hidip
-  return priv->width;
+  return priv->width * priv->pixel_ratio;
 }
 
 int
@@ -378,8 +399,7 @@ gthree_renderer_get_drawing_buffer_height (GthreeRenderer     *renderer)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
 
-  // TODO: This should multiply with pixelration on hidip
-  return priv->height;
+  return priv->height * priv->pixel_ratio;
 }
 
 void
@@ -595,6 +615,7 @@ gthree_renderer_set_render_target (GthreeRenderer *renderer,
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
   gboolean is_cube;
   int framebuffer;
+  int pixel_ratio;
 
   if (render_target)
     g_object_ref (render_target);
@@ -630,6 +651,7 @@ gthree_renderer_set_render_target (GthreeRenderer *renderer,
       graphene_rect_init_from_rect (&priv->current_viewport,
                                     gthree_render_target_get_viewport (render_target));
 
+      pixel_ratio = 1;
 #ifdef TODO
       _currentScissor.copy( renderTarget.scissor );
       _currentScissorTest = renderTarget.scissorTest;
@@ -643,6 +665,7 @@ gthree_renderer_set_render_target (GthreeRenderer *renderer,
       _currentScissor.copy( _scissor ).multiplyScalar( _pixelRatio );
       _currentScissorTest = _scissorTest;
 #endif
+      pixel_ratio = priv->pixel_ratio;
     }
 
   /* We always set the framebuffer, because something other than the renderer may have changed it
@@ -650,10 +673,10 @@ gthree_renderer_set_render_target (GthreeRenderer *renderer,
   glBindFramebuffer (GL_FRAMEBUFFER, framebuffer);
   priv->current_framebuffer = framebuffer;
 
-  glViewport (graphene_rect_get_x (&priv->current_viewport),
-              graphene_rect_get_y (&priv->current_viewport),
-              graphene_rect_get_width (&priv->current_viewport),
-              graphene_rect_get_height (&priv->current_viewport));
+  glViewport (graphene_rect_get_x (&priv->current_viewport) * pixel_ratio,
+              graphene_rect_get_y (&priv->current_viewport) * pixel_ratio,
+              graphene_rect_get_width (&priv->current_viewport) * pixel_ratio,
+              graphene_rect_get_height (&priv->current_viewport) * pixel_ratio);
 #ifdef TODO
   state.scissor( _currentScissor );
   state.setScissorTest( _currentScissorTest );
@@ -692,10 +715,10 @@ gthree_set_default_gl_state (GthreeRenderer *renderer)
   glBlendEquation (GL_FUNC_ADD);
   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  glViewport (graphene_rect_get_x (&priv->current_viewport),
-              graphene_rect_get_y (&priv->current_viewport),
-              graphene_rect_get_width (&priv->current_viewport),
-              graphene_rect_get_height (&priv->current_viewport));
+  glViewport (graphene_rect_get_x (&priv->current_viewport) * priv->pixel_ratio,
+              graphene_rect_get_y (&priv->current_viewport) * priv->pixel_ratio,
+              graphene_rect_get_width (&priv->current_viewport) * priv->pixel_ratio,
+              graphene_rect_get_height (&priv->current_viewport) * priv->pixel_ratio);
 
   glClearColor (priv->clear_color.red, priv->clear_color.green,
                 priv->clear_color.blue, priv->clear_color.alpha );

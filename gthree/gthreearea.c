@@ -98,10 +98,13 @@ gthree_area_real_resize (GtkGLArea *gl_area, int width, int height)
 {
   GthreeArea *area = GTHREE_AREA (gl_area);
   GthreeAreaPrivate *priv = gthree_area_get_instance_private (area);
+  int scale;
 
   GTK_GL_AREA_CLASS (gthree_area_parent_class)->resize (gl_area, width, height);
 
-  gthree_renderer_set_size (priv->renderer, width, height);
+  scale = gtk_widget_get_scale_factor (GTK_WIDGET (gl_area));
+  gthree_renderer_set_size (priv->renderer, width / scale, height / scale);
+  gthree_renderer_set_pixel_ratio (priv->renderer, scale);
 }
 
 static void
