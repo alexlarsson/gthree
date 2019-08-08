@@ -10,6 +10,7 @@ examples = [
   'multi',
   'normals',
   'performance',
+  'points',
   'shader',
   'sprites',
   'rendertarget',
