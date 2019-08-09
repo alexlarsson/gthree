@@ -98,6 +98,15 @@ gthree_geometry_add_attribute (GthreeGeometry  *geometry,
 }
 
 void
+gthree_geometry_invalidate_bounds (GthreeGeometry  *geometry)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+
+  priv->bounding_box_set = FALSE;
+  priv->bounding_sphere_set = FALSE;
+}
+
+void
 gthree_geometry_remove_attribute (GthreeGeometry  *geometry,
                                   const char *name)
 {

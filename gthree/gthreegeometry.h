@@ -119,6 +119,8 @@ void                     gthree_geometry_set_draw_range             (GthreeGeome
                                                                      int                      start,
                                                                      int                      count);
 GTHREE_API
+void                     gthree_geometry_invalidate_bounds          (GthreeGeometry          *geometry);
+GTHREE_API
 const graphene_sphere_t *gthree_geometry_get_bounding_sphere        (GthreeGeometry          *geometry);
 GTHREE_API
 void                     gthree_geometry_set_bounding_sphere        (GthreeGeometry          *geometry,
