@@ -1,5 +1,6 @@
 examples = [
   'testanimation',
+  'cairo',
   'cubes',
   'envmap',
   'skinning',

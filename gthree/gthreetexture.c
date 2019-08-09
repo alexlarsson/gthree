@@ -1,5 +1,6 @@
 #include <math.h>
 #include <epoxy/gl.h>
+#include <cairo-gobject.h>
 
 #include "gthreetexture.h"
 #include "gthreeprivate.h"
@@ -20,6 +21,7 @@ typedef struct {
   gboolean needs_update;
 
   GdkPixbuf *pixbuf;
+  cairo_surface_t *surface;
   char *name;
   char *uuid;
   GArray *mipmaps;
@@ -51,6 +53,7 @@ enum {
   PROP_0,
 
   PROP_PIXBUF,
+  PROP_SURFACE,
 
   N_PROPS
 };
@@ -64,6 +67,14 @@ gthree_texture_new (GdkPixbuf *pixbuf)
 {
   return g_object_new (gthree_texture_get_type (),
                        "pixbuf", pixbuf,
+                       NULL);
+}
+
+GthreeTexture *
+gthree_texture_new_from_surface (cairo_surface_t *surface)
+{
+  return g_object_new (gthree_texture_get_type (),
+                       "surface", surface,
                        NULL);
 }
 
@@ -83,7 +94,7 @@ gthree_texture_init (GthreeTexture *texture)
   priv->mag_filter = GTHREE_FILTER_LINEAR;
   priv->min_filter = GTHREE_FILTER_LINEAR_MIPMAP_LINEAR;
   priv->mapping = GTHREE_MAPPING_UV;
-  priv->encoding = GTHREE_ENCODING_FORMAT_SRGB; // Differs rom three.js deault LINEAR
+  priv->encoding = GTHREE_ENCODING_FORMAT_SRGB; // Differs from three.js default LINEAR
 
   priv->format = GTHREE_TEXTURE_FORMAT_RGBA;
   priv->type = GTHREE_DATA_TYPE_UNSIGNED_BYTE;
@@ -128,6 +139,9 @@ gthree_texture_finalize (GObject *obj)
   g_free (priv->name);
 
   g_clear_object (&priv->pixbuf);
+  if (priv->surface)
+    cairo_surface_destroy (priv->surface);
+
 
   G_OBJECT_CLASS (gthree_texture_parent_class)->finalize (obj);
 }
@@ -140,12 +154,42 @@ gthree_texture_set_property (GObject *obj,
 {
   GthreeTexture *texture = GTHREE_TEXTURE (obj);
   GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+  cairo_surface_t *new_surface;
+  GdkPixbuf *new_pixbuf;
 
   switch (prop_id)
     {
+    case PROP_SURFACE:
+      new_surface = g_value_dup_boxed (value);
+
+      if (new_surface)
+        g_clear_object (&priv->pixbuf);
+
+      if (priv->surface)
+        cairo_surface_destroy (priv->surface);
+
+      priv->surface = new_surface;
+      if (priv->surface)
+        {
+          cairo_surface_reference (priv->surface);
+          if (cairo_surface_get_content (priv->surface) == CAIRO_CONTENT_COLOR_ALPHA)
+            priv->format = GTHREE_TEXTURE_FORMAT_RGBA;
+          else
+            priv->format = GTHREE_TEXTURE_FORMAT_RGB;
+        }
+      break;
+
     case PROP_PIXBUF:
+      new_pixbuf = g_value_dup_object (value);
+
+      if (new_pixbuf && priv->surface)
+        {
+          cairo_surface_destroy (priv->surface);
+          priv->surface = NULL;
+        }
+
       g_clear_object (&priv->pixbuf);
-      priv->pixbuf = g_value_dup_object (value);
+      priv->pixbuf = new_pixbuf;
       if (priv->pixbuf && gdk_pixbuf_get_has_alpha (priv->pixbuf))
         priv->format = GTHREE_TEXTURE_FORMAT_RGBA;
       else
@@ -191,6 +235,10 @@ gthree_texture_class_init (GthreeTextureClass *klass)
 
   klass->load = gthree_texture_real_load;
 
+  obj_props[PROP_SURFACE] =
+    g_param_spec_boxed ("surface", "Surface", "Surface",
+                        CAIRO_GOBJECT_TYPE_SURFACE,
+                        G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
   obj_props[PROP_PIXBUF] =
     g_param_spec_object ("pixbuf", "Pixbuf", "Pixbuf",
                          GDK_TYPE_PIXBUF,
@@ -205,6 +253,14 @@ gthree_texture_get_pixbuf (GthreeTexture *texture)
   GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
 
   return priv->pixbuf;
+}
+
+cairo_surface_t *
+gthree_texture_get_surface (GthreeTexture *texture)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  return priv->surface;
 }
 
 gboolean
@@ -607,15 +663,28 @@ gthree_texture_real_load (GthreeTexture *texture, int slot)
 
   gthree_texture_bind (texture, slot, GL_TEXTURE_2D);
 
-  if (priv->needs_update && priv->pixbuf)
+  if (priv->needs_update && (priv->pixbuf || priv->surface))
     {
-      guint width = gdk_pixbuf_get_width (priv->pixbuf);
-      guint height = gdk_pixbuf_get_height (priv->pixbuf);
+      guint width;
+      guint height;
       guint gl_format, gl_type;
-      gboolean is_image_power_of_two = is_power_of_two (width) && is_power_of_two (height);
+      gboolean is_image_power_of_two;
+
+      if (priv->pixbuf)
+        {
+          width = gdk_pixbuf_get_width (priv->pixbuf);
+          height = gdk_pixbuf_get_height (priv->pixbuf);
+        }
+      else
+        {
+          width = cairo_image_surface_get_width (priv->surface);
+          height = cairo_image_surface_get_height (priv->surface);
+        }
+      is_image_power_of_two = is_power_of_two (width) && is_power_of_two (height);
 
       //glPixelStorei( GL_UNPACK_FLIP_Y_WEBGL, texture.flipY );
       //glPixelStorei( GL_UNPACK_PREMULTIPLY_ALPHA_WEBGL, texture.premultiplyAlpha );
+      glPixelStorei (GL_UNPACK_ALIGNMENT, priv->unpack_alignment);
       glPixelStorei (GL_UNPACK_ALIGNMENT, priv->unpack_alignment);
 
       gl_format = gthree_texture_format_to_gl (priv->format);
@@ -680,15 +749,30 @@ gthree_texture_real_load (GthreeTexture *texture, int slot)
           else
 #endif
             {
-              GdkPixbuf *pixbuf;
-              if (priv->flip_y)
-                pixbuf = gdk_pixbuf_flip (priv->pixbuf, FALSE);
-              else
-                pixbuf = g_object_ref (priv->pixbuf);
+              if (priv->pixbuf)
+                {
+                  GdkPixbuf *pixbuf;
+                  if (priv->flip_y)
+                    pixbuf = gdk_pixbuf_flip (priv->pixbuf, FALSE);
+                  else
+                    pixbuf = g_object_ref (priv->pixbuf);
 
-              glTexImage2D (GL_TEXTURE_2D, 0, gl_format, width, height, 0, gl_format, gl_type,
-                            gdk_pixbuf_get_pixels (pixbuf));
-              g_object_unref (pixbuf);
+                  glTexImage2D (GL_TEXTURE_2D, 0, gl_format, width, height, 0, gl_format, gl_type,
+                                gdk_pixbuf_get_pixels (pixbuf));
+                  g_object_unref (pixbuf);
+                }
+              else
+                {
+                  if (priv->flip_y)
+                    {
+                      g_warning ("Y-Flipping cairo_surface_t not supported yet");
+                      // TODO: Support flip
+                    }
+
+                  glTexImage2D (GL_TEXTURE_2D, 0, gl_format, width, height, 0,
+                                GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
+                                cairo_image_surface_get_data (priv->surface));
+                }
             }
         }
 

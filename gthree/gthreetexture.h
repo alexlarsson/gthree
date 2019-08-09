@@ -38,7 +38,8 @@ GType gthree_texture_get_type (void) G_GNUC_CONST;
 
 GTHREE_API
 GthreeTexture *gthree_texture_new (GdkPixbuf *pixbuf);
-
+GTHREE_API
+GthreeTexture *gthree_texture_new_from_surface (cairo_surface_t *surface);
 GTHREE_API
 GdkPixbuf             *gthree_texture_get_pixbuf           (GthreeTexture        *texture);
 GTHREE_API
@@ -120,6 +121,11 @@ void                   gthree_texture_set_uuid             (GthreeTexture       
 GTHREE_API
 const char *           gthree_texture_get_uuid             (GthreeTexture        *texture);
 int                    gthree_texture_get_gl_texture       (GthreeTexture        *texture);
+GTHREE_API
+gboolean               gthree_texture_get_needs_update     (GthreeTexture        *texture);
+GTHREE_API
+void                   gthree_texture_set_needs_update     (GthreeTexture        *texture,
+                                                            gboolean              needs_update);
 
 
 G_END_DECLS
