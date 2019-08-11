@@ -43,6 +43,8 @@ GthreeTexture *gthree_texture_new_from_surface (cairo_surface_t *surface);
 GTHREE_API
 GdkPixbuf             *gthree_texture_get_pixbuf           (GthreeTexture        *texture);
 GTHREE_API
+cairo_surface_t       *gthree_texture_get_surface           (GthreeTexture        *texture);
+GTHREE_API
 const graphene_vec2_t *gthree_texture_get_repeat           (GthreeTexture        *texture);
 GTHREE_API
 void                   gthree_texture_set_repeat           (GthreeTexture *texture,
