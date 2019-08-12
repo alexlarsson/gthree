@@ -4,6 +4,7 @@
 #include "gthreemeshphongmaterial.h"
 #include "gthreecubetexture.h"
 #include "gthreetypebuiltins.h"
+#include "gthreeprivate.h"
 
 typedef struct {
   GdkRGBA color;

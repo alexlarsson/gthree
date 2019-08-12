@@ -3,6 +3,7 @@
 
 #include "gthreemeshdepthmaterial.h"
 #include "gthreecamera.h"
+#include "gthreeprivate.h"
 
 typedef struct {
   int format;

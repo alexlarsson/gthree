@@ -3,6 +3,7 @@
 
 #include "gthreeshadermaterial.h"
 #include "gthreetypebuiltins.h"
+#include "gthreeprivate.h"
 
 typedef struct {
   GthreeShader *shader;
