@@ -61,7 +61,8 @@ gthree_geometry_finalize (GObject *obj)
     g_hash_table_unref (priv->morph_attributes);
   g_array_unref (priv->groups);
 
-  g_array_unref (geometry->influences);
+  if (geometry->influences)
+    g_array_unref (geometry->influences);
 
   G_OBJECT_CLASS (gthree_geometry_parent_class)->finalize (obj);
 }
