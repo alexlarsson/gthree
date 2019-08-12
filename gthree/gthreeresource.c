@@ -51,7 +51,7 @@ list_node_unlink (ListNode *node)
   g_assert (node->prev != NULL);
 
   prev->next = next;
-  next->prev = next;
+  next->prev = prev;
 
   node->prev = NULL;
   node->next = NULL;
@@ -258,7 +258,6 @@ gthree_resource_unrealize (GthreeResource *resource)
   GthreeResourceClass *class = GTHREE_RESOURCE_GET_CLASS(resource);
 
   g_assert (priv->gl_context != NULL);
-  g_assert (gdk_gl_context_get_current () == priv->gl_context);
 
   class->unrealize (resource);
 
