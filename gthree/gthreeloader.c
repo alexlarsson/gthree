@@ -1517,9 +1517,9 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
       graphene_quaternion_t rotate;
 
       if (priv->node_infos[i].is_bone)
-        node = (GthreeObject *)g_object_ref_sink (gthree_bone_new ());
+        node = GTHREE_OBJECT (gthree_bone_new ());
       else
-        node = (GthreeObject *)g_object_ref_sink (gthree_group_new ());
+        node = GTHREE_OBJECT (gthree_group_new ());
 
       graphene_quaternion_init_identity (&rotate);
 

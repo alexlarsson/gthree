@@ -53,7 +53,7 @@ gthree_directional_light_init (GthreeDirectionalLight *directional)
   GthreeDirectionalLightPrivate *priv = gthree_directional_light_get_instance_private (directional);
   graphene_point3d_t pos = {0, 1, 0};
 
-  priv->target = g_object_ref_sink (gthree_object_new ());
+  priv->target = gthree_object_new ();
   priv->uniforms = gthree_uniforms_new_from_definitions (light_uniforms, G_N_ELEMENTS (light_uniforms));
 
   gthree_object_set_position_point3d (GTHREE_OBJECT (directional), &pos);
@@ -66,7 +66,7 @@ gthree_directional_light_set_target (GthreeDirectionalLight *directional,
   GthreeDirectionalLightPrivate *priv = gthree_directional_light_get_instance_private (directional);
 
   if (object == NULL)
-    object = g_object_ref_sink (gthree_object_new ());
+    object = gthree_object_new ();
 
   if (g_set_object (&priv->target, object))
     g_object_notify_by_pspec (G_OBJECT (directional), obj_props[PROP_TARGET]);

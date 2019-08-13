@@ -23,13 +23,13 @@ G_BEGIN_DECLS
 #define GTHREE_OBJECT_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GTHREE_TYPE_OBJECT, GthreeObjectClass))
 
 typedef struct {
-  GInitiallyUnowned parent;
+  GObject parent;
 } GthreeObject;
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeObject, g_object_unref)
 
 typedef struct {
-  GInitiallyUnownedClass parent_class;
+  GObjectClass parent_class;
 
   gboolean (* in_frustum)       (GthreeObject             *object,
                                  const graphene_frustum_t *frustum);

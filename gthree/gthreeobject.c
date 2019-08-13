@@ -827,7 +827,7 @@ gthree_object_add_child (GthreeObject              *object,
   obj = G_OBJECT (object);
   g_object_freeze_notify (obj);
 
-  g_object_ref_sink (child);
+  g_object_ref (child);
 
   child_priv->parent = object;
 
