@@ -1,3 +1,4 @@
+#include <graphene-gobject.h>
 #include "prop-editor.h"
 #include "utils.h"
 
@@ -183,37 +184,60 @@ bool_changed (GObject *object, GParamSpec *pspec, gpointer data)
 }
 
 static void
-rgba_modified (GtkColorButton *cb, GParamSpec *ignored, ObjectProperty *p)
-{
-  GValue val = G_VALUE_INIT;
-
-  g_value_init (&val, p->spec->value_type);
-  g_object_get_property (G_OBJECT (cb), "rgba", &val);
-  set_property_value (p->obj, p->spec, &val);
-  g_value_unset (&val);
-}
-
-static void
-rgba_changed (GObject *object, GParamSpec *pspec, gpointer data)
+rgb_changed (GObject *object, GParamSpec *pspec, gpointer data)
 {
   GtkColorChooser *cb = GTK_COLOR_CHOOSER (data);
   GValue val = G_VALUE_INIT;
-  GdkRGBA *color;
+  graphene_vec3_t *color;
+  GdkRGBA rgba = {0, 0, 0, 1};
   GdkRGBA cb_color;
 
-  g_value_init (&val, GDK_TYPE_RGBA);
+  g_value_init (&val, GRAPHENE_TYPE_VEC3);
   get_property_value (object, pspec, &val);
 
   color = g_value_get_boxed (&val);
+  if (color != NULL)
+    {
+      rgba.red = graphene_vec3_get_x (color);
+      rgba.green = graphene_vec3_get_y (color);
+      rgba.blue = graphene_vec3_get_z (color);
+    }
+
   gtk_color_chooser_get_rgba (GTK_COLOR_CHOOSER (cb), &cb_color);
 
-  if (color != NULL && !gdk_rgba_equal (color, &cb_color))
+  if (color != NULL && !gdk_rgba_equal (&rgba, &cb_color))
     {
       block_controller (G_OBJECT (cb));
-      gtk_color_chooser_set_rgba (GTK_COLOR_CHOOSER (cb), color);
+      gtk_color_chooser_set_rgba (GTK_COLOR_CHOOSER (cb), &rgba);
       unblock_controller (G_OBJECT (cb));
     }
  g_value_unset (&val);
+}
+
+static void
+rgb_modified (GtkColorButton *cb, GParamSpec *ignored, ObjectProperty *p)
+{
+  GValue val = G_VALUE_INIT;
+  GValue val2 = G_VALUE_INIT;
+  GdkRGBA *rgba;
+  graphene_vec3_t rgb;
+
+  g_value_init (&val, GDK_TYPE_RGBA);
+  g_object_get_property (G_OBJECT (cb), "rgba", &val);
+
+  rgba = g_value_get_boxed (&val);
+  graphene_vec3_init (&rgb,
+                      rgba->red,
+                      rgba->green,
+                      rgba->blue);
+  g_value_unset (&val);
+
+
+  g_value_init (&val2, GRAPHENE_TYPE_VEC3);
+  g_value_set_boxed (&val2, &rgb);
+
+  set_property_value (p->obj, p->spec, &val2);
+  g_value_unset (&val2);
 }
 
 static void
@@ -361,17 +385,19 @@ property_editor (GObject     *object,
       }
     }
   else if (type == G_TYPE_PARAM_BOXED &&
-           G_PARAM_SPEC_VALUE_TYPE (spec) == GDK_TYPE_RGBA)
+           G_PARAM_SPEC_VALUE_TYPE (spec) == GRAPHENE_TYPE_VEC3 &&
+           (strstr (spec->name, "color") != NULL ||
+            strstr (spec->name, "Color") != NULL))
     {
       prop_edit = gtk_color_button_new ();
       gtk_color_chooser_set_use_alpha (GTK_COLOR_CHOOSER (prop_edit), FALSE);
 
       g_object_connect_property (object, spec,
-                                 G_CALLBACK (rgba_changed),
+                                 G_CALLBACK (rgb_changed),
                                  prop_edit, G_OBJECT (prop_edit));
 
       connect_controller (G_OBJECT (prop_edit), "notify::rgba",
-                          object, spec, G_CALLBACK (rgba_modified));
+                          object, spec, G_CALLBACK (rgb_modified));
     }
   else if (type == G_TYPE_PARAM_OBJECT &&
            G_PARAM_SPEC_VALUE_TYPE (spec) == GTHREE_TYPE_TEXTURE)

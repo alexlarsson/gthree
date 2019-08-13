@@ -22,8 +22,8 @@ static GParamSpec *obj_props[N_PROPS] = { NULL, };
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeDirectionalLight, gthree_directional_light, GTHREE_TYPE_LIGHT)
 
 GthreeDirectionalLight *
-gthree_directional_light_new (const GdkRGBA *color,
-			      float intensity)
+gthree_directional_light_new (const graphene_vec3_t *color,
+                              float intensity)
 {
   return g_object_new (gthree_directional_light_get_type (),
                        "color", color,
@@ -32,7 +32,7 @@ gthree_directional_light_new (const GdkRGBA *color,
 }
 
 static float zerov3[3] = { 0, 0, 0 };
-static GdkRGBA white = { 1, 1, 1, 1.0 };
+static float white[3] = { 1, 1, 1 };
 static int i0 = 0;
 static float f0 = 0.0;
 static float f1 = 1.0;
@@ -40,7 +40,7 @@ static float zerov2[2] = { 0, 0 };
 
 static GthreeUniformsDefinition light_uniforms[] = {
   {"direction", GTHREE_UNIFORM_TYPE_VECTOR3, &zerov3},
-  {"color", GTHREE_UNIFORM_TYPE_COLOR, &white },
+  {"color", GTHREE_UNIFORM_TYPE_VECTOR3, &white },
   {"shadow", GTHREE_UNIFORM_TYPE_INT, &i0 },
   {"shadowBias", GTHREE_UNIFORM_TYPE_FLOAT, &f0 },
   {"shadowRadius", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
@@ -61,7 +61,7 @@ gthree_directional_light_init (GthreeDirectionalLight *directional)
 
 void
 gthree_directional_light_set_target (GthreeDirectionalLight *directional,
-				     GthreeObject *object)
+                                     GthreeObject *object)
 {
   GthreeDirectionalLightPrivate *priv = gthree_directional_light_get_instance_private (directional);
 
@@ -99,18 +99,14 @@ gthree_directional_light_real_setup (GthreeLight *light,
 {
   GthreeDirectionalLight *directional = GTHREE_DIRECTIONAL_LIGHT (light);
   GthreeDirectionalLightPrivate *priv = gthree_directional_light_get_instance_private (directional);
-  GdkRGBA color = *gthree_light_get_color (light);
+  graphene_vec3_t color;
   float intensity = gthree_light_get_intensity (light);
   graphene_vec4_t light_pos, target_pos;
   graphene_vec3_t direction;
   const graphene_matrix_t *view_matrix = gthree_camera_get_world_inverse_matrix (camera);
 
-  color.red *= intensity;
-  color.green *= intensity;
-  color.blue *= intensity;
-  color.alpha = 1.0;
-
-  gthree_uniforms_set_color (priv->uniforms, "color", &color);
+  graphene_vec3_scale (gthree_light_get_color (light), intensity, &color);
+  gthree_uniforms_set_vec3 (priv->uniforms, "color", &color);
 
   graphene_matrix_get_row (gthree_object_get_world_matrix (GTHREE_OBJECT (light)), 3, &light_pos);
   graphene_matrix_get_row (gthree_object_get_world_matrix (priv->target), 3, &target_pos);

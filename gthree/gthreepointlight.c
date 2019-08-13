@@ -24,7 +24,7 @@ static GParamSpec *obj_props[N_PROPS] = { NULL, };
 G_DEFINE_TYPE_WITH_PRIVATE (GthreePointLight, gthree_point_light, GTHREE_TYPE_LIGHT)
 
 GthreePointLight *
-gthree_point_light_new (const GdkRGBA *color,
+gthree_point_light_new (const graphene_vec3_t *color,
                         float intensity,
                         float distance)
 {
@@ -36,7 +36,7 @@ gthree_point_light_new (const GdkRGBA *color,
 }
 
 static float zerov3[3] = { 0, 0, 0 };
-static GdkRGBA white = { 1, 1, 1, 1.0 };
+static float white[3] = { 1, 1, 1 };
 static int i0 = 0;
 static float f0 = 0.0;
 static float f1 = 1.0;
@@ -45,7 +45,7 @@ static float zerov2[2] = { 0, 0 };
 
 static GthreeUniformsDefinition light_uniforms[] = {
   {"position", GTHREE_UNIFORM_TYPE_VECTOR3, &zerov3},
-  {"color", GTHREE_UNIFORM_TYPE_COLOR, &white },
+  {"color", GTHREE_UNIFORM_TYPE_VECTOR3, &white },
   {"distance", GTHREE_UNIFORM_TYPE_FLOAT, &f0 },
   {"decay", GTHREE_UNIFORM_TYPE_FLOAT, &f0 },
   {"shadow", GTHREE_UNIFORM_TYPE_INT, &i0 },
@@ -84,18 +84,14 @@ gthree_point_light_real_setup (GthreeLight *light,
 {
   GthreePointLight *point = GTHREE_POINT_LIGHT (light);
   GthreePointLightPrivate *priv = gthree_point_light_get_instance_private (point);
-  GdkRGBA color = *gthree_light_get_color (light);
+  graphene_vec3_t color;
   float intensity = gthree_light_get_intensity (light);
   graphene_vec4_t light_pos;
   graphene_vec3_t light_pos3;
   const graphene_matrix_t *view_matrix = gthree_camera_get_world_inverse_matrix (camera);
 
-  color.red *= intensity;
-  color.green *= intensity;
-  color.blue *= intensity;
-  color.alpha = 1.0;
-
-  gthree_uniforms_set_color (priv->uniforms, "color", &color);
+  graphene_vec3_scale (gthree_light_get_color (light), intensity, &color);
+  gthree_uniforms_set_vec3 (priv->uniforms, "color", &color);
 
   graphene_matrix_get_row (gthree_object_get_world_matrix (GTHREE_OBJECT (light)), 3, &light_pos);
   graphene_matrix_transform_vec4 (view_matrix, &light_pos, &light_pos);

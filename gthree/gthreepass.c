@@ -257,7 +257,7 @@ struct _GthreeRenderPass {
   GthreeScene *scene;
   GthreeCamera *camera;
   GthreeMaterial *override_material;
-  GdkRGBA clear_color;
+  graphene_vec3_t clear_color;
   float clear_alpha;
   gboolean clear_depth;
   GArray *clipping_planes;
@@ -391,7 +391,7 @@ gthree_render_pass_set_clear_depth  (GthreeRenderPass *render_pass,
 
 struct _GthreeClearPass {
   GthreePass parent;
-  GdkRGBA color;
+  graphene_vec3_t color;
   gboolean color_set;
   gboolean clear_depth;
 };
@@ -429,7 +429,7 @@ gthree_clear_pass_render (GthreePass *pass,
                           gboolean mask_active)
 {
   GthreeClearPass *clear_pass = GTHREE_CLEAR_PASS (pass);
-  GdkRGBA old_clear_color;
+  graphene_vec3_t old_clear_color;
 
   if (clear_pass->color_set)
     {
@@ -460,7 +460,7 @@ gthree_clear_pass_class_init (GthreeClearPassClass *klass)
 }
 
 GthreePass *
-gthree_clear_pass_new (const GdkRGBA *color)
+gthree_clear_pass_new (const graphene_vec3_t *color)
 {
   GthreeClearPass *pass = g_object_new (GTHREE_TYPE_CLEAR_PASS, NULL);
 

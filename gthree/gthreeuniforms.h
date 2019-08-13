@@ -34,7 +34,6 @@ typedef enum {
   GTHREE_UNIFORM_TYPE_VECTOR2,
   GTHREE_UNIFORM_TYPE_VECTOR3,
   GTHREE_UNIFORM_TYPE_VECTOR4,
-  GTHREE_UNIFORM_TYPE_COLOR,
   GTHREE_UNIFORM_TYPE_VEC2_ARRAY,
   GTHREE_UNIFORM_TYPE_VEC3_ARRAY,
   GTHREE_UNIFORM_TYPE_VEC4_ARRAY,
@@ -128,10 +127,6 @@ void            gthree_uniforms_set_texture        (GthreeUniforms  *uniforms,
                                                     const char      *name,
                                                     GthreeTexture   *value);
 GTHREE_API
-void            gthree_uniforms_set_color          (GthreeUniforms  *uniforms,
-                                                    const char      *name,
-                                                    GdkRGBA         *color);
-GTHREE_API
 void            gthree_uniforms_set_uarray         (GthreeUniforms   *uniforms,
                                                     const char      *name,
                                                     GPtrArray       *uarray,
@@ -173,9 +168,6 @@ void        gthree_uniform_set_vec4         (GthreeUniform   *uniform,
 GTHREE_API
 void        gthree_uniform_set_texture      (GthreeUniform   *uniform,
                                              GthreeTexture   *value);
-GTHREE_API
-void        gthree_uniform_set_color        (GthreeUniform   *uniform,
-                                             GdkRGBA         *color);
 GTHREE_API
 void        gthree_uniform_set_uarray       (GthreeUniform   *uniform,
                                              GPtrArray       *uarray,

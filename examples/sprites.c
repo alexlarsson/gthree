@@ -20,14 +20,14 @@ GthreeTexture *sprite2_texture;
 GthreeSprite *spriteTL, *spriteTR, *spriteBL, *spriteBR, *spriteC;
 
 static void
-rgba_init_from_hsla (GdkRGBA *rgba,
-                     double   hue,
-                     double   saturation,
-                     double   lightness,
-                     double   alpha)
+rgb_init_from_hsl (graphene_vec3_t *color,
+                   double   hue,
+                   double   saturation,
+                   double   lightness)
 {
   gdouble original_hue;
   gdouble m1, m2;
+  float red, green, blue;
 
   if (hue >= 0)
     hue = fmod (hue, 360);
@@ -35,7 +35,6 @@ rgba_init_from_hsla (GdkRGBA *rgba,
     hue = fmod (hue, 360) + 360;
   saturation = CLAMP (saturation, 0, 1);
   lightness = CLAMP (lightness, 0, 1);
-  alpha = CLAMP (alpha, 0, 1);
 
   original_hue = hue;
 
@@ -45,13 +44,11 @@ rgba_init_from_hsla (GdkRGBA *rgba,
     m2 = lightness + saturation - lightness * saturation;
   m1 = 2 * lightness - m2;
 
-  rgba->alpha = alpha;
-
   if (saturation == 0)
     {
-      rgba->red = lightness;
-      rgba->green = lightness;
-      rgba->blue = lightness;
+      red = lightness;
+      green = lightness;
+      blue = lightness;
     }
   else
     {
@@ -62,13 +59,13 @@ rgba_init_from_hsla (GdkRGBA *rgba,
         hue += 360;
 
       if (hue < 60)
-        rgba->red = m1 + (m2 - m1) * hue / 60;
+        red = m1 + (m2 - m1) * hue / 60;
       else if (hue < 180)
-        rgba->red = m2;
+        red = m2;
       else if (hue < 240)
-        rgba->red = m1 + (m2 - m1) * (240 - hue) / 60;
+        red = m1 + (m2 - m1) * (240 - hue) / 60;
       else
-        rgba->red = m1;
+        red = m1;
 
       hue = original_hue;
       while (hue > 360)
@@ -77,13 +74,13 @@ rgba_init_from_hsla (GdkRGBA *rgba,
         hue += 360;
 
       if (hue < 60)
-        rgba->green = m1 + (m2 - m1) * hue / 60;
+        green = m1 + (m2 - m1) * hue / 60;
       else if (hue < 180)
-        rgba->green = m2;
+        green = m2;
       else if (hue < 240)
-        rgba->green = m1 + (m2 - m1) * (240 - hue) / 60;
+        green = m1 + (m2 - m1) * (240 - hue) / 60;
       else
-        rgba->green = m1;
+        green = m1;
 
       hue = original_hue - 120;
       while (hue > 360)
@@ -92,14 +89,16 @@ rgba_init_from_hsla (GdkRGBA *rgba,
         hue += 360;
 
       if (hue < 60)
-        rgba->blue = m1 + (m2 - m1) * hue / 60;
+        blue = m1 + (m2 - m1) * hue / 60;
       else if (hue < 180)
-        rgba->blue = m2;
+        blue = m2;
       else if (hue < 240)
-        rgba->blue = m1 + (m2 - m1) * (240 - hue) / 60;
+        blue = m1 + (m2 - m1) * (240 - hue) / 60;
       else
-        rgba->blue = m1;
+        blue = m1;
     }
+
+  graphene_vec3_init (color, red, green, blue);
 }
 
 static void
@@ -142,9 +141,9 @@ init_scene (GtkWidget *window)
   g_autoptr(GthreeSpriteMaterial) materialB = gthree_sprite_material_new ();
   g_autoptr(GthreeSpriteMaterial) materialC = gthree_sprite_material_new ();
 
-  gthree_sprite_material_set_color (materialB, &white);
+  gthree_sprite_material_set_color (materialB, white ());
   gthree_sprite_material_set_map (materialB, sprite1_texture);
-  gthree_sprite_material_set_color (materialC, &white);
+  gthree_sprite_material_set_color (materialC, white ());
   gthree_sprite_material_set_map (materialC, sprite2_texture);
 
   // TODO: Set fog == TRUE for materials
@@ -166,14 +165,14 @@ init_scene (GtkWidget *window)
         }
       else
         {
-          GdkRGBA color;
+          graphene_vec3_t color;
           graphene_vec2_t v2;
 
           material = gthree_material_clone (GTHREE_MATERIAL (materialC));
 
-          rgba_init_from_hsla (&color,
-                               g_random_double_range (0, 180),
-                               0.75, 0.5, 1.0);
+          rgb_init_from_hsl (&color,
+                             g_random_double_range (0, 180),
+                             0.75, 0.5);
           gthree_sprite_material_set_color (GTHREE_SPRITE_MATERIAL (material), &color);
 
           // This makes these sprites half the size (since we see only the top left quadrant, testing

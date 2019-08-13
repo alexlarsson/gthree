@@ -7,20 +7,18 @@ void examples_load_cube_pixbufs (const char *dir,
 
 GthreeLoader *examples_load_gltl (const char *name, GError **error);
 
-extern GdkRGBA red;
-extern GdkRGBA green;
-extern GdkRGBA blue;
-extern GdkRGBA yellow;
-extern GdkRGBA cyan;
-extern GdkRGBA magenta;
-extern GdkRGBA white;
-extern GdkRGBA black;
-
-extern GdkRGBA very_dark_grey;
-extern GdkRGBA dark_grey;
-extern GdkRGBA medium_grey;
-extern GdkRGBA grey;
-extern GdkRGBA light_grey;
-
-extern GdkRGBA dark_green;
-extern GdkRGBA orange;
+const graphene_vec3_t *black (void);
+const graphene_vec3_t *white (void);
+const graphene_vec3_t *red (void);
+const graphene_vec3_t *green (void);
+const graphene_vec3_t *blue (void);
+const graphene_vec3_t *yellow (void);
+const graphene_vec3_t *cyan (void);
+const graphene_vec3_t *magenta (void);
+const graphene_vec3_t *very_dark_grey (void);
+const graphene_vec3_t *dark_grey (void);
+const graphene_vec3_t *medium_grey (void);
+const graphene_vec3_t *grey (void);
+const graphene_vec3_t *light_grey (void);
+const graphene_vec3_t *dark_green (void);
+const graphene_vec3_t *orange (void);

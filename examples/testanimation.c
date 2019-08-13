@@ -49,11 +49,11 @@ init_scene (void)
 
   scene = gthree_scene_new ();
 
-  ambient_light = gthree_ambient_light_new (&red);
+  ambient_light = gthree_ambient_light_new (red ());
   gthree_light_set_intensity (GTHREE_LIGHT (ambient_light), 0.2);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));
 
-  directional_light = gthree_directional_light_new (&blue, 1.2);
+  directional_light = gthree_directional_light_new (blue (), 1.2);
   gthree_object_set_position_point3d (GTHREE_OBJECT (directional_light),
                               graphene_point3d_init (&pos,
                                                      1, 1, -1));
@@ -61,7 +61,7 @@ init_scene (void)
 
   geometry = gthree_geometry_new_box (60, 60, 60, 1, 1, 1);
   material = gthree_mesh_lambert_material_new ();
-  gthree_mesh_lambert_material_set_color (material, &white);
+  gthree_mesh_lambert_material_set_color (material, white ());
   mesh = gthree_mesh_new (geometry, GTHREE_MATERIAL (material));
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (mesh));
 

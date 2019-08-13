@@ -35,20 +35,20 @@ GTHREE_API
 GType gthree_mesh_phong_material_get_type (void) G_GNUC_CONST;
 
 GTHREE_API
-const GdkRGBA *   gthree_mesh_phong_material_get_color            (GthreeMeshPhongMaterial *phong);
+const graphene_vec3_t *gthree_mesh_phong_material_get_color      (GthreeMeshPhongMaterial *phong);
 GTHREE_API
 void              gthree_mesh_phong_material_set_color            (GthreeMeshPhongMaterial *phong,
-                                                                   const GdkRGBA           *color);
+                                                                   const graphene_vec3_t           *color);
 GTHREE_API
-const GdkRGBA *   gthree_mesh_phong_material_get_emissive_color   (GthreeMeshPhongMaterial *phong);
+const graphene_vec3_t *gthree_mesh_phong_material_get_emissive_color (GthreeMeshPhongMaterial *phong);
 GTHREE_API
 void              gthree_mesh_phong_material_set_emissive_color   (GthreeMeshPhongMaterial *phong,
-                                                                   const GdkRGBA           *color);
+                                                                   const graphene_vec3_t           *color);
 GTHREE_API
-const GdkRGBA *   gthree_mesh_phong_material_get_specular_color   (GthreeMeshPhongMaterial *phong);
+const graphene_vec3_t *gthree_mesh_phong_material_get_specular_color (GthreeMeshPhongMaterial *phong);
 GTHREE_API
 void              gthree_mesh_phong_material_set_specular_color   (GthreeMeshPhongMaterial *phong,
-                                                                   const GdkRGBA           *color);
+                                                                   const graphene_vec3_t           *color);
 GTHREE_API
 float             gthree_mesh_phong_material_get_shininess        (GthreeMeshPhongMaterial *phong);
 GTHREE_API

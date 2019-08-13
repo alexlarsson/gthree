@@ -1,5 +1,6 @@
 #include <math.h>
 #include <epoxy/gl.h>
+#include <graphene-gobject.h>
 
 #include "gthreelight.h"
 #include "gthreeprivate.h"
@@ -15,7 +16,7 @@ gthree_light_setup_hash_equal (GthreeLightSetupHash *a,
 
 
 typedef struct {
-  GdkRGBA color;
+  graphene_vec3_t color;
   float   intensity;
 } GthreeLightPrivate;
 
@@ -96,7 +97,7 @@ gthree_light_class_init (GthreeLightClass *klass)
 
   obj_props[PROP_COLOR] =
     g_param_spec_boxed ("color", "Color", "Light color",
-                        GDK_TYPE_RGBA,
+                        GRAPHENE_TYPE_VEC3,
                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   obj_props[PROP_INTENSITY] =
@@ -112,11 +113,8 @@ gthree_light_init (GthreeLight *light)
 {
   GthreeLightPrivate *priv = gthree_light_get_instance_private (light);
 
-  priv->color.red = 1.0;
-  priv->color.green = 1.0;
-  priv->color.blue = 1.0;
-  priv->color.alpha = 1.0;
-
+  graphene_vec3_init (&priv->color,
+                      1.0, 1.0, 1.0);
   priv->intensity = 1.0;
 }
 
@@ -149,7 +147,7 @@ gthree_light_set_intensity (GthreeLight *light,
 }
 
 
-const GdkRGBA *
+const graphene_vec3_t *
 gthree_light_get_color (GthreeLight *light)
 {
   GthreeLightPrivate *priv = gthree_light_get_instance_private (light);
@@ -159,11 +157,11 @@ gthree_light_get_color (GthreeLight *light)
 
 void
 gthree_light_set_color (GthreeLight *light,
-                        const GdkRGBA *color)
+                        const graphene_vec3_t *color)
 {
   GthreeLightPrivate *priv = gthree_light_get_instance_private (light);
 
-  if (gdk_rgba_equal (color, &priv->color))
+  if (graphene_vec3_equal (color, &priv->color))
     return;
 
   priv->color = *color;

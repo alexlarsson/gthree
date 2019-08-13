@@ -288,7 +288,8 @@ static void
 gthree_loader_init (GthreeLoader *loader)
 {
   GthreeLoaderPrivate *priv = gthree_loader_get_instance_private (loader);
-  GdkRGBA magenta= {1, 0, 1, 1};
+  graphene_vec3_t magenta;
+  graphene_vec3_init (&magenta, 1, 0, 1);
 
   priv->buffers = g_ptr_array_new_with_free_func ((GDestroyNotify)g_bytes_unref);
   priv->buffer_views = g_ptr_array_new_with_free_func ((GDestroyNotify)buffer_view_free);
@@ -458,15 +459,21 @@ parse_point3d (JsonArray *point_j, graphene_point3d_t *p)
 }
 
 static void
-parse_color (JsonArray *color_j, GdkRGBA *c)
+parse_color (JsonArray *color_j, graphene_vec3_t *c, float *alpha_out)
 {
-  c->red = json_array_get_double_element  (color_j, 0);
-  c->green = json_array_get_double_element (color_j, 1);
-  c->blue = json_array_get_double_element (color_j, 2);
+  float red, green, blue, alpha;
+
+  red = json_array_get_double_element  (color_j, 0);
+  green = json_array_get_double_element (color_j, 1);
+  blue = json_array_get_double_element (color_j, 2);
   if (json_array_get_length (color_j) > 3)
-    c->alpha = json_array_get_double_element (color_j, 3);
+    alpha = json_array_get_double_element (color_j, 3);
   else
-    c->alpha = 1.0;
+    alpha = 1.0;
+
+  if (alpha_out)
+    *alpha_out = alpha;
+  graphene_vec3_init (c, red, green, blue);
 }
 
 static void
@@ -1029,15 +1036,18 @@ parse_materials (GthreeLoader *loader, JsonObject *root, GError **error)
       JsonObject *material_j = json_array_get_object_element (materials_j, i);
       g_autoptr(GthreeMeshStandardMaterial) material = NULL;
       JsonObject *pbr = NULL;
-      GdkRGBA color = {1.0, 1.0, 1.0, 1.0};
+      graphene_vec3_t color;
+      float color_alpha;
       double metallic_factor = 1.0, roughness_factor = 1.0;
       const char *alpha_mode = "OPAQUE";
+
+      graphene_vec3_init (&color, 1.0, 1.0, 1.0);
 
       if (json_object_has_member (material_j, "pbrMetallicRoughness"))
         pbr = json_object_get_object_member (material_j, "pbrMetallicRoughness");
 
       if (pbr && json_object_has_member (pbr, "baseColorFactor"))
-        parse_color (json_object_get_array_member (pbr, "baseColorFactor"), &color);
+        parse_color (json_object_get_array_member (pbr, "baseColorFactor"), &color, &color_alpha);
       if (pbr && json_object_has_member (pbr, "metallicFactor"))
         metallic_factor = json_object_get_double_member (pbr, "metallicFactor");
       if (pbr && json_object_has_member (pbr, "roughnessFactor"))
@@ -1046,7 +1056,7 @@ parse_materials (GthreeLoader *loader, JsonObject *root, GError **error)
       material = gthree_mesh_standard_material_new ();
 
       gthree_mesh_standard_material_set_color (material, &color);
-      gthree_material_set_opacity (GTHREE_MATERIAL (material), color.alpha);
+      gthree_material_set_opacity (GTHREE_MATERIAL (material), color_alpha);
       gthree_mesh_standard_material_set_roughness (material, roughness_factor);
       gthree_mesh_standard_material_set_metalness (material, metallic_factor);
 
@@ -1097,9 +1107,9 @@ parse_materials (GthreeLoader *loader, JsonObject *root, GError **error)
 
       if (json_object_has_member (material_j, "emissiveFactor"))
         {
-          GdkRGBA e_color;
+          graphene_vec3_t e_color;
 
-          parse_color (json_object_get_array_member (material_j, "emissiveFactor"), &e_color);
+          parse_color (json_object_get_array_member (material_j, "emissiveFactor"), &e_color, NULL);
           gthree_mesh_standard_material_set_emissive_color (material, &e_color);
         }
 

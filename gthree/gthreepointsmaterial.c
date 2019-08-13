@@ -1,4 +1,5 @@
 #include <math.h>
+#include <graphene-gobject.h>
 
 #include "gthreepointsmaterial.h"
 #include "gthreetypebuiltins.h"
@@ -7,7 +8,7 @@
 #include "gthreeprivate.h"
 
 typedef struct {
-  GdkRGBA color;
+  graphene_vec3_t color;
   float size;
   GthreeTexture *map;
   gboolean size_attenuation;
@@ -140,7 +141,7 @@ gthree_points_material_real_set_uniforms (GthreeMaterial *material,
 
   uni = gthree_uniforms_lookup_from_string (uniforms, "diffuse");
   if (uni != NULL)
-    gthree_uniform_set_color (uni, &priv->color);
+    gthree_uniform_set_vec3 (uni, &priv->color);
 
   uni = gthree_uniforms_lookup_from_string (uniforms, "size");
   if (uni != NULL)
@@ -180,7 +181,7 @@ gthree_points_material_class_init (GthreePointsMaterialClass *klass)
 
    obj_props[PROP_COLOR] =
     g_param_spec_boxed ("color", "Color", "Color",
-                        GDK_TYPE_RGBA,
+                        GRAPHENE_TYPE_VEC3,
                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   obj_props[PROP_MAP] =
     g_param_spec_object ("map", "Map", "Map",
@@ -204,10 +205,8 @@ gthree_points_material_init (GthreePointsMaterial *points_material)
 {
   GthreePointsMaterialPrivate *priv = gthree_points_material_get_instance_private (points_material);
 
-  priv->color.red = 1.0;
-  priv->color.green = 1.0;
-  priv->color.blue = 1.0;
-  priv->color.alpha = 1.0;
+  graphene_vec3_init (&priv->color,
+                      1.0, 1.0, 1.0);
 
   priv->size = 1;
   priv->size_attenuation = TRUE;
@@ -222,7 +221,7 @@ gthree_points_material_new (void)
                        NULL);
 }
 
-const GdkRGBA *
+const graphene_vec3_t *
 gthree_points_material_get_color (GthreePointsMaterial *points_material)
 {
   GthreePointsMaterialPrivate *priv = gthree_points_material_get_instance_private (points_material);
@@ -232,7 +231,7 @@ gthree_points_material_get_color (GthreePointsMaterial *points_material)
 
 void
 gthree_points_material_set_color (GthreePointsMaterial *points_material,
-                                  const GdkRGBA           *color)
+                                  const graphene_vec3_t           *color)
 {
   GthreePointsMaterialPrivate *priv = gthree_points_material_get_instance_private (points_material);
 

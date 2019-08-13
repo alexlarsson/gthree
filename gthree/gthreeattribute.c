@@ -510,7 +510,7 @@ void
 gthree_attribute_array_set_vec2 (GthreeAttributeArray *array,
                                  guint                 index,
                                  guint                 offset,
-                                 graphene_vec2_t      *vec2)
+                                 const graphene_vec2_t *vec2)
 {
   gthree_attribute_array_set_xy (array, index, offset,
                                  graphene_vec2_get_x (vec2),
@@ -521,7 +521,7 @@ void
 gthree_attribute_array_set_vec3 (GthreeAttributeArray *array,
                                  guint                 index,
                                  guint                 offset,
-                                 graphene_vec3_t      *vec3)
+                                 const graphene_vec3_t *vec3)
 {
   gthree_attribute_array_set_xyz (array, index, offset,
                                   graphene_vec3_get_x (vec3),
@@ -533,7 +533,7 @@ void
 gthree_attribute_array_set_vec4 (GthreeAttributeArray *array,
                                  guint                 index,
                                  guint                 offset,
-                                 graphene_vec4_t      *vec4)
+                                 const graphene_vec4_t *vec4)
 {
   gthree_attribute_array_set_xyzw (array, index, offset,
                                    graphene_vec4_get_x (vec4),
@@ -561,31 +561,6 @@ gthree_attribute_array_get_matrix (GthreeAttributeArray *array,
 {
   float *p = gthree_attribute_array_peek_float_at (array, index, offset);
   graphene_matrix_init_from_float (matrix, p);
-}
-
-void
-gthree_attribute_array_set_rgb (GthreeAttributeArray *array,
-                                guint                 index,
-                                guint                 offset,
-                                GdkRGBA              *color)
-{
-  gthree_attribute_array_set_xyz (array, index, offset,
-                                  color->red,
-                                  color->green,
-                                  color->blue);
-}
-
-void
-gthree_attribute_array_set_rgba (GthreeAttributeArray *array,
-                                 guint                 index,
-                                 guint                 offset,
-                                 GdkRGBA              *color)
-{
-  gthree_attribute_array_set_xyzw (array, index, offset,
-                                   color->red,
-                                   color->green,
-                                   color->blue,
-                                   color->alpha);
 }
 
 void
@@ -1497,7 +1472,7 @@ gthree_attribute_set_point3d (GthreeAttribute      *attribute,
 void
 gthree_attribute_set_vec2 (GthreeAttribute      *attribute,
                            guint                 index,
-                           graphene_vec2_t      *vec2)
+                           const graphene_vec2_t *vec2)
 {
   g_assert (attribute->array);
   gthree_attribute_array_set_vec2  (attribute->array, index, attribute->item_offset, vec2);
@@ -1506,16 +1481,16 @@ gthree_attribute_set_vec2 (GthreeAttribute      *attribute,
 void
 gthree_attribute_set_vec3 (GthreeAttribute      *attribute,
                            guint                 index,
-                           graphene_vec3_t      *vec3)
+                           const graphene_vec3_t *vec3)
 {
   g_assert (attribute->array);
   gthree_attribute_array_set_vec3 (attribute->array, index, attribute->item_offset, vec3);
 }
 
 void
-gthree_attribute_set_vec4 (GthreeAttribute      *attribute,
-                           guint                 index,
-                           graphene_vec4_t      *vec4)
+gthree_attribute_set_vec4 (GthreeAttribute       *attribute,
+                           guint                  index,
+                           const graphene_vec4_t *vec4)
 {
   g_assert (attribute->array);
   gthree_attribute_array_set_vec4  (attribute->array, index, attribute->item_offset, vec4);
@@ -1537,24 +1512,6 @@ gthree_attribute_get_matrix (GthreeAttribute      *attribute,
 {
   g_assert (attribute->array);
   gthree_attribute_array_get_matrix  (attribute->array, index, attribute->item_offset, matrix);
-}
-
-void
-gthree_attribute_set_rgb (GthreeAttribute      *attribute,
-                          guint                 index,
-                          GdkRGBA              *color)
-{
-  g_assert (attribute->array);
-  gthree_attribute_array_set_rgb  (attribute->array, index, attribute->item_offset, color);
-}
-
-void
-gthree_attribute_set_rgba (GthreeAttribute      *attribute,
-                           guint                 index,
-                           GdkRGBA              *color)
-{
-  g_assert (attribute->array);
-  gthree_attribute_array_set_rgba  (attribute->array, index, attribute->item_offset, color);
 }
 
 void

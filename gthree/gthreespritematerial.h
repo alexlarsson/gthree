@@ -34,10 +34,10 @@ GTHREE_API
 GthreeSpriteMaterial *gthree_sprite_material_new (void);
 
 GTHREE_API
-const GdkRGBA *   gthree_sprite_material_get_color            (GthreeSpriteMaterial *sprite_material);
+const graphene_vec3_t *gthree_sprite_material_get_color       (GthreeSpriteMaterial *sprite_material);
 GTHREE_API
 void              gthree_sprite_material_set_color            (GthreeSpriteMaterial *sprite_material,
-                                                               const GdkRGBA           *color);
+                                                               const graphene_vec3_t *color);
 GTHREE_API
 void              gthree_sprite_material_set_map              (GthreeSpriteMaterial *sprite_material,
                                                                GthreeTexture           *texture);

@@ -50,18 +50,18 @@ light_scene (void)
   GthreeMesh *particle_light;
   graphene_point3d_t pos;
 
-  ambient_light = gthree_ambient_light_new (&white);
+  ambient_light = gthree_ambient_light_new (white ());
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));
 
   geometry_light = gthree_geometry_new_sphere (1, 8, 8);
   material_light = gthree_mesh_basic_material_new ();
-  gthree_mesh_basic_material_set_color (material_light, &white);
+  gthree_mesh_basic_material_set_color (material_light, white ());
 
   point_light_group = gthree_group_new  ();
   gthree_object_set_position_point3d (GTHREE_OBJECT (point_light_group), &scene_center);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (point_light_group));
 
-  point_light = gthree_point_light_new (&white, 1, 0);
+  point_light = gthree_point_light_new (white (), 1, 0);
   gthree_object_add_child (GTHREE_OBJECT (point_light_group), GTHREE_OBJECT (point_light));
   gthree_object_set_position_point3d (GTHREE_OBJECT (point_light),
                               graphene_point3d_init (&pos, scene_radius, 0, 0));
@@ -74,7 +74,7 @@ light_scene (void)
   particle_light = gthree_mesh_new (geometry_light, GTHREE_MATERIAL (material_light));
   gthree_object_add_child (GTHREE_OBJECT (point_light), GTHREE_OBJECT (particle_light));
 
-  directional_light = gthree_directional_light_new (&white, 0.125);
+  directional_light = gthree_directional_light_new (white (), 0.125);
   gthree_object_set_position_point3d (GTHREE_OBJECT (directional_light),
                               graphene_point3d_init (&pos,
                                                      1, 1, -1));

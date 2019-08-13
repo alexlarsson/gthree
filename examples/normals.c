@@ -33,15 +33,15 @@ green_object (int num)
     }
 
   material = GTHREE_MATERIAL (gthree_mesh_lambert_material_new ());
-  gthree_mesh_lambert_material_set_color (GTHREE_LAMBERT_MATERIAL (material), &green);
-  gthree_mesh_lambert_material_set_emissive_color (GTHREE_LAMBERT_MATERIAL (material), &green);
+  gthree_mesh_lambert_material_set_color (GTHREE_LAMBERT_MATERIAL (material), green ());
+  gthree_mesh_lambert_material_set_emissive_color (GTHREE_LAMBERT_MATERIAL (material), green ());
   gthree_material_set_side (GTHREE_MATERIAL (material), GTHREE_SIDE_DOUBLE);
 
   return GTHREE_OBJECT (gthree_mesh_new (geo, material));
 }
 
 GthreeObject *
-face_normals (GthreeMesh *object, float size, GdkRGBA *color, float width)
+face_normals (GthreeMesh *object, float size, const graphene_vec3_t *color, float width)
 {
   GthreeGeometry *geo, *geometry;
   GthreeMaterial *material;
@@ -99,7 +99,7 @@ init_scene (void)
 
   scene = gthree_scene_new ();
 
-  ambient_light = gthree_ambient_light_new (&white);
+  ambient_light = gthree_ambient_light_new (white ());
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));
 
   for (i = 0; i < 4; i++)
@@ -110,7 +110,7 @@ init_scene (void)
 
       gthree_object_add_child (GTHREE_OBJECT (scene), obj);
       gthree_object_set_position_point3d (obj, graphene_point3d_init (&pos, i * 70 - 100, 0, 0));
-      gthree_object_add_child (obj, face_normals (GTHREE_MESH (obj), 10, &red, 1));
+      gthree_object_add_child (obj, face_normals (GTHREE_MESH (obj), 10, red (), 1));
     }
 
   return scene;

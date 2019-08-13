@@ -35,15 +35,15 @@ GTHREE_API
 GType gthree_mesh_standard_material_get_type (void) G_GNUC_CONST;
 
 GTHREE_API
-const GdkRGBA *        gthree_mesh_standard_material_get_color               (GthreeMeshStandardMaterial *standard);
+const graphene_vec3_t *gthree_mesh_standard_material_get_color               (GthreeMeshStandardMaterial *standard);
 GTHREE_API
 void                   gthree_mesh_standard_material_set_color               (GthreeMeshStandardMaterial *standard,
-                                                                              const GdkRGBA              *color);
+                                                                              const graphene_vec3_t      *color);
 GTHREE_API
-const GdkRGBA *        gthree_mesh_standard_material_get_emissive_color      (GthreeMeshStandardMaterial *standard);
+const graphene_vec3_t *        gthree_mesh_standard_material_get_emissive_color      (GthreeMeshStandardMaterial *standard);
 GTHREE_API
 void                   gthree_mesh_standard_material_set_emissive_color      (GthreeMeshStandardMaterial *standard,
-                                                                              const GdkRGBA              *color);
+                                                                              const graphene_vec3_t              *color);
 GTHREE_API
 GthreeTexture *        gthree_mesh_standard_material_get_emissive_map        (GthreeMeshStandardMaterial *standard);
 GTHREE_API

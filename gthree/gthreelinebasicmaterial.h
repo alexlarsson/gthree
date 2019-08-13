@@ -36,10 +36,10 @@ GTHREE_API
 GthreeLineBasicMaterial *gthree_line_basic_material_new ();
 
 GTHREE_API
-const GdkRGBA *gthree_line_basic_material_get_color      (GthreeLineBasicMaterial *line_basic);
+const graphene_vec3_t *gthree_line_basic_material_get_color (GthreeLineBasicMaterial *line_basic);
 GTHREE_API
 void           gthree_line_basic_material_set_color      (GthreeLineBasicMaterial *line_basic,
-                                                          const GdkRGBA           *color);
+                                                          const graphene_vec3_t   *color);
 GTHREE_API
 float          gthree_line_basic_material_get_line_width (GthreeLineBasicMaterial *line_basic);
 GTHREE_API

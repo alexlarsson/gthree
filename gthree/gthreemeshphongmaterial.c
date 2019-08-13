@@ -1,5 +1,6 @@
 #include <math.h>
 #include <epoxy/gl.h>
+#include <graphene-gobject.h>
 
 #include "gthreemeshphongmaterial.h"
 #include "gthreecubetexture.h"
@@ -7,9 +8,9 @@
 #include "gthreeprivate.h"
 
 typedef struct {
-  GdkRGBA color;
-  GdkRGBA emissive;
-  GdkRGBA specular;
+  graphene_vec3_t color;
+  graphene_vec3_t emissive;
+  graphene_vec3_t specular;
   float shininess;
   float reflectivity;
   float refraction_ratio;
@@ -59,20 +60,12 @@ gthree_mesh_phong_material_init (GthreeMeshPhongMaterial *phong)
 {
   GthreeMeshPhongMaterialPrivate *priv = gthree_mesh_phong_material_get_instance_private (phong);
 
-  priv->color.red = 1.0;
-  priv->color.green = 1.0;
-  priv->color.blue = 1.0;
-  priv->color.alpha = 1.0;
-
-  priv->emissive.red = 0.0;
-  priv->emissive.green = 0.0;
-  priv->emissive.blue = 0.0;
-  priv->emissive.alpha = 1.0;
-
-  priv->specular.red = 0.07;
-  priv->specular.green = 0.07;
-  priv->specular.blue = 0.07;
-  priv->specular.alpha = 1.0;
+  graphene_vec3_init (&priv->color,
+                      1.0, 1.0, 1.0);
+  graphene_vec3_init (&priv->emissive,
+                      0.0, 0.0, 0.0);
+  graphene_vec3_init (&priv->specular,
+                      0.07, 0.07, 0.07);
 
   priv->combine = GTHREE_OPERATION_MULTIPLY;
 
@@ -138,15 +131,15 @@ gthree_mesh_phong_material_real_set_uniforms (GthreeMaterial *material,
 
   uni = gthree_uniforms_lookup_from_string (uniforms, "diffuse");
   if (uni != NULL)
-    gthree_uniform_set_color (uni, &priv->color);
+    gthree_uniform_set_vec3 (uni, &priv->color);
 
   uni = gthree_uniforms_lookup_from_string (uniforms, "emissive");
   if (uni != NULL)
-    gthree_uniform_set_color (uni, &priv->emissive);
+    gthree_uniform_set_vec3 (uni, &priv->emissive);
 
   uni = gthree_uniforms_lookup_from_string (uniforms, "specular");
   if (uni != NULL)
-    gthree_uniform_set_color (uni, &priv->specular);
+    gthree_uniform_set_vec3 (uni, &priv->specular);
 
   uni = gthree_uniforms_lookup_from_string (uniforms, "shininess");
   if (uni != NULL)
@@ -325,15 +318,15 @@ gthree_mesh_phong_material_class_init (GthreeMeshPhongMaterialClass *klass)
 
   obj_props[PROP_COLOR] =
     g_param_spec_boxed ("color", "Color", "Color",
-                        GDK_TYPE_RGBA,
+                        GRAPHENE_TYPE_VEC3,
                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   obj_props[PROP_EMISSIVE_COLOR] =
     g_param_spec_boxed ("emissive-color", "Emissive Color", "Emissive",
-                        GDK_TYPE_RGBA,
+                        GRAPHENE_TYPE_VEC3,
                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   obj_props[PROP_SPECULAR_COLOR] =
     g_param_spec_boxed ("specular-color", "Specular color", "Specular color",
-                        GDK_TYPE_RGBA,
+                        GRAPHENE_TYPE_VEC3,
                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   obj_props[PROP_COMBINE] =
     g_param_spec_enum ("combine", "Combine", "Combine",
@@ -368,7 +361,7 @@ gthree_mesh_phong_material_class_init (GthreeMeshPhongMaterialClass *klass)
   g_object_class_install_properties (gobject_class, N_PROPS, obj_props);
 }
 
-const GdkRGBA *
+const graphene_vec3_t *
 gthree_mesh_phong_material_get_emissive_color (GthreeMeshPhongMaterial *phong)
 {
   GthreeMeshPhongMaterialPrivate *priv = gthree_mesh_phong_material_get_instance_private (phong);
@@ -378,7 +371,7 @@ gthree_mesh_phong_material_get_emissive_color (GthreeMeshPhongMaterial *phong)
 
 void
 gthree_mesh_phong_material_set_emissive_color (GthreeMeshPhongMaterial *phong,
-                                               const GdkRGBA *color)
+                                               const graphene_vec3_t *color)
 {
   GthreeMeshPhongMaterialPrivate *priv = gthree_mesh_phong_material_get_instance_private (phong);
 
@@ -387,7 +380,7 @@ gthree_mesh_phong_material_set_emissive_color (GthreeMeshPhongMaterial *phong,
   gthree_material_set_needs_update (GTHREE_MATERIAL (phong), TRUE);
 }
 
-const GdkRGBA *
+const graphene_vec3_t *
 gthree_mesh_phong_material_get_specular_color (GthreeMeshPhongMaterial *phong)
 {
   GthreeMeshPhongMaterialPrivate *priv = gthree_mesh_phong_material_get_instance_private (phong);
@@ -397,7 +390,7 @@ gthree_mesh_phong_material_get_specular_color (GthreeMeshPhongMaterial *phong)
 
 void
 gthree_mesh_phong_material_set_specular_color (GthreeMeshPhongMaterial *phong,
-                                               const GdkRGBA *color)
+                                               const graphene_vec3_t *color)
 {
   GthreeMeshPhongMaterialPrivate *priv = gthree_mesh_phong_material_get_instance_private (phong);
 
@@ -490,7 +483,7 @@ gthree_mesh_phong_material_set_reflectivity (GthreeMeshPhongMaterial *phong,
   g_object_notify_by_pspec (G_OBJECT (phong), obj_props[PROP_REFRACTION_RATIO]);
 }
 
-const GdkRGBA *
+const graphene_vec3_t *
 gthree_mesh_phong_material_get_color (GthreeMeshPhongMaterial *phong)
 {
   GthreeMeshPhongMaterialPrivate *priv = gthree_mesh_phong_material_get_instance_private (phong);
@@ -500,7 +493,7 @@ gthree_mesh_phong_material_get_color (GthreeMeshPhongMaterial *phong)
 
 void
 gthree_mesh_phong_material_set_color (GthreeMeshPhongMaterial *phong,
-                                      const GdkRGBA *color)
+                                      const graphene_vec3_t *color)
 {
   GthreeMeshPhongMaterialPrivate *priv = gthree_mesh_phong_material_get_instance_private (phong);
 

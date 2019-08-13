@@ -76,7 +76,8 @@ init_snow (GthreeScene *scene)
   GthreePointsMaterial *material = gthree_points_material_new ();
   gthree_points_material_set_size (material, 150);
   gthree_points_material_set_map (material, snowflake_texture);
-  GdkRGBA color = { 0.5, 0.5, 1.0, 1.0 };
+  graphene_vec3_t color;
+  graphene_vec3_init (&color, 0.5, 0.5, 1.0);
   gthree_points_material_set_color (material, &color);
   gthree_material_set_blend_mode (GTHREE_MATERIAL (material), GTHREE_BLEND_NORMAL, 0, 0, 0);
 
@@ -91,7 +92,7 @@ init_scene (void)
 {
   scene = gthree_scene_new ();
 
-  gthree_scene_set_background_color (scene, &blue);
+  gthree_scene_set_background_color (scene, blue ());
 
   init_cube (scene);
   init_snow (scene);

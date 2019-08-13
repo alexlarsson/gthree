@@ -7,7 +7,7 @@
 #include "gthreeobjectprivate.h"
 
 typedef struct {
-  GdkRGBA bg_color;
+  graphene_vec3_t bg_color;
   gboolean bg_color_is_set;
   GthreeTexture *bg_texture;
   GthreeMaterial *override_material;
@@ -46,7 +46,7 @@ gthree_scene_finalize (GObject *obj)
   G_OBJECT_CLASS (gthree_scene_parent_class)->finalize (obj);
 }
 
-const GdkRGBA *
+const graphene_vec3_t *
 gthree_scene_get_background_color (GthreeScene *scene)
 {
   GthreeScenePrivate *priv = gthree_scene_get_instance_private (scene);
@@ -56,8 +56,8 @@ gthree_scene_get_background_color (GthreeScene *scene)
 }
 
 void
-gthree_scene_set_background_color   (GthreeScene   *scene,
-                                     GdkRGBA       *color)
+gthree_scene_set_background_color (GthreeScene   *scene,
+                                   const graphene_vec3_t *color)
 {
   GthreeScenePrivate *priv = gthree_scene_get_instance_private (scene);
   if (color != NULL)

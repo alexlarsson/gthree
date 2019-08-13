@@ -41,10 +41,10 @@ GTHREE_API
 void            gthree_scene_set_override_material  (GthreeScene   *scene,
                                                     GthreeMaterial *material);
 GTHREE_API
-const GdkRGBA * gthree_scene_get_background_color   (GthreeScene   *scene);
+const graphene_vec3_t * gthree_scene_get_background_color   (GthreeScene   *scene);
 GTHREE_API
 void            gthree_scene_set_background_color   (GthreeScene   *scene,
-                                                     GdkRGBA       *color);
+                                                     const graphene_vec3_t *color);
 GTHREE_API
 GthreeTexture * gthree_scene_get_background_texture (GthreeScene   *scene);
 GTHREE_API

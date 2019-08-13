@@ -30,7 +30,7 @@ GTHREE_API
 GType gthree_directional_light_get_type (void) G_GNUC_CONST;
 
 GTHREE_API
-GthreeDirectionalLight *gthree_directional_light_new (const GdkRGBA *color,
+GthreeDirectionalLight *gthree_directional_light_new (const graphene_vec3_t *color,
                                                       float intensity);
 
 GTHREE_API

@@ -35,10 +35,10 @@ GTHREE_API
 GType gthree_mesh_basic_material_get_type (void) G_GNUC_CONST;
 
 GTHREE_API
-const GdkRGBA *   gthree_mesh_basic_material_get_color            (GthreeMeshBasicMaterial *basic);
+const graphene_vec3_t *gthree_mesh_basic_material_get_color       (GthreeMeshBasicMaterial *basic);
 GTHREE_API
 void              gthree_mesh_basic_material_set_color            (GthreeMeshBasicMaterial *basic,
-                                                                   const GdkRGBA           *color);
+                                                                   const graphene_vec3_t   *color);
 GTHREE_API
 void              gthree_mesh_basic_material_set_map              (GthreeMeshBasicMaterial *basic,
                                                                    GthreeTexture           *texture);

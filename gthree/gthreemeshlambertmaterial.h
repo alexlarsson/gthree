@@ -35,15 +35,15 @@ GTHREE_API
 GType gthree_mesh_lambert_material_get_type (void) G_GNUC_CONST;
 
 GTHREE_API
-const GdkRGBA * gthree_mesh_lambert_material_get_emissive_color   (GthreeMeshLambertMaterial *lambert);
+const graphene_vec3_t * gthree_mesh_lambert_material_get_emissive_color (GthreeMeshLambertMaterial *lambert);
 GTHREE_API
 void            gthree_mesh_lambert_material_set_emissive_color   (GthreeMeshLambertMaterial *lambert,
-                                                                   const GdkRGBA             *color);
+                                                                   const graphene_vec3_t             *color);
 GTHREE_API
-const GdkRGBA * gthree_mesh_lambert_material_get_color            (GthreeMeshLambertMaterial *lambert);
+const graphene_vec3_t * gthree_mesh_lambert_material_get_color    (GthreeMeshLambertMaterial *lambert);
 GTHREE_API
 void            gthree_mesh_lambert_material_set_color            (GthreeMeshLambertMaterial *lambert,
-                                                                   const GdkRGBA             *color);
+                                                                   const graphene_vec3_t             *color);
 GTHREE_API
 float           gthree_mesh_lambert_material_get_refraction_ratio (GthreeMeshLambertMaterial *lambert);
 GTHREE_API

@@ -52,7 +52,7 @@ init_scene (void)
   material = gthree_mesh_basic_material_new ();
   gthree_mesh_material_set_is_wireframe (GTHREE_MESH_MATERIAL (material), TRUE);
   gthree_mesh_material_set_wireframe_line_width (GTHREE_MESH_MATERIAL (material), 3.0);
-  gthree_mesh_basic_material_set_color (GTHREE_MESH_BASIC_MATERIAL (material), &yellow);
+  gthree_mesh_basic_material_set_color (GTHREE_MESH_BASIC_MATERIAL (material), yellow ());
   wire = gthree_mesh_new (geometry, GTHREE_MATERIAL (material));
   gthree_object_set_position_point3d (GTHREE_OBJECT (wire),
                               graphene_point3d_init (&pos, -80,20, 0));
@@ -79,8 +79,8 @@ init_scene2 (void)
   scene2 = gthree_scene_new ();
 
   material_phong = gthree_mesh_phong_material_new ();
-  gthree_mesh_phong_material_set_color (material_phong, &orange);
-  gthree_mesh_phong_material_set_specular_color (material_phong, &red);
+  gthree_mesh_phong_material_set_color (material_phong, orange ());
+  gthree_mesh_phong_material_set_specular_color (material_phong, red ());
   gthree_mesh_phong_material_set_shininess (material_phong, 30);
 
   mesh2 = gthree_mesh_new (geometry, GTHREE_MATERIAL (material_phong));
@@ -91,10 +91,10 @@ init_scene2 (void)
 
   gthree_object_add_child (GTHREE_OBJECT (scene2), GTHREE_OBJECT (mesh2));
 
-  ambient_light = gthree_ambient_light_new (&dark_grey);
+  ambient_light = gthree_ambient_light_new (dark_grey ());
   gthree_object_add_child (GTHREE_OBJECT (scene2), GTHREE_OBJECT (ambient_light));
 
-  directional_light = gthree_directional_light_new (&white, 0.65);
+  directional_light = gthree_directional_light_new (white (), 0.65);
   gthree_object_set_position_point3d (GTHREE_OBJECT (directional_light),
                               graphene_point3d_init (&pos,
                                                      1, 1, -1));
@@ -185,7 +185,7 @@ init_composer (void)
                                vertex_shader,
                                fragment_greyscale_shader);
 
-  clear_pass = gthree_clear_pass_new (&black);
+  clear_pass = gthree_clear_pass_new (black ());
   psycho_pass = gthree_shader_pass_new (psycho_shader, NULL);
   gthree_pass_set_clear (psycho_pass, FALSE);
   bloom_pass = gthree_bloom_pass_new (2, 4.0, 256);

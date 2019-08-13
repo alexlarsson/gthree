@@ -1,22 +1,94 @@
 #include "utils.h"
 
-GdkRGBA red =    {1, 0, 0, 1};
-GdkRGBA green =  {0, 1, 0, 1};
-GdkRGBA blue =   {0, 0, 1, 1};
-GdkRGBA yellow = {1, 1, 0, 1};
-GdkRGBA cyan   = {0, 1, 1, 1};
-GdkRGBA magenta= {1, 0, 1, 1};
-GdkRGBA white =  {1, 1, 1, 1};
-GdkRGBA black = {0, 0, 0, 1.0};
+const graphene_vec3_t *black (void)
+{
+  static graphene_vec3_t v;
+  return graphene_vec3_init (&v, 0, 0, 0);
+}
 
-GdkRGBA very_dark_grey = {0.012, 0.012, 0.012, 1.0};
-GdkRGBA dark_grey = {0.07, 0.07, 0.07, 1.0};
-GdkRGBA medium_grey = {0.4, 0.4, 0.4, 1.0};
-GdkRGBA grey = {0.5, 0.5, 0.5, 1.0};
-GdkRGBA light_grey = {0.87, 0.87, 0.87, 1.0};
+const graphene_vec3_t *white (void)
+{
+  static graphene_vec3_t v;
+  return graphene_vec3_init (&v, 1, 1, 1);
+}
 
-GdkRGBA dark_green = {0, 0.6, 0, 1.0};
-GdkRGBA orange = {1, 0.67, 0, 1.0};
+const graphene_vec3_t *red (void)
+{
+  static graphene_vec3_t v;
+  return graphene_vec3_init (&v, 1, 0, 0);
+}
+
+const graphene_vec3_t *green (void)
+{
+  static graphene_vec3_t v;
+  return graphene_vec3_init (&v, 0, 1, 0);
+}
+
+const graphene_vec3_t *blue (void)
+{
+  static graphene_vec3_t v;
+  return graphene_vec3_init (&v, 0, 0, 1);
+}
+
+const graphene_vec3_t *yellow (void)
+{
+  static graphene_vec3_t v;
+  return graphene_vec3_init (&v, 1, 1, 0);
+}
+
+const graphene_vec3_t *cyan (void)
+{
+  static graphene_vec3_t v;
+  return graphene_vec3_init (&v, 0, 1, 1);
+}
+
+const graphene_vec3_t *magenta (void)
+{
+  static graphene_vec3_t v;
+  return graphene_vec3_init (&v, 1, 0, 1);
+}
+
+const graphene_vec3_t *very_dark_grey (void)
+{
+  static graphene_vec3_t v;
+  return graphene_vec3_init (&v, 0.012, 0.012, 0.012);
+}
+
+const graphene_vec3_t *dark_grey (void)
+{
+  static graphene_vec3_t v;
+  return graphene_vec3_init (&v, 0.07, 0.07, 0.07);
+}
+
+const graphene_vec3_t *medium_grey (void)
+{
+  static graphene_vec3_t v;
+  return graphene_vec3_init (&v, 0.4, 0.4, 0.4);
+}
+
+const graphene_vec3_t *grey (void)
+{
+  static graphene_vec3_t v;
+  return graphene_vec3_init (&v, 0.5, 0.5, 0.5);
+}
+
+const graphene_vec3_t *light_grey (void)
+{
+  static graphene_vec3_t v;
+  return graphene_vec3_init (&v, 0.87, 0.87, 0.87);
+}
+
+const graphene_vec3_t *dark_green (void)
+{
+  static graphene_vec3_t v;
+  return graphene_vec3_init (&v, 0, 0.6, 0);
+}
+
+const graphene_vec3_t *orange (void)
+{
+  static graphene_vec3_t v;
+  return graphene_vec3_init (&v, 1, 0.67, 0);
+}
 
 GdkPixbuf *
 examples_load_pixbuf (const char *file)

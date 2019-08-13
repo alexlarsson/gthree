@@ -27,7 +27,7 @@ typedef struct {
 } GthreeAmbientLightClass;
 
 GTHREE_API
-GthreeAmbientLight *gthree_ambient_light_new (const GdkRGBA *color);
+GthreeAmbientLight *gthree_ambient_light_new (const graphene_vec3_t *color);
 GTHREE_API
 GType gthree_ambient_light_get_type (void) G_GNUC_CONST;
 

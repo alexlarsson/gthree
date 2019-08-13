@@ -21,7 +21,7 @@ typedef struct {
 
 struct _GthreeLightSetup
 {
-  GdkRGBA ambient;
+  graphene_vec3_t ambient;
 
   /* Uniforms */
   GPtrArray *directional;

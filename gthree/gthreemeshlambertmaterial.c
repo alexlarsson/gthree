@@ -1,5 +1,6 @@
 #include <math.h>
 #include <epoxy/gl.h>
+#include <graphene-gobject.h>
 
 #include "gthreemeshlambertmaterial.h"
 #include "gthreecubetexture.h"
@@ -7,8 +8,8 @@
 #include "gthreeprivate.h"
 
 typedef struct {
-  GdkRGBA color;
-  GdkRGBA emissive;
+  graphene_vec3_t color;
+  graphene_vec3_t emissive;
   float reflectivity;
   float refraction_ratio;
   GthreeOperation combine;
@@ -52,15 +53,10 @@ gthree_mesh_lambert_material_init (GthreeMeshLambertMaterial *lambert)
 {
   GthreeMeshLambertMaterialPrivate *priv = gthree_mesh_lambert_material_get_instance_private (lambert);
 
-  priv->color.red = 1.0;
-  priv->color.green = 1.0;
-  priv->color.blue = 1.0;
-  priv->color.alpha = 1.0;
-
-  priv->emissive.red = 0.0;
-  priv->emissive.green = 0.0;
-  priv->emissive.blue = 0.0;
-  priv->emissive.alpha = 1.0;
+  graphene_vec3_init (&priv->color,
+                      1.0, 1.0, 1.0);
+  graphene_vec3_init (&priv->emissive,
+                      0.0, 0.0, 0.0);
 
   priv->combine = GTHREE_OPERATION_MULTIPLY;
 
@@ -121,11 +117,11 @@ gthree_mesh_lambert_material_real_set_uniforms (GthreeMaterial *material,
 
   uni = gthree_uniforms_lookup_from_string (uniforms, "diffuse");
   if (uni != NULL)
-    gthree_uniform_set_color (uni, &priv->color);
+    gthree_uniform_set_vec3 (uni, &priv->color);
 
   uni = gthree_uniforms_lookup_from_string (uniforms, "emissive");
   if (uni != NULL)
-    gthree_uniform_set_color (uni, &priv->emissive);
+    gthree_uniform_set_vec3 (uni, &priv->emissive);
 
   uni = gthree_uniforms_lookup_from_string (uniforms, "map");
   if (uni != NULL)
@@ -280,11 +276,11 @@ gthree_mesh_lambert_material_class_init (GthreeMeshLambertMaterialClass *klass)
 
   obj_props[PROP_COLOR] =
     g_param_spec_boxed ("color", "Color", "Color",
-                        GDK_TYPE_RGBA,
+                        GRAPHENE_TYPE_VEC3,
                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   obj_props[PROP_EMISSIVE_COLOR] =
     g_param_spec_boxed ("emissive-color", "Emissive Color", "Emissive",
-                        GDK_TYPE_RGBA,
+                        GRAPHENE_TYPE_VEC3,
                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   obj_props[PROP_COMBINE] =
     g_param_spec_enum ("combine", "Combine", "Combine",
@@ -311,7 +307,7 @@ gthree_mesh_lambert_material_class_init (GthreeMeshLambertMaterialClass *klass)
   g_object_class_install_properties (gobject_class, N_PROPS, obj_props);
 }
 
-const GdkRGBA *
+const graphene_vec3_t *
 gthree_mesh_lambert_material_get_emissive_color (GthreeMeshLambertMaterial *lambert)
 {
   GthreeMeshLambertMaterialPrivate *priv = gthree_mesh_lambert_material_get_instance_private (lambert);
@@ -321,7 +317,7 @@ gthree_mesh_lambert_material_get_emissive_color (GthreeMeshLambertMaterial *lamb
 
 void
 gthree_mesh_lambert_material_set_emissive_color (GthreeMeshLambertMaterial *lambert,
-                                                 const GdkRGBA *color)
+                                                 const graphene_vec3_t *color)
 {
   GthreeMeshLambertMaterialPrivate *priv = gthree_mesh_lambert_material_get_instance_private (lambert);
 
@@ -330,7 +326,7 @@ gthree_mesh_lambert_material_set_emissive_color (GthreeMeshLambertMaterial *lamb
   gthree_material_set_needs_update (GTHREE_MATERIAL (lambert), TRUE);
 }
 
-const GdkRGBA *
+const graphene_vec3_t *
 gthree_mesh_lambert_material_get_color (GthreeMeshLambertMaterial *lambert)
 {
   GthreeMeshLambertMaterialPrivate *priv = gthree_mesh_lambert_material_get_instance_private (lambert);
@@ -340,7 +336,7 @@ gthree_mesh_lambert_material_get_color (GthreeMeshLambertMaterial *lambert)
 
 void
 gthree_mesh_lambert_material_set_color (GthreeMeshLambertMaterial *lambert,
-                                 const GdkRGBA *color)
+                                        const graphene_vec3_t *color)
 {
   GthreeMeshLambertMaterialPrivate *priv = gthree_mesh_lambert_material_get_instance_private (lambert);
 

@@ -207,17 +207,17 @@ GTHREE_API
 void                  gthree_attribute_array_set_vec2           (GthreeAttributeArray *array,
                                                                  guint                 index,
                                                                  guint                 offset,
-                                                                 graphene_vec2_t      *vec2);
+                                                                 const graphene_vec2_t *vec2);
 GTHREE_API
 void                  gthree_attribute_array_set_vec3           (GthreeAttributeArray *array,
                                                                  guint                 index,
                                                                  guint                 offset,
-                                                                 graphene_vec3_t      *vec3);
+                                                                 const graphene_vec3_t *vec3);
 GTHREE_API
 void                  gthree_attribute_array_set_vec4           (GthreeAttributeArray *array,
                                                                  guint                 index,
                                                                  guint                 offset,
-                                                                 graphene_vec4_t      *vec4);
+                                                                 const graphene_vec4_t *vec4);
 GTHREE_API
 void                  gthree_attribute_array_get_vec4           (GthreeAttributeArray *array,
                                                                  guint                 index,
@@ -228,16 +228,6 @@ void                  gthree_attribute_array_get_matrix         (GthreeAttribute
                                                                  guint                 index,
                                                                  guint                 offset,
                                                                  graphene_matrix_t    *matrix);
-GTHREE_API
-void                  gthree_attribute_array_set_rgb            (GthreeAttributeArray *array,
-                                                                 guint                 index,
-                                                                 guint                 offset,
-                                                                 GdkRGBA              *color);
-GTHREE_API
-void                  gthree_attribute_array_set_rgba           (GthreeAttributeArray *array,
-                                                                 guint                 index,
-                                                                 guint                 offset,
-                                                                 GdkRGBA              *color);
 GTHREE_API
 void                  gthree_attribute_array_set_uint8          (GthreeAttributeArray *array,
                                                                  guint                 index,
@@ -479,15 +469,15 @@ void                  gthree_attribute_set_point3d        (GthreeAttribute      
 GTHREE_API
 void                  gthree_attribute_set_vec2           (GthreeAttribute      *attribute,
                                                            guint                 index,
-                                                           graphene_vec2_t      *vec2);
+                                                           const graphene_vec2_t *vec2);
 GTHREE_API
 void                  gthree_attribute_set_vec3           (GthreeAttribute      *attribute,
                                                            guint                 index,
-                                                           graphene_vec3_t      *vec3);
+                                                           const graphene_vec3_t *vec3);
 GTHREE_API
 void                  gthree_attribute_set_vec4           (GthreeAttribute      *attribute,
                                                            guint                 index,
-                                                           graphene_vec4_t      *vec4);
+                                                           const graphene_vec4_t *vec4);
 GTHREE_API
 void                  gthree_attribute_get_vec4           (GthreeAttribute      *attribute,
                                                            guint                 index,
@@ -496,14 +486,6 @@ GTHREE_API
 void                  gthree_attribute_get_matrix         (GthreeAttribute      *attribute,
                                                            guint                 index,
                                                            graphene_matrix_t    *matrix);
-GTHREE_API
-void                  gthree_attribute_set_rgb            (GthreeAttribute      *attribute,
-                                                           guint                 index,
-                                                           GdkRGBA              *color);
-GTHREE_API
-void                  gthree_attribute_set_rgba           (GthreeAttribute      *attribute,
-                                                           guint                 index,
-                                                           GdkRGBA              *color);
 GTHREE_API
 void                  gthree_attribute_set_uint8          (GthreeAttribute      *attribute,
                                                            guint                 index,

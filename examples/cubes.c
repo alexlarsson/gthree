@@ -28,31 +28,31 @@ colorise_faces (GthreeGeometry *geometry)
 
   for (i = 0; i < count / 4; i++)
     {
-      GdkRGBA *rgba;
+      const graphene_vec3_t *rgb = NULL;
       switch (i)
         {
         case 0:
-          rgba = &red;
+          rgb = red ();
           break;
         case 1:
-          rgba = &green;
+          rgb = green ();
           break;
         case 2:
-          rgba = &blue;
+          rgb = blue ();
           break;
         case 3:
-          rgba = &cyan;
+          rgb = cyan ();
           break;
         case 4:
-          rgba = &magenta;
+          rgb = magenta ();
           break;
         case 5:
-          rgba = &yellow;
+          rgb = yellow ();
           break;
         }
 
       for (j = 0; j < 4; j++)
-        gthree_attribute_set_rgb (color, i * 4 + j, rgba);
+        gthree_attribute_set_vec3 (color, i * 4 + j, rgb);
     }
 
   g_object_unref (color);
@@ -69,10 +69,10 @@ colorise_vertices (GthreeGeometry *geometry)
 
   for (i = 0; i < count / 4; i++)
     {
-      gthree_attribute_set_rgb (color, i * 4 + 0, &red);
-      gthree_attribute_set_rgb (color, i * 4 + 1, &blue);
-      gthree_attribute_set_rgb (color, i * 4 + 2, &green);
-      gthree_attribute_set_rgb (color, i * 4 + 3, &yellow);
+      gthree_attribute_set_vec3 (color, i * 4 + 0, red ());
+      gthree_attribute_set_vec3 (color, i * 4 + 1, blue ());
+      gthree_attribute_set_vec3 (color, i * 4 + 2, green ());
+      gthree_attribute_set_vec3 (color, i * 4 + 3, yellow ());
     }
 
   g_object_unref (color);
@@ -144,7 +144,7 @@ init_scene (void)
   texture = gthree_texture_new (crate_pixbuf);
 
   material_simple = gthree_mesh_basic_material_new ();
-  gthree_mesh_basic_material_set_color (material_simple, &cyan);
+  gthree_mesh_basic_material_set_color (material_simple, cyan ());
   gthree_material_set_vertex_colors (GTHREE_MATERIAL (material_simple), FALSE);
 
   material_vertex_color = gthree_mesh_basic_material_new ();
@@ -152,7 +152,7 @@ init_scene (void)
 
   material_wireframe = gthree_mesh_basic_material_new ();
   gthree_mesh_material_set_is_wireframe (GTHREE_MESH_MATERIAL (material_wireframe), TRUE);
-  gthree_mesh_basic_material_set_color (material_wireframe, &yellow);
+  gthree_mesh_basic_material_set_color (material_wireframe, yellow ());
   gthree_material_set_vertex_colors (GTHREE_MATERIAL (material_wireframe), FALSE);
 
   material_texture = gthree_mesh_basic_material_new ();

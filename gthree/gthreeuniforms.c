@@ -246,18 +246,6 @@ gthree_uniforms_set_texture (GthreeUniforms  *uniforms,
 }
 
 void
-gthree_uniforms_set_color (GthreeUniforms  *uniforms,
-                           const char      *name,
-                           GdkRGBA         *color)
-{
-  GthreeUniform *uni;
-
-  uni = gthree_uniforms_lookup_from_string (uniforms, name);
-  if (uni)
-    gthree_uniform_set_color (uni, color);
-}
-
-void
 gthree_uniforms_set_uarray (GthreeUniforms  *uniforms,
                             const char      *name,
                             GPtrArray       *value,
@@ -369,7 +357,6 @@ gthree_uniform_free (GthreeUniform *uniform)
     case GTHREE_UNIFORM_TYPE_VECTOR2:
     case GTHREE_UNIFORM_TYPE_VECTOR3:
     case GTHREE_UNIFORM_TYPE_VECTOR4:
-    case GTHREE_UNIFORM_TYPE_COLOR:
       /* Do nothing */
       break;
     }
@@ -414,7 +401,6 @@ gthree_uniform_is_array (GthreeUniform *uniform)
     case GTHREE_UNIFORM_TYPE_VECTOR2:
     case GTHREE_UNIFORM_TYPE_VECTOR3:
     case GTHREE_UNIFORM_TYPE_VECTOR4:
-    case GTHREE_UNIFORM_TYPE_COLOR:
     case GTHREE_UNIFORM_TYPE_MATRIX3:
     case GTHREE_UNIFORM_TYPE_MATRIX4:
       return FALSE;
@@ -499,7 +485,6 @@ gthree_uniform_copy_value (GthreeUniform   *uniform,
     case GTHREE_UNIFORM_TYPE_VECTOR2:
     case GTHREE_UNIFORM_TYPE_VECTOR3:
     case GTHREE_UNIFORM_TYPE_VECTOR4:
-    case GTHREE_UNIFORM_TYPE_COLOR:
       /* Do nothing */
       break;
     }
@@ -575,7 +560,6 @@ gthree_uniform_clone (GthreeUniform *uniform)
     case GTHREE_UNIFORM_TYPE_VECTOR2:
     case GTHREE_UNIFORM_TYPE_VECTOR3:
     case GTHREE_UNIFORM_TYPE_VECTOR4:
-    case GTHREE_UNIFORM_TYPE_COLOR:
       /* Do nothing */
       break;
     }
@@ -635,16 +619,6 @@ gthree_uniform_set_int (GthreeUniform *uniform,
 {
   g_return_if_fail (uniform->type == GTHREE_UNIFORM_TYPE_INT);
   uniform->value.ints[0] = val;
-}
-
-void
-gthree_uniform_set_color (GthreeUniform *uniform,
-                          GdkRGBA *val)
-{
-  g_return_if_fail (uniform->type == GTHREE_UNIFORM_TYPE_COLOR);
-  uniform->value.floats[0] = val->red;
-  uniform->value.floats[1] = val->green;
-  uniform->value.floats[2] = val->blue;
 }
 
 void
@@ -758,7 +732,6 @@ gthree_uniform_load (GthreeUniform *uniform,
       break;
     case GTHREE_UNIFORM_TYPE_FLOAT3:
     case GTHREE_UNIFORM_TYPE_VECTOR3:
-    case GTHREE_UNIFORM_TYPE_COLOR:
       glUniform3f (uniform->location, uniform->value.floats[0], uniform->value.floats[1], uniform->value.floats[2]);
       break;
     case GTHREE_UNIFORM_TYPE_FLOAT4:
@@ -832,8 +805,8 @@ static float fm1 = -1.0;
 static float f2000 = 2000;
 static float fp98 = 0.98;
 static float fp00025 = 0.00025;
-static GdkRGBA grey = { 0.9333333333333333, 0.9333333333333333, 0.9333333333333333, 1.0 };
-static GdkRGBA white = { 1, 1, 1, 1.0 };
+static float grey[3] = { 0.9333333333333333, 0.9333333333333333, 0.9333333333333333 };
+static float white[3] = { 1, 1, 1 };
 static float onev2[2] = { 1, 1 };
 static float halfv2[2] = { 0.5, 0.5 };
 static float one_matrix3[9] = { 1, 0, 0,
@@ -842,7 +815,7 @@ static float one_matrix3[9] = { 1, 0, 0,
 
 static GthreeUniforms *common;
 static GthreeUniformsDefinition common_lib[] = {
-  {"diffuse", GTHREE_UNIFORM_TYPE_COLOR, &grey },
+  {"diffuse", GTHREE_UNIFORM_TYPE_VECTOR3, &grey },
   {"opacity", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
 
   {"map", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
@@ -922,13 +895,13 @@ static GthreeUniformsDefinition fog_lib[] = {
   {"fogDensity", GTHREE_UNIFORM_TYPE_FLOAT, &fp00025 },
   {"fogNear", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
   {"fogFar", GTHREE_UNIFORM_TYPE_FLOAT, &f2000 },
-  {"fogColor", GTHREE_UNIFORM_TYPE_COLOR, &white }
+  {"fogColor", GTHREE_UNIFORM_TYPE_VECTOR3, &white }
 };
 
 /* TODO: Convert this to the structures above */
 static GthreeUniforms *lights;
 static GthreeUniformsDefinition lights_lib[] = {
-  {"ambientLightColor", GTHREE_UNIFORM_TYPE_COLOR, NULL},
+  {"ambientLightColor", GTHREE_UNIFORM_TYPE_VECTOR3, NULL},
 
 #ifdef TODO
   lightProbe: { value: [] },
@@ -1003,7 +976,7 @@ static GthreeUniformsDefinition lights_lib[] = {
 
 static GthreeUniforms *points;
 static GthreeUniformsDefinition points_lib[] = {
-  {"diffuse", GTHREE_UNIFORM_TYPE_COLOR, &grey },
+  {"diffuse", GTHREE_UNIFORM_TYPE_VECTOR3, &grey },
   {"opacity", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
   {"size", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
   {"scale", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
@@ -1013,7 +986,7 @@ static GthreeUniformsDefinition points_lib[] = {
 
 static GthreeUniforms *sprite;
 static GthreeUniformsDefinition sprite_lib[] = {
-  {"diffuse", GTHREE_UNIFORM_TYPE_COLOR, &grey },
+  {"diffuse", GTHREE_UNIFORM_TYPE_VECTOR3, &grey },
   {"opacity", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
   {"center", GTHREE_UNIFORM_TYPE_VECTOR2, &halfv2 },
   {"rotation", GTHREE_UNIFORM_TYPE_FLOAT, &f0 },
@@ -1044,11 +1017,6 @@ gthree_uniforms_new_from_definitions (GthreeUniformsDefinition *element, int len
               break;
             case GTHREE_UNIFORM_TYPE_FLOAT:
               uniform->value.floats[0] = *(float *)value;
-              break;
-            case GTHREE_UNIFORM_TYPE_COLOR:
-              uniform->value.floats[0] = ((GdkRGBA *)value)->red;
-              uniform->value.floats[1] = ((GdkRGBA *)value)->green;
-              uniform->value.floats[2] = ((GdkRGBA *)value)->blue;
               break;
             case GTHREE_UNIFORM_TYPE_VECTOR2:
               uniform->value.floats[0] = ((float *)value)[0];

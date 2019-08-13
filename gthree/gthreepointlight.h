@@ -29,7 +29,7 @@ typedef struct {
 GTHREE_API
 GType gthree_point_light_get_type (void) G_GNUC_CONST;
 GTHREE_API
-GthreePointLight *gthree_point_light_new (const GdkRGBA *color,
+GthreePointLight *gthree_point_light_new (const graphene_vec3_t *color,
                                           float intensity,
                                           float distance);
 

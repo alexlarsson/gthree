@@ -56,8 +56,8 @@ gtk_logo (void)
   materials = g_ptr_array_new_with_free_func (g_object_unref);
 
   material = gthree_mesh_lambert_material_new ();
-  gthree_mesh_lambert_material_set_color (material, &red);
-  gthree_mesh_lambert_material_set_emissive_color (GTHREE_LAMBERT_MATERIAL (material), &red);
+  gthree_mesh_lambert_material_set_color (material, red ());
+  gthree_mesh_lambert_material_set_emissive_color (GTHREE_LAMBERT_MATERIAL (material), red ());
   gthree_material_set_side (GTHREE_MATERIAL (material), GTHREE_SIDE_DOUBLE);
   gthree_material_set_is_transparent (GTHREE_MATERIAL (material), TRUE);
   gthree_material_set_opacity (GTHREE_MATERIAL (material), 0.75);
@@ -66,8 +66,8 @@ gtk_logo (void)
   g_object_unref (material);
 
   material = gthree_mesh_lambert_material_new ();
-  gthree_mesh_lambert_material_set_color (material, &green);
-  gthree_mesh_lambert_material_set_emissive_color (GTHREE_LAMBERT_MATERIAL (material), &green);
+  gthree_mesh_lambert_material_set_color (material, green ());
+  gthree_mesh_lambert_material_set_emissive_color (GTHREE_LAMBERT_MATERIAL (material), green ());
   gthree_material_set_side (GTHREE_MATERIAL (material), GTHREE_SIDE_DOUBLE);
   gthree_material_set_is_transparent (GTHREE_MATERIAL (material), TRUE);
   gthree_material_set_opacity (GTHREE_MATERIAL (material), 0.75);
@@ -76,8 +76,8 @@ gtk_logo (void)
   g_object_unref (material);
 
   material = gthree_mesh_lambert_material_new ();
-  gthree_mesh_lambert_material_set_color (material, &blue);
-  gthree_mesh_lambert_material_set_emissive_color (GTHREE_LAMBERT_MATERIAL (material), &blue);
+  gthree_mesh_lambert_material_set_color (material, blue ());
+  gthree_mesh_lambert_material_set_emissive_color (GTHREE_LAMBERT_MATERIAL (material), blue ());
   gthree_material_set_side (GTHREE_MATERIAL (material), GTHREE_SIDE_DOUBLE);
   gthree_material_set_is_transparent (GTHREE_MATERIAL (material), TRUE);
   gthree_material_set_opacity (GTHREE_MATERIAL (material), 0.75);
@@ -88,7 +88,7 @@ gtk_logo (void)
   cube = new_cube (materials);
 
   ball_material = gthree_mesh_phong_material_new ();
-  gthree_mesh_phong_material_set_emissive_color (ball_material, &white);
+  gthree_mesh_phong_material_set_emissive_color (ball_material, white ());
 
   ball = new_ball (GTHREE_MATERIAL (ball_material));
   gthree_object_set_position_point3d (ball, graphene_point3d_init (&p, 30, 30, 30));
@@ -190,9 +190,9 @@ init_scene (void)
 
   scene = gthree_scene_new ();
 
-  gthree_scene_set_background_color (scene, &grey);
+  gthree_scene_set_background_color (scene, grey ());
 
-  ambient_light = gthree_ambient_light_new (&white);
+  ambient_light = gthree_ambient_light_new (white ());
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));
 
   logo = gtk_logo ();

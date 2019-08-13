@@ -7,7 +7,7 @@
 G_DEFINE_TYPE (GthreeAmbientLight, gthree_ambient_light, GTHREE_TYPE_LIGHT)
 
 GthreeAmbientLight *
-gthree_ambient_light_new (const GdkRGBA *color)
+gthree_ambient_light_new (const graphene_vec3_t *color)
 {
   return g_object_new (GTHREE_TYPE_AMBIENT_LIGHT,
                        "color", color,
@@ -24,12 +24,13 @@ gthree_ambient_light_real_setup (GthreeLight *light,
                                  GthreeCamera  *camera,
                                  GthreeLightSetup *setup)
 {
-  const GdkRGBA *color = gthree_light_get_color (light);
+  graphene_vec3_t color;
   float intensity = gthree_light_get_intensity (light);
 
-  setup->ambient.red += color->red * intensity;
-  setup->ambient.green += color->green * intensity;
-  setup->ambient.blue += color->blue * intensity;
+  graphene_vec3_scale (gthree_light_get_color (light),
+                       intensity, &color);
+
+  graphene_vec3_add (&setup->ambient, &color, &setup->ambient);
 
   GTHREE_LIGHT_CLASS (gthree_ambient_light_parent_class)->setup (light, camera, setup);
 }

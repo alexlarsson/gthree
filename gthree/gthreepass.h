@@ -178,7 +178,7 @@ GTHREE_API
 GType gthree_clear_pass_get_type (void) G_GNUC_CONST;
 
 GTHREE_API
-GthreePass *gthree_clear_pass_new  (const GdkRGBA *color);
+GthreePass *gthree_clear_pass_new  (const graphene_vec3_t *color);
 GTHREE_API
 void gthree_clear_pass_set_clear_depth (GthreeClearPass *clear_pass,
                                         gboolean clear_depth);

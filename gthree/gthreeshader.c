@@ -484,8 +484,8 @@ static float f30 = 30;
 static float fm1 = -1.0;
 static float f1000 = 1000;
 static float fp5 = 0.5;
-static GdkRGBA dark_grey = { 0.06666666666666667, 0.06666666666666667, 0.06666666666666667, 1.0 };
-static GdkRGBA black = { 0, 0, 0, 1.0 };
+static float dark_grey[3] = { 0.06666666666666667, 0.06666666666666667, 0.06666666666666667 };
+static float black[3] = { 0, 0, 0 };
 static float zerov2[2] = { 0, 0 };
 static float one_matrix3[9] = { 1, 0, 0,
                                 0, 1, 0,
@@ -494,19 +494,19 @@ static float one_matrix3[9] = { 1, 0, 0,
 static const char *basic_uniform_libs[] = { "common", "specularmap", "envmap", "aomap", "lightmap", "fog", NULL };
 static const char *lambert_uniform_libs[] = { "common", "specularmap", "envmap", "aomap", "lightmap", "emissivemap", "fog", "lights", NULL };
 static GthreeUniformsDefinition lambert_uniforms[] = {
-  {"emissive", GTHREE_UNIFORM_TYPE_COLOR, &black },
+  {"emissive", GTHREE_UNIFORM_TYPE_VECTOR3, &black },
 };
 
 static const char *phong_uniform_libs[] = { "common", "specularmap", "envmap", "aomap", "lightmap", "emissivemap", "bumpmap", "normalmap", "displacementmap", "gradientmap", "fog", "lights", NULL };
 static GthreeUniformsDefinition phong_uniforms[] = {
-  {"emissive", GTHREE_UNIFORM_TYPE_COLOR, &black },
-  {"specular", GTHREE_UNIFORM_TYPE_COLOR, &dark_grey },
+  {"emissive", GTHREE_UNIFORM_TYPE_VECTOR3, &black },
+  {"specular", GTHREE_UNIFORM_TYPE_VECTOR3, &dark_grey },
   {"shininess", GTHREE_UNIFORM_TYPE_FLOAT, &f30 },
 };
 
 static const char *standard_uniform_libs[] = { "common", "envmap", "aomap", "lightmap", "emissivemap", "bumpmap", "normalmap", "displacementmap", "roughnessmap", "metalnessmap", "fog", "lights", NULL };
 static GthreeUniformsDefinition standard_uniforms[] = {
-  {"emissive", GTHREE_UNIFORM_TYPE_COLOR, &black },
+  {"emissive", GTHREE_UNIFORM_TYPE_VECTOR3, &black },
   {"roughness", GTHREE_UNIFORM_TYPE_FLOAT, &fp5 },
   {"metalness", GTHREE_UNIFORM_TYPE_FLOAT, &fp5 },
   {"envMapIntensity", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
@@ -562,7 +562,7 @@ static GthreeUniformsDefinition distanceRGBA_uniforms[] = {
 
 static const char *shadow_uniform_libs[] = { "lights", "fog", NULL };
 static GthreeUniformsDefinition shadow_uniforms[] = {
-  {"color", GTHREE_UNIFORM_TYPE_COLOR, &black },
+  {"color", GTHREE_UNIFORM_TYPE_VECTOR3, &black },
   {"opacity", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
 };
 

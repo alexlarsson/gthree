@@ -42,7 +42,7 @@ init_scene (void)
   scene2 = gthree_scene_new ();
 
   material2 = gthree_mesh_basic_material_new ();
-  gthree_mesh_basic_material_set_color (material2, &blue);
+  gthree_mesh_basic_material_set_color (material2, blue ());
 
   mesh2 = gthree_mesh_new (geometry, GTHREE_MATERIAL (material2));
 
@@ -111,7 +111,7 @@ static gboolean
 render_area (GtkGLArea    *gl_area,
              GdkGLContext *context)
 {
-  gthree_renderer_set_clear_color (gthree_area_get_renderer (GTHREE_AREA (gl_area)), &red);
+  gthree_renderer_set_clear_color (gthree_area_get_renderer (GTHREE_AREA (gl_area)), red ());
 
   gthree_renderer_set_render_target (gthree_area_get_renderer (GTHREE_AREA (gl_area)),
                                      render_target, 0, 0);
@@ -121,7 +121,7 @@ render_area (GtkGLArea    *gl_area,
 
   gthree_mesh_basic_material_set_map (material, gthree_render_target_get_texture (render_target));
 
-  gthree_renderer_set_clear_color (gthree_area_get_renderer (GTHREE_AREA (gl_area)), &green);
+  gthree_renderer_set_clear_color (gthree_area_get_renderer (GTHREE_AREA (gl_area)), green ());
 
   gthree_renderer_set_render_target (gthree_area_get_renderer (GTHREE_AREA (gl_area)),
                                      NULL, 0, 0);

@@ -103,27 +103,27 @@ init_scene (void)
                               graphene_point3d_init (&pos, 0, 200, 2000));
 
   material_lambert = gthree_mesh_lambert_material_new ();
-  gthree_mesh_lambert_material_set_color (material_lambert, &light_grey);
+  gthree_mesh_lambert_material_set_color (material_lambert, light_grey ());
   geometries[n_materials] = geometry;
   materials[n_materials++] = GTHREE_MATERIAL (material_lambert);
 
   material_phong = gthree_mesh_phong_material_new ();
-  gthree_mesh_phong_material_set_color (material_phong, &light_grey);
+  gthree_mesh_phong_material_set_color (material_phong, light_grey ());
   gthree_mesh_phong_material_set_flat_shading (material_phong, TRUE);
   geometries[n_materials] = geometry;
   materials[n_materials++] = GTHREE_MATERIAL (material_phong);
 
   material_phong = gthree_mesh_phong_material_new ();
-  gthree_mesh_phong_material_set_color (material_phong, &light_grey);
-  gthree_mesh_phong_material_set_specular_color (material_phong, &dark_green);
+  gthree_mesh_phong_material_set_color (material_phong, light_grey ());
+  gthree_mesh_phong_material_set_specular_color (material_phong, dark_green ());
   gthree_mesh_phong_material_set_shininess (material_phong, 30);
   gthree_mesh_phong_material_set_flat_shading (material_phong, TRUE);
   geometries[n_materials] = geometry;
   materials[n_materials++] = GTHREE_MATERIAL (material_phong);
 
   material_phong = gthree_mesh_phong_material_new ();
-  gthree_mesh_phong_material_set_color (material_phong, &light_grey);
-  gthree_mesh_phong_material_set_specular_color (material_phong, &dark_green);
+  gthree_mesh_phong_material_set_color (material_phong, light_grey ());
+  gthree_mesh_phong_material_set_specular_color (material_phong, dark_green ());
   gthree_mesh_phong_material_set_shininess (material_phong, 30);
   geometries[n_materials] = geometry;
   materials[n_materials++] = GTHREE_MATERIAL (material_phong);
@@ -139,22 +139,22 @@ init_scene (void)
   materials[n_materials++] = GTHREE_MATERIAL (material_normal);
 
   material_basic = gthree_mesh_basic_material_new ();
-  gthree_mesh_basic_material_set_color (material_basic, &orange);
+  gthree_mesh_basic_material_set_color (material_basic, orange ());
   gthree_material_set_is_transparent (GTHREE_MATERIAL (material_basic), TRUE);
   gthree_material_set_blend_mode (GTHREE_MATERIAL (material_basic), GTHREE_BLEND_ADDITIVE, 0, 0 , 0);
   geometries[n_materials] = geometry;
   materials[n_materials++] = GTHREE_MATERIAL (material_basic);
 
   material_basic = gthree_mesh_basic_material_new ();
-  gthree_mesh_basic_material_set_color (material_basic, &red);
+  gthree_mesh_basic_material_set_color (material_basic, red ());
   gthree_material_set_is_transparent (GTHREE_MATERIAL (material_basic), TRUE);
   gthree_material_set_blend_mode (GTHREE_MATERIAL (material_basic), GTHREE_BLEND_SUBTRACTIVE, 0, 0 , 0);
   geometries[n_materials] = geometry;
   materials[n_materials++] = GTHREE_MATERIAL (material_basic);
 
   material_phong = gthree_mesh_phong_material_new ();
-  gthree_mesh_phong_material_set_color (material_phong, &light_grey);
-  gthree_mesh_phong_material_set_specular_color (material_phong, &dark_green);
+  gthree_mesh_phong_material_set_color (material_phong, light_grey ());
+  gthree_mesh_phong_material_set_specular_color (material_phong, dark_green ());
   gthree_mesh_phong_material_set_shininess (material_phong, 30);
   gthree_mesh_phong_material_set_map (material_phong, texture);
   gthree_material_set_is_transparent (GTHREE_MATERIAL (material_phong), TRUE);
@@ -167,7 +167,7 @@ init_scene (void)
 
   material_basic = gthree_mesh_basic_material_new ();
   gthree_mesh_material_set_is_wireframe (GTHREE_MESH_MATERIAL (material_basic), TRUE);
-  gthree_mesh_basic_material_set_color (material_basic, &orange);
+  gthree_mesh_basic_material_set_color (material_basic, orange ());
   geometries[n_materials] = geometry;
   materials[n_materials++] = GTHREE_MATERIAL (material_basic);
 
@@ -176,16 +176,16 @@ init_scene (void)
   materials[n_materials++] = GTHREE_MATERIAL (material_depth);
 
   material_lambert = gthree_mesh_lambert_material_new ();
-  gthree_mesh_lambert_material_set_color (material_lambert, &medium_grey);
-  gthree_mesh_lambert_material_set_emissive_color (material_lambert, &red);
+  gthree_mesh_lambert_material_set_color (material_lambert, medium_grey ());
+  gthree_mesh_lambert_material_set_emissive_color (material_lambert, red ());
   anim_material1 = n_materials;
   geometries[n_materials] = geometry;
   materials[n_materials++] = GTHREE_MATERIAL (material_lambert);
 
   material_phong = gthree_mesh_phong_material_new ();
-  gthree_mesh_phong_material_set_color (material_phong, &black);
-  gthree_mesh_phong_material_set_specular_color (material_phong, &medium_grey);
-  gthree_mesh_phong_material_set_emissive_color(material_phong, &red);
+  gthree_mesh_phong_material_set_color (material_phong, black ());
+  gthree_mesh_phong_material_set_specular_color (material_phong, medium_grey ());
+  gthree_mesh_phong_material_set_emissive_color(material_phong, red ());
   gthree_mesh_phong_material_set_shininess (material_phong, 10);
   gthree_material_set_is_transparent (GTHREE_MATERIAL (material_phong), TRUE);
   gthree_material_set_opacity (GTHREE_MATERIAL (material_phong), 0.9);
@@ -217,7 +217,7 @@ init_scene (void)
 
   material_wireframe = gthree_mesh_basic_material_new ();
   gthree_mesh_material_set_is_wireframe (GTHREE_MESH_MATERIAL (material_wireframe), TRUE);
-  gthree_mesh_basic_material_set_color (material_wireframe, &grey);
+  gthree_mesh_basic_material_set_color (material_wireframe, grey ());
 
   floor = gthree_mesh_new (floor_geometry, GTHREE_MATERIAL (material_wireframe));
 
@@ -247,20 +247,20 @@ init_scene (void)
       objects = g_list_prepend (objects, sphere);
     }
 
-  ambient_light = gthree_ambient_light_new (&dark_grey);
+  ambient_light = gthree_ambient_light_new (dark_grey ());
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));
 
   geometry_light = gthree_geometry_new_sphere (4, 8, 8);
   material_light = gthree_mesh_basic_material_new ();
-  gthree_mesh_basic_material_set_color (material_light, &white);
+  gthree_mesh_basic_material_set_color (material_light, white ());
 
-  point_light = gthree_point_light_new (&white, 1, 0);
+  point_light = gthree_point_light_new (white (), 1, 0);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (point_light));
 
   particle_light = gthree_mesh_new (geometry_light, GTHREE_MATERIAL (material_light));
   gthree_object_add_child (GTHREE_OBJECT (point_light), GTHREE_OBJECT (particle_light));
 
-  directional_light = gthree_directional_light_new (&white, 0.125);
+  directional_light = gthree_directional_light_new (white (), 0.125);
   gthree_object_set_position_point3d (GTHREE_OBJECT (directional_light),
                               graphene_point3d_init (&pos,
                                                      1, 1, -1));
@@ -279,7 +279,8 @@ tick (GtkWidget     *widget,
   gint64 frame_time;
   static gint64 first_frame_time = 0;
   float angle;
-  GdkRGBA color;
+  graphene_vec3_t color;
+  double r, g, b;
 
   frame_time = gdk_frame_clock_get_frame_time (frame_clock);
   if (first_frame_time == 0)
@@ -309,14 +310,16 @@ tick (GtkWidget     *widget,
   if (anim_material1)
     {
       gtk_hsv_to_rgb (0.54, 1, 0.35 * (0.5 + 0.5 * sin (35 * angle)),
-                      &color.red, &color.green, &color.blue);
+                      &r, &g, &b);
+      graphene_vec3_init (&color, r, g, b);
       gthree_mesh_lambert_material_set_emissive_color (GTHREE_LAMBERT_MATERIAL (materials[anim_material1]), &color);
     }
 
   if (anim_material2)
     {
       gtk_hsv_to_rgb (0.04, 1, 0.35 * (0.5 + 0.5 * cos (35 * angle)),
-                      &color.red, &color.green, &color.blue);
+                      &r, &g, &b);
+      graphene_vec3_init (&color, r, g, b);
       gthree_mesh_phong_material_set_emissive_color (GTHREE_PHONG_MATERIAL (materials[anim_material2]), &color);
     }
 

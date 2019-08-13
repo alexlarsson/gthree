@@ -31,10 +31,10 @@ colorise_vertices (GthreeGeometry *geometry)
 
   for (i = 0; i < count / 4; i++)
     {
-      gthree_attribute_set_rgb (color, i * 4 + 0, &red);
-      gthree_attribute_set_rgb (color, i * 4 + 1, &blue);
-      gthree_attribute_set_rgb (color, i * 4 + 2, &green);
-      gthree_attribute_set_rgb (color, i * 4 + 3, &yellow);
+      gthree_attribute_set_vec3 (color, i * 4 + 0, red ());
+      gthree_attribute_set_vec3 (color, i * 4 + 1, blue ());
+      gthree_attribute_set_vec3 (color, i * 4 + 2, green ());
+      gthree_attribute_set_vec3 (color, i * 4 + 3, yellow ());
     }
 
   g_object_unref (color);
@@ -103,20 +103,20 @@ init_scene (void)
 
   scene = gthree_scene_new ();
 
-  ambient_light = gthree_ambient_light_new (&red);
+  ambient_light = gthree_ambient_light_new (red ());
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));
 
   geometry_light = gthree_geometry_new_sphere (4, 8, 8);
   material_light = gthree_mesh_basic_material_new ();
-  gthree_mesh_basic_material_set_color (material_light, &green);
+  gthree_mesh_basic_material_set_color (material_light, green ());
 
-  point_light = gthree_point_light_new (&green, 1, 0);
+  point_light = gthree_point_light_new (green (), 1, 0);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (point_light));
 
   particle_light = gthree_mesh_new (geometry_light, GTHREE_MATERIAL (material_light));
   gthree_object_add_child (GTHREE_OBJECT (point_light), GTHREE_OBJECT (particle_light));
 
-  directional_light = gthree_directional_light_new (&blue, 1.2);
+  directional_light = gthree_directional_light_new (blue (), 1.2);
   gthree_object_set_position_point3d (GTHREE_OBJECT (directional_light),
                               graphene_point3d_init (&pos,
                                                      1, 1, -1));

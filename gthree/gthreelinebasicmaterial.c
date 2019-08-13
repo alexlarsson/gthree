@@ -1,10 +1,11 @@
 #include <math.h>
+#include <graphene-gobject.h>
 
 #include "gthreelinebasicmaterial.h"
 #include "gthreetypebuiltins.h"
 
 typedef struct {
-  GdkRGBA color;
+  graphene_vec3_t color;
   float line_width;
 } GthreeLineBasicMaterialPrivate;
 
@@ -48,7 +49,7 @@ gthree_line_basic_material_real_set_uniforms (GthreeMaterial *material,
 
   uni = gthree_uniforms_lookup_from_string (uniforms, "diffuse");
   if (uni != NULL)
-    gthree_uniform_set_color (uni, &priv->color);
+    gthree_uniform_set_vec3 (uni, &priv->color);
 }
 
 static gboolean
@@ -59,9 +60,9 @@ gthree_line_basic_material_needs_camera_pos (GthreeMaterial *material)
 
 static void
 gthree_line_basic_material_set_property (GObject *obj,
-                                    guint prop_id,
-                                    const GValue *value,
-                                    GParamSpec *pspec)
+                                         guint prop_id,
+                                         const GValue *value,
+                                         GParamSpec *pspec)
 {
   GthreeLineBasicMaterial *line_basic = GTHREE_LINE_BASIC_MATERIAL (obj);
 
@@ -120,7 +121,7 @@ gthree_line_basic_material_class_init (GthreeLineBasicMaterialClass *klass)
 
   obj_props[PROP_COLOR] =
     g_param_spec_boxed ("color", "Color", "Color",
-                        GDK_TYPE_RGBA,
+                        GRAPHENE_TYPE_VEC3,
                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   obj_props[PROP_LINE_WIDTH] =
     g_param_spec_float ("line-width", "Line width", "Line width",
@@ -135,10 +136,8 @@ gthree_line_basic_material_init (GthreeLineBasicMaterial *line_basic)
 {
   GthreeLineBasicMaterialPrivate *priv = gthree_line_basic_material_get_instance_private (line_basic);
 
-  priv->color.red = 1.0;
-  priv->color.green = 1.0;
-  priv->color.blue = 1.0;
-  priv->color.alpha = 1.0;
+  graphene_vec3_init (&priv->color,
+                      1.0, 1.0, 1.0);
 
   priv->line_width = 1.0;
 }
@@ -149,7 +148,7 @@ gthree_line_basic_material_new (void)
   return g_object_new (gthree_line_basic_material_get_type (), NULL);
 }
 
-const GdkRGBA *
+const graphene_vec3_t *
 gthree_line_basic_material_get_color (GthreeLineBasicMaterial *line_basic)
 {
   GthreeLineBasicMaterialPrivate *priv = gthree_line_basic_material_get_instance_private (line_basic);
@@ -159,7 +158,7 @@ gthree_line_basic_material_get_color (GthreeLineBasicMaterial *line_basic)
 
 void
 gthree_line_basic_material_set_color (GthreeLineBasicMaterial *line_basic,
-                                 const GdkRGBA *color)
+                                 const graphene_vec3_t *color)
 {
   GthreeLineBasicMaterialPrivate *priv = gthree_line_basic_material_get_instance_private (line_basic);
 

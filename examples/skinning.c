@@ -26,31 +26,31 @@ colorise_faces (GthreeGeometry *geometry)
 
   for (i = 0; i < count / 4; i++)
     {
-      GdkRGBA *rgba;
+      const graphene_vec3_t *rgb = NULL;
       switch (i)
         {
         case 0:
-          rgba = &red;
+          rgb = red ();
           break;
         case 1:
-          rgba = &green;
+          rgb = green ();
           break;
         case 2:
-          rgba = &blue;
+          rgb = blue ();
           break;
         case 3:
-          rgba = &cyan;
+          rgb = cyan ();
           break;
         case 4:
-          rgba = &magenta;
+          rgb = magenta ();
           break;
         case 5:
-          rgba = &yellow;
+          rgb = yellow ();
           break;
         }
 
       for (j = 0; j < 4; j++)
-        gthree_attribute_set_rgb (color, i * 4 + j, rgba);
+        gthree_attribute_set_vec3 (color, i * 4 + j, rgb);
     }
 
   g_object_unref (color);
@@ -69,7 +69,7 @@ init_scene (void)
   GthreeMeshBasicMaterial *dot_material;
 
   material = gthree_mesh_standard_material_new ();
-  gthree_mesh_standard_material_set_color (material, &cyan);
+  gthree_mesh_standard_material_set_color (material, cyan ());
   gthree_mesh_material_set_is_wireframe (GTHREE_MESH_MATERIAL (material), TRUE);
   gthree_mesh_material_set_wireframe_line_width (GTHREE_MESH_MATERIAL (material), 3);
   gthree_mesh_material_set_skinning (GTHREE_MESH_MATERIAL (material), TRUE);
@@ -245,10 +245,10 @@ main (int argc, char *argv[])
 
   scene = init_scene ();
 
-  ambient_light = gthree_ambient_light_new (&white);
+  ambient_light = gthree_ambient_light_new (white ());
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));
 
-  directional_light = gthree_directional_light_new (&white, 0.125);
+  directional_light = gthree_directional_light_new (white (), 0.125);
   gthree_object_set_position_point3d (GTHREE_OBJECT (directional_light),
                               graphene_point3d_init (&pos,
                                                      1, 1, -1));

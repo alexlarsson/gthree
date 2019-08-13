@@ -73,9 +73,9 @@ GTHREE_API
 gboolean            gthree_renderer_get_autoclear_stencil     (GthreeRenderer     *renderer);
 GTHREE_API
 void                gthree_renderer_set_clear_color           (GthreeRenderer     *renderer,
-                                                               GdkRGBA            *color);
+                                                               const graphene_vec3_t *color);
 GTHREE_API
-const GdkRGBA      *gthree_renderer_get_clear_color           (GthreeRenderer     *renderer);
+const graphene_vec3_t *gthree_renderer_get_clear_color        (GthreeRenderer     *renderer);
 GTHREE_API
 void                gthree_renderer_set_gamma_factor          (GthreeRenderer     *renderer,
                                                                float               factor);

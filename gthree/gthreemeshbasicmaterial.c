@@ -1,4 +1,5 @@
 #include <math.h>
+#include <graphene-gobject.h>
 
 #include "gthreemeshbasicmaterial.h"
 #include "gthreetypebuiltins.h"
@@ -6,7 +7,7 @@
 #include "gthreeprivate.h"
 
 typedef struct {
-  GdkRGBA color;
+  graphene_vec3_t color;
 
   float reflectivity;
   float refraction_ratio;
@@ -84,19 +85,19 @@ gthree_mesh_basic_material_real_set_uniforms (GthreeMaterial *material,
 
   uni = gthree_uniforms_lookup_from_string (uniforms, "diffuse");
   if (uni != NULL)
-    gthree_uniform_set_color (uni, &priv->color);
+    gthree_uniform_set_vec3 (uni, &priv->color);
 
-  //TODO: from refreshUniformsCommon 
+  //TODO: from refreshUniformsCommon
   uni = gthree_uniforms_lookup_from_string (uniforms, "emissive");
 
   uni = gthree_uniforms_lookup_from_string (uniforms, "map");
   if (uni != NULL)
     gthree_uniform_set_texture (uni, priv->map);
 
-  //TODO: from refreshUniformsCommon 
+  //TODO: from refreshUniformsCommon
   uni = gthree_uniforms_lookup_from_string (uniforms, "alphaMap");
 
-  //TODO: from refreshUniformsCommon 
+  //TODO: from refreshUniformsCommon
   uni = gthree_uniforms_lookup_from_string (uniforms, "specularMap");
 
   if (priv->env_map)
@@ -118,11 +119,11 @@ gthree_mesh_basic_material_real_set_uniforms (GthreeMaterial *material,
         gthree_uniform_set_float (uni, priv->refraction_ratio);
     }
 
-  //TODO: from refreshUniformsCommon 
+  //TODO: from refreshUniformsCommon
   uni = gthree_uniforms_lookup_from_string (uniforms, "lightMap");
   uni = gthree_uniforms_lookup_from_string (uniforms, "lightMapIntensity");
 
-  //TODO: from refreshUniformsCommon 
+  //TODO: from refreshUniformsCommon
   uni = gthree_uniforms_lookup_from_string (uniforms, "aoMap");
   uni = gthree_uniforms_lookup_from_string (uniforms, "aoMapIntensity");
 
@@ -256,7 +257,7 @@ gthree_mesh_basic_material_class_init (GthreeMeshBasicMaterialClass *klass)
 
   obj_props[PROP_COLOR] =
     g_param_spec_boxed ("color", "Color", "Color",
-                        GDK_TYPE_RGBA,
+                        GRAPHENE_TYPE_VEC3,
                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   obj_props[PROP_COMBINE] =
     g_param_spec_enum ("combine", "Combine", "Combine",
@@ -288,10 +289,8 @@ gthree_mesh_basic_material_init (GthreeMeshBasicMaterial *basic)
 {
   GthreeMeshBasicMaterialPrivate *priv = gthree_mesh_basic_material_get_instance_private (basic);
 
-  priv->color.red = 1.0;
-  priv->color.green = 1.0;
-  priv->color.blue = 1.0;
-  priv->color.alpha = 1.0;
+  graphene_vec3_init (&priv->color,
+                      1.0, 1.0, 1.0);
 
   priv->combine = GTHREE_OPERATION_MULTIPLY;
 
@@ -305,7 +304,7 @@ gthree_mesh_basic_material_new (void)
   return g_object_new (gthree_mesh_basic_material_get_type (), NULL);
 }
 
-const GdkRGBA *
+const graphene_vec3_t *
 gthree_mesh_basic_material_get_color (GthreeMeshBasicMaterial *basic)
 {
   GthreeMeshBasicMaterialPrivate *priv = gthree_mesh_basic_material_get_instance_private (basic);
@@ -315,7 +314,7 @@ gthree_mesh_basic_material_get_color (GthreeMeshBasicMaterial *basic)
 
 void
 gthree_mesh_basic_material_set_color (GthreeMeshBasicMaterial *basic,
-                                      const GdkRGBA *color)
+                                      const graphene_vec3_t *color)
 {
   GthreeMeshBasicMaterialPrivate *priv = gthree_mesh_basic_material_get_instance_private (basic);
 
