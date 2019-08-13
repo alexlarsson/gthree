@@ -312,7 +312,7 @@ tick (GtkWidget     *widget,
       gtk_hsv_to_rgb (0.54, 1, 0.35 * (0.5 + 0.5 * sin (35 * angle)),
                       &r, &g, &b);
       graphene_vec3_init (&color, r, g, b);
-      gthree_mesh_lambert_material_set_emissive_color (GTHREE_LAMBERT_MATERIAL (materials[anim_material1]), &color);
+      gthree_mesh_lambert_material_set_emissive_color (GTHREE_MESH_LAMBERT_MATERIAL (materials[anim_material1]), &color);
     }
 
   if (anim_material2)
@@ -320,7 +320,7 @@ tick (GtkWidget     *widget,
       gtk_hsv_to_rgb (0.04, 1, 0.35 * (0.5 + 0.5 * cos (35 * angle)),
                       &r, &g, &b);
       graphene_vec3_init (&color, r, g, b);
-      gthree_mesh_phong_material_set_emissive_color (GTHREE_PHONG_MATERIAL (materials[anim_material2]), &color);
+      gthree_mesh_phong_material_set_emissive_color (GTHREE_MESH_PHONG_MATERIAL (materials[anim_material2]), &color);
     }
 
   gthree_object_set_position_point3d (GTHREE_OBJECT (point_light),

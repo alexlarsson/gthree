@@ -79,7 +79,7 @@ gthree_mesh_phong_material_init (GthreeMeshPhongMaterial *phong)
 static void
 gthree_mesh_phong_material_finalize (GObject *obj)
 {
-  GthreeMeshPhongMaterial *phong = GTHREE_PHONG_MATERIAL (obj);
+  GthreeMeshPhongMaterial *phong = GTHREE_MESH_PHONG_MATERIAL (obj);
   GthreeMeshPhongMaterialPrivate *priv = gthree_mesh_phong_material_get_instance_private (phong);
 
   g_clear_object (&priv->map);
@@ -98,7 +98,7 @@ static void
 gthree_mesh_phong_material_real_set_params (GthreeMaterial *material,
                                             GthreeProgramParameters *params)
 {
-  GthreeMeshPhongMaterial *phong = GTHREE_PHONG_MATERIAL (material);
+  GthreeMeshPhongMaterial *phong = GTHREE_MESH_PHONG_MATERIAL (material);
   GthreeMeshPhongMaterialPrivate *priv = gthree_mesh_phong_material_get_instance_private (phong);
 
   params->map = priv->map != NULL;
@@ -123,7 +123,7 @@ gthree_mesh_phong_material_real_set_uniforms (GthreeMaterial *material,
                                               GthreeCamera   *camera,
                                               GthreeRenderer *renderer)
 {
-  GthreeMeshPhongMaterial *phong = GTHREE_PHONG_MATERIAL (material);
+  GthreeMeshPhongMaterial *phong = GTHREE_MESH_PHONG_MATERIAL (material);
   GthreeMeshPhongMaterialPrivate *priv = gthree_mesh_phong_material_get_instance_private (phong);
   GthreeUniform *uni;
 
@@ -193,7 +193,7 @@ gthree_mesh_phong_material_set_property (GObject *obj,
                                          const GValue *value,
                                          GParamSpec *pspec)
 {
-  GthreeMeshPhongMaterial *phong = GTHREE_PHONG_MATERIAL (obj);
+  GthreeMeshPhongMaterial *phong = GTHREE_MESH_PHONG_MATERIAL (obj);
 
   switch (prop_id)
     {
@@ -248,7 +248,7 @@ gthree_mesh_phong_material_get_property (GObject *obj,
                                          GValue *value,
                                          GParamSpec *pspec)
 {
-  GthreeMeshPhongMaterial *phong = GTHREE_PHONG_MATERIAL (obj);
+  GthreeMeshPhongMaterial *phong = GTHREE_MESH_PHONG_MATERIAL (obj);
   GthreeMeshPhongMaterialPrivate *priv = gthree_mesh_phong_material_get_instance_private (phong);
 
   switch (prop_id)

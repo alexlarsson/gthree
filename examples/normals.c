@@ -33,8 +33,8 @@ green_object (int num)
     }
 
   material = GTHREE_MATERIAL (gthree_mesh_lambert_material_new ());
-  gthree_mesh_lambert_material_set_color (GTHREE_LAMBERT_MATERIAL (material), green ());
-  gthree_mesh_lambert_material_set_emissive_color (GTHREE_LAMBERT_MATERIAL (material), green ());
+  gthree_mesh_lambert_material_set_color (GTHREE_MESH_LAMBERT_MATERIAL (material), green ());
+  gthree_mesh_lambert_material_set_emissive_color (GTHREE_MESH_LAMBERT_MATERIAL (material), green ());
   gthree_material_set_side (GTHREE_MATERIAL (material), GTHREE_SIDE_DOUBLE);
 
   return GTHREE_OBJECT (gthree_mesh_new (geo, material));

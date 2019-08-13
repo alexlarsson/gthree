@@ -57,7 +57,7 @@ gtk_logo (void)
 
   material = gthree_mesh_lambert_material_new ();
   gthree_mesh_lambert_material_set_color (material, red ());
-  gthree_mesh_lambert_material_set_emissive_color (GTHREE_LAMBERT_MATERIAL (material), red ());
+  gthree_mesh_lambert_material_set_emissive_color (GTHREE_MESH_LAMBERT_MATERIAL (material), red ());
   gthree_material_set_side (GTHREE_MATERIAL (material), GTHREE_SIDE_DOUBLE);
   gthree_material_set_is_transparent (GTHREE_MATERIAL (material), TRUE);
   gthree_material_set_opacity (GTHREE_MATERIAL (material), 0.75);
@@ -67,7 +67,7 @@ gtk_logo (void)
 
   material = gthree_mesh_lambert_material_new ();
   gthree_mesh_lambert_material_set_color (material, green ());
-  gthree_mesh_lambert_material_set_emissive_color (GTHREE_LAMBERT_MATERIAL (material), green ());
+  gthree_mesh_lambert_material_set_emissive_color (GTHREE_MESH_LAMBERT_MATERIAL (material), green ());
   gthree_material_set_side (GTHREE_MATERIAL (material), GTHREE_SIDE_DOUBLE);
   gthree_material_set_is_transparent (GTHREE_MATERIAL (material), TRUE);
   gthree_material_set_opacity (GTHREE_MATERIAL (material), 0.75);
@@ -77,7 +77,7 @@ gtk_logo (void)
 
   material = gthree_mesh_lambert_material_new ();
   gthree_mesh_lambert_material_set_color (material, blue ());
-  gthree_mesh_lambert_material_set_emissive_color (GTHREE_LAMBERT_MATERIAL (material), blue ());
+  gthree_mesh_lambert_material_set_emissive_color (GTHREE_MESH_LAMBERT_MATERIAL (material), blue ());
   gthree_material_set_side (GTHREE_MATERIAL (material), GTHREE_SIDE_DOUBLE);
   gthree_material_set_is_transparent (GTHREE_MATERIAL (material), TRUE);
   gthree_material_set_opacity (GTHREE_MATERIAL (material), 0.75);

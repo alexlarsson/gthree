@@ -1,5 +1,5 @@
-#ifndef __GTHREE_PHONG_MATERIAL_H__
-#define __GTHREE_PHONG_MATERIAL_H__
+#ifndef __GTHREE_MESH_PHONG_MATERIAL_H__
+#define __GTHREE_MESH_PHONG_MATERIAL_H__
 
 #if !defined (__GTHREE_H_INSIDE__) && !defined (GTHREE_COMPILATION)
 #error "Only <gthree/gthree.h> can be included directly."
@@ -11,12 +11,12 @@
 G_BEGIN_DECLS
 
 
-#define GTHREE_TYPE_PHONG_MATERIAL      (gthree_mesh_phong_material_get_type ())
-#define GTHREE_PHONG_MATERIAL(inst)     (G_TYPE_CHECK_INSTANCE_CAST ((inst), \
-                                                                     GTHREE_TYPE_PHONG_MATERIAL, \
-                                                                     GthreeMeshPhongMaterial))
-#define GTHREE_IS_PHONG_MATERIAL(inst)  (G_TYPE_CHECK_INSTANCE_TYPE ((inst), \
-                                                                     GTHREE_TYPE_PHONG_MATERIAL))
+#define GTHREE_TYPE_MESH_PHONG_MATERIAL      (gthree_mesh_phong_material_get_type ())
+#define GTHREE_MESH_PHONG_MATERIAL(inst)     (G_TYPE_CHECK_INSTANCE_CAST ((inst), \
+                                                                          GTHREE_TYPE_MESH_PHONG_MATERIAL, \
+                                                                          GthreeMeshPhongMaterial))
+#define GTHREE_IS_MESH_PHONG_MATERIAL(inst)  (G_TYPE_CHECK_INSTANCE_TYPE ((inst), \
+                                                                          GTHREE_TYPE_MESH_PHONG_MATERIAL))
 
 struct _GthreeMeshPhongMaterial {
   GthreeMeshMaterial parent;
@@ -88,4 +88,4 @@ void              gthree_mesh_phong_material_set_flat_shading     (GthreeMeshPho
 
 G_END_DECLS
 
-#endif /* __GTHREE_PHONGMATERIAL_H__ */
+#endif /* __GTHREE_MESH_PHONG_MATERIAL_H__ */

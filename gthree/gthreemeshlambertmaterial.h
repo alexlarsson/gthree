@@ -1,5 +1,5 @@
-#ifndef __GTHREE_LAMBERT_MATERIAL_H__
-#define __GTHREE_LAMBERT_MATERIAL_H__
+#ifndef __GTHREE_MESH_LAMBERT_MATERIAL_H__
+#define __GTHREE_MESH_LAMBERT_MATERIAL_H__
 
 #if !defined (__GTHREE_H_INSIDE__) && !defined (GTHREE_COMPILATION)
 #error "Only <gthree/gthree.h> can be included directly."
@@ -11,12 +11,12 @@
 G_BEGIN_DECLS
 
 
-#define GTHREE_TYPE_LAMBERT_MATERIAL      (gthree_mesh_lambert_material_get_type ())
-#define GTHREE_LAMBERT_MATERIAL(inst)     (G_TYPE_CHECK_INSTANCE_CAST ((inst), \
-                                                                     GTHREE_TYPE_LAMBERT_MATERIAL, \
-                                                                     GthreeMeshLambertMaterial))
-#define GTHREE_IS_LAMBERT_MATERIAL(inst)  (G_TYPE_CHECK_INSTANCE_TYPE ((inst), \
-                                                                     GTHREE_TYPE_LAMBERT_MATERIAL))
+#define GTHREE_TYPE_MESH_LAMBERT_MATERIAL      (gthree_mesh_lambert_material_get_type ())
+#define GTHREE_MESH_LAMBERT_MATERIAL(inst)     (G_TYPE_CHECK_INSTANCE_CAST ((inst), \
+                                                                            GTHREE_TYPE_MESH_LAMBERT_MATERIAL, \
+                                                                            GthreeMeshLambertMaterial))
+#define GTHREE_IS_MESH_LAMBERT_MATERIAL(inst)  (G_TYPE_CHECK_INSTANCE_TYPE ((inst), \
+                                                                     GTHREE_TYPE_MESH_LAMBERT_MATERIAL))
 
 struct _GthreeMeshLambertMaterial {
   GthreeMeshMaterial parent;
@@ -72,4 +72,4 @@ GthreeOperation gthree_mesh_lambert_material_get_combine          (GthreeMeshLam
 
 G_END_DECLS
 
-#endif /* __GTHREE_LAMBERTMATERIAL_H__ */
+#endif /* __GTHREE_MESH_LAMBERT_MATERIAL_H__ */

@@ -67,7 +67,7 @@ gthree_mesh_lambert_material_init (GthreeMeshLambertMaterial *lambert)
 static void
 gthree_mesh_lambert_material_finalize (GObject *obj)
 {
-  GthreeMeshLambertMaterial *lambert = GTHREE_LAMBERT_MATERIAL (obj);
+  GthreeMeshLambertMaterial *lambert = GTHREE_MESH_LAMBERT_MATERIAL (obj);
   GthreeMeshLambertMaterialPrivate *priv = gthree_mesh_lambert_material_get_instance_private (lambert);
 
   g_clear_object (&priv->map);
@@ -86,7 +86,7 @@ static void
 gthree_mesh_lambert_material_real_set_params (GthreeMaterial *material,
                                               GthreeProgramParameters *params)
 {
-  GthreeMeshLambertMaterial *lambert = GTHREE_LAMBERT_MATERIAL (material);
+  GthreeMeshLambertMaterial *lambert = GTHREE_MESH_LAMBERT_MATERIAL (material);
   GthreeMeshLambertMaterialPrivate *priv = gthree_mesh_lambert_material_get_instance_private (lambert);
 
   params->map = priv->map != NULL;
@@ -109,7 +109,7 @@ gthree_mesh_lambert_material_real_set_uniforms (GthreeMaterial *material,
                                                 GthreeCamera   *camera,
                                                 GthreeRenderer *renderer)
 {
-  GthreeMeshLambertMaterial *lambert = GTHREE_LAMBERT_MATERIAL (material);
+  GthreeMeshLambertMaterial *lambert = GTHREE_MESH_LAMBERT_MATERIAL (material);
   GthreeMeshLambertMaterialPrivate *priv = gthree_mesh_lambert_material_get_instance_private (lambert);
   GthreeUniform *uni;
 
@@ -150,7 +150,7 @@ gthree_mesh_lambert_material_real_set_uniforms (GthreeMaterial *material,
 static gboolean
 gthree_mesh_lambert_material_needs_camera_pos (GthreeMaterial *material)
 {
-  GthreeMeshLambertMaterial *lambert = GTHREE_LAMBERT_MATERIAL (material);
+  GthreeMeshLambertMaterial *lambert = GTHREE_MESH_LAMBERT_MATERIAL (material);
   GthreeMeshLambertMaterialPrivate *priv = gthree_mesh_lambert_material_get_instance_private (lambert);
 
   return priv->env_map != NULL;
@@ -175,7 +175,7 @@ gthree_mesh_lambert_material_set_property (GObject *obj,
                                            const GValue *value,
                                            GParamSpec *pspec)
 {
-  GthreeMeshLambertMaterial *lambert = GTHREE_LAMBERT_MATERIAL (obj);
+  GthreeMeshLambertMaterial *lambert = GTHREE_MESH_LAMBERT_MATERIAL (obj);
 
   switch (prop_id)
     {
@@ -218,7 +218,7 @@ gthree_mesh_lambert_material_get_property (GObject *obj,
                                            GValue *value,
                                            GParamSpec *pspec)
 {
-  GthreeMeshLambertMaterial *lambert = GTHREE_LAMBERT_MATERIAL (obj);
+  GthreeMeshLambertMaterial *lambert = GTHREE_MESH_LAMBERT_MATERIAL (obj);
   GthreeMeshLambertMaterialPrivate *priv = gthree_mesh_lambert_material_get_instance_private (lambert);
 
   switch (prop_id)
