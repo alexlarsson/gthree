@@ -64,7 +64,7 @@ gthree_animation_clip_add_track (GthreeAnimationClip *clip,
 }
 
 void
-gthree_animation_reset_duration (GthreeAnimationClip *clip)
+gthree_animation_clip_reset_duration (GthreeAnimationClip *clip)
 {
   GthreeAnimationClipPrivate *priv = gthree_animation_clip_get_instance_private (clip);
   int i;
@@ -81,7 +81,7 @@ gthree_animation_reset_duration (GthreeAnimationClip *clip)
 }
 
 void
-gthree_animation_optimize (GthreeAnimationClip *clip)
+gthree_animation_clip_optimize (GthreeAnimationClip *clip)
 {
   GthreeAnimationClipPrivate *priv = gthree_animation_clip_get_instance_private (clip);
   int i;
@@ -94,7 +94,7 @@ gthree_animation_optimize (GthreeAnimationClip *clip)
 }
 
 void
-gthree_animation_trim (GthreeAnimationClip *clip)
+gthree_animation_clip_trim (GthreeAnimationClip *clip)
 {
   GthreeAnimationClipPrivate *priv = gthree_animation_clip_get_instance_private (clip);
   int i;
@@ -131,8 +131,8 @@ gthree_animation_clip_get_n_tracks (GthreeAnimationClip *clip)
 }
 
 GthreeKeyframeTrack *
-gthree_animation_clip_get_track    (GthreeAnimationClip *clip,
-                                    int                  i)
+gthree_animation_clip_get_track (GthreeAnimationClip *clip,
+                                 int                  i)
 {
   GthreeAnimationClipPrivate *priv = gthree_animation_clip_get_instance_private (clip);
 
