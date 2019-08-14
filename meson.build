@@ -75,7 +75,6 @@ foreach pkg: [ 'gthree-1.0.pc', ]
   configure_file(input: pkg + '.in',
                  output: pkg,
                  configuration: pkgconf,
-                 install: true,
                  install_dir: join_paths(gthree_libdir, 'pkgconfig'))
 endforeach
 
