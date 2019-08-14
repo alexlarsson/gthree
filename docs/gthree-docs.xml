@@ -53,6 +53,9 @@
       <title>Scene</title>
       <xi:include href="xml/gthreescene.xml" />
       <xi:include href="xml/gthreegroup.xml" />
+      <xi:include href="xml/gthreelinesegments.xml" />
+      <xi:include href="xml/gthreesprite.xml" />
+      <xi:include href="xml/gthreepoints.xml" />
     </chapter>
 
     <chapter>
@@ -71,6 +74,7 @@
       <xi:include href="xml/gthreemeshlambertmaterial.xml" />
       <xi:include href="xml/gthreemeshnormalmaterial.xml" />
       <xi:include href="xml/gthreemeshphongmaterial.xml" />
+      <xi:include href="xml/gthreemeshstandardmaterial.xml" />
       <xi:include href="xml/gthreeskinnedmesh.xml" />
     </chapter>
 
@@ -90,8 +94,10 @@
     <chapter>
       <title>Resources</title>
       <xi:include href="xml/gthreetexture.xml" />
+      <xi:include href="xml/gthreecubetexture.xml" />
       <xi:include href="xml/gthreerendertarget.xml" />
       <xi:include href="xml/gthreeattribute.xml" />
+      <xi:include href="xml/gthreeloader.xml" />
     </chapter>
 
     <chapter>
@@ -155,7 +161,9 @@
 
     <chapter>
       <title>Interpolators</title>
+      <xi:include href="xml/gthreeinterpolant.xml" />
       <xi:include href="xml/gthreelinearinterpolant.xml" />
+      <xi:include href="xml/gthreediscreteinterpolant.xml" />
       <xi:include href="xml/gthreecubicinterpolant.xml" />
       <xi:include href="xml/gthreequaternioninterpolant.xml" />
     </chapter>
