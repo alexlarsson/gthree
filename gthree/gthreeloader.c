@@ -1983,7 +1983,7 @@ parse_animations (GthreeLoader *loader, JsonObject *root, GError **error)
             }
         }
 
-      gthree_animation_reset_duration (clip);
+      gthree_animation_clip_reset_duration (clip);
 
       g_ptr_array_add (priv->animations, g_steal_pointer (&clip));
     }
