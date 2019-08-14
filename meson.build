@@ -34,6 +34,7 @@ json_glib_dep  = dependency('json-glib-1.0', version: '>= 1.2.0')
 gthree_prefix = get_option('prefix')
 gthree_libdir = join_paths(gthree_prefix, get_option('libdir'))
 gthree_includedir = join_paths(gthree_prefix, get_option('includedir'))
+gthree_datadir = join_paths(gthree_prefix, get_option('datadir'))
 
 # Maintain version scheme with libtool
 gthree_soversion = 0
@@ -77,3 +78,7 @@ root_inc = include_directories('.')
 
 subdir('gthree')
 subdir('examples')
+
+if get_option('gtk_doc')
+  subdir('docs')
+endif
