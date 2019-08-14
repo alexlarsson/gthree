@@ -1,0 +1,170 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+                      "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" [
+  <!ENTITY % local.common.attrib "xmlns:xi  CDATA  #FIXED 'http://www.w3.org/2003/XInclude'">
+]>
+
+<book id="index" xmlns:xi="http://www.w3.org/2003/XInclude">
+  <bookinfo>
+    <title>Gthree Reference Manual</title>
+    <releaseinfo>
+      <para>This document is the API reference for Gthree.</para>
+      <para>
+        If you find any issues in the API reference, please report it using
+        <ulink type="http" url="https://github.com/alexlarsson/gthree/issues">the
+        online bug reporting tool</ulink>.
+      </para>
+    </releaseinfo>
+  </bookinfo>
+
+  <part id="overview">
+    <title>Overview</title>
+
+    <xi:include href="overview.xml" />
+    <xi:include href="resources.xml" />
+
+    <chapter>
+      <title>Object hierarchy</title>
+      <xi:include href="xml/tree_index.sgml" />
+    </chapter>
+  </part>
+
+  <part id="widget">
+    <title>Widget</title>
+
+    <xi:include href="xml/gthreearea.xml" />
+  </part>
+
+  <part id="base-types">
+    <title>Types</title>
+
+    <chapter>
+      <title>Objects</title>
+      <xi:include href="xml/gthreeobject.xml" />
+      <xi:include href="xml/gthreecamera.xml" />
+      <xi:include href="xml/gthreelight.xml" />
+      <xi:include href="xml/gthreeresource.xml" />
+      <xi:include href="xml/gthreematerial.xml" />
+      <xi:include href="xml/gthreemesh.xml" />
+      <xi:include href="xml/gthreegeometry.xml" />
+    </chapter>
+
+    <chapter>
+      <title>Scene</title>
+      <xi:include href="xml/gthreescene.xml" />
+      <xi:include href="xml/gthreegroup.xml" />
+    </chapter>
+
+    <chapter>
+      <title>Materials</title>
+      <xi:include href="xml/gthreelinebasicmaterial.xml" />
+      <xi:include href="xml/gthreepointsmaterial.xml" />
+      <xi:include href="xml/gthreeshadermaterial.xml" />
+      <xi:include href="xml/gthreespritematerial.xml" />
+      <xi:include href="xml/gthreemeshmaterial.xml" />
+    </chapter>
+
+    <chapter>
+      <title>Mesh materials</title>
+      <xi:include href="xml/gthreemeshbasicmaterial.xml" />
+      <xi:include href="xml/gthreemeshdepthmaterial.xml" />
+      <xi:include href="xml/gthreemeshlambertmaterial.xml" />
+      <xi:include href="xml/gthreemeshnormalmaterial.xml" />
+      <xi:include href="xml/gthreemeshphongmaterial.xml" />
+      <xi:include href="xml/gthreeskinnedmesh.xml" />
+    </chapter>
+
+    <chapter>
+      <title>Cameras</title>
+      <xi:include href="xml/gthreeorthographiccamera.xml" />
+      <xi:include href="xml/gthreeperspectivecamera.xml" />
+    </chapter>
+
+    <chapter>
+      <title>Lights</title>
+      <xi:include href="xml/gthreeambientlight.xml" />
+      <xi:include href="xml/gthreedirectionallight.xml" />
+      <xi:include href="xml/gthreepointlight.xml" />
+    </chapter>
+
+    <chapter>
+      <title>Resources</title>
+      <xi:include href="xml/gthreetexture.xml" />
+      <xi:include href="xml/gthreerendertarget.xml" />
+      <xi:include href="xml/gthreeattribute.xml" />
+    </chapter>
+
+    <chapter>
+      <title>Shaders</title>
+      <xi:include href="xml/gthreeshader.xml" />
+      <xi:include href="xml/gthreeprogram.xml" />
+      <xi:include href="xml/gthreeuniforms.xml" />
+    </chapter>
+
+  </part>
+
+  <part id="rendering">
+    <title>Rendering</title>
+
+    <chapter>
+      <title>Render pipeline objects</title>
+      <xi:include href="xml/gthreerenderer.xml" />
+      <xi:include href="xml/gthreerendertarget.xml" />
+      <xi:include href="xml/gthreepass.xml" />
+      <xi:include href="xml/gthreeeffectcomposer.xml" />
+    </chapter>
+
+    <chapter>
+      <title>Render passes</title>
+      <xi:include href="xml/gthreefullscreenquadpass.xml" />
+      <xi:include href="xml/gthreeshaderpass.xml" />
+      <xi:include href="xml/gthreerenderpass.xml" />
+      <xi:include href="xml/gthreebloompass.xml" />
+      <xi:include href="xml/gthreeclearpass.xml" />
+    </chapter>
+  </part>
+
+  <part id="models">
+    <title>Models</title>
+
+    <chapter>
+      <title>Types</title>
+      <xi:include href="xml/gthreeskeleton.xml" />
+      <xi:include href="xml/gthreebone.xml" />
+    </chapter>
+  </part>
+
+  <part id="animation">
+    <title>Animation</title>
+
+    <chapter>
+      <title>Animations</title>
+      <xi:include href="xml/gthreeanimationclip.xml" />
+      <xi:include href="xml/gthreeanimationaction.xml" />
+      <xi:include href="xml/gthreeanimationmixer.xml" />
+    </chapter>
+
+    <chapter>
+      <title>Keyframe tracks</title>
+      <xi:include href="xml/gthreekeyframetrack.xml" />
+      <xi:include href="xml/gthreecolorkeyframetrack.xml" />
+      <xi:include href="xml/gthreenumberkeyframetrack.xml" />
+      <xi:include href="xml/gthreequaternionkeyframetrack.xml" />
+      <xi:include href="xml/gthreevectorkeyframetrack.xml" />
+    </chapter>
+
+    <chapter>
+      <title>Interpolators</title>
+      <xi:include href="xml/gthreelinearinterpolant.xml" />
+      <xi:include href="xml/gthreecubicinterpolant.xml" />
+      <xi:include href="xml/gthreequaternioninterpolant.xml" />
+    </chapter>
+  </part>
+
+  <index id="api-index-full">
+    <title>Index of all symbols</title>
+    <xi:include href="xml/api-index-full.xml"><xi:fallback /></xi:include>
+  </index>
+
+  <xi:include href="xml/annotation-glossary.xml"><xi:fallback /></xi:include>
+</book>

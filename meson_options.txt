@@ -2,3 +2,7 @@ option('introspection',
        description: 'Whether to build introspection files',
        type: 'boolean',
        value: true)
+option('gtk_doc',
+       description: 'Whether to build the API reference',
+       type: 'boolean',
+       value: false)

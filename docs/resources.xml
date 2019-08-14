@@ -1,0 +1,118 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+                          "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" [
+]>
+
+<refentry id="chap-resources">
+  <refmeta>
+    <refentrytitle>Resources</refentrytitle>
+    <refmiscinfo>Gthree</refmiscinfo>
+    <manvolnum>3</manvolnum>
+  </refmeta>
+
+  <refsect1 id="resources">
+    <title>Resources</title>
+
+    <para>
+      There are two types of state in Gthree, regular data, and GL resources.
+    </para>
+
+    <para>
+      Regular data is things like the object in the scene, their positions
+      and relations, but also host side geometry data like the vertex
+      position and colors as well as the pixbuf data for textures. Another
+      form is GLSL code (in textual form).
+    </para>
+
+    <para>
+      GL resources are something that are tied to the OpenGL context, and
+      any time such contents is manipulated or referenced the GL context
+      must be active. GL resources are of several types: buffers
+      (i.e. geometry data), textures, programs.
+    </para>
+
+    <para>
+      This is particularly sensitive when it comes to destroying state, such
+      as when finalizing a widget, or even more so when moving between different
+      GL contexts (such as when a widget moves to a new toplevel window). The main
+      problem here is that finalization can be arbitrary delayed by a reference
+      being held somewhere, and by the time we're finalizing we may no longer
+      have access to the GL context.
+    </para>
+
+    <para>
+      GL resources are transient and generated from regular data when
+      needed. As such it can be destroyed and recreated as needed. This is
+      called realization/unrealization. For example, to realize a texture
+      means allocating a gl texture id for it and uploading the data, and
+      unrealizing it means freeing the data and deleting the id.
+    </para>
+
+    <refsect2 id="resources-data-ownership">
+      <title>Data Ownership</title>
+
+      <para>
+        The toplevel owner of data is the #GThreeArea widget. It owns the
+        scene, as well as as camera object (which is typically also part of
+        the scenen. It also has a renderer object, but only while the widget
+        is realized. A more complex program might have multiple scenes and/or
+        cameras, but only one renderer per GL context, because the renderer
+        keeps track of the GL state and would be confused if something else
+        re-used the context.
+      </para>
+
+      <para>
+        The scene contains both regular data and GL state. For example, it
+        indirectly references vertex arrays and textures, which are created
+        and uploaded to the GPU on when needed. This means a scene can only be
+        used by one GL context at a time. However, by unrealizing and then
+        re-realizing the resources it can be switched to a different context.
+      </para>
+    </refsect2>
+
+    <refsect2 id="resources-realization">
+      <title>Realization</title>
+
+      <para>
+        The fact that some object store both regular data and GPU resources
+        makes it lifetime management somewhat complicated. Take for example a
+        scene. You can dynamically add objects to a scene either before or
+        after it is displayed without problem, because this just adds regular
+        data. The data can then be realized as needed during rendering, when
+        we're guaranteed to have an active GL context. However, if you remove
+        an object (to free it or add it back later), or move it to another
+        scene, then there is no guarantee that the the corresponding GL
+        context is active, so you can't directly unrealize it.
+      </para>
+
+      <para>
+        The only points we can guarantee that the GL context is active is
+        during rendering, widget realization and widget unrealization. This
+        means all unrealization must be postponed until one of these points.
+      </para>
+
+      <para>
+        All objects that may hold GL resources are of the type
+        GthreeResource<footnote><para>Actually programs are not, but all
+        programs are owned by the renderer which is tied to realization of
+        the widget.</para></footnote>, and are realized for one single GL
+        Context at a time (or unrealized and independent). Once a GL resource
+        is not used anymore you can call gthree_resource_unrealize_for() to
+        unrealize all the resources for the content. Additionally, whenever
+        some object (like a scene) uses a resource it holds an extra refcount
+        (the use count), and when the use count goes to zero the resource will
+        be marked for auto-unrealization at the next oportune moment (such as
+        e.g. rendering), this to avoid leaking GPU resources for unused
+        things.
+      </para>
+
+      <para>
+        Ownership wise this is a done with a reference cycle, where the GL
+        context object holds a ref to all resources (to avoid them being
+        finalized before unrealization). This cycle must be broken manually by
+        calling one of the gthree_resources_unrealize_* calls with the GL
+        context active (which is done automatically by the #GthreeArea widget).
+      </para>
+    </refsect2>
+  </refsect1>
+</refentry>
