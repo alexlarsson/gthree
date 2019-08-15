@@ -5,7 +5,7 @@ project('gthree', 'c',
           'warning_level=1',
           'c_std=gnu99',
         ],
-        meson_version : '>= 0.48.0',
+        meson_version : '>= 0.50.0',
         license: 'MIT')
 
 version = meson.project_version().split('.')
