@@ -86,33 +86,37 @@
       </para>
 
       <para>
-        The only points we can guarantee that the GL context is active is
-        during rendering, widget realization and widget unrealization. This
-        means all unrealization must be postponed until one of these points.
-      </para>
-
-      <para>
         All objects that may hold GL resources are of the type
         GthreeResource<footnote><para>Actually programs are not, but all
         programs are owned by the renderer which is tied to realization of
         the widget.</para></footnote>, and are realized for one single GL
-        Context at a time (or unrealized and independent). Once a GL resource
-        is not used anymore you can call gthree_resource_unrealize_for() to
-        unrealize all the resources for the content. Additionally, whenever
-        some object (like a scene) uses a resource it holds an extra refcount
-        (the use count), and when the use count goes to zero the resource will
-        be marked for auto-unrealization at the next oportune moment (such as
-        e.g. rendering), this to avoid leaking GPU resources for unused
-        things.
+        Context at a time (or are unrealized and independent). You can
+        call gthree_resources_unrealize_all_for() to unrealize all the
+        resources for a Context, but this is typically done automatically
+        when unrealizing the GthreeArea widget that owns the Context.
       </para>
 
       <para>
-        Ownership wise this is a done with a reference cycle, where the GL
-        context object holds a ref to all resources (to avoid them being
-        finalized before unrealization). This cycle must be broken manually by
-        calling one of the gthree_resources_unrealize_* calls with the GL
-        context active (which is done automatically by the #GthreeArea widget).
+        The only points we can guarantee that the GL context is active is
+        during rendering, widget realization and widget unrealization. This
+        means all unrealization must be postponed until one of these points.
+        For finalization at odd times (i.e. when the context is not active)
+        this means it frees all the regular data, but keeps the GPU data
+        around in an queue which is freed at the next oportune moment.
+        Every time you render this queue is flushed, but you can also
+        trigger it manually i needed by calling gthree_resources_unrealize_all_for().
       </para>
+
+      <para>
+        It is sometimes hard to track what resources are in use, and which you
+        may want to allocate, but gthree has some simple mark-and-sweep system
+        that lets you find it. You call gthree_resources_set_all_unused_for()
+        on a context, then iterate over all important resources, calling
+        gthree_resource_set_used (). Then you can call gthree_resources_unrealize_unused_for()
+        to unrealize all resources that are still realize but not actually
+        in use.
+      </para>
+
     </refsect2>
   </refsect1>
 </refentry>
