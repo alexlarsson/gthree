@@ -152,6 +152,16 @@ GTHREE_API
 void                         gthree_object_get_normal_matrix3_floats    (GthreeObject                *object,
                                                                          float                       *dest);
 GTHREE_API
+gboolean                     gthree_object_get_cast_shadow              (GthreeObject                *object);
+GTHREE_API
+void                         gthree_object_set_cast_shadow              (GthreeObject                *object,
+                                                                         gboolean                     cast_shadow);
+GTHREE_API
+gboolean                     gthree_object_get_receive_shadow           (GthreeObject                *object);
+GTHREE_API
+void                         gthree_object_set_receive_shadow           (GthreeObject                *object,
+                                                                         gboolean                     receive_shadow);
+GTHREE_API
 gboolean                     gthree_object_get_visible                  (GthreeObject                *object);
 GTHREE_API
 void                         gthree_object_set_visible                  (GthreeObject                *object,

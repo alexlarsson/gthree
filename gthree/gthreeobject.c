@@ -38,6 +38,8 @@ typedef struct {
   graphene_matrix_t normal_matrix;
 
   gboolean visible;
+  gboolean cast_shadow;
+  gboolean receive_shadow;
   guint32 layer_mask;
 
   GthreeBeforeRenderCallback before_render_cb;
@@ -375,6 +377,46 @@ gthree_object_set_visible (GthreeObject *object,
   priv->visible = visible;
 
   g_object_notify_by_pspec (G_OBJECT (object), obj_props[PROP_VISIBLE]);
+}
+
+gboolean
+gthree_object_get_cast_shadow (GthreeObject *object)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  return priv->cast_shadow;
+}
+
+void
+gthree_object_set_cast_shadow (GthreeObject *object,
+                               gboolean cast_shadow)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  if (priv->cast_shadow == cast_shadow)
+    return;
+
+  priv->cast_shadow = cast_shadow;
+}
+
+gboolean
+gthree_object_get_receive_shadow (GthreeObject *object)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  return priv->receive_shadow;
+}
+
+void
+gthree_object_set_receive_shadow (GthreeObject *object,
+                                  gboolean receive_shadow)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  if (priv->receive_shadow == receive_shadow)
+    return;
+
+  priv->receive_shadow = receive_shadow;
 }
 
 void
