@@ -9,6 +9,7 @@
 #include <gthree/gthreerendertarget.h>
 #include <gthree/gthreemesh.h>
 #include <gthree/gthreesprite.h>
+#include <gthree/gthreelightshadow.h>
 
 //#define DEBUG_LABELS
 //#define DEBUG_GROUPS
@@ -157,6 +158,8 @@ void gthree_geometry_fill_render_list (GthreeGeometry   *geometry,
 
 gboolean gthree_light_setup_hash_equal (GthreeLightSetupHash *a,
                                         GthreeLightSetupHash *b);
+void gthree_light_set_shadow (GthreeLight   *light,
+                              GthreeLightShadow *shadow);
 
 void gthree_skeleton_update  (GthreeSkeleton *skeleton);
 float *gthree_skeleton_get_bone_matrices (GthreeSkeleton *skeleton);
@@ -164,6 +167,8 @@ float *gthree_skeleton_get_bone_matrices (GthreeSkeleton *skeleton);
 void gthree_light_setup  (GthreeLight   *light,
                           GthreeCamera  *camera,
                           GthreeLightSetup *setup);
+
+GthreeLightShadow *gthree_light_shadow_new (GthreeCamera *camera);
 
 GthreeMaterialProperties *gthree_material_get_properties (GthreeMaterial  *material);
 

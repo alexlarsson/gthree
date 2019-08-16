@@ -18,6 +18,7 @@ gthree_light_setup_hash_equal (GthreeLightSetupHash *a,
 typedef struct {
   graphene_vec3_t color;
   float   intensity;
+  GthreeLightShadow *shadow;
 } GthreeLightPrivate;
 
 enum {
@@ -86,12 +87,32 @@ gthree_light_get_property (GObject *self,
 }
 
 static void
+gthree_light_init (GthreeLight *light)
+{
+  GthreeLightPrivate *priv = gthree_light_get_instance_private (light);
+
+  graphene_vec3_init (&priv->color,
+                      1.0, 1.0, 1.0);
+  priv->intensity = 1.0;
+}
+
+static void
+gthree_light_finalize (GObject *obj)
+{
+  GthreeLight *light = GTHREE_LIGHT (obj);
+  GthreeLightPrivate *priv = gthree_light_get_instance_private (light);
+
+  g_clear_object (&priv->shadow);
+}
+
+static void
 gthree_light_class_init (GthreeLightClass *klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
   gobject_class->set_property = gthree_light_set_property;
   gobject_class->get_property = gthree_light_get_property;
+  gobject_class->finalize = gthree_light_finalize;
 
   klass->setup = gthree_light_real_setup;
 
@@ -106,16 +127,6 @@ gthree_light_class_init (GthreeLightClass *klass)
                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, LAST_PROP, obj_props);
-}
-
-static void
-gthree_light_init (GthreeLight *light)
-{
-  GthreeLightPrivate *priv = gthree_light_get_instance_private (light);
-
-  graphene_vec3_init (&priv->color,
-                      1.0, 1.0, 1.0);
-  priv->intensity = 1.0;
 }
 
 GthreeLight *
@@ -181,4 +192,21 @@ gthree_light_setup (GthreeLight *light,
   GthreeLightClass *class = GTHREE_LIGHT_GET_CLASS(light);
 
   class->setup (light, camera, setup);
+}
+
+GthreeLightShadow  *
+gthree_light_get_shadow (GthreeLight   *light)
+{
+  GthreeLightPrivate *priv = gthree_light_get_instance_private (light);
+
+  return priv->shadow;
+}
+
+void
+gthree_light_set_shadow (GthreeLight   *light,
+                         GthreeLightShadow *shadow)
+{
+  GthreeLightPrivate *priv = gthree_light_get_instance_private (light);
+
+  g_set_object (&priv->shadow, shadow);
 }

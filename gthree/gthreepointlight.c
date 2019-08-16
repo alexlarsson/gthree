@@ -2,6 +2,7 @@
 #include <epoxy/gl.h>
 
 #include "gthreepointlight.h"
+#include "gthreecamera.h"
 #include "gthreeprivate.h"
 
 typedef struct {

@@ -29,6 +29,7 @@
 #include <gthree/gthreecubetexture.h>
 #include <gthree/gthreeloader.h>
 #include <gthree/gthreelight.h>
+#include <gthree/gthreelightshadow.h>
 #include <gthree/gthreeambientlight.h>
 #include <gthree/gthreepointlight.h>
 #include <gthree/gthreedirectionallight.h>

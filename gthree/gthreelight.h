@@ -6,8 +6,6 @@
 #endif
 
 #include <gthree/gthreeobject.h>
-#include <gthree/gthreeprogram.h>
-#include <gthree/gthreecamera.h>
 #include <gdk/gdk.h>
 
 G_BEGIN_DECLS
@@ -49,6 +47,8 @@ float                  gthree_light_get_intensity      (GthreeLight   *light);
 GTHREE_API
 void                   gthree_light_set_intensity      (GthreeLight   *light,
                                                         float          intensity);
+GTHREE_API
+GthreeLightShadow     *gthree_light_get_shadow         (GthreeLight   *light);
 
 G_END_DECLS
 
