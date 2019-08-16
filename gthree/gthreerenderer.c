@@ -1019,7 +1019,6 @@ material_apply_light_setup (GthreeUniforms *m_uniforms,
 static GthreeProgram *
 init_material (GthreeRenderer *renderer,
                GthreeMaterial *material,
-               GList *lights,
                gpointer fog,
                GthreeObject *object)
 {
@@ -1046,7 +1045,6 @@ init_material (GthreeRenderer *renderer,
   gthree_material_set_params (material, &parameters);
   parameters.num_dir_lights = priv->light_setup.directional->len;
   parameters.num_point_lights = priv->light_setup.point->len;
-
 
   max_bones = 0;
   if (GTHREE_IS_SKINNED_MESH (object))
@@ -1326,7 +1324,6 @@ mark_uniforms_lights_needs_update (GthreeUniforms *uniforms, gboolean needs_upda
 static GthreeProgram *
 set_program (GthreeRenderer *renderer,
              GthreeCamera *camera,
-             GList *lights,
              gpointer fog,
              GthreeMaterial *material,
              GthreeObject *object)
@@ -1361,7 +1358,7 @@ set_program (GthreeRenderer *renderer,
 
   if (gthree_material_get_needs_update (material))
     {
-      init_material (renderer, material, lights, fog, object);
+      init_material (renderer, material, fog, object);
       gthree_material_set_needs_update (material, FALSE);
     }
 
@@ -1812,7 +1809,6 @@ update_morphtargets (GthreeRenderer *renderer,
 static void
 render_item (GthreeRenderer *renderer,
              GthreeCamera *camera,
-             GList *lights,
              gpointer fog,
              GthreeMaterial *material,
              GthreeRenderListItem *item)
@@ -1836,7 +1832,7 @@ render_item (GthreeRenderer *renderer,
       gthree_mesh_material_get_is_wireframe (GTHREE_MESH_MATERIAL (material)))
     wireframe = TRUE;
 
-  program = set_program (renderer, camera, lights, fog, material, object);
+  program = set_program (renderer, camera, fog, material, object);
 
   if (geometry != priv->current_geometry_program_geometry ||
       program != priv->current_geometry_program_program ||
@@ -1962,7 +1958,6 @@ render_objects (GthreeRenderer *renderer,
                 GthreeScene    *scene,
                 GArray *render_list_indexes,
                 GthreeCamera *camera,
-                GList *lights,
                 gpointer fog,
                 gboolean use_blending,
                 GthreeMaterial *override_material)
@@ -2008,7 +2003,7 @@ render_objects (GthreeRenderer *renderer,
       }
       set_material_faces (renderer, material);
 
-      render_item (renderer, camera, lights, fog, material, item);
+      render_item (renderer, camera, fog, material, item);
     }
 }
 
@@ -2189,7 +2184,6 @@ gthree_renderer_render (GthreeRenderer *renderer,
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
   GthreeMaterial *override_material;
-  GList *lights;
   gpointer fog;
 
   push_debug_group ("gthree render to %p", priv->current_render_target);
@@ -2271,21 +2265,21 @@ gthree_renderer_render (GthreeRenderer *renderer,
       polygon_offset = gthree_material_get_polygon_offset (override_material, &factor, &units);
       set_polygon_offset (renderer, polygon_offset, factor, units);
 
-      render_objects (renderer, scene, priv->current_render_list->background, camera, lights, fog, TRUE, override_material );
-      render_objects (renderer, scene, priv->current_render_list->opaque, camera, lights, fog, TRUE, override_material );
-      render_objects (renderer, scene, priv->current_render_list->transparent, camera, lights, fog, TRUE, override_material );
+      render_objects (renderer, scene, priv->current_render_list->background, camera, fog, TRUE, override_material );
+      render_objects (renderer, scene, priv->current_render_list->opaque, camera, fog, TRUE, override_material );
+      render_objects (renderer, scene, priv->current_render_list->transparent, camera, fog, TRUE, override_material );
     }
   else
     {
       set_blending (renderer, GTHREE_BLEND_NO, 0, 0, 0);
 
-      render_objects (renderer, scene, priv->current_render_list->background, camera, lights, fog, FALSE, NULL);
+      render_objects (renderer, scene, priv->current_render_list->background, camera, fog, FALSE, NULL);
 
       // opaque pass (front-to-back order)
-      render_objects (renderer, scene, priv->current_render_list->opaque, camera, lights, fog, FALSE, NULL);
+      render_objects (renderer, scene, priv->current_render_list->opaque, camera, fog, FALSE, NULL);
 
       // transparent pass (back-to-front order)
-      render_objects (renderer, scene, priv->current_render_list->transparent, camera, lights, fog, TRUE, NULL);
+      render_objects (renderer, scene, priv->current_render_list->transparent, camera, fog, TRUE, NULL);
     }
 
   if (priv->current_render_target != NULL)
