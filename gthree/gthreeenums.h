@@ -149,6 +149,12 @@ typedef enum {
  GTHREE_DRAW_MODE_TRIANGLE_FAN,
 } GthreeDrawMode;
 
+typedef enum {
+ GTHREE_SHADOW_MAP_TYPE_BASIC,
+ GTHREE_SHADOW_MAP_TYPE_PCF,
+ GTHREE_SHADOW_MAP_TYPE_PCF_SOFT,
+} GthreeShadowMapType;
+
 G_END_DECLS
 
 #endif /* __GTHREE_ENUM_H__ */
