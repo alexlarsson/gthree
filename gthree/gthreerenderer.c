@@ -12,6 +12,8 @@
 #include "gthreeobjectprivate.h"
 #include "gthreecubetexture.h"
 #include "gthreeshadermaterial.h"
+#include "gthreemeshdepthmaterial.h"
+#include "gthreemeshmaterial.h"
 #include "gthreelinebasicmaterial.h"
 #include "gthreeprimitives.h"
 #include "gthreegroup.h"
@@ -55,6 +57,10 @@ typedef struct {
   gboolean sort_objects;
   float gamma_factor;
   gboolean physically_correct_lights;
+  gboolean shadowmap_enabled;
+  GthreeShadowMapType shadowmap_type;
+  GPtrArray *shadowmap_depth_materials;
+  GPtrArray *shadowmap_distance_materials;
 
   GArray *clipping_planes;
 
@@ -71,6 +77,8 @@ typedef struct {
 
   GthreeLightSetup light_setup;
   GList *lights;
+
+  GList *shadows;
 
   gboolean old_flip_sided;
   gboolean old_double_sided;
@@ -235,7 +243,10 @@ gthree_renderer_init (GthreeRenderer *renderer)
   priv->current_framebuffer = 0;
 
   priv->light_setup.directional = g_ptr_array_new ();
+  priv->light_setup.directional_shadow_map = g_ptr_array_new ();
+  priv->light_setup.directional_shadow_map_matrix = g_array_new (FALSE, FALSE, sizeof (graphene_matrix_t));
   priv->light_setup.point = g_ptr_array_new ();
+  priv->light_setup.shadow = g_ptr_array_new ();
 
   priv->current_render_list = gthree_render_list_new ();
 
@@ -281,6 +292,11 @@ gthree_renderer_finalize (GObject *obj)
 
   g_clear_object (&priv->current_render_target);
 
+  if (priv->shadowmap_depth_materials)
+    g_ptr_array_unref (priv->shadowmap_depth_materials);
+  if (priv->shadowmap_distance_materials)
+    g_ptr_array_unref (priv->shadowmap_distance_materials);
+
   gthree_program_cache_free (priv->program_cache);
 
   g_array_free (priv->clipping_planes, TRUE);
@@ -289,6 +305,7 @@ gthree_renderer_finalize (GObject *obj)
   g_list_free (priv->lights);
   g_ptr_array_free (priv->light_setup.directional, TRUE);
   g_ptr_array_free (priv->light_setup.point, TRUE);
+  g_ptr_array_free (priv->light_setup.shadow, TRUE);
 
   gthree_render_list_free (priv->current_render_list);
 
@@ -511,6 +528,23 @@ gthree_renderer_get_gamma_factor (GthreeRenderer *renderer)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
   return priv->gamma_factor;
+}
+
+gboolean
+gthree_renderer_get_shadow_map_enabled (GthreeRenderer     *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  return priv->shadowmap_enabled;
+}
+
+void
+gthree_renderer_set_shadow_map_enabled (GthreeRenderer     *renderer,
+                                        gboolean            enabled)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  priv->shadowmap_enabled = enabled;
 }
 
 int
@@ -982,10 +1016,8 @@ project_object (GthreeRenderer *renderer,
       else if (GTHREE_IS_LIGHT (object))
         {
           priv->lights = g_list_append (priv->lights, object);
-#if TODO
-          if (object.castShadow)
-            currentRenderState.pushShadow ( );
-#endif
+          if (gthree_object_get_cast_shadow (object))
+            priv->shadows = g_list_append (priv->shadows, object);
         }
       else if (GTHREE_IS_MESH (object) || GTHREE_IS_LINE_SEGMENTS (object) || GTHREE_IS_SPRITE (object) || GTHREE_IS_POINTS (object))
         {
@@ -1034,6 +1066,16 @@ material_apply_light_setup (GthreeUniforms *m_uniforms,
 
   gthree_uniforms_set_uarray (m_uniforms, "directionalLights", light_setup->directional, update_only);
   gthree_uniforms_set_uarray (m_uniforms, "pointLights", light_setup->point, update_only);
+
+  gthree_uniforms_set_texture_array (m_uniforms, "directionalShadowMap", light_setup->directional_shadow_map);
+  gthree_uniforms_set_matrix4_array (m_uniforms, "directionalShadowMatrix", light_setup->directional_shadow_map_matrix);
+
+#ifdef TODO // shadow
+  uniforms.spotShadowMap.value = lights.state.spotShadowMap;
+  uniforms.spotShadowMatrix.value = lights.state.spotShadowMatrix;
+  uniforms.pointShadowMap.value = lights.state.pointShadowMap;
+  uniforms.pointShadowMatrix.value = lights.state.pointShadowMatrix;
+#endif
 }
 
 static GthreeProgram *
@@ -1083,6 +1125,9 @@ init_material (GthreeRenderer *renderer,
 
   parameters.num_clipping_planes = priv->num_clipping_planes;
 
+  parameters.shadow_map_enabled = priv->shadowmap_enabled && gthree_object_get_receive_shadow (object) && priv->shadows != NULL;
+  parameters.shadow_map_type = priv->shadowmap_type;
+
 #ifdef TODO
   parameters =
     {
@@ -1099,12 +1144,6 @@ init_material (GthreeRenderer *renderer,
     logarithmicDepthBuffer: _logarithmicDepthBuffer,
 
     useVertexTexture: _supportsBoneTextures && object && object.skeleton && object.skeleton.useVertexTexture,
-
-    maxShadows: maxShadows,
-    shadowMapEnabled: this.shadowMapEnabled && object.receiveShadow && maxShadows > 0,
-    shadowMapType: this.shadowMapType,
-    shadowMapDebug: this.shadowMapDebug,
-    shadowMapCascade: this.shadowMapCascade,
     };
 #endif
 
@@ -1212,6 +1251,8 @@ setup_lights (GthreeRenderer *renderer, GthreeCamera *camera)
   graphene_vec3_init (&setup->ambient, 0, 0, 0);
 
   g_ptr_array_set_size (setup->directional, 0);
+  g_ptr_array_set_size (setup->directional_shadow_map, 0);
+  g_array_set_size (setup->directional_shadow_map_matrix, 0);
   g_ptr_array_set_size (setup->point, 0);
 
   for (l = priv->lights; l != NULL; l = l->next)
@@ -1223,6 +1264,7 @@ setup_lights (GthreeRenderer *renderer, GthreeCamera *camera)
 
   setup->hash.num_directional = setup->directional->len;
   setup->hash.num_point = setup->point->len;
+  setup->hash.num_shadow = setup->shadow->len;
 }
 
 static void *
@@ -1313,6 +1355,474 @@ clipping_init (GthreeRenderer *renderer,
   return enabled;
 }
 
+static void
+clipping_begin_shadows (GthreeRenderer *renderer)
+{
+  // TODO
+}
+
+static void
+clipping_end_shadows (GthreeRenderer *renderer)
+{
+  // TODO
+}
+
+#define SHADER_MAP_MORPHING_FLAG (1<<0)
+#define SHADER_MAP_SKINNING_FLAG (1<<1)
+
+static GthreeMaterial *
+getDepthMaterial (GthreeRenderer *renderer,
+                  GthreeObject *object,
+                  GthreeGeometry *geometry,
+                  GthreeMaterial *material,
+                  gboolean isPointLight,
+                  const graphene_vec3_t *lightPositionWorld,
+                  float shadowCameraNear,
+                  float shadowCameraFar)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  GthreeMaterial *result = NULL;
+  GthreeMaterial *customMaterial = NULL;
+  GPtrArray *materialVariants = NULL;
+
+  if (priv->shadowmap_depth_materials == NULL)
+    {
+      priv->shadowmap_depth_materials = g_ptr_array_new_with_free_func (g_object_unref);
+      priv->shadowmap_distance_materials = g_ptr_array_new_with_free_func (g_object_unref);
+
+      for (int i = 0; i < 4; i++)
+        {
+          gboolean useMorphing = (i & SHADER_MAP_MORPHING_FLAG) != 0;
+          gboolean useSkinning = (i & SHADER_MAP_SKINNING_FLAG) != 0;
+
+          GthreeMeshDepthMaterial *m = gthree_mesh_depth_material_new ();
+          gthree_mesh_depth_material_set_depth_packing_format (m, GTHREE_DEPTH_PACKING_FORMAT_RGBA);
+
+          gthree_mesh_material_set_morph_targets (GTHREE_MESH_MATERIAL (m), useMorphing);
+          gthree_mesh_material_set_skinning (GTHREE_MESH_MATERIAL (m), useSkinning);
+          g_ptr_array_add (priv->shadowmap_depth_materials, m);
+
+#ifdef TODO
+          GthreeMeshDistanceMaterial *m2 = gthree_mesh_distance_material_new ();
+          gthree_mesh_material_set_morph_targets (GTHREE_MESH_MATERIAL (m2), useMorphing);
+          gthree_mesh_material_set_skinning (GTHREE_MESH_MATERIAL (m2), useSkinning);
+          g_ptr_array_add (priv->shadowmap_distance_materials, m2);
+#endif
+        }
+    }
+
+  materialVariants = priv->shadowmap_depth_materials;
+#ifdef TODO
+  var customMaterial = object.customDepthMaterial;
+#endif
+
+#ifdef TODO
+  if (isPointLight)
+    {
+      materialVariants = _distanceMaterials;
+      customMaterial = object.customDistanceMaterial;
+    }
+#endif
+
+  if (!customMaterial)
+    {
+      gboolean useMorphing = FALSE;
+      gboolean useSkinning = FALSE;
+      int variantIndex = 0;
+
+#ifdef TODO
+      if (material.morphTargets && geometry)
+        useMorphing = geometry.morphAttributes && geometry.morphAttributes.position && geometry.morphAttributes.position.length > 0;
+#endif
+
+#ifdef TODO
+      if (GTHREE_IS_SKINNED_MESH (object) && material.skinning === false ) {
+        console.warn( 'THREE.WebGLShadowMap: THREE.SkinnedMesh with material.skinning set to false:', object );
+      }
+#endif
+
+#ifdef TODO
+      useSkinning = object.isSkinnedMesh && material.skinning;
+#endif
+
+      if (useMorphing)
+        variantIndex |= SHADER_MAP_MORPHING_FLAG;
+      if (useSkinning)
+        variantIndex |= SHADER_MAP_SKINNING_FLAG;
+
+      result = g_ptr_array_index (materialVariants, variantIndex);
+    }
+  else
+    {
+      result = customMaterial;
+    }
+
+#ifdef TODO
+  if ( _renderer.localClippingEnabled &&
+       material.clipShadows === true &&
+       material.clippingPlanes.length !== 0 ) {
+    // in this case we need a unique material instance reflecting the
+    // appropriate state
+
+    var keyA = result.uuid, keyB = material.uuid;
+    var materialsForVariant = _materialCache[ keyA ];
+
+    if ( materialsForVariant === undefined ) {
+      materialsForVariant = {};
+      _materialCache[ keyA ] = materialsForVariant;
+    }
+
+    var cachedMaterial = materialsForVariant[ keyB ];
+    if ( cachedMaterial === undefined ) {
+      cachedMaterial = result.clone();
+      materialsForVariant[ keyB ] = cachedMaterial;
+    }
+
+    result = cachedMaterial;
+  }
+#endif
+
+  gthree_material_set_is_visible (result, gthree_material_get_is_visible (material));
+  if (GTHREE_MESH_MATERIAL (material))
+    gthree_mesh_material_set_is_wireframe (GTHREE_MESH_MATERIAL (result),
+                                           gthree_mesh_material_get_is_wireframe (GTHREE_MESH_MATERIAL (material)));
+
+#ifdef TODO
+  result.side = ( material.shadowSide != null ) ? material.shadowSide : shadowSide[ material.side ];
+#endif
+
+#ifdef TODO
+  result.clipShadows = material.clipShadows;
+  result.clippingPlanes = material.clippingPlanes;
+  result.clipIntersection = material.clipIntersection;
+#endif
+
+#ifdef TODO
+  result.wireframeLinewidth = material.wireframeLinewidth;
+  result.linewidth = material.linewidth;
+#endif
+
+#ifdef TODO
+  if (isPointLight && result.isMeshDistanceMaterial)
+    {
+      result.referencePosition.copy( lightPositionWorld );
+      result.nearDistance = shadowCameraNear;
+      result.farDistance = shadowCameraFar;
+    }
+#endif
+
+  return result;
+}
+
+static void
+shadow_map_render_object (GthreeRenderer *renderer,
+                          GthreeObject *object,
+                          GthreeCamera *camera,
+                          graphene_frustum_t *frustum,
+                          GthreeCamera *shadow_camera,
+                          const graphene_vec3_t *_lightPositionWorld,
+                          gboolean is_point_light)
+{
+  GthreeObject *child;
+  GthreeObjectIter iter;
+
+  if (!gthree_object_get_visible (object))
+    return;
+
+  if (gthree_object_check_layer (object, gthree_object_get_layer_mask (GTHREE_OBJECT (camera))) &&
+      (GTHREE_IS_MESH (object) || GTHREE_IS_LINE_SEGMENTS (object) || GTHREE_IS_POINTS (object)))
+    {
+      if (gthree_object_get_cast_shadow (object) &&
+          (!gthree_object_get_is_frustum_culled (object) || gthree_object_is_in_frustum (object, frustum)))
+        {
+          GthreeGeometry *geometry = NULL;
+          GthreeMaterial *material = NULL;
+          gboolean uses_groups = FALSE;
+
+          gthree_object_update_matrix_view (object, gthree_camera_get_world_inverse_matrix (shadow_camera));
+          gthree_object_update (object);
+
+          // TODO: Abstract this out into vfuncs
+          if (GTHREE_IS_MESH (object))
+            {
+              // TODO: Handle multi material
+              geometry = gthree_mesh_get_geometry (GTHREE_MESH (object));
+              uses_groups = gthree_mesh_get_n_materials (GTHREE_MESH (object)) > 1;
+              material = gthree_mesh_get_material (GTHREE_MESH (object), 0);
+            }
+          else
+            {
+              g_warning ("Unsupported object type for shadows: %s", g_type_name_from_instance ((gpointer)object));
+            }
+
+          if (uses_groups)
+            {
+#ifdef TODO
+              var groups = geometry.groups;
+
+              for ( var k = 0, kl = groups.length; k < kl; k ++ )
+                {
+                  var group = groups[ k ];
+                  var groupMaterial = material[ group.materialIndex ];
+
+                  if ( groupMaterial && groupMaterial.visible )
+                    {
+                      var depthMaterial = getDepthMaterial( object, groupMaterial, is_point_light, _lightPositionWorld, shadow_camera.near, shadow_camera.far );
+                      _renderer.renderBufferDirect( shadow_camera, null, geometry, depthMaterial, object, group );
+                    }
+                }
+#endif
+            }
+          else if (gthree_material_get_is_visible (material))
+            {
+              GthreeMaterial *depthMaterial = getDepthMaterial (renderer, object, geometry, material, is_point_light, _lightPositionWorld,
+                                                                gthree_camera_get_near (shadow_camera), gthree_camera_get_far (shadow_camera));
+              GthreeRenderListItem item = { object, geometry, depthMaterial, NULL, 0.0 };
+              render_item (renderer, shadow_camera, FALSE, depthMaterial, &item);
+            }
+        }
+    }
+
+  gthree_object_iter_init (&iter, object);
+  while (gthree_object_iter_next (&iter, &child))
+    shadow_map_render_object (renderer, child, camera, frustum, shadow_camera, _lightPositionWorld, is_point_light);
+}
+
+
+static void
+render_shadow_map (GthreeRenderer *renderer,
+                   GthreeScene *scene,
+                   GthreeCamera *camera)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  g_autoptr(GthreeRenderTarget) current_render_target = NULL;
+  GList *l;
+  int faceCount;
+  graphene_vec3_t c;
+
+  if (!priv->shadowmap_enabled)
+    return;
+
+#ifdef TODO
+  if ( scope.autoUpdate === false && scope.needsUpdate === false )
+    return;
+#endif
+
+  if (priv->shadows == NULL)
+    return;
+
+  push_debug_group ("rendering shadow maps");
+
+  g_set_object (&current_render_target,  priv->current_render_target);
+
+  // Set GL state for depth map.
+  set_blending (renderer, GTHREE_BLEND_NO, 0, 0, 0);
+  set_depth_test (renderer, TRUE);
+
+  set_clear_color (renderer, graphene_vec3_init (&c, 1, 1, 1));
+
+#ifdef TODO
+  _state.setScissorTest( false );
+#endif
+
+  // render depth map
+  for (l = priv->shadows; l != NULL; l = l->next)
+    {
+      GthreeLight *light = l->data;
+      GthreeLightShadow *shadow = gthree_light_get_shadow (light);
+
+      if (shadow == NULL)
+        {
+          g_warning ("light has no shadow.");
+          continue;
+        }
+
+      GthreeCamera *shadow_camera = gthree_light_shadow_get_camera (shadow);
+
+      int shadow_map_width = MIN (gthree_light_shadow_get_map_width (shadow), priv->max_texture_size);
+      int shadow_map_height = MIN (gthree_light_shadow_get_map_height (shadow), priv->max_texture_size);
+
+      push_debug_group ("shadow maps light %p", light);
+
+#ifdef TODO
+      graphene_vec4_t cube2DViewPorts[6];
+      if (GTHREE_IS_POINT_LIGHT (light))
+        {
+          int vpWidth = shadow_map_width;
+          int vpHeight = shadow_map_height;
+
+          // These viewports map a cube-map onto a 2D texture with the
+          // following orientation:
+          //
+          //  xzXZ
+          //   y Y
+          //
+          // X - Positive x direction
+          // x - Negative x direction
+          // Y - Positive y direction
+          // y - Negative y direction
+          // Z - Positive z direction
+          // z - Negative z direction
+
+          // positive X
+          graphene_vec4_init (&cube2DViewPorts[0],
+                              vpWidth * 2, vpHeight, vpWidth, vpHeight);
+          // negative X
+          graphene_vec4_init (&cube2DViewPorts[1],
+                              0, vpHeight, vpWidth, vpHeight );
+          // positive Z
+          graphene_vec4_init (&cube2DViewPorts[2],
+                              vpWidth * 3, vpHeight, vpWidth, vpHeight );
+          // negative Z
+          graphene_vec4_init (&cube2DViewPorts[3],
+                              vpWidth, vpHeight, vpWidth, vpHeight );
+          // positive Y
+          graphene_vec4_init (&cube2DViewPorts[4],
+                              vpWidth * 3, 0, vpWidth, vpHeight );
+          // negative Y
+          graphene_vec4_init (&cube2DViewPorts[5],
+                              vpWidth, 0, vpWidth, vpHeight );
+
+          shadow_map_width *= 4;
+          shadow_map_height *= 2;
+        }
+#endif
+
+      GthreeRenderTarget *shadow_map = gthree_light_shadow_get_map (shadow);
+
+      if (shadow_map == NULL)
+        {
+          shadow_map = gthree_render_target_new (shadow_map_width, shadow_map_height);
+
+          GthreeTexture *texture = gthree_render_target_get_texture (shadow_map);
+          gthree_texture_set_mag_filter (texture, GTHREE_FILTER_NEAREST);
+          gthree_texture_set_min_filter (texture, GTHREE_FILTER_NEAREST);
+
+          gthree_light_shadow_set_map (shadow, shadow_map);
+
+#ifdef TODO
+          texture.name = light.name + ".shadowMap";
+#endif
+
+          gthree_camera_update (shadow_camera);
+        }
+
+#ifdef TODO
+      if (GTHREE_IS_SPOT_LIGHT_SHADOW (shadow))
+        {
+          shadow.update( light );
+        }
+#endif
+
+      graphene_matrix_t *shadowMatrix = gthree_light_shadow_get_matrix (shadow);
+
+      graphene_vec4_t _lightPositionWorld4;
+      graphene_matrix_get_row (gthree_object_get_world_matrix (GTHREE_OBJECT (light)),
+                               3, &_lightPositionWorld4);
+      graphene_vec3_t _lightPositionWorld;
+      graphene_vec4_get_xyz (&_lightPositionWorld4, &_lightPositionWorld);
+
+      gthree_object_set_position (GTHREE_OBJECT (shadow_camera), &_lightPositionWorld);
+
+#ifdef TODO
+      if (GTHREE_IS_POINT_LIGHT (light))
+        {
+          faceCount = 6;
+
+          // for point lights we set the shadow matrix to be a translation-only matrix
+          // equal to inverse of the light's position
+          graphene_point3d_t p;
+          graphene_matrix_init_translate (shadowMatrix,
+                                          graphene_point3d_init (&p,
+                                                                 -graphene_vec3_get_x (&_lightPositionWorld),
+                                                                 -graphene_vec3_get_y (&_lightPositionWorld),
+                                                                 -graphene_vec3_get_z (&_lightPositionWorld)));
+        }
+      else
+#endif
+        {
+          faceCount = 1;
+
+          g_autoptr(GthreeObject) light_target = NULL;
+          g_object_get (light, "target", &light_target, NULL);
+
+          graphene_vec4_t _lookTarget;
+          graphene_matrix_get_row (gthree_object_get_world_matrix (light_target),
+                                   3, &_lookTarget);
+
+          graphene_point3d_t p;
+          gthree_object_look_at (GTHREE_OBJECT (shadow_camera),
+                                 graphene_point3d_init (&p,
+                                                        graphene_vec4_get_x (&_lookTarget),
+                                                        graphene_vec4_get_y (&_lookTarget),
+                                                        graphene_vec4_get_z (&_lookTarget)));
+          gthree_object_update_matrix_world (GTHREE_OBJECT (shadow_camera), FALSE);
+          gthree_camera_update_matrix (shadow_camera);
+
+          // compute shadow matrix
+          graphene_matrix_init_scale (shadowMatrix, 0.5, 0.5, 0.5);
+          graphene_matrix_translate (shadowMatrix, graphene_point3d_init (&p, 0.5, 0.5, 0.5));
+
+          graphene_matrix_multiply (gthree_camera_get_projection_matrix (shadow_camera),
+                                    shadowMatrix,
+                                    shadowMatrix);
+          graphene_matrix_multiply (gthree_camera_get_world_inverse_matrix (shadow_camera),
+                                    shadowMatrix,
+                                    shadowMatrix);
+        }
+
+      gthree_renderer_set_render_target (renderer, shadow_map, 0, 0);
+      gthree_renderer_clear (renderer, TRUE, TRUE, TRUE);
+
+      // render shadow map for each cube face (if omni-directional) or
+      // run a single pass if not
+      for (int face = 0; face < faceCount; face++)
+        {
+#ifdef TODO
+          if (GTHREE_IS_POINT_LIGHT (light))
+            {
+              _lookTarget.copy( shadow_camera.position );
+              _lookTarget.add( cubeDirections[ face ] );
+              shadow_camera.up.copy( cubeUps[ face ] );
+              shadow_camera.lookAt( _lookTarget );
+              shadow_camera.updateMatrixWorld();
+
+              var vpDimensions = cube2DViewPorts[ face ];
+              _state.viewport( vpDimensions );
+            }
+#endif
+
+          // update camera matrices and frustum
+          graphene_matrix_t _projScreenMatrix;
+          graphene_frustum_t frustum;
+
+          gthree_camera_get_proj_screen_matrix (shadow_camera, &_projScreenMatrix);
+          graphene_frustum_init_from_matrix (&frustum, &_projScreenMatrix);
+
+          // set object matrices & frustum culling
+          shadow_map_render_object (renderer, GTHREE_OBJECT (scene), camera, &frustum, shadow_camera,
+                                    &_lightPositionWorld,
+#ifdef TODO
+                                    GTHREE_IS_POINT_LIGHT (light)
+#else
+                                    FALSE
+#endif
+                                    );
+
+          pop_debug_group ();
+        }
+    }
+
+#ifdef TODO
+  scope.needsUpdate = false;
+#endif
+
+  gthree_renderer_set_render_target (renderer, current_render_target, 0, 0);
+
+  pop_debug_group ();
+}
+
+
 // If uniforms are marked as clean, they don't need to be loaded to the GPU.
 static void
 mark_uniforms_lights_needs_update (GthreeUniforms *uniforms, gboolean needs_update)
@@ -1368,8 +1878,10 @@ set_program (GthreeRenderer *renderer,
 
   priv->used_texture_units = 0;
 
-  /* Maybe the light state (e.g. nr of lights) changed sinze we last initialized the material, even if the
-     material didn't change */
+  /* Maybe the light state (e.g. nr of lights, or if this is a shaded
+     object) changed since we last initialized the material, even if
+     the material itself didn't change */
+  priv->light_setup.hash.obj_receive_shadow = gthree_object_get_receive_shadow (object) && priv->shadowmap_enabled;
   if (!gthree_material_get_needs_update (material))
     {
       if (!gthree_light_setup_hash_equal (&material_properties->light_hash, &priv->light_setup.hash))
@@ -2202,6 +2714,9 @@ gthree_renderer_render (GthreeRenderer *renderer,
   g_list_free (priv->lights);
   priv->lights = NULL;
 
+  g_list_free (priv->shadows);
+  priv->shadows = NULL;
+
   fog = NULL;
 
   priv->current_material = NULL;
@@ -2237,21 +2752,14 @@ gthree_renderer_render (GthreeRenderer *renderer,
     gthree_render_list_sort (priv->current_render_list);
 
   if (priv->clipping_enabled )
-    {
-      //TODO: _clipping.beginShadows();
-    }
+    clipping_begin_shadows (renderer);
 
-#ifdef TODO
-  var shadowsArray = currentRenderState.state.shadowsArray;
-  shadowMap.render( shadowsArray, scene, camera );
-#endif
+  render_shadow_map (renderer, scene, camera);
 
   setup_lights (renderer, camera);
 
   if (priv->clipping_enabled)
-    {
-      //TODO: _clipping.endShadows();
-    }
+    clipping_end_shadows (renderer);
 
   gthree_renderer_set_render_target (renderer, priv->current_render_target, 0, 0);
 
