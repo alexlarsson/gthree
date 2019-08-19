@@ -65,3 +65,77 @@ gthree_light_shadow_new (GthreeCamera *camera)
 
   return light_shadow;
 }
+
+GthreeCamera *
+gthree_light_shadow_get_camera (GthreeLightShadow *shadow)
+{
+  GthreeLightShadowPrivate *priv = gthree_light_shadow_get_instance_private (shadow);
+
+  return priv->camera;
+}
+
+void
+gthree_light_shadow_set_camera (GthreeLightShadow *shadow,
+                                GthreeCamera *camera)
+{
+  GthreeLightShadowPrivate *priv = gthree_light_shadow_get_instance_private (shadow);
+
+  g_set_object (&priv->camera, camera);
+}
+
+int
+gthree_light_shadow_get_map_width (GthreeLightShadow *shadow)
+{
+  GthreeLightShadowPrivate *priv = gthree_light_shadow_get_instance_private (shadow);
+
+  return priv->map_width;
+}
+
+int
+gthree_light_shadow_get_map_height (GthreeLightShadow *shadow)
+{
+  GthreeLightShadowPrivate *priv = gthree_light_shadow_get_instance_private (shadow);
+
+  return priv->map_height;
+}
+
+GthreeRenderTarget *
+gthree_light_shadow_get_map (GthreeLightShadow *shadow)
+{
+  GthreeLightShadowPrivate *priv = gthree_light_shadow_get_instance_private (shadow);
+
+  return priv->map;
+}
+
+void
+gthree_light_shadow_set_map (GthreeLightShadow *shadow,
+                             GthreeRenderTarget *map)
+{
+  GthreeLightShadowPrivate *priv = gthree_light_shadow_get_instance_private (shadow);
+
+  g_set_object (&priv->map, map);
+}
+
+graphene_matrix_t *
+gthree_light_shadow_get_matrix (GthreeLightShadow *shadow)
+{
+  GthreeLightShadowPrivate *priv = gthree_light_shadow_get_instance_private (shadow);
+
+  return &priv->matrix;
+}
+
+float
+gthree_light_shadow_get_bias (GthreeLightShadow *shadow)
+{
+  GthreeLightShadowPrivate *priv = gthree_light_shadow_get_instance_private (shadow);
+
+  return priv->bias;
+}
+
+float
+gthree_light_shadow_get_radius (GthreeLightShadow *shadow)
+{
+  GthreeLightShadowPrivate *priv = gthree_light_shadow_get_instance_private (shadow);
+
+  return priv->radius;
+}

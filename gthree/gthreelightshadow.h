@@ -35,6 +35,18 @@ typedef struct {
 GTHREE_API
 GType gthree_light_shadow_get_type (void) G_GNUC_CONST;
 
+GTHREE_API
+int gthree_light_shadow_get_map_width (GthreeLightShadow *shadow);
+GTHREE_API
+int gthree_light_shadow_get_map_height (GthreeLightShadow *shadow);
+GTHREE_API
+GthreeCamera * gthree_light_shadow_get_camera (GthreeLightShadow *shadow);
+GTHREE_API
+float gthree_light_shadow_get_bias (GthreeLightShadow *shadow);
+GTHREE_API
+float gthree_light_shadow_get_radius (GthreeLightShadow *shadow);
+
+
 G_END_DECLS
 
 #endif /* __GTHREE_LIGHT_SHADOW_H__ */

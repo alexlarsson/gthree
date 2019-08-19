@@ -169,6 +169,12 @@ void gthree_light_setup  (GthreeLight   *light,
                           GthreeLightSetup *setup);
 
 GthreeLightShadow *gthree_light_shadow_new (GthreeCamera *camera);
+void gthree_light_shadow_set_camera (GthreeLightShadow *shadow,
+                                     GthreeCamera *camera);
+GthreeRenderTarget * gthree_light_shadow_get_map (GthreeLightShadow *shadow);
+void gthree_light_shadow_set_map (GthreeLightShadow *shadow,
+                                  GthreeRenderTarget *map);
+graphene_matrix_t * gthree_light_shadow_get_matrix (GthreeLightShadow *shadow);
 
 GthreeMaterialProperties *gthree_material_get_properties (GthreeMaterial  *material);
 
