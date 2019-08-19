@@ -10,6 +10,7 @@
 #include <gthree/gthreemesh.h>
 #include <gthree/gthreesprite.h>
 #include <gthree/gthreelightshadow.h>
+#include <gthree/gthreedirectionallightshadow.h>
 
 //#define DEBUG_LABELS
 //#define DEBUG_GROUPS
@@ -175,6 +176,8 @@ GthreeRenderTarget * gthree_light_shadow_get_map (GthreeLightShadow *shadow);
 void gthree_light_shadow_set_map (GthreeLightShadow *shadow,
                                   GthreeRenderTarget *map);
 graphene_matrix_t * gthree_light_shadow_get_matrix (GthreeLightShadow *shadow);
+
+GthreeDirectionalLightShadow *gthree_directional_light_shadow_new (void);
 
 GthreeMaterialProperties *gthree_material_get_properties (GthreeMaterial  *material);
 

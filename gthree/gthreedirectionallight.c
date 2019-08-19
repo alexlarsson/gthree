@@ -2,6 +2,7 @@
 #include <epoxy/gl.h>
 
 #include "gthreedirectionallight.h"
+#include "gthreedirectionallightshadow.h"
 #include "gthreecamera.h"
 #include "gthreeprivate.h"
 
@@ -53,11 +54,15 @@ gthree_directional_light_init (GthreeDirectionalLight *directional)
 {
   GthreeDirectionalLightPrivate *priv = gthree_directional_light_get_instance_private (directional);
   graphene_point3d_t pos = {0, 1, 0};
+  g_autoptr(GthreeDirectionalLightShadow) shadow;
 
   priv->target = gthree_object_new ();
   priv->uniforms = gthree_uniforms_new_from_definitions (light_uniforms, G_N_ELEMENTS (light_uniforms));
 
   gthree_object_set_position_point3d (GTHREE_OBJECT (directional), &pos);
+
+  shadow = gthree_directional_light_shadow_new ();
+  gthree_light_set_shadow (GTHREE_LIGHT (directional), GTHREE_LIGHT_SHADOW (shadow));
 }
 
 void
