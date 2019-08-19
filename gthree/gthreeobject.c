@@ -505,6 +505,23 @@ gthree_object_is_in_frustum (GthreeObject *object,
 }
 
 void
+gthree_object_set_up (GthreeObject *object,
+                      const graphene_vec3_t *up)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  priv->up = *up;
+}
+
+const graphene_vec3_t *
+gthree_object_get_up (GthreeObject *object)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  return &priv->up;
+}
+
+void
 gthree_object_look_at (GthreeObject *object,
                        graphene_point3d_t *pos)
 {
