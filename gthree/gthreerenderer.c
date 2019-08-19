@@ -237,6 +237,8 @@ gthree_renderer_init (GthreeRenderer *renderer)
   priv->pixel_ratio = 1;
   priv->gamma_factor = 2.2; // Differs from three.js default 2.0
   priv->physically_correct_lights = FALSE;
+  priv->shadowmap_type = GTHREE_SHADOW_MAP_TYPE_PCF;
+  priv->shadowmap_enabled = FALSE;
 
   priv->clipping_planes = g_array_new (FALSE, FALSE, sizeof (graphene_plane_t));
   priv->clipping_state = g_array_new (FALSE, FALSE, sizeof (float));
