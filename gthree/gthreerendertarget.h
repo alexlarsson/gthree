@@ -38,22 +38,6 @@ GTHREE_API
 GType gthree_render_target_get_type (void) G_GNUC_CONST;
 
 GTHREE_API
-GthreeRenderTarget *gthree_render_target_new_full (int width,
-                                                   int height,
-                                                   GthreeWrapping wrap_t,
-                                                   GthreeWrapping wrap_s,
-                                                   GthreeFilter mag_filter,
-                                                   GthreeFilter min_filter,
-                                                   GthreeTextureFormat format,
-                                                   GthreeDataType data_type,
-                                                   int anisotropy,
-                                                   GthreeEncodingFormat encoding,
-                                                   gboolean generate_mipmaps,
-                                                   gboolean depth_buffer,
-                                                   gboolean stencil_buffer,
-                                                   GthreeTexture *depth_texture);
-
-GTHREE_API
 GthreeRenderTarget *gthree_render_target_new (int width,
                                               int height);
 GTHREE_API
