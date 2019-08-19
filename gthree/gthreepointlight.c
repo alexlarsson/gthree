@@ -103,6 +103,8 @@ gthree_point_light_real_setup (GthreeLight *light,
   gthree_uniforms_set_float (priv->uniforms, "decay", priv->decay);
 
   gthree_uniforms_set_int (priv->uniforms, "shadow", 0);
+
+  //ADD this
 #ifdef TODO
   uniforms.shadow = light.castShadow;
   if ( light.castShadow ) {

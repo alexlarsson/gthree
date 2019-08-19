@@ -19,6 +19,8 @@
 typedef struct {
   guint8 num_directional;
   guint8 num_point;
+  guint8 num_shadow;
+  guint8 obj_receive_shadow;
 } GthreeLightSetupHash;
 
 struct _GthreeLightSetup
@@ -27,7 +29,10 @@ struct _GthreeLightSetup
 
   /* Uniforms */
   GPtrArray *directional;
+  GPtrArray *directional_shadow_map;
+  GArray *directional_shadow_map_matrix;
   GPtrArray *point;
+  GPtrArray *shadow;
 
   GthreeLightSetupHash hash;
 };
@@ -78,7 +83,7 @@ struct  _GthreeProgramParameters {
   guint morph_normals : 1;
   guint premultiplied_alpha : 1;
   guint shadow_map_enabled : 1;
-  guint shadow_map_type_ : 2;
+  guint shadow_map_type : 2;
   guint tone_mapping : 1;
   guint physically_correct_lights : 1;
   guint double_sided : 1;
