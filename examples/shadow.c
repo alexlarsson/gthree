@@ -11,6 +11,7 @@ static GthreePerspectiveCamera *camera;
 static GthreeAmbientLight *ambient_light;
 static GthreeDirectionalLight *directional_light;
 static GthreeSpotLight *spot_light;
+static GthreePointLight *point_light;
 static GthreeMesh *ball;
 static GthreeMesh *cube;
 
@@ -19,8 +20,12 @@ init_scene (void)
 {
   GthreeGeometry *floor_geometry, *ball_geometry, *cube_geometry;
   GthreeMeshPhongMaterial *ball_material, *cube_material, *floor_material;
-  GthreeMesh *floor;
+  GthreeMeshBasicMaterial *particle_material;
+  GthreeGeometry *particle_geometry;
+  GthreeMesh *floor, *dir_particle, *spot_particle, *point_particle;
   graphene_point3d_t pos = { 0, 0, 0};
+
+  particle_geometry = gthree_geometry_new_sphere (4, 8, 8);
 
   scene = gthree_scene_new ();
 
@@ -32,7 +37,7 @@ init_scene (void)
   ball_material = gthree_mesh_phong_material_new ();
   gthree_mesh_phong_material_set_color (ball_material, white ());
 
-  ball_geometry = gthree_geometry_new_sphere (70, 32, 16);
+  ball_geometry = gthree_geometry_new_sphere (100, 32, 16);
   ball = gthree_mesh_new (ball_geometry, GTHREE_MATERIAL (ball_material));
   gthree_object_set_cast_shadow (GTHREE_OBJECT (ball), TRUE);
   gthree_object_set_position_point3d (GTHREE_OBJECT (ball),
@@ -70,6 +75,8 @@ init_scene (void)
   ambient_light = gthree_ambient_light_new (dark_grey ());
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));
 
+  /* Directional light */
+
   directional_light = gthree_directional_light_new (green (), 0.3);
   gthree_object_set_cast_shadow (GTHREE_OBJECT (directional_light), TRUE);
   gthree_object_set_position_point3d (GTHREE_OBJECT (directional_light),
@@ -85,12 +92,32 @@ init_scene (void)
   gthree_orthographic_camera_set_top (GTHREE_ORTHOGRAPHIC_CAMERA (shadow_camera), 500);
   gthree_orthographic_camera_set_bottom (GTHREE_ORTHOGRAPHIC_CAMERA (shadow_camera), -500);
 
+  particle_material = gthree_mesh_basic_material_new ();
+  gthree_mesh_basic_material_set_color (particle_material, green ());
+  dir_particle = gthree_mesh_new (particle_geometry, GTHREE_MATERIAL (particle_material));
+  gthree_object_add_child (GTHREE_OBJECT (directional_light), GTHREE_OBJECT (dir_particle));
+
+  /* Spot light */
+
   spot_light = gthree_spot_light_new (blue (), 1.5, 5000, G_PI/4, 0.2);
   gthree_object_set_cast_shadow (GTHREE_OBJECT (spot_light), TRUE);
-  gthree_object_set_position_point3d (GTHREE_OBJECT (spot_light),
-                                      graphene_point3d_init (&pos,
-                                                             200, 200, 0));
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (spot_light));
+
+  particle_material = gthree_mesh_basic_material_new ();
+  gthree_mesh_basic_material_set_color (particle_material, blue ());
+  spot_particle = gthree_mesh_new (particle_geometry, GTHREE_MATERIAL (particle_material));
+  gthree_object_add_child (GTHREE_OBJECT (spot_light), GTHREE_OBJECT (spot_particle));
+
+  /* Point light */
+
+  point_light = gthree_point_light_new (red (), 0.5, 0);
+  gthree_object_set_cast_shadow (GTHREE_OBJECT (point_light), TRUE);
+  gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (point_light));
+
+  particle_material = gthree_mesh_basic_material_new ();
+  gthree_mesh_basic_material_set_color (particle_material, red ());
+  point_particle = gthree_mesh_new (particle_geometry, GTHREE_MATERIAL (particle_material));
+  gthree_object_add_child (GTHREE_OBJECT (point_light), GTHREE_OBJECT (point_particle));
 }
 
 static gboolean
@@ -121,12 +148,17 @@ tick (GtkWidget     *widget,
                               graphene_euler_init (&e,
                                                    angle*300, angle * 123, 0));
 
-
   gthree_object_set_position_point3d (GTHREE_OBJECT (spot_light),
                                       graphene_point3d_init (&pos,
                                                              cos (angle*10) * 150,
                                                              150,
                                                              cos (angle*7) * 150));
+
+  gthree_object_set_position_point3d (GTHREE_OBJECT (point_light),
+                                      graphene_point3d_init (&pos,
+                                                             0,
+                                                             150,
+                                                             cos (angle*10) * 150));
 
   gtk_widget_queue_draw (widget);
 
