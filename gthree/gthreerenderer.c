@@ -149,6 +149,14 @@ static GQuark q_boneMatrices;
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeRenderer, gthree_renderer, G_TYPE_OBJECT);
 
 static void clear (gboolean color, gboolean depth, gboolean stencil);
+static void set_clear_color (GthreeRenderer *renderer,
+                             const graphene_vec3_t *color);
+
+static void render_item (GthreeRenderer *renderer,
+                         GthreeCamera *camera,
+                         gpointer fog,
+                         GthreeMaterial *material,
+                         GthreeRenderListItem *item);
 
 static void
 push_debug_group (const char   *format, ...)
@@ -478,11 +486,7 @@ gthree_renderer_set_clear_color (GthreeRenderer *renderer,
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
 
   priv->clear_color = *color;
-
-  glClearColor (graphene_vec3_get_x (&priv->clear_color),
-                graphene_vec3_get_y (&priv->clear_color),
-                graphene_vec3_get_z (&priv->clear_color),
-                1);
+  set_clear_color (renderer, color);
 }
 
 const graphene_vec3_t *
@@ -859,6 +863,22 @@ set_polygon_offset (GthreeRenderer *renderer,
       glPolygonOffset (factor, units);
       priv->old_polygon_offset_factor = factor;
       priv->old_polygon_offset_units = units;
+    }
+}
+
+static void
+set_clear_color (GthreeRenderer *renderer,
+                 const graphene_vec3_t *color)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  if (!graphene_vec3_equal (color, &priv->old_clear_color))
+    {
+      glClearColor (graphene_vec3_get_x (color),
+                    graphene_vec3_get_y (color),
+                    graphene_vec3_get_z (color),
+                    1);
+      priv->old_clear_color = *color;
     }
 }
 
@@ -2055,22 +2075,11 @@ gthree_renderer_render_background (GthreeRenderer *renderer,
     {
       graphene_vec3_t default_col;
       graphene_vec3_init (&default_col, 0, 0, 0);
-      if (!graphene_vec3_equal (&default_col, &priv->old_clear_color))
-        {
-          glClearColor (0, 0, 0, 0);
-          priv->old_clear_color = default_col;
-        }
+      set_clear_color (renderer, &default_col);
     }
   else
     {
-      if (!graphene_vec3_equal (bg_color, &priv->old_clear_color))
-        {
-          glClearColor (graphene_vec3_get_x (bg_color),
-                        graphene_vec3_get_y (bg_color),
-                        graphene_vec3_get_z (bg_color),
-                        1);
-          priv->old_clear_color = *bg_color;
-        }
+      set_clear_color (renderer, bg_color);
       force_clear = TRUE;
     }
 
