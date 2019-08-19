@@ -10,10 +10,10 @@
 G_BEGIN_DECLS
 
 
-#define GTHREE_TYPE_DIRECTIONAL_LIGHT_SHADOW      (gthree_directional_light_get_type ())
+#define GTHREE_TYPE_DIRECTIONAL_LIGHT_SHADOW      (gthree_directional_light_shadow_get_type ())
 #define GTHREE_DIRECTIONAL_LIGHT_SHADOW(inst)     (G_TYPE_CHECK_INSTANCE_CAST ((inst), \
                                                                      GTHREE_TYPE_DIRECTIONAL_LIGHT_SHADOW, \
-                                                                     GthreeDirectionalLight))
+                                                                     GthreeDirectionalLightShadow))
 #define GTHREE_IS_DIRECTIONAL_LIGHT_SHADOW(inst)  (G_TYPE_CHECK_INSTANCE_TYPE ((inst), \
                                                                      GTHREE_TYPE_DIRECTIONAL_LIGHT_SHADOW))
 
