@@ -39,6 +39,7 @@
 #include <gthree/gthreemeshstandardmaterial.h>
 #include <gthree/gthreemeshnormalmaterial.h>
 #include <gthree/gthreemeshdepthmaterial.h>
+#include <gthree/gthreemeshdistancematerial.h>
 #include <gthree/gthreeshadermaterial.h>
 #include <gthree/gthreesprite.h>
 #include <gthree/gthreespritematerial.h>

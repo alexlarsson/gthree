@@ -1012,6 +1012,8 @@ static GthreeUniformsDefinition lights_lib[] = {
   */
 
   {"pointLights", GTHREE_UNIFORM_TYPE_UNIFORMS_ARRAY, NULL},
+  {"pointShadowMap", GTHREE_UNIFORM_TYPE_TEXTURE_ARRAY, NULL},
+  {"pointShadowMatrix", GTHREE_UNIFORM_TYPE_MATRIX4_ARRAY, NULL},
   /*
      properties: {
        color: {},
@@ -1048,8 +1050,6 @@ static GthreeUniformsDefinition lights_lib[] = {
 
 /*
   lightProbe: { value: [] },
-  pointShadowMap: { value: [] },
-  pointShadowMatrix: { value: [] },
   hemisphereLights: { value: [], properties: {
     direction: {},
     skyColor: {},

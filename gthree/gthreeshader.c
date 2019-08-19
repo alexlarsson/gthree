@@ -486,7 +486,7 @@ static float f1000 = 1000;
 static float fp5 = 0.5;
 static float dark_grey[3] = { 0.06666666666666667, 0.06666666666666667, 0.06666666666666667 };
 static float black[3] = { 0, 0, 0 };
-static float zerov2[2] = { 0, 0 };
+static float zerov3[3] = { 0, 0, 0 };
 static float one_matrix3[9] = { 1, 0, 0,
                                 0, 1, 0,
                                 0, 0, 1};
@@ -555,7 +555,7 @@ static GthreeUniformsDefinition equirect_uniforms[] = {
 
 static const char *distanceRGBA_uniform_libs[] = { "common", "displacementmap", NULL };
 static GthreeUniformsDefinition distanceRGBA_uniforms[] = {
-  {"referencePosition", GTHREE_UNIFORM_TYPE_VECTOR2, &zerov2},
+  {"referencePosition", GTHREE_UNIFORM_TYPE_VECTOR3, &zerov3},
   {"nearDistance", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
   {"farDistance", GTHREE_UNIFORM_TYPE_FLOAT, &f1000 },
 };

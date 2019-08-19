@@ -13,6 +13,7 @@
 #include "gthreecubetexture.h"
 #include "gthreeshadermaterial.h"
 #include "gthreemeshdepthmaterial.h"
+#include "gthreemeshdistancematerial.h"
 #include "gthreemeshmaterial.h"
 #include "gthreelinebasicmaterial.h"
 #include "gthreeprimitives.h"
@@ -21,9 +22,13 @@
 #include "gthreesprite.h"
 #include "gthreepoints.h"
 #include "gthreespotlight.h"
+#include "gthreepointlight.h"
 
 #define MAX_MORPH_TARGETS 8
 #define MAX_MORPH_NORMALS 4
+
+static graphene_vec3_t cube_directions[6];
+static graphene_vec3_t cube_ups[6];
 
 typedef struct {
   GthreeObject *object;
@@ -249,6 +254,8 @@ gthree_renderer_init (GthreeRenderer *renderer)
   priv->light_setup.directional_shadow_map = g_ptr_array_new ();
   priv->light_setup.directional_shadow_map_matrix = g_array_new (FALSE, FALSE, sizeof (graphene_matrix_t));
   priv->light_setup.point = g_ptr_array_new ();
+  priv->light_setup.point_shadow_map = g_ptr_array_new ();
+  priv->light_setup.point_shadow_map_matrix = g_array_new (FALSE, FALSE, sizeof (graphene_matrix_t));
   priv->light_setup.spot = g_ptr_array_new ();
   priv->light_setup.spot_shadow_map = g_ptr_array_new ();
   priv->light_setup.spot_shadow_map_matrix = g_array_new (FALSE, FALSE, sizeof (graphene_matrix_t));
@@ -313,6 +320,8 @@ gthree_renderer_finalize (GObject *obj)
   g_ptr_array_free (priv->light_setup.directional_shadow_map, TRUE);
   g_array_free (priv->light_setup.directional_shadow_map_matrix, TRUE);
   g_ptr_array_free (priv->light_setup.point, TRUE);
+  g_ptr_array_free (priv->light_setup.point_shadow_map, TRUE);
+  g_array_free (priv->light_setup.point_shadow_map_matrix, TRUE);
   g_ptr_array_free (priv->light_setup.spot, TRUE);
   g_ptr_array_free (priv->light_setup.spot_shadow_map, TRUE);
   g_array_free (priv->light_setup.spot_shadow_map_matrix, TRUE);
@@ -354,6 +363,21 @@ gthree_renderer_class_init (GthreeRendererClass *klass)
   INIT_QUARK(bindMatrix);
   INIT_QUARK(bindMatrixInverse);
   INIT_QUARK(boneMatrices);
+
+  graphene_vec3_init (&cube_directions[0],  1,  0,  0);
+  graphene_vec3_init (&cube_directions[1], -1,  0,  0);
+  graphene_vec3_init (&cube_directions[2],  0,  0,  1);
+  graphene_vec3_init (&cube_directions[3],  0,  0, -1);
+  graphene_vec3_init (&cube_directions[4],  0,  1,  0);
+  graphene_vec3_init (&cube_directions[5],  0, -1,  0);
+
+  graphene_vec3_init (&cube_ups[0],  0,  1,  0);
+  graphene_vec3_init (&cube_ups[1],  0,  1,  0);
+  graphene_vec3_init (&cube_ups[2],  0,  1,  0);
+  graphene_vec3_init (&cube_ups[3],  0,  1,  0);
+  graphene_vec3_init (&cube_ups[4],  0,  0,  1);
+  graphene_vec3_init (&cube_ups[5],  0,  0, -1);
+
 }
 
 void
@@ -1085,10 +1109,8 @@ material_apply_light_setup (GthreeUniforms *m_uniforms,
   gthree_uniforms_set_texture_array (m_uniforms, "spotShadowMap", light_setup->spot_shadow_map);
   gthree_uniforms_set_matrix4_array (m_uniforms, "spotShadowMatrix", light_setup->spot_shadow_map_matrix);
 
-#ifdef TODO // shadow
-  uniforms.pointShadowMap.value = lights.state.pointShadowMap;
-  uniforms.pointShadowMatrix.value = lights.state.pointShadowMatrix;
-#endif
+  gthree_uniforms_set_texture_array (m_uniforms, "pointShadowMap", light_setup->point_shadow_map);
+  gthree_uniforms_set_matrix4_array (m_uniforms, "pointShadowMatrix", light_setup->point_shadow_map_matrix);
 }
 
 static GthreeProgram *
@@ -1268,6 +1290,8 @@ setup_lights (GthreeRenderer *renderer, GthreeCamera *camera)
   g_ptr_array_set_size (setup->directional_shadow_map, 0);
   g_array_set_size (setup->directional_shadow_map_matrix, 0);
   g_ptr_array_set_size (setup->point, 0);
+  g_ptr_array_set_size (setup->point_shadow_map, 0);
+  g_array_set_size (setup->point_shadow_map_matrix, 0);
   g_ptr_array_set_size (setup->spot, 0);
   g_ptr_array_set_size (setup->spot_shadow_map, 0);
   g_array_set_size (setup->spot_shadow_map_matrix, 0);
@@ -1420,12 +1444,10 @@ getDepthMaterial (GthreeRenderer *renderer,
           gthree_mesh_material_set_skinning (GTHREE_MESH_MATERIAL (m), useSkinning);
           g_ptr_array_add (priv->shadowmap_depth_materials, m);
 
-#ifdef TODO
           GthreeMeshDistanceMaterial *m2 = gthree_mesh_distance_material_new ();
           gthree_mesh_material_set_morph_targets (GTHREE_MESH_MATERIAL (m2), useMorphing);
           gthree_mesh_material_set_skinning (GTHREE_MESH_MATERIAL (m2), useSkinning);
           g_ptr_array_add (priv->shadowmap_distance_materials, m2);
-#endif
         }
     }
 
@@ -1434,13 +1456,13 @@ getDepthMaterial (GthreeRenderer *renderer,
   var customMaterial = object.customDepthMaterial;
 #endif
 
-#ifdef TODO
   if (isPointLight)
     {
-      materialVariants = _distanceMaterials;
+      materialVariants = priv->shadowmap_distance_materials;
+#ifdef TODO
       customMaterial = object.customDistanceMaterial;
-    }
 #endif
+    }
 
   if (!customMaterial)
     {
@@ -1520,14 +1542,15 @@ getDepthMaterial (GthreeRenderer *renderer,
   result.linewidth = material.linewidth;
 #endif
 
-#ifdef TODO
-  if (isPointLight && result.isMeshDistanceMaterial)
+  if (isPointLight && GTHREE_IS_MESH_DISTANCE_MATERIAL (result))
     {
-      result.referencePosition.copy( lightPositionWorld );
-      result.nearDistance = shadowCameraNear;
-      result.farDistance = shadowCameraFar;
+      gthree_mesh_distance_material_set_reference_point (GTHREE_MESH_DISTANCE_MATERIAL (result),
+                                                         lightPositionWorld);
+      gthree_mesh_distance_material_set_near_distance (GTHREE_MESH_DISTANCE_MATERIAL (result),
+                                                       shadowCameraNear);
+      gthree_mesh_distance_material_set_far_distance (GTHREE_MESH_DISTANCE_MATERIAL (result),
+                                                      shadowCameraFar);
     }
-#endif
 
   return result;
 }
@@ -1648,6 +1671,7 @@ render_shadow_map (GthreeRenderer *renderer,
     {
       GthreeLight *light = l->data;
       GthreeLightShadow *shadow = gthree_light_get_shadow (light);
+      graphene_vec4_t cube2DViewPorts[6];
 
       if (shadow == NULL)
         {
@@ -1662,8 +1686,6 @@ render_shadow_map (GthreeRenderer *renderer,
 
       push_debug_group ("shadow maps light %p", light);
 
-#ifdef TODO
-      graphene_vec4_t cube2DViewPorts[6];
       if (GTHREE_IS_POINT_LIGHT (light))
         {
           int vpWidth = shadow_map_width;
@@ -1704,7 +1726,6 @@ render_shadow_map (GthreeRenderer *renderer,
           shadow_map_width *= 4;
           shadow_map_height *= 2;
         }
-#endif
 
       GthreeRenderTarget *shadow_map = gthree_light_shadow_get_map (shadow);
 
@@ -1738,7 +1759,6 @@ render_shadow_map (GthreeRenderer *renderer,
 
       gthree_object_set_position (GTHREE_OBJECT (shadow_camera), &_lightPositionWorld);
 
-#ifdef TODO
       if (GTHREE_IS_POINT_LIGHT (light))
         {
           faceCount = 6;
@@ -1753,7 +1773,6 @@ render_shadow_map (GthreeRenderer *renderer,
                                                                  -graphene_vec3_get_z (&_lightPositionWorld)));
         }
       else
-#endif
         {
           faceCount = 1;
 
@@ -1792,19 +1811,30 @@ render_shadow_map (GthreeRenderer *renderer,
       // run a single pass if not
       for (int face = 0; face < faceCount; face++)
         {
-#ifdef TODO
           if (GTHREE_IS_POINT_LIGHT (light))
             {
-              _lookTarget.copy( shadow_camera.position );
-              _lookTarget.add( cubeDirections[ face ] );
-              shadow_camera.up.copy( cubeUps[ face ] );
-              shadow_camera.lookAt( _lookTarget );
-              shadow_camera.updateMatrixWorld();
+              graphene_point3d_t p;
+              graphene_vec3_t _lookTarget;
+              graphene_vec3_add (gthree_object_get_position (GTHREE_OBJECT (shadow_camera)),
+                                 &cube_directions[face], &_lookTarget);
 
-              var vpDimensions = cube2DViewPorts[ face ];
-              _state.viewport( vpDimensions );
+              gthree_object_set_up (GTHREE_OBJECT (shadow_camera), &cube_ups[face]);
+              gthree_object_look_at (GTHREE_OBJECT (shadow_camera),
+                                     graphene_point3d_init (&p,
+                                                            graphene_vec3_get_x (&_lookTarget),
+                                                            graphene_vec3_get_y (&_lookTarget),
+                                                            graphene_vec3_get_z (&_lookTarget)));
+
+              gthree_object_update_matrix_world (GTHREE_OBJECT (shadow_camera), FALSE);
+              gthree_camera_update_matrix (shadow_camera);
+
+              graphene_vec4_t *vpDimensions = &cube2DViewPorts[face];
+
+              glViewport (graphene_vec4_get_x (vpDimensions),
+                          graphene_vec4_get_y (vpDimensions),
+                          graphene_vec4_get_z (vpDimensions),
+                          graphene_vec4_get_w (vpDimensions));
             }
-#endif
 
           // update camera matrices and frustum
           graphene_matrix_t _projScreenMatrix;
@@ -1816,15 +1846,10 @@ render_shadow_map (GthreeRenderer *renderer,
           // set object matrices & frustum culling
           shadow_map_render_object (renderer, GTHREE_OBJECT (scene), camera, &frustum, shadow_camera,
                                     &_lightPositionWorld,
-#ifdef TODO
-                                    GTHREE_IS_POINT_LIGHT (light)
-#else
-                                    FALSE
-#endif
-                                    );
-
-          pop_debug_group ();
+                                    GTHREE_IS_POINT_LIGHT (light));
         }
+
+      pop_debug_group ();
     }
 
 #ifdef TODO

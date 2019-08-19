@@ -34,6 +34,8 @@ struct _GthreeLightSetup
   GPtrArray *directional_shadow_map;
   GArray *directional_shadow_map_matrix;
   GPtrArray *point;
+  GPtrArray *point_shadow_map;
+  GArray *point_shadow_map_matrix;
   GPtrArray *spot;
   GPtrArray *spot_shadow_map;
   GArray *spot_shadow_map_matrix;
