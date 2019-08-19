@@ -13,6 +13,7 @@ examples = [
   'performance',
   'points',
   'shader',
+  'shadow',
   'sprites',
   'rendertarget',
   'effects',
