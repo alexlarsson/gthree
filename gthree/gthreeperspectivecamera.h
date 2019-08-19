@@ -26,6 +26,8 @@ typedef struct {
 
 } GthreePerspectiveCameraClass;
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreePerspectiveCamera, g_object_unref)
+
 GTHREE_API
 GType gthree_perspective_camera_get_type (void) G_GNUC_CONST;
 

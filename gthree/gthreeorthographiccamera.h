@@ -26,6 +26,8 @@ typedef struct {
 
 } GthreeOrthographicCameraClass;
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeOrthographicCamera, g_object_unref)
+
 GTHREE_API
 GType gthree_orthographic_camera_get_type (void) G_GNUC_CONST;
 
