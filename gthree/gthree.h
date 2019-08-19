@@ -32,6 +32,7 @@
 #include <gthree/gthreelightshadow.h>
 #include <gthree/gthreeambientlight.h>
 #include <gthree/gthreepointlight.h>
+#include <gthree/gthreespotlight.h>
 #include <gthree/gthreedirectionallight.h>
 #include <gthree/gthreemeshlambertmaterial.h>
 #include <gthree/gthreemeshphongmaterial.h>

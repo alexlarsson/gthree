@@ -23,6 +23,7 @@ typedef struct _GthreeShaderMaterial GthreeShaderMaterial;
 typedef struct _GthreeProgram GthreeProgram;
 typedef struct _GthreeAmbientLight GthreeAmbientLight;
 typedef struct _GthreePointLight GthreePointLight;
+typedef struct _GthreeSpotLight GthreeSpotLight;
 typedef struct _GthreeDirectionalLight GthreeDirectionalLight;
 typedef struct _GthreeLightShadow GthreeLightShadow;
 typedef struct _GthreeLightSetup GthreeLightSetup;

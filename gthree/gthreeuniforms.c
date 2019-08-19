@@ -1028,9 +1028,10 @@ static GthreeUniformsDefinition lights_lib[] = {
        }
   */
 
-/*
-  lightProbe: { value: [] },
-  spotLights: { value: [], properties: {
+  {"spotLights", GTHREE_UNIFORM_TYPE_UNIFORMS_ARRAY, NULL},
+  {"spotShadowMap", GTHREE_UNIFORM_TYPE_TEXTURE_ARRAY, NULL},
+  {"spotShadowMatrix", GTHREE_UNIFORM_TYPE_MATRIX4_ARRAY, NULL},
+  /*properties: {
     color: {},
     position: {},
     direction: {},
@@ -1042,9 +1043,11 @@ static GthreeUniformsDefinition lights_lib[] = {
     shadowBias: {},
     shadowRadius: {},
     shadowMapSize: {}
-  } },
-  spotShadowMap: { value: [] },
-  spotShadowMatrix: { value: [] },
+    }
+  */
+
+/*
+  lightProbe: { value: [] },
   pointShadowMap: { value: [] },
   pointShadowMatrix: { value: [] },
   hemisphereLights: { value: [], properties: {

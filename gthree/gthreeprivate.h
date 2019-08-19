@@ -11,6 +11,7 @@
 #include <gthree/gthreesprite.h>
 #include <gthree/gthreelightshadow.h>
 #include <gthree/gthreedirectionallightshadow.h>
+#include <gthree/gthreespotlightshadow.h>
 
 //#define DEBUG_LABELS
 //#define DEBUG_GROUPS
@@ -19,6 +20,7 @@
 typedef struct {
   guint8 num_directional;
   guint8 num_point;
+  guint8 num_spot;
   guint8 num_shadow;
   guint8 obj_receive_shadow;
 } GthreeLightSetupHash;
@@ -32,6 +34,9 @@ struct _GthreeLightSetup
   GPtrArray *directional_shadow_map;
   GArray *directional_shadow_map_matrix;
   GPtrArray *point;
+  GPtrArray *spot;
+  GPtrArray *spot_shadow_map;
+  GArray *spot_shadow_map_matrix;
   GPtrArray *shadow;
 
   GthreeLightSetupHash hash;
@@ -183,6 +188,10 @@ void gthree_light_shadow_set_map (GthreeLightShadow *shadow,
 graphene_matrix_t * gthree_light_shadow_get_matrix (GthreeLightShadow *shadow);
 
 GthreeDirectionalLightShadow *gthree_directional_light_shadow_new (void);
+
+GthreeSpotLightShadow *gthree_spot_light_shadow_new (void);
+void gthree_spot_light_shadow_update (GthreeSpotLightShadow *shadow,
+                                      GthreeSpotLight *light);
 
 GthreeMaterialProperties *gthree_material_get_properties (GthreeMaterial  *material);
 

@@ -20,6 +20,7 @@
 #include "gthreeattribute.h"
 #include "gthreesprite.h"
 #include "gthreepoints.h"
+#include "gthreespotlight.h"
 
 #define MAX_MORPH_TARGETS 8
 #define MAX_MORPH_NORMALS 4
@@ -246,6 +247,9 @@ gthree_renderer_init (GthreeRenderer *renderer)
   priv->light_setup.directional_shadow_map = g_ptr_array_new ();
   priv->light_setup.directional_shadow_map_matrix = g_array_new (FALSE, FALSE, sizeof (graphene_matrix_t));
   priv->light_setup.point = g_ptr_array_new ();
+  priv->light_setup.spot = g_ptr_array_new ();
+  priv->light_setup.spot_shadow_map = g_ptr_array_new ();
+  priv->light_setup.spot_shadow_map_matrix = g_array_new (FALSE, FALSE, sizeof (graphene_matrix_t));
   priv->light_setup.shadow = g_ptr_array_new ();
 
   priv->current_render_list = gthree_render_list_new ();
@@ -307,6 +311,9 @@ gthree_renderer_finalize (GObject *obj)
   g_ptr_array_free (priv->light_setup.directional_shadow_map, TRUE);
   g_array_free (priv->light_setup.directional_shadow_map_matrix, TRUE);
   g_ptr_array_free (priv->light_setup.point, TRUE);
+  g_ptr_array_free (priv->light_setup.spot, TRUE);
+  g_ptr_array_free (priv->light_setup.spot_shadow_map, TRUE);
+  g_array_free (priv->light_setup.spot_shadow_map_matrix, TRUE);
   g_ptr_array_free (priv->light_setup.shadow, TRUE);
 
   gthree_render_list_free (priv->current_render_list);
@@ -1068,13 +1075,15 @@ material_apply_light_setup (GthreeUniforms *m_uniforms,
 
   gthree_uniforms_set_uarray (m_uniforms, "directionalLights", light_setup->directional, update_only);
   gthree_uniforms_set_uarray (m_uniforms, "pointLights", light_setup->point, update_only);
+  gthree_uniforms_set_uarray (m_uniforms, "spotLights", light_setup->spot, update_only);
 
   gthree_uniforms_set_texture_array (m_uniforms, "directionalShadowMap", light_setup->directional_shadow_map);
   gthree_uniforms_set_matrix4_array (m_uniforms, "directionalShadowMatrix", light_setup->directional_shadow_map_matrix);
 
+  gthree_uniforms_set_texture_array (m_uniforms, "spotShadowMap", light_setup->spot_shadow_map);
+  gthree_uniforms_set_matrix4_array (m_uniforms, "spotShadowMatrix", light_setup->spot_shadow_map_matrix);
+
 #ifdef TODO // shadow
-  uniforms.spotShadowMap.value = lights.state.spotShadowMap;
-  uniforms.spotShadowMatrix.value = lights.state.spotShadowMatrix;
   uniforms.pointShadowMap.value = lights.state.pointShadowMap;
   uniforms.pointShadowMatrix.value = lights.state.pointShadowMatrix;
 #endif
@@ -1109,6 +1118,7 @@ init_material (GthreeRenderer *renderer,
   gthree_material_set_params (material, &parameters);
   parameters.num_dir_lights = priv->light_setup.directional->len;
   parameters.num_point_lights = priv->light_setup.point->len;
+  parameters.num_spot_lights = priv->light_setup.spot->len;
 
   max_bones = 0;
   if (GTHREE_IS_SKINNED_MESH (object))
@@ -1256,6 +1266,9 @@ setup_lights (GthreeRenderer *renderer, GthreeCamera *camera)
   g_ptr_array_set_size (setup->directional_shadow_map, 0);
   g_array_set_size (setup->directional_shadow_map_matrix, 0);
   g_ptr_array_set_size (setup->point, 0);
+  g_ptr_array_set_size (setup->spot, 0);
+  g_ptr_array_set_size (setup->spot_shadow_map, 0);
+  g_array_set_size (setup->spot_shadow_map_matrix, 0);
 
   for (l = priv->lights; l != NULL; l = l->next)
     {
@@ -1266,6 +1279,7 @@ setup_lights (GthreeRenderer *renderer, GthreeCamera *camera)
 
   setup->hash.num_directional = setup->directional->len;
   setup->hash.num_point = setup->point->len;
+  setup->hash.num_spot = setup->spot->len;
   setup->hash.num_shadow = setup->shadow->len;
 }
 
@@ -1709,12 +1723,8 @@ render_shadow_map (GthreeRenderer *renderer,
           gthree_camera_update (shadow_camera);
         }
 
-#ifdef TODO
       if (GTHREE_IS_SPOT_LIGHT_SHADOW (shadow))
-        {
-          shadow.update( light );
-        }
-#endif
+        gthree_spot_light_shadow_update (GTHREE_SPOT_LIGHT_SHADOW (shadow), GTHREE_SPOT_LIGHT (light));
 
       graphene_matrix_t *shadowMatrix = gthree_light_shadow_get_matrix (shadow);
 
