@@ -186,6 +186,18 @@ gthree_uniforms_set_float3_array (GthreeUniforms  *uniforms,
 }
 
 void
+gthree_uniforms_set_matrix4_array (GthreeUniforms  *uniforms,
+                                   const char      *name,
+                                   GArray          *array)
+{
+  GthreeUniform *uni;
+
+  uni = gthree_uniforms_lookup_from_string (uniforms, name);
+  if (uni)
+    gthree_uniform_set_matrix4_array (uni, array);
+}
+
+void
 gthree_uniforms_set_int (GthreeUniforms  *uniforms,
                          const char      *name,
                          int              value)
@@ -243,6 +255,18 @@ gthree_uniforms_set_texture (GthreeUniforms  *uniforms,
   uni = gthree_uniforms_lookup_from_string (uniforms, name);
   if (uni)
     gthree_uniform_set_texture (uni, value);
+}
+
+void
+gthree_uniforms_set_texture_array (GthreeUniforms  *uniforms,
+                                   const char      *name,
+                                   GPtrArray       *value)
+{
+  GthreeUniform *uni;
+
+  uni = gthree_uniforms_lookup_from_string (uniforms, name);
+  if (uni)
+    gthree_uniform_set_texture_array (uni, value);
 }
 
 void
@@ -414,6 +438,13 @@ gthree_uniform_set_needs_update (GthreeUniform *uniform,
   uniform->needs_update = needs_update;
 }
 
+static void
+maybe_g_object_unref (gpointer object)
+{
+  if (object)
+    g_object_unref (object);
+}
+
 void
 gthree_uniform_copy_value (GthreeUniform   *uniform,
                            GthreeUniform   *source)
@@ -452,11 +483,11 @@ gthree_uniform_copy_value (GthreeUniform   *uniform,
     case GTHREE_UNIFORM_TYPE_TEXTURE_ARRAY:
       if (uniform->value.ptr_array)
         {
-          guint len = uniform->value.ptr_array->len;
-          uniform->value.ptr_array = g_ptr_array_sized_new (len);
-          // TODO: ref? duplicate?
-          // TODO: Copy free func?
-          memcpy (source->value.ptr_array->pdata, uniform->value.ptr_array->pdata, len * sizeof (gpointer));
+          guint i, len = uniform->value.ptr_array->len;
+          uniform->value.ptr_array = g_ptr_array_new_with_free_func (maybe_g_object_unref);
+          for (i = 0; i < len; i++)
+            g_ptr_array_add (uniform->value.ptr_array,
+                             g_object_ref (g_ptr_array_index (source->value.ptr_array, i)));
         }
       break;
     case GTHREE_UNIFORM_TYPE_UNIFORMS_ARRAY:
@@ -527,11 +558,11 @@ gthree_uniform_clone (GthreeUniform *uniform)
     case GTHREE_UNIFORM_TYPE_TEXTURE_ARRAY:
       if (uniform->value.ptr_array)
         {
-          guint len = uniform->value.ptr_array->len;
-          clone->value.ptr_array = g_ptr_array_sized_new (len);
-          // TODO: ref? duplicate?
-          // TODO: Copy free func?
-          memcpy (clone->value.ptr_array->pdata, uniform->value.ptr_array->pdata, len * sizeof (gpointer));
+          guint i, len = uniform->value.ptr_array->len;
+          uniform->value.ptr_array = g_ptr_array_new_with_free_func (maybe_g_object_unref);
+          for (i = 0; i < len; i++)
+            g_ptr_array_add (uniform->value.ptr_array,
+                             g_object_ref (g_ptr_array_index (uniform->value.ptr_array, i)));
         }
       break;
     case GTHREE_UNIFORM_TYPE_UNIFORMS_ARRAY:
@@ -614,6 +645,15 @@ gthree_uniform_set_float4_array (GthreeUniform *uniform,
 }
 
 void
+gthree_uniform_set_matrix4_array (GthreeUniform  *uniform,
+                                  GArray          *array)
+{
+ g_return_if_fail (uniform->type == GTHREE_UNIFORM_TYPE_MATRIX4_ARRAY);
+
+ set_array (uniform, array);
+}
+
+void
 gthree_uniform_set_int (GthreeUniform *uniform,
                         int val)
 {
@@ -663,6 +703,28 @@ gthree_uniform_set_texture (GthreeUniform *uniform,
     g_object_unref (uniform->value.texture);
 
   uniform->value.texture = value;
+}
+
+void
+gthree_uniform_set_texture_array (GthreeUniform *uniform,
+                                  GPtrArray *value)
+{
+  int i;
+
+  g_return_if_fail (uniform->type == GTHREE_UNIFORM_TYPE_TEXTURE_ARRAY);
+
+  if (uniform->value.ptr_array == NULL)
+    uniform->value.ptr_array = g_ptr_array_new_with_free_func (maybe_g_object_unref);
+
+  g_ptr_array_set_size (uniform->value.ptr_array, 0);
+  for (i = 0; i < value->len; i++)
+    {
+      GthreeTexture *src = g_ptr_array_index (value, i);
+      if (src)
+        g_ptr_array_add (uniform->value.ptr_array, g_object_ref (src));
+      else
+        g_ptr_array_add (uniform->value.ptr_array, NULL);
+    }
 }
 
 void
@@ -788,12 +850,40 @@ gthree_uniform_load (GthreeUniform *uniform,
             }
         }
       break;
+    case GTHREE_UNIFORM_TYPE_TEXTURE_ARRAY:
+      if (uniform->value.ptr_array)
+        {
+          guint i, len = uniform->value.ptr_array->len;
+          int *units = g_alloca (len * sizeof (int));
+          for (i = 0; i < len; i++)
+            {
+              GthreeTexture *texture = g_ptr_array_index (uniform->value.ptr_array, i);
+              units[i] = gthree_renderer_allocate_texture_unit (renderer);
+              gthree_texture_load (texture, units[i]);
+              glUniform1iv (uniform->location, len, units);
+            }
+        }
+
+      break;
+    case GTHREE_UNIFORM_TYPE_MATRIX4_ARRAY:
+      if (uniform->value.array)
+        {
+          guint i, len = uniform->value.array->len;
+          float *floats = g_alloca (len * sizeof(float) * 16);
+
+          for (i = 0; i < len; i++)
+            {
+              graphene_matrix_t *m = &g_array_index (uniform->value.array, graphene_matrix_t, i);
+              graphene_matrix_to_float (m, &floats[16*i]);
+            }
+
+          glUniformMatrix4fv (uniform->location, len, FALSE, floats);
+        }
+      break;
     case GTHREE_UNIFORM_TYPE_VEC2_ARRAY:
     case GTHREE_UNIFORM_TYPE_VEC3_ARRAY:
     case GTHREE_UNIFORM_TYPE_VEC4_ARRAY:
     case GTHREE_UNIFORM_TYPE_MATRIX3_ARRAY:
-    case GTHREE_UNIFORM_TYPE_MATRIX4_ARRAY:
-    case GTHREE_UNIFORM_TYPE_TEXTURE_ARRAY:
       g_warning ("gthree_uniform_load() - unsupported uniform type %d\n", uniform->type);
     }
 }
@@ -908,6 +998,8 @@ static GthreeUniformsDefinition lights_lib[] = {
 #endif
 
   {"directionalLights", GTHREE_UNIFORM_TYPE_UNIFORMS_ARRAY, NULL},
+  {"directionalShadowMap", GTHREE_UNIFORM_TYPE_TEXTURE_ARRAY, NULL},
+  {"directionalShadowMatrix", GTHREE_UNIFORM_TYPE_MATRIX4_ARRAY, NULL},
   /*
     properties: {
       direction: {},
@@ -938,8 +1030,6 @@ static GthreeUniformsDefinition lights_lib[] = {
 
 /*
   lightProbe: { value: [] },
-  directionalShadowMap: { value: [] },
-  directionalShadowMatrix: { value: [] },
   spotLights: { value: [], properties: {
     color: {},
     position: {},

@@ -107,6 +107,10 @@ void            gthree_uniforms_set_float3_array   (GthreeUniforms  *uniforms,
                                                     const char      *name,
                                                     GArray          *array);
 GTHREE_API
+void            gthree_uniforms_set_matrix4_array  (GthreeUniforms  *uniforms,
+                                                    const char      *name,
+                                                    GArray          *array);
+GTHREE_API
 void            gthree_uniforms_set_int            (GthreeUniforms  *uniforms,
                                                     const char      *name,
                                                     int              value);
@@ -126,6 +130,10 @@ GTHREE_API
 void            gthree_uniforms_set_texture        (GthreeUniforms  *uniforms,
                                                     const char      *name,
                                                     GthreeTexture   *value);
+GTHREE_API
+void            gthree_uniforms_set_texture_array  (GthreeUniforms  *uniforms,
+                                                    const char      *name,
+                                                    GPtrArray       *value);
 GTHREE_API
 void            gthree_uniforms_set_uarray         (GthreeUniforms   *uniforms,
                                                     const char      *name,
@@ -154,6 +162,9 @@ GTHREE_API
 void        gthree_uniform_set_float4_array (GthreeUniform   *uniform,
                                              GArray          *array);
 GTHREE_API
+void        gthree_uniform_set_matrix4_array (GthreeUniform   *uniform,
+                                              GArray          *array);
+GTHREE_API
 void        gthree_uniform_set_int          (GthreeUniform   *uniform,
                                              int              value);
 GTHREE_API
@@ -168,6 +179,9 @@ void        gthree_uniform_set_vec4         (GthreeUniform   *uniform,
 GTHREE_API
 void        gthree_uniform_set_texture      (GthreeUniform   *uniform,
                                              GthreeTexture   *value);
+GTHREE_API
+void        gthree_uniform_set_texture_array (GthreeUniform   *uniform,
+                                              GPtrArray       *value);
 GTHREE_API
 void        gthree_uniform_set_uarray       (GthreeUniform   *uniform,
                                              GPtrArray       *uarray,
