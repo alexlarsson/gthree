@@ -532,6 +532,7 @@ gthree_object_look_at (GthreeObject *object,
   graphene_point3d_to_vec3 (pos, &vec);
   graphene_matrix_init_look_at (&m, &priv->position, &vec, &priv->up);
   graphene_quaternion_init_from_matrix (&priv->quaternion, &m);
+  priv->matrix_need_update = TRUE;
   priv->euler_valid = FALSE;
 }
 
