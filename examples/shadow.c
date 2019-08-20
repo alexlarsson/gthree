@@ -24,6 +24,8 @@ init_scene (void)
   GthreeGeometry *particle_geometry;
   GthreeMesh *floor, *dir_particle, *spot_particle, *point_particle;
   graphene_point3d_t pos = { 0, 0, 0};
+  GthreeLightShadow *shadow;
+  GthreeCamera *shadow_camera;
 
   particle_geometry = gthree_geometry_new_sphere (4, 8, 8);
 
@@ -84,8 +86,8 @@ init_scene (void)
                                                      0, 200, 200));
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (directional_light));
 
-  GthreeLightShadow *shadow = gthree_light_get_shadow (GTHREE_LIGHT (directional_light));
-  GthreeCamera *shadow_camera = gthree_light_shadow_get_camera (shadow);
+  shadow = gthree_light_get_shadow (GTHREE_LIGHT (directional_light));
+  shadow_camera = gthree_light_shadow_get_camera (shadow);
 
   gthree_orthographic_camera_set_left (GTHREE_ORTHOGRAPHIC_CAMERA (shadow_camera), -500);
   gthree_orthographic_camera_set_right (GTHREE_ORTHOGRAPHIC_CAMERA (shadow_camera), 500);
@@ -118,6 +120,11 @@ init_scene (void)
   gthree_mesh_basic_material_set_color (particle_material, red ());
   point_particle = gthree_mesh_new (particle_geometry, GTHREE_MATERIAL (particle_material));
   gthree_object_add_child (GTHREE_OBJECT (point_light), GTHREE_OBJECT (point_particle));
+
+  shadow = gthree_light_get_shadow (GTHREE_LIGHT (point_light));
+  shadow_camera = gthree_light_shadow_get_camera (shadow);
+
+  gthree_camera_set_far (shadow_camera, 1000);
 }
 
 static gboolean
