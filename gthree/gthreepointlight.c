@@ -68,7 +68,7 @@ gthree_point_light_init (GthreePointLight *point)
   priv->decay = 1;
   priv->uniforms = gthree_uniforms_new_from_definitions (light_uniforms, G_N_ELEMENTS (light_uniforms));
 
-  camera = gthree_perspective_camera_new (50, 1, 0.5, 500);
+  camera = gthree_perspective_camera_new (90, 1, 0.5, 500);
   shadow = gthree_light_shadow_new (GTHREE_CAMERA (camera));
   gthree_light_set_shadow (GTHREE_LIGHT (point), GTHREE_LIGHT_SHADOW (shadow));
 }
