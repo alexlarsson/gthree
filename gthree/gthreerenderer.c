@@ -101,7 +101,7 @@ typedef struct {
   guint old_blend_src;
   guint old_blend_dst;
   guint old_num_global_planes;
-  graphene_vec3_t old_clear_color;
+  graphene_vec4_t old_clear_color;
   GthreeRenderTarget *current_render_target;
   GthreeProgram *current_program;
   GthreeMaterial *current_material;
@@ -166,7 +166,8 @@ G_DEFINE_TYPE_WITH_PRIVATE (GthreeRenderer, gthree_renderer, G_TYPE_OBJECT);
 
 static void clear (gboolean color, gboolean depth, gboolean stencil);
 static void set_clear_color (GthreeRenderer *renderer,
-                             const graphene_vec3_t *color);
+                             const graphene_vec3_t *color,
+                             float alpha);
 
 static void render_item (GthreeRenderer *renderer,
                          GthreeCamera *camera,
@@ -542,7 +543,6 @@ gthree_renderer_set_clear_color (GthreeRenderer *renderer,
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
 
   priv->clear_color = *color;
-  set_clear_color (renderer, color);
 }
 
 const graphene_vec3_t *
@@ -816,6 +816,7 @@ gthree_set_default_gl_state (GthreeRenderer *renderer)
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
 
   glClearColor (0, 0, 0, 1);
+  graphene_vec4_init (&priv->old_clear_color, 0, 0, 0, 1);
   glClearDepth (1);
   glClearStencil (0);
 
@@ -836,11 +837,6 @@ gthree_set_default_gl_state (GthreeRenderer *renderer)
               graphene_rect_get_y (&priv->current_viewport) * priv->pixel_ratio,
               graphene_rect_get_width (&priv->current_viewport) * priv->pixel_ratio,
               graphene_rect_get_height (&priv->current_viewport) * priv->pixel_ratio);
-
-  glClearColor (graphene_vec3_get_x (&priv->clear_color),
-                graphene_vec3_get_y (&priv->clear_color),
-                graphene_vec3_get_z (&priv->clear_color),
-                1);
 };
 
 void
@@ -852,6 +848,9 @@ gthree_renderer_clear (GthreeRenderer *renderer,
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
 
   g_assert (gdk_gl_context_get_current () == priv->gl_context);
+
+  if (color)
+    set_clear_color (renderer, &priv->clear_color, 1);
 
   clear (color, depth, stencil);
 }
@@ -872,6 +871,8 @@ gthree_renderer_clear_color (GthreeRenderer *renderer)
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
 
   g_assert (gdk_gl_context_get_current () == priv->gl_context);
+
+  set_clear_color (renderer, &priv->clear_color, 1);
 
   clear (TRUE, FALSE, FALSE);
 }
@@ -975,17 +976,20 @@ set_polygon_offset (GthreeRenderer *renderer,
 
 static void
 set_clear_color (GthreeRenderer *renderer,
-                 const graphene_vec3_t *color)
+                 const graphene_vec3_t *color,
+                 float alpha)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  graphene_vec4_t c4;
 
-  if (!graphene_vec3_equal (color, &priv->old_clear_color))
+  graphene_vec4_init_from_vec3 (&c4, color, alpha);
+  if (!graphene_vec4_equal (&c4, &priv->old_clear_color))
     {
-      glClearColor (graphene_vec3_get_x (color),
-                    graphene_vec3_get_y (color),
-                    graphene_vec3_get_z (color),
-                    1);
-      priv->old_clear_color = *color;
+      glClearColor (graphene_vec4_get_x (&c4),
+                    graphene_vec4_get_y (&c4),
+                    graphene_vec4_get_z (&c4),
+                    graphene_vec4_get_w (&c4));
+      priv->old_clear_color = c4;
     }
 }
 
@@ -1696,7 +1700,7 @@ render_shadow_map (GthreeRenderer *renderer,
   set_blending (renderer, GTHREE_BLEND_NO, 0, 0, 0);
   set_depth_test (renderer, TRUE);
 
-  set_clear_color (renderer, graphene_vec3_init (&c, 1, 1, 1));
+  set_clear_color (renderer, graphene_vec3_init (&c, 1, 1, 1), 1);
 
 #ifdef TODO
   _state.setScissorTest( false );
@@ -2655,21 +2659,21 @@ gthree_renderer_render_background (GthreeRenderer *renderer,
   GthreeTexture *bg_texture = gthree_scene_get_background_texture (scene);
   gboolean force_clear = FALSE;
   GthreeMesh *bg_mesh = NULL;
+  const graphene_vec3_t *clear_color = NULL;
 
   if (bg_color == NULL)
-    {
-      graphene_vec3_t default_col;
-      graphene_vec3_init (&default_col, 0, 0, 0);
-      set_clear_color (renderer, &default_col);
-    }
+    clear_color = &priv->clear_color;
   else
     {
-      set_clear_color (renderer, bg_color);
+      clear_color = bg_color;
       force_clear = TRUE;
     }
 
   if (priv->auto_clear || force_clear)
-    clear (priv->auto_clear_color, priv->auto_clear_depth, priv->auto_clear_stencil);
+    {
+      set_clear_color (renderer, clear_color, 1);
+      clear (priv->auto_clear_color, priv->auto_clear_depth, priv->auto_clear_stencil);
+    }
 
   if (bg_texture && GTHREE_IS_CUBE_TEXTURE (bg_texture))
     {
