@@ -87,6 +87,16 @@ GTHREE_API
 void                gthree_renderer_set_shadow_map_enabled    (GthreeRenderer     *renderer,
                                                                gboolean            enabled);
 GTHREE_API
+gboolean            gthree_renderer_get_shadow_map_auto_update (GthreeRenderer     *renderer);
+GTHREE_API
+void                gthree_renderer_set_shadow_map_auto_update (GthreeRenderer     *renderer,
+                                                                gboolean            auto_update);
+GTHREE_API
+gboolean            gthree_renderer_get_shadow_map_needs_update (GthreeRenderer     *renderer);
+GTHREE_API
+void                gthree_renderer_set_shadow_map_needs_update (GthreeRenderer     *renderer,
+                                                                 gboolean            needs_update);
+GTHREE_API
 int                 gthree_renderer_get_n_clipping_planes     (GthreeRenderer     *renderer);
 GTHREE_API
 const graphene_plane_t *gthree_renderer_get_clipping_plane    (GthreeRenderer     *renderer,

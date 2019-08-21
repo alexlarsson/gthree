@@ -64,6 +64,8 @@ typedef struct {
   float gamma_factor;
   gboolean physically_correct_lights;
   gboolean shadowmap_enabled;
+  gboolean shadowmap_auto_update;
+  gboolean shadowmap_needs_update;
   GthreeShadowMapType shadowmap_type;
   GPtrArray *shadowmap_depth_materials;
   GPtrArray *shadowmap_distance_materials;
@@ -244,6 +246,8 @@ gthree_renderer_init (GthreeRenderer *renderer)
   priv->physically_correct_lights = FALSE;
   priv->shadowmap_type = GTHREE_SHADOW_MAP_TYPE_PCF;
   priv->shadowmap_enabled = FALSE;
+  priv->shadowmap_auto_update = TRUE;
+  priv->shadowmap_needs_update = FALSE;
 
   priv->clipping_planes = g_array_new (FALSE, FALSE, sizeof (graphene_plane_t));
   priv->clipping_state = g_array_new (FALSE, FALSE, sizeof (float));
@@ -580,6 +584,40 @@ gthree_renderer_set_shadow_map_enabled (GthreeRenderer     *renderer,
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
 
   priv->shadowmap_enabled = enabled;
+}
+
+gboolean
+gthree_renderer_get_shadow_map_auto_update (GthreeRenderer     *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  return priv->shadowmap_auto_update;
+}
+
+void
+gthree_renderer_set_shadow_map_auto_update (GthreeRenderer     *renderer,
+                                            gboolean            auto_update)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  priv->shadowmap_auto_update = auto_update;
+}
+
+gboolean
+gthree_renderer_get_shadow_map_needs_update (GthreeRenderer     *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  return priv->shadowmap_needs_update;
+}
+
+void
+gthree_renderer_set_shadow_map_needs_update (GthreeRenderer     *renderer,
+                                             gboolean            needs_update)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  priv->shadowmap_needs_update = needs_update;
 }
 
 int
@@ -1644,10 +1682,8 @@ render_shadow_map (GthreeRenderer *renderer,
   if (!priv->shadowmap_enabled)
     return;
 
-#ifdef TODO
-  if ( scope.autoUpdate === false && scope.needsUpdate === false )
+  if (!priv->shadowmap_auto_update && !priv->shadowmap_needs_update)
     return;
-#endif
 
   if (priv->shadows == NULL)
     return;
@@ -1852,9 +1888,7 @@ render_shadow_map (GthreeRenderer *renderer,
       pop_debug_group ();
     }
 
-#ifdef TODO
-  scope.needsUpdate = false;
-#endif
+  priv->shadowmap_needs_update = FALSE;
 
   gthree_renderer_set_render_target (renderer, current_render_target, 0, 0);
 
