@@ -394,13 +394,14 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
 #endif
 
   shadow_map_type_define = "SHADOWMAP_TYPE_BASIC";
-#if TODO
-  if (parameters.shadowMapType === THREE.PCFShadowMap) {
-    shadowMapTypeDefine = "SHADOWMAP_TYPE_PCF";
-  } else if (parameters.shadowMapType === THREE.PCFSoftShadowMap) {
-    shadowMapTypeDefine = "SHADOWMAP_TYPE_PCF_SOFT";
-  }
-#endif
+  if (parameters->shadow_map_type == GTHREE_SHADOW_MAP_TYPE_PCF)
+    {
+      shadow_map_type_define = "SHADOWMAP_TYPE_PCF";
+    }
+  else if (parameters->shadow_map_type == GTHREE_SHADOW_MAP_TYPE_PCF_SOFT)
+    {
+      shadow_map_type_define = "SHADOWMAP_TYPE_PCF_SOFT";
+    }
 
   env_map_type_define = "ENVMAP_TYPE_CUBE";
   env_map_mode_define = "ENVMAP_MODE_REFLECTION";
