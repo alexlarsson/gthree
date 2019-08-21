@@ -4,6 +4,7 @@
 
 typedef struct {
   graphene_matrix_t projection_matrix;
+  graphene_matrix_t projection_matrix_inverse;
   graphene_matrix_t world_matrix_inverse;
 
   float near;
@@ -111,6 +112,25 @@ gthree_camera_update_matrix (GthreeCamera *camera)
                            &priv->world_matrix_inverse);
 }
 
+graphene_vec3_t *
+gthree_camera_unproject (GthreeCamera          *camera,
+                         const graphene_vec3_t *screen_point,
+                         graphene_vec3_t       *res)
+{
+  GthreeCameraPrivate *priv = gthree_camera_get_instance_private (camera);
+  graphene_vec4_t v4;
+
+  graphene_vec4_init_from_vec3 (&v4, screen_point, 1.0);
+
+  graphene_matrix_transform_vec4 (&priv->projection_matrix_inverse, &v4, &v4);
+  graphene_matrix_transform_vec4 (gthree_object_get_world_matrix (GTHREE_OBJECT (camera)), &v4, &v4);
+
+  graphene_vec4_scale (&v4, 1.0f / graphene_vec4_get_w (&v4), &v4);
+
+  graphene_vec4_get_xyz (&v4, res);
+  return res;
+}
+
 void
 gthree_camera_get_proj_screen_matrix (GthreeCamera *camera,
                                       graphene_matrix_t *res)
@@ -193,9 +213,12 @@ gthree_camera_set_far (GthreeCamera *camera,
 void
 gthree_camera_update (GthreeCamera *camera)
 {
+  GthreeCameraPrivate *priv = gthree_camera_get_instance_private (camera);
   GthreeCameraClass *class = GTHREE_CAMERA_GET_CLASS(camera);
 
   class->update (camera);
+
+  graphene_matrix_inverse (&priv->projection_matrix, &priv->projection_matrix_inverse);
 }
 
 /**
@@ -205,15 +228,16 @@ gthree_camera_update (GthreeCamera *camera)
  * @res: (out caller-allocates) (type Graphene.Point3D): ...
  *
  * ...
+ * Returns: (type Graphene.Point3D): ...
  */
-void
-gthree_camera_unproject_point3d (GthreeCamera *camera,
-                                 const graphene_point3d_t *pos,
-                                 graphene_point3d_t *res)
+graphene_point3d_t *
+gthree_camera_unproject_point3d  (GthreeCamera      *camera,
+                                  const graphene_point3d_t *screen_point,
+                                  graphene_point3d_t    *res)
 {
-  GthreeCameraPrivate *priv = gthree_camera_get_instance_private (camera);
+  graphene_vec3_t v3;
 
-  graphene_matrix_unproject_point3d (&priv->projection_matrix,
-                                     gthree_object_get_world_matrix (GTHREE_OBJECT (camera)),
-                                     pos, res);
+  graphene_point3d_to_vec3 (screen_point, &v3);
+  gthree_camera_unproject (camera, &v3, &v3);
+  return graphene_point3d_init_from_vec3 (res, &v3);
 }

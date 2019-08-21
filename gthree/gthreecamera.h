@@ -53,11 +53,14 @@ void                     gthree_camera_set_far                  (GthreeCamera   
                                                                  float              far);
 GTHREE_API
 void                     gthree_camera_update                   (GthreeCamera      *camera);
-
 GTHREE_API
-void                     gthree_camera_unproject_point3d        (GthreeCamera      *camera,
-                                                                 const graphene_point3d_t *pos,
-                                                                 graphene_point3d_t *res);
+graphene_vec3_t *        gthree_camera_unproject                (GthreeCamera      *camera,
+                                                                 const graphene_vec3_t *screen_point,
+                                                                 graphene_vec3_t    *res);
+GTHREE_API
+graphene_point3d_t *     gthree_camera_unproject_point3d        (GthreeCamera      *camera,
+                                                                 const graphene_point3d_t *screen_point,
+                                                                 graphene_point3d_t    *res);
 
 G_END_DECLS
 
