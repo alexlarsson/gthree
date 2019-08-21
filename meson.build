@@ -48,8 +48,8 @@ common_ldflags = []
 gthree_conf = configuration_data()
 gthree_conf.set_quoted('VERSION', meson.project_version())
 
-gthree_packages = ' '.join([ 'glib-2.0', 'gobject-2.0', 'graphene-gobject-1.0', 'gtk+-3.0' ])
-gthree_private_packages = ' '.join([ 'epoxy', 'json-glib-1.0' ])
+gthree_packages = ' '.join([ 'glib-2.0', 'gobject-2.0', 'graphene-gobject-1.0', 'gtk+-3.0', 'json-glib-1.0' ])
+gthree_private_packages = ' '.join([ 'epoxy' ])
 
 # Compat variables for pkgconfig
 pkgconf = configuration_data()
