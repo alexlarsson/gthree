@@ -99,6 +99,17 @@ gthree_light_shadow_get_map_height (GthreeLightShadow *shadow)
   return priv->map_height;
 }
 
+void
+gthree_light_shadow_set_map_size (GthreeLightShadow *shadow,
+                                  int width,
+                                  int height)
+{
+  GthreeLightShadowPrivate *priv = gthree_light_shadow_get_instance_private (shadow);
+
+  priv->map_width = width;
+  priv->map_height = height;
+}
+
 GthreeRenderTarget *
 gthree_light_shadow_get_map (GthreeLightShadow *shadow)
 {
@@ -132,10 +143,28 @@ gthree_light_shadow_get_bias (GthreeLightShadow *shadow)
   return priv->bias;
 }
 
+void
+gthree_light_shadow_set_bias (GthreeLightShadow *shadow,
+                              float bias)
+{
+  GthreeLightShadowPrivate *priv = gthree_light_shadow_get_instance_private (shadow);
+
+  priv->bias = bias;
+}
+
 float
 gthree_light_shadow_get_radius (GthreeLightShadow *shadow)
 {
   GthreeLightShadowPrivate *priv = gthree_light_shadow_get_instance_private (shadow);
 
   return priv->radius;
+}
+
+void
+gthree_light_shadow_set_radius (GthreeLightShadow *shadow,
+                                float radius)
+{
+  GthreeLightShadowPrivate *priv = gthree_light_shadow_get_instance_private (shadow);
+
+  priv->radius = radius;
 }

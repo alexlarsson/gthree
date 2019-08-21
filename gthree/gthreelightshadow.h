@@ -40,11 +40,21 @@ int gthree_light_shadow_get_map_width (GthreeLightShadow *shadow);
 GTHREE_API
 int gthree_light_shadow_get_map_height (GthreeLightShadow *shadow);
 GTHREE_API
+void gthree_light_shadow_set_map_size (GthreeLightShadow *shadow,
+                                       int width,
+                                       int height);
+GTHREE_API
 GthreeCamera * gthree_light_shadow_get_camera (GthreeLightShadow *shadow);
 GTHREE_API
 float gthree_light_shadow_get_bias (GthreeLightShadow *shadow);
 GTHREE_API
+void gthree_light_shadow_set_bias (GthreeLightShadow *shadow,
+                                   float bias);
+GTHREE_API
 float gthree_light_shadow_get_radius (GthreeLightShadow *shadow);
+GTHREE_API
+void gthree_light_shadow_set_radius (GthreeLightShadow *shadow,
+                                     float radiuso);
 
 
 G_END_DECLS
