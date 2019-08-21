@@ -858,9 +858,12 @@ gthree_uniform_load (GthreeUniform *uniform,
           for (i = 0; i < len; i++)
             {
               GthreeTexture *texture = g_ptr_array_index (uniform->value.ptr_array, i);
-              units[i] = gthree_renderer_allocate_texture_unit (renderer);
-              gthree_texture_load (texture, units[i]);
-              glUniform1iv (uniform->location, len, units);
+              if (texture)
+                {
+                  units[i] = gthree_renderer_allocate_texture_unit (renderer);
+                  gthree_texture_load (texture, units[i]);
+                  glUniform1iv (uniform->location, len, units);
+                }
             }
         }
 
