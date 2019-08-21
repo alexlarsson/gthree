@@ -93,6 +93,7 @@ init_scene (void)
   gthree_orthographic_camera_set_right (GTHREE_ORTHOGRAPHIC_CAMERA (shadow_camera), 500);
   gthree_orthographic_camera_set_top (GTHREE_ORTHOGRAPHIC_CAMERA (shadow_camera), 500);
   gthree_orthographic_camera_set_bottom (GTHREE_ORTHOGRAPHIC_CAMERA (shadow_camera), -500);
+  gthree_camera_set_far (shadow_camera, 1000);
 
   particle_material = gthree_mesh_basic_material_new ();
   gthree_mesh_basic_material_set_color (particle_material, green ());
