@@ -505,6 +505,17 @@ gthree_object_is_in_frustum (GthreeObject *object,
 }
 
 void
+gthree_object_raycast (GthreeObject                *object,
+                       GthreeRaycaster             *raycaster,
+                       GPtrArray                   *intersections)
+{
+  GthreeObjectClass *class = GTHREE_OBJECT_GET_CLASS(object);
+
+  if (class->raycast)
+    return class->raycast (object, raycaster, intersections);
+}
+
+void
 gthree_object_set_up (GthreeObject *object,
                       const graphene_vec3_t *up)
 {

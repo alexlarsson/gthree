@@ -48,6 +48,9 @@ typedef struct {
   void (* set_direct_uniforms)   (GthreeObject          *object,
                                   GthreeProgram         *program,
                                   GthreeRenderer *renderer);
+  void (* raycast)               (GthreeObject          *object,
+                                  GthreeRaycaster       *raycaster,
+                                  GPtrArray             *intersections);
 } GthreeObjectClass;
 
 GTHREE_API
@@ -194,6 +197,10 @@ gboolean                     gthree_object_check_layer                  (GthreeO
                                                                          guint32                      layer_mask);
 GTHREE_API
 gboolean                     gthree_object_get_is_frustum_culled        (GthreeObject                *object);
+GTHREE_API
+void                         gthree_object_raycast                      (GthreeObject                *object,
+                                                                         GthreeRaycaster             *raycaster,
+                                                                         GPtrArray                   *intersections);
 GTHREE_API
 gboolean                     gthree_object_is_in_frustum                (GthreeObject                *object,
                                                                          const graphene_frustum_t    *frustum);

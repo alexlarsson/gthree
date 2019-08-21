@@ -60,6 +60,7 @@
 #include <gthree/gthreeanimationmixer.h>
 #include <gthree/gthreeanimationaction.h>
 #include <gthree/gthreeeffectcomposer.h>
+#include <gthree/gthreeraycaster.h>
 #undef __GTHREE_H_INSIDE__
 
 #endif /* __GTHREE_H__ */

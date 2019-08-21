@@ -38,6 +38,7 @@ typedef struct _GthreeRenderList GthreeRenderList;
 typedef struct _GthreeMaterialProperties GthreeMaterialProperties;
 typedef struct _GthreeAnimationAction GthreeAnimationAction;
 typedef struct _GthreeAnimationMixer GthreeAnimationMixer;
+typedef struct _GthreeRaycaster GthreeRaycaster;
 typedef int GthreeAttributeName;
 
 #if defined (_MSC_VER) && defined (GTHREE_COMPILATION)
