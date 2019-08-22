@@ -530,6 +530,28 @@ gthree_attribute_array_set_vec3 (GthreeAttributeArray *array,
 }
 
 void
+gthree_attribute_array_get_vec2 (GthreeAttributeArray *array,
+                                 guint                 index,
+                                 guint                 offset,
+                                 graphene_vec2_t      *vec2)
+{
+  float x, y, z;
+  gthree_attribute_array_get_xyz (array, index, offset, &x, &y, &z);
+  graphene_vec2_init (vec2, x, y);
+}
+
+void
+gthree_attribute_array_get_vec3 (GthreeAttributeArray *array,
+                                 guint                 index,
+                                 guint                 offset,
+                                 graphene_vec3_t      *vec3)
+{
+  float x, y, z;
+  gthree_attribute_array_get_xyz (array, index, offset, &x, &y, &z);
+  graphene_vec3_init (vec3, x, y, z);
+}
+
+void
 gthree_attribute_array_set_vec4 (GthreeAttributeArray *array,
                                  guint                 index,
                                  guint                 offset,
@@ -1479,12 +1501,30 @@ gthree_attribute_set_vec2 (GthreeAttribute      *attribute,
 }
 
 void
+gthree_attribute_get_vec2 (GthreeAttribute      *attribute,
+                           guint                 index,
+                           graphene_vec2_t      *vec2)
+{
+  g_assert (attribute->array);
+  gthree_attribute_array_get_vec2  (attribute->array, index, attribute->item_offset, vec2);
+}
+
+void
 gthree_attribute_set_vec3 (GthreeAttribute      *attribute,
                            guint                 index,
                            const graphene_vec3_t *vec3)
 {
   g_assert (attribute->array);
   gthree_attribute_array_set_vec3 (attribute->array, index, attribute->item_offset, vec3);
+}
+
+void
+gthree_attribute_get_vec3 (GthreeAttribute      *attribute,
+                           guint                 index,
+                           graphene_vec3_t      *vec3)
+{
+  g_assert (attribute->array);
+  gthree_attribute_array_get_vec3  (attribute->array, index, attribute->item_offset, vec3);
 }
 
 void
