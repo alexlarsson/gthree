@@ -18,6 +18,7 @@ examples = [
   'rendertarget',
   'effects',
   'morphtargets',
+  'interactive'
 ]
 
 example_resources = gnome.compile_resources('gthree-example-resources',
