@@ -21,6 +21,8 @@ struct _GthreeDirectionalLight {
   GthreeLight parent;
 };
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeDirectionalLight, g_object_unref)
+
 typedef struct {
   GthreeLightClass parent_class;
 

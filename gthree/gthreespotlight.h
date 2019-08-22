@@ -21,6 +21,8 @@ struct _GthreeSpotLight {
   GthreeLight parent;
 };
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeSpotLight, g_object_unref)
+
 typedef struct {
   GthreeLightClass parent_class;
 
