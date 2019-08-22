@@ -98,8 +98,7 @@ tick (GtkWidget     *widget,
   gthree_object_look_at (GTHREE_OBJECT (camera),
                          graphene_point3d_init (&point,
                                                 0, 0, 0));
-  gthree_camera_update_matrix (GTHREE_CAMERA (camera));
-  gthree_object_update_matrix_world (GTHREE_OBJECT (camera), FALSE);
+  gthree_object_update_matrix_world (GTHREE_OBJECT (scene), FALSE);
 
   gtk_widget_get_pointer (widget, &cursor_x, &cursor_y);
   x = ((float)cursor_x / gtk_widget_get_allocated_width (widget)) * 2 - 1;
