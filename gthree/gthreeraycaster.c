@@ -31,7 +31,7 @@ gthree_ray_intersection_copy (GthreeRayIntersection *intersection)
 GthreeRayIntersection *
 gthree_ray_intersection_new (GthreeObject *object)
 {
-  GthreeRayIntersection *intersection = g_new0 (GthreeRayIntersection, 0);
+  GthreeRayIntersection *intersection = g_new0 (GthreeRayIntersection, 1);
 
   intersection->face_index = -1;
   intersection->material_index = -1;
