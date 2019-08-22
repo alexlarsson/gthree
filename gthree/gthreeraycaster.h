@@ -21,9 +21,10 @@ G_BEGIN_DECLS
 typedef struct {
   GthreeObject *object;
   float distance;
-  graphene_vec3_t point;
-  graphene_vec3_t face[3];
-  int face_index;
+  graphene_point3d_t point;
+  int face_index;             // -1 means unset
+  int material_index;         // -1 means unset
+  graphene_triangle_t face;   // In object coords, only if face_index set
   graphene_vec2_t uv;
   graphene_vec2_t uv2;
 } GthreeRayIntersection;
@@ -36,7 +37,7 @@ void                   gthree_ray_intersection_free (GthreeRayIntersection *inte
 GTHREE_API
 GthreeRayIntersection *gthree_ray_intersection_copy (GthreeRayIntersection *intersection);
 GTHREE_API
-GthreeRayIntersection *gthree_ray_intersection_new (void);
+GthreeRayIntersection *gthree_ray_intersection_new (GthreeObject *object);
 
 struct _GthreeRaycaster {
   GObject parent;

@@ -20,7 +20,7 @@ gthree_ray_intersection_free (GthreeRayIntersection *intersection)
 GthreeRayIntersection *
 gthree_ray_intersection_copy (GthreeRayIntersection *intersection)
 {
-  GthreeRayIntersection *copy = gthree_ray_intersection_new ();
+  GthreeRayIntersection *copy = gthree_ray_intersection_new (NULL);
   *copy = *intersection;
   if (copy->object)
     g_object_ref (copy->object);
@@ -29,9 +29,16 @@ gthree_ray_intersection_copy (GthreeRayIntersection *intersection)
 }
 
 GthreeRayIntersection *
-gthree_ray_intersection_new (void)
+gthree_ray_intersection_new (GthreeObject *object)
 {
-  return g_new0 (GthreeRayIntersection, 0);
+  GthreeRayIntersection *intersection = g_new0 (GthreeRayIntersection, 0);
+
+  intersection->face_index = -1;
+  intersection->material_index = -1;
+  if (object)
+    intersection->object = g_object_ref (object);
+
+  return intersection;
 }
 
 static gint
