@@ -248,7 +248,7 @@ main (int argc, char *argv[])
   gthree_object_set_position_point3d (GTHREE_OBJECT (camera_x),
                               graphene_point3d_init (&pos, 1000, 0, 0));
   gthree_object_set_rotation (GTHREE_OBJECT (camera_x),
-                              graphene_euler_init (&euler, 0, 90, 0));
+                              graphene_euler_init (&euler, 0, -90, 0));
 
   area_x = gthree_area_new (scene, GTHREE_CAMERA (camera_x));
   g_signal_connect (area_x, "resize", G_CALLBACK (resize_area), camera_x);
