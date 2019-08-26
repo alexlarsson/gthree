@@ -701,12 +701,20 @@ static void
 gthree_object_decompose_matrix (GthreeObject                *object)
 {
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
-  graphene_vec4_t transl;
+  graphene_vec3_t shear;
+  graphene_vec4_t perspective;
 
-  // TODO: This should fully decompose the matrix into pos, scale, quat
-  // We do just position for now
-  graphene_matrix_get_row (&priv->matrix, 3, &transl);
-  graphene_vec4_get_xyz (&transl, &priv->position);
+  if (!graphene_matrix_decompose (&priv->matrix,
+                                  &priv->position,
+                                  &priv->scale,
+                                  &priv->quaternion,
+                                  &shear, &perspective))
+    {
+      // If this fails, at least get the position
+      graphene_vec4_t transl;
+      graphene_matrix_get_row (&priv->matrix, 3, &transl);
+      graphene_vec4_get_xyz (&transl, &priv->position);
+    }
 }
 
 /* Only useful if auto-update are off, otherwise its overwritten the next frame */
