@@ -9,7 +9,6 @@
 
 #include <gdk/gdk.h>
 #include <gthree/gthreeobject.h>
-#include <json-glib/json-glib.h>
 
 G_BEGIN_DECLS
 

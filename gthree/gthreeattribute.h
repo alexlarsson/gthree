@@ -9,7 +9,6 @@
 #include <graphene.h>
 #include <gthree/gthreeenums.h>
 #include <gthree/gthreeresource.h>
-#include <json-glib/json-glib.h>
 
 G_BEGIN_DECLS
 
@@ -341,9 +340,6 @@ GthreeAttribute *gthree_attribute_new_with_array_interleaved (const char        
                                                               int                   item_size,
                                                               int                   item_offset,
                                                               int                   count);
-GTHREE_API
-GthreeAttribute *gthree_attribute_parse_json                 (JsonObject           *root,
-                                                              const char           *name);
 
 GTHREE_API
 const char *          gthree_attribute_get_name           (GthreeAttribute      *attribute);
