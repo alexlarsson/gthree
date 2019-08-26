@@ -26,7 +26,7 @@ libm = cc.find_library('m', required : false)
 
 glib_dep       = dependency('glib-2.0', version: '>= 2.43.2')
 gobject_dep    = dependency('gobject-2.0', version: '>= 2.43.2')
-graphene_dep   = dependency('graphene-gobject-1.0', version: '>= 1.9.6')
+graphene_dep   = dependency('graphene-gobject-1.0', version: '>= 1.9.7')
 gtk_dep        = dependency('gtk+-3.0', version: '>= 3.22')
 epoxy_dep      = dependency('epoxy', version: '>= 1.4')
 json_glib_dep  = dependency('json-glib-1.0', version: '>= 1.2.0')
