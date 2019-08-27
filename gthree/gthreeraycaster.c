@@ -42,13 +42,17 @@ gthree_ray_intersection_new (GthreeObject *object)
 }
 
 static gint
-compare_intersection (gconstpointer  a,
-                      gconstpointer  b)
+compare_intersection (gconstpointer *a,
+                      gconstpointer *b)
 {
-  const GthreeRayIntersection *aa = a;
-  const GthreeRayIntersection *bb = b;
+  const GthreeRayIntersection *aa = *a;
+  const GthreeRayIntersection *bb = *b;
 
-  return aa->distance - bb->distance;
+  if (aa->distance < bb->distance)
+    return -1;
+  else if (aa->distance > bb->distance)
+    return 1;
+  return 0;
 }
 
 G_DEFINE_BOXED_TYPE (GthreeRayIntersection, gthree_ray_intersection,
