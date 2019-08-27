@@ -51,6 +51,8 @@ typedef struct {
   void (* raycast)               (GthreeObject          *object,
                                   GthreeRaycaster       *raycaster,
                                   GPtrArray             *intersections);
+
+  gpointer padding[8];
 } GthreeObjectClass;
 
 GTHREE_API

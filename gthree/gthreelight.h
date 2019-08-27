@@ -29,6 +29,8 @@ typedef struct {
   void          (*setup) (GthreeLight *light,
                           GthreeCamera *camera,
                           GthreeLightSetup *light_setup);
+
+  gpointer padding[8];
 } GthreeLightClass;
 
 GTHREE_API

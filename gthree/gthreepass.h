@@ -63,6 +63,8 @@ typedef struct {
                   float delta_time,
                   gboolean render_to_screen,
                   gboolean mask_active);
+
+  gpointer padding[8];
 } GthreePassClass;
 
 

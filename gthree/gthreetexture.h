@@ -31,6 +31,8 @@ typedef struct {
   GthreeResourceClass parent_class;
 
   void (*load) (GthreeTexture *texture, int slot);
+
+  gpointer padding[8];
 } GthreeTextureClass;
 
 GTHREE_API

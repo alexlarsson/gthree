@@ -49,6 +49,7 @@ typedef struct {
 
   gboolean apply_common_uniforms;
 
+  gpointer padding[8];
 } GthreeMaterialClass;
 
 GTHREE_API

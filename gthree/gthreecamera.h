@@ -27,6 +27,8 @@ typedef struct {
   GthreeObjectClass parent_class;
 
   void (*update) (GthreeCamera *camera);
+
+  gpointer padding[8];
 } GthreeCameraClass;
 
 GTHREE_API

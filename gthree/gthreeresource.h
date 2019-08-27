@@ -28,6 +28,8 @@ typedef struct {
   void (*set_used) (GthreeResource *resource,
                     gboolean        used);
   void (*unrealize) (GthreeResource *resource);
+
+  gpointer padding[8];
 } GthreeResourceClass;
 
 GTHREE_API
