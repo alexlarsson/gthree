@@ -26,8 +26,8 @@ init_scene (void)
 
   for (i = 0; i < 2000; i++)
     {
-      g_autoptr(GthreeMeshLambertMaterial) material =  gthree_mesh_lambert_material_new ();
-      g_autoptr(GthreeMesh) mesh = gthree_mesh_new (geometry, GTHREE_MATERIAL (material));
+      g_autoptr(GthreeMesh) mesh = gthree_mesh_new (geometry, NULL);
+      g_object_set_data (mesh, "index", GINT_TO_POINTER(i));
 
       graphene_vec3_init (&color,
                           g_random_double (),
@@ -46,7 +46,15 @@ init_scene (void)
                           g_random_double_range (0.5, 1.5),
                           g_random_double_range (0.5, 1.5));
 
-      gthree_mesh_lambert_material_set_color (material, &color);
+      for (int j = 0; j < 6; j++)
+        {
+          g_autoptr(GthreeMeshLambertMaterial) material =  gthree_mesh_lambert_material_new ();
+
+          gthree_mesh_lambert_material_set_color (material, &color);
+
+          gthree_mesh_set_material (mesh, j, GTHREE_MATERIAL (material));
+        }
+
       gthree_object_set_position (GTHREE_OBJECT (mesh), &pos);
       gthree_object_set_scale (GTHREE_OBJECT (mesh), &scale);
       gthree_object_set_rotation (GTHREE_OBJECT (mesh), &rotation);
@@ -107,29 +115,29 @@ tick (GtkWidget     *widget,
   gthree_raycaster_set_from_camera  (raycaster, GTHREE_CAMERA (camera), x, y);
 
   intersections = gthree_raycaster_intersect_object (raycaster, GTHREE_OBJECT (scene), TRUE, NULL);
+  if (intersected)
+    {
+      for (int j = 0; j < 6; j++)
+        {
+          GthreeMaterial *material = gthree_mesh_get_material (GTHREE_MESH (intersected), j);
+          gthree_mesh_lambert_material_set_color (GTHREE_MESH_LAMBERT_MATERIAL (material), &intersected_color);
+        }
+      intersected = NULL;
+    }
 
   if (intersections->len > 0)
     {
       GthreeRayIntersection *intersection = g_ptr_array_index (intersections, 0);
-
-      if (intersection->object != intersected)
+      intersected = intersection->object;
+      intersected_color = *gthree_mesh_lambert_material_get_color (GTHREE_MESH_LAMBERT_MATERIAL (gthree_mesh_get_material (GTHREE_MESH (intersected), 0)));
+      for (int j = 0; j < 6; j++)
         {
-          if (intersected)
-            {
-              GthreeMaterial *material = gthree_mesh_get_material (GTHREE_MESH (intersected), 0);
-              gthree_mesh_lambert_material_set_color (GTHREE_MESH_LAMBERT_MATERIAL (material), &intersected_color);
-            }
-          intersected = intersection->object;
-          GthreeMaterial *material = gthree_mesh_get_material (GTHREE_MESH (intersected), 0);
-          intersected_color = *gthree_mesh_lambert_material_get_color (GTHREE_MESH_LAMBERT_MATERIAL (material));
-          gthree_mesh_lambert_material_set_color (GTHREE_MESH_LAMBERT_MATERIAL (material), red ());
+          GthreeMaterial *material = gthree_mesh_get_material (GTHREE_MESH (intersected), j);
+          if (j == intersection->material_index)
+            gthree_mesh_lambert_material_set_color (GTHREE_MESH_LAMBERT_MATERIAL (material), green ());
+          else
+            gthree_mesh_lambert_material_set_color (GTHREE_MESH_LAMBERT_MATERIAL (material), red ());
         }
-    }
-  else if (intersected)
-    {
-      GthreeMaterial *material = gthree_mesh_get_material (GTHREE_MESH (intersected), 0);
-      gthree_mesh_lambert_material_set_color (GTHREE_MESH_LAMBERT_MATERIAL (material), &intersected_color);
-      intersected = NULL;
     }
 
   gtk_widget_queue_draw (widget);
