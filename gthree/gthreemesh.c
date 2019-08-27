@@ -214,13 +214,13 @@ ray_intersect_triangle (const graphene_ray_t *local_ray,
 
   if (DdN > 0)
     {
-      kind = RAY_INTERSECTION_KIND_LEAVE;
+      kind = RAY_INTERSECTION_KIND_ENTER;
       sign = 1;
 
     }
   else if (DdN < 0)
     {
-      kind = RAY_INTERSECTION_KIND_ENTER;
+      kind = RAY_INTERSECTION_KIND_LEAVE;
       sign = -1;
       DdN = -DdN;
     }
@@ -490,10 +490,6 @@ check_intersection (GthreeObject *object,
     }
 
   graphene_ray_get_position_at (local_ray, t, &local_intersection_point);
-
-  if (t < gthree_raycaster_get_near (raycaster) ||
-      t > gthree_raycaster_get_far (raycaster))
-    return NULL;
 
   graphene_matrix_transform_point3d (gthree_object_get_world_matrix (object),
                                      &local_intersection_point, &world_intersection_point);
