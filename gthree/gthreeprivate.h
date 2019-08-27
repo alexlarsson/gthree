@@ -206,6 +206,11 @@ void gthree_object_print_tree (GthreeObject *object, int depth);
 GthreeAttribute *gthree_attribute_parse_json                 (JsonObject           *root,
                                                               const char           *name);
 
+/* These are valid when realized */
+int gthree_attribute_get_gl_buffer            (GthreeAttribute *attribute);
+int gthree_attribute_get_gl_type              (GthreeAttribute *attribute);
+int gthree_attribute_get_gl_bytes_per_element (GthreeAttribute *attribute);
+
 GthreeInterpolant *gthree_interpolant_create (GType type,
                                               GthreeAttributeArray *parameter_positions,
                                               GthreeAttributeArray *sample_values);

@@ -534,16 +534,6 @@ void                  gthree_attribute_get_point3d        (GthreeAttribute      
                                                            graphene_point3d_t   *point);
 
 
-
-/* These are valid when realized */
-GTHREE_API
-int gthree_attribute_get_gl_buffer            (GthreeAttribute *attribute);
-GTHREE_API
-int gthree_attribute_get_gl_type              (GthreeAttribute *attribute);
-GTHREE_API
-int gthree_attribute_get_gl_bytes_per_element (GthreeAttribute *attribute);
-
-
 G_END_DECLS
 
 #endif /* __GTHREE_ATTRIBUTE_H__ */
