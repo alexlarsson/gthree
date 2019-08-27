@@ -27,7 +27,7 @@ init_scene (void)
   for (i = 0; i < 2000; i++)
     {
       g_autoptr(GthreeMesh) mesh = gthree_mesh_new (geometry, NULL);
-      g_object_set_data (mesh, "index", GINT_TO_POINTER(i));
+      g_object_set_data (G_OBJECT (mesh), "index", GINT_TO_POINTER(i));
 
       graphene_vec3_init (&color,
                           g_random_double (),
