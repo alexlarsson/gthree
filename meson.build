@@ -26,7 +26,8 @@ libm = cc.find_library('m', required : false)
 
 glib_dep       = dependency('glib-2.0', version: '>= 2.43.2')
 gobject_dep    = dependency('gobject-2.0', version: '>= 2.43.2')
-graphene_dep   = dependency('graphene-gobject-1.0', version: '>= 1.9.7')
+graphene_dep   = dependency('graphene-gobject-1.0', version: '>= 1.9.7',
+                            fallback: ['graphene', 'graphene_dep'])
 gtk_dep        = dependency('gtk+-3.0', version: '>= 3.22')
 epoxy_dep      = dependency('epoxy', version: '>= 1.4')
 json_glib_dep  = dependency('json-glib-1.0', version: '>= 1.2.0')
@@ -35,6 +36,14 @@ gthree_prefix = get_option('prefix')
 gthree_libdir = join_paths(gthree_prefix, get_option('libdir'))
 gthree_includedir = join_paths(gthree_prefix, get_option('includedir'))
 gthree_datadir = join_paths(gthree_prefix, get_option('datadir'))
+
+if graphene_dep.type_name() == 'internal'
+  graphene_is_subproject = true
+  graphene_subproject_typelib_dir = join_paths(meson.build_root(), 'subprojects', 'graphene', 'src')
+else
+  graphene_is_subproject = false
+  graphene_subproject_typelib_dir = ''
+endif
 
 # Maintain version scheme with libtool
 gthree_soversion = 0
