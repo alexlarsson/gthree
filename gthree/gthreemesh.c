@@ -7,274 +7,6 @@
 #include "gthreeprivate.h"
 #include "gthreeraycaster.h"
 
-/* These are some graphene_ray_t helpers, they should probably be in graphene */
-
-typedef enum {
-  RAY_INTERSECTION_KIND_NONE,
-  RAY_INTERSECTION_KIND_ENTER,
-  RAY_INTERSECTION_KIND_LEAVE,
-} RayIntersectionKind;
-
-static RayIntersectionKind
-ray_intersect_sphere (const graphene_ray_t *ray,
-                      const graphene_sphere_t *sphere,
-                      float *t_out)
-{
-  graphene_vec3_t v1, origin, direction, center;
-  graphene_point3d_t center_point, origin_point;
-
-  graphene_ray_get_origin (ray, &origin_point);
-  graphene_point3d_to_vec3 (&origin_point, &origin);
-
-  graphene_ray_get_direction (ray, &direction);
-
-  graphene_sphere_get_center (sphere, &center_point);
-  graphene_point3d_to_vec3 (&center_point, &center);
-
-  graphene_vec3_subtract (&center, &origin, &v1);
-
-  // (signed) distance along ray to point nearest sphere center
-  float tca = graphene_vec3_dot (&v1, &direction);
-
-  // square of distance from ray line to sphere center
-  float d2 = graphene_vec3_dot (&v1, &v1) - tca * tca;
-
-  float radius2 = graphene_sphere_get_radius (sphere) * graphene_sphere_get_radius (sphere);
-  if (d2 > radius2)
-    return RAY_INTERSECTION_KIND_NONE;
-
-  // Distance to entry/exit point
-  float thc = sqrtf (radius2 - d2);
-
-  // t0 = first intersect point - entrance on front of sphere
-  float t0 = tca - thc;
-
-  // t1 = second intersect point - exit point on back of sphere
-  float t1 = tca + thc;
-
-  // test to see if both t0 and t1 are behind the ray - if so, no intersection
-  if (t0 < 0 && t1 < 0)
-    return RAY_INTERSECTION_KIND_NONE;
-
-  // test to see if t0 is behind the ray:
-  // if it is, the ray is inside the sphere, so return t1,
-  // in order to always return an intersect point that is in front of the ray.
-  if (t0 < 0)
-    {
-      if (t_out)
-        *t_out = t1;
-      return RAY_INTERSECTION_KIND_LEAVE;
-    }
-
-  // else t0 is in front of the ray, so return  t0
-  if (t_out)
-    *t_out = t0;
-  return RAY_INTERSECTION_KIND_ENTER;
-}
-
-static gboolean
-ray_intersects_sphere (const graphene_ray_t *ray,
-                       const graphene_sphere_t *sphere)
-{
-  return ray_intersect_sphere (ray, sphere, NULL) != RAY_INTERSECTION_KIND_NONE;
-}
-
-static RayIntersectionKind
-ray_intersect_box (const graphene_ray_t *ray,
-                   const graphene_box_t *box,
-                   float *t_out)
-{
-  graphene_point3d_t origin;
-  graphene_vec3_t direction;
-  float tmin, tmax, tymin, tymax, tzmin, tzmax;
-  graphene_point3d_t min, max;
-  float invdirx, invdiry, invdirz;
-
-  graphene_ray_get_origin (ray, &origin);
-  graphene_ray_get_direction (ray, &direction);
-
-  invdirx = 1 / graphene_vec3_get_x (&direction);
-  invdiry = 1 / graphene_vec3_get_y (&direction);
-  invdirz = 1 / graphene_vec3_get_z (&direction);
-
-  graphene_box_get_min (box, &min);
-  graphene_box_get_max (box, &max);
-
-  if (invdirx >= 0)
-    {
-      tmin = (min.x - origin.x) * invdirx;
-      tmax = (max.x - origin.x) * invdirx;
-    }
-  else
-    {
-      tmin = (max.x - origin.x) * invdirx;
-      tmax = (min.x - origin.x) * invdirx;
-    }
-
-  if (invdiry >= 0)
-    {
-      tymin = (min.y - origin.y) * invdiry;
-      tymax = (max.y - origin.y) * invdiry;
-    }
-  else
-    {
-      tymin = (max.y - origin.y) * invdiry;
-      tymax = (min.y - origin.y) * invdiry;
-    }
-
-  if ((tmin > tymax) || (tymin > tmax))
-    return RAY_INTERSECTION_KIND_NONE;
-
-  // These lines also handle the case where tmin or tmax is NaN
-  // (result of 0 * Infinity). x !== x returns true if x is NaN
-  if (tymin > tmin || tmin != tmin)
-    tmin = tymin;
-
-  if (tymax < tmax || tmax != tmax)
-    tmax = tymax;
-
-  if (invdirz >= 0)
-    {
-      tzmin = (min.z - origin.z) * invdirz;
-      tzmax = (max.z - origin.z) * invdirz;
-    }
-  else
-    {
-      tzmin = (max.z - origin.z) * invdirz;
-      tzmax = (min.z - origin.z) * invdirz;
-    }
-
-  if ((tmin > tzmax) || (tzmin > tmax))
-    return RAY_INTERSECTION_KIND_NONE;
-
-  if (tzmin > tmin || tmin != tmin)
-    tmin = tzmin;
-
-  if (tzmax < tmax || tmax != tmax)
-    tmax = tzmax;
-
-  //return point closest to the ray (positive side)
-  if (tmax < 0)
-    return RAY_INTERSECTION_KIND_NONE;
-
-  if (tmin >= 0)
-    {
-      if (t_out)
-        *t_out = tmin;
-      return RAY_INTERSECTION_KIND_ENTER;
-    }
-
-  if (t_out)
-    *t_out = tmax;
-  return RAY_INTERSECTION_KIND_LEAVE;
-}
-
-static gboolean
-ray_intersects_box (const graphene_ray_t *ray,
-                    const graphene_box_t *box)
-{
-  return ray_intersect_box (ray, box, NULL) != RAY_INTERSECTION_KIND_NONE;
-}
-
-/* This takes the separate vectors instead of a graphene_triangle_t so
-   we don't have to create a temporary one for every vertex we extract
-   from the buffers. It would be nice if we could initialize the
-   vertices of a graphene_triangle_t in place so we could avoid such a
-   copy. */
-static RayIntersectionKind
-ray_intersect_triangle (const graphene_ray_t *local_ray,
-                        const graphene_vec3_t *vA,
-                        const graphene_vec3_t *vB,
-                        const graphene_vec3_t *vC,
-                        float *t_out)
-{
-  graphene_point3d_t origin_point;
-  graphene_vec3_t direction, origin;
-  graphene_vec3_t diff, edge1, edge2, normal;
-  RayIntersectionKind kind;
-
-  // from http://www.geometrictools.com/GTEngine/Include/Mathematics/GteIntrRay3Triangle3.h
-
-  graphene_ray_get_origin (local_ray, &origin_point);
-  graphene_point3d_to_vec3 (&origin_point, &origin);
-  graphene_ray_get_direction (local_ray, &direction);
-
-  // Compute the offset origin, edges, and normal.
-  graphene_vec3_subtract (vB, vA, &edge1);
-  graphene_vec3_subtract (vC, vA, &edge2);
-  graphene_vec3_cross (&edge1, &edge2, &normal);
-
-  // Solve Q + t*D = b1*E1 + b2*E2 (Q = kDiff, D = ray direction,
-  // E1 = kEdge1, E2 = kEdge2, N = Cross(E1,E2)) by
-  //   |Dot(D,N)|*b1 = sign(Dot(D,N))*Dot(D,Cross(Q,E2))
-  //   |Dot(D,N)|*b2 = sign(Dot(D,N))*Dot(D,Cross(E1,Q))
-  //   |Dot(D,N)|*t = -sign(Dot(D,N))*Dot(Q,N)
-  float DdN = graphene_vec3_dot (&direction, &normal);
-  float sign;
-
-  if (DdN > 0)
-    {
-      kind = RAY_INTERSECTION_KIND_ENTER;
-      sign = 1;
-
-    }
-  else if (DdN < 0)
-    {
-      kind = RAY_INTERSECTION_KIND_LEAVE;
-      sign = -1;
-      DdN = -DdN;
-    }
-  else
-    {
-      // Ray and triangle are parallel, call it a "no intersection"
-      // even if the ray does intersect.
-      return RAY_INTERSECTION_KIND_NONE;
-    }
-
-  graphene_vec3_subtract (&origin, vA, &diff);
-  graphene_vec3_cross (&diff, &edge2, &edge2);
-  float DdQxE2 = sign * graphene_vec3_dot (&direction, &edge2);
-
-  // b1 < 0, no intersection
-  if ( DdQxE2 < 0 )
-    return RAY_INTERSECTION_KIND_NONE;
-
-  graphene_vec3_cross (&edge1, &diff, &edge1);
-
-  float DdE1xQ = sign * graphene_vec3_dot (&direction, &edge1);
-
-  // b2 < 0, no intersection
-  if ( DdE1xQ < 0 )
-    return RAY_INTERSECTION_KIND_NONE;
-
-  // b1+b2 > 1, no intersection
-  if ( DdQxE2 + DdE1xQ > DdN )
-    return RAY_INTERSECTION_KIND_NONE;
-
-  // Line intersects triangle, check if ray does.
-  float QdN = -sign * graphene_vec3_dot (&diff, &normal);
-
-  // t < 0, no intersection
-  if ( QdN < 0 )
-    return RAY_INTERSECTION_KIND_NONE;
-
-  if (t_out)
-    *t_out = QdN / DdN;
-
-  return kind;
-}
-
-static void
-triangle_get_uv (const graphene_triangle_t *triangle,
-                 const graphene_point3d_t *point,
-                 const graphene_vec2_t *uvA,
-                 const graphene_vec2_t *uvB,
-                 const graphene_vec2_t *uvC,
-                 graphene_vec2_t *uv_out)
-{
-  // TODO
-}
-
 typedef struct {
   GthreeGeometry *geometry;
   GPtrArray *materials;
@@ -456,13 +188,11 @@ check_intersection (GthreeObject *object,
                     GthreeMaterial *material,
                     GthreeRaycaster *raycaster,
                     const graphene_ray_t *local_ray,
-                    const graphene_vec3_t *vA,
-                    const graphene_vec3_t *vB,
-                    const graphene_vec3_t *vC)
+                    const graphene_triangle_t *triangle,
+                    graphene_point3d_t *local_intersection_point)
 {
   GthreeSide side = GTHREE_SIDE_FRONT;
-  RayIntersectionKind kind;
-  graphene_point3d_t local_intersection_point;
+  graphene_ray_intersection_kind_t kind;
   graphene_point3d_t world_intersection_point;
   float t, distance;
   graphene_point3d_t world_origin;
@@ -471,28 +201,28 @@ check_intersection (GthreeObject *object,
   if (material)
     side = gthree_material_get_side (material);
 
-  kind = ray_intersect_triangle (local_ray, vC, vB, vA, &t);
+  kind = graphene_ray_intersect_triangle (local_ray, triangle, &t);
 
   switch (side)
     {
     case GTHREE_SIDE_FRONT:
-      if (kind != RAY_INTERSECTION_KIND_ENTER)
+      if (kind != GRAPHENE_RAY_INTERSECTION_KIND_ENTER)
         return NULL;
       break;
     case GTHREE_SIDE_BACK:
-      if (kind != RAY_INTERSECTION_KIND_LEAVE)
+      if (kind != GRAPHENE_RAY_INTERSECTION_KIND_LEAVE)
         return NULL;
       break;
     default: // double sided
-      if (kind == RAY_INTERSECTION_KIND_NONE)
+      if (kind == GRAPHENE_RAY_INTERSECTION_KIND_NONE)
         return NULL;
       break;
     }
 
-  graphene_ray_get_position_at (local_ray, t, &local_intersection_point);
+  graphene_ray_get_position_at (local_ray, t, local_intersection_point);
 
   graphene_matrix_transform_point3d (gthree_object_get_world_matrix (object),
-                                     &local_intersection_point, &world_intersection_point);
+                                     local_intersection_point, &world_intersection_point);
 
   graphene_ray_get_origin (gthree_raycaster_get_ray (raycaster), &world_origin);
 
@@ -527,20 +257,23 @@ do_geometry_intersection (GthreeObject *object,
 {
   GthreeMesh *mesh = GTHREE_MESH (object);
   GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
-  graphene_vec3_t vA, vB, vC;
   graphene_vec2_t uvA, uvB, uvC;
   graphene_vec3_t morphA, morphB, morphC;
   GthreeRayIntersection *intersection;
-
-  graphene_point3d_to_vec3 (gthree_attribute_peek_point3d_at (position, a), &vA);
-  graphene_point3d_to_vec3 (gthree_attribute_peek_point3d_at (position, b), &vB);
-  graphene_point3d_to_vec3 (gthree_attribute_peek_point3d_at (position, c), &vC);
+  graphene_triangle_t triangle;
+  graphene_point3d_t local_intersection_point;
 
   if (material != NULL &&
       GTHREE_IS_MESH_MATERIAL (material) &&
       gthree_mesh_material_get_morph_targets (GTHREE_MESH_MATERIAL (material)) &&
       morph_position &&  priv->morph_target_influences)
     {
+      graphene_vec3_t vA, vB, vC;
+
+      graphene_point3d_to_vec3 (gthree_attribute_peek_point3d_at (position, a), &vA);
+      graphene_point3d_to_vec3 (gthree_attribute_peek_point3d_at (position, b), &vB);
+      graphene_point3d_to_vec3 (gthree_attribute_peek_point3d_at (position, c), &vC);
+
       graphene_vec3_init (&morphA, 0, 0, 0);
       graphene_vec3_init (&morphB, 0, 0, 0);
       graphene_vec3_init (&morphC, 0, 0, 0);
@@ -575,14 +308,22 @@ do_geometry_intersection (GthreeObject *object,
       graphene_vec3_add (&vA, &morphA, &vA);
       graphene_vec3_add (&vB, &morphB, &vB);
       graphene_vec3_add (&vC, &morphC, &vC);
+
+      graphene_triangle_init_from_vec3 (&triangle, &vA, &vB, &vC);
+    }
+  else
+    {
+      graphene_triangle_init_from_float (&triangle,
+                                         gthree_attribute_peek_float_at (position, a),
+                                         gthree_attribute_peek_float_at (position, b),
+                                         gthree_attribute_peek_float_at (position, c));
     }
 
-  intersection = check_intersection (object, material, raycaster, local_ray, &vA, &vB, &vC);
+  intersection = check_intersection (object, material, raycaster, local_ray, &triangle, &local_intersection_point);
   if (intersection)
     {
       intersection->face_index = face_index;
-      graphene_triangle_init_from_vec3 (&intersection->face,
-                                        &vA, &vB, &vC); // NOTE: In object coords, like three.js
+      intersection->face = triangle; // NOTE: In object coords, like three.js
       intersection->material_index = material_index;
 
       if (uv)
@@ -591,10 +332,10 @@ do_geometry_intersection (GthreeObject *object,
           gthree_attribute_get_vec2 (uv, b, &uvB);
           gthree_attribute_get_vec2 (uv, c, &uvC);
 
-          triangle_get_uv (&intersection->face,
-                           &intersection->point,
-                           &uvA, &uvB, &uvC,
-                           &intersection->uv);
+          graphene_triangle_get_uv (&intersection->face,
+                                    &local_intersection_point,
+                                    &uvA, &uvB, &uvC,
+                                    &intersection->uv);
         }
 
       g_ptr_array_add (intersections, intersection);
@@ -629,14 +370,14 @@ gthree_mesh_raycast (GthreeObject *object,
                                     &world_sphere);
 
   world_ray = gthree_raycaster_get_ray (raycaster);
-  if (!ray_intersects_sphere (world_ray, &world_sphere))
+  if (!graphene_ray_intersects_sphere (world_ray, &world_sphere))
     return;
 
   graphene_matrix_inverse (gthree_object_get_world_matrix (object), &inverse_matrix);
   graphene_matrix_transform_ray (&inverse_matrix, world_ray, &local_ray);
 
   // Check boundingBox before continuing
-  if (!ray_intersects_box (&local_ray, gthree_geometry_get_bounding_box  (priv->geometry)))
+  if (!graphene_ray_intersects_box (&local_ray, gthree_geometry_get_bounding_box  (priv->geometry)))
     return;
 
   n_groups = gthree_geometry_get_n_groups (priv->geometry);
