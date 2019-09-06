@@ -1,5 +1,11 @@
-#ifndef __GTHREE_ATTRIBUTE_H__
-#define __GTHREE_ATTRIBUTE_H__
+/* gthreeattribute.h: Attribute
+ *
+ * Copyright 2019  Alex Larsson
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
+#pragma once
 
 #if !defined (__GTHREE_H_INSIDE__) && !defined (GTHREE_COMPILATION)
 #error "Only <gthree/gthree.h> can be included directly."
@@ -14,6 +20,11 @@ G_BEGIN_DECLS
 
 GTHREE_API
 int gthree_attribute_type_length (GthreeAttributeType type);
+
+#define GTHREE_TYPE_ATTRIBUTE_ARRAY (gthree_attribute_array_get_type())
+
+GTHREE_API
+GType gthree_attribute_array_get_type (void) G_GNUC_CONST;
 
 GTHREE_API
 GthreeAttributeArray *gthree_attribute_array_new                (GthreeAttributeType   type,
@@ -32,12 +43,12 @@ GthreeAttributeArray *gthree_attribute_array_new_from_uint32    (guint32        
                                                                  int                   count,
                                                                  int                   item_size);
 GTHREE_API
-GthreeAttributeArray *gthree_attribute_array_reshape (GthreeAttributeArray *array,
-                                                      guint                 index,
-                                                      guint                 offset,
-                                                      guint                 count,
-                                                      guint                 item_size,
-                                                      gboolean              share_if_possible);
+GthreeAttributeArray *gthree_attribute_array_reshape            (GthreeAttributeArray *array,
+                                                                 guint                 index,
+                                                                 guint                 offset,
+                                                                 guint                 count,
+                                                                 guint                 item_size,
+                                                                 gboolean              share_if_possible);
 GTHREE_API
 GthreeAttributeArray *gthree_attribute_array_ref                (GthreeAttributeArray *array);
 GTHREE_API
@@ -291,19 +302,12 @@ void                  gthree_attribute_array_set_elements_from_float (GthreeAttr
                                                                       float                *src,
                                                                       guint                 n_elements);
 
-
-#define GTHREE_TYPE_ATTRIBUTE      (gthree_attribute_get_type ())
-#define GTHREE_ATTRIBUTE(inst)     (G_TYPE_CHECK_INSTANCE_CAST ((inst), GTHREE_TYPE_ATTRIBUTE, GthreeAttribute))
-#define GTHREE_ATTRIBUTE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GTHREE_TYPE_ATTRIBUTE, GthreeAttributeClass))
-#define GTHREE_IS_ATTRIBUTE(inst)  (G_TYPE_CHECK_INSTANCE_TYPE ((inst), GTHREE_TYPE_ATTRIBUTE))
-#define GTHREE_IS_ATTRIBUTE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GTHREE_TYPE_ATTRIBUTE))
-#define GTHREE_ATTRIBUTE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GTHREE_TYPE_ATTRIBUTE, GthreeAttributeClass))
-
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeAttributeArray, gthree_attribute_array_unref)
-G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeAttribute, g_object_unref)
+
+#define GTHREE_TYPE_ATTRIBUTE (gthree_attribute_get_type ())
 
 GTHREE_API
-GType gthree_attribute_get_type (void) G_GNUC_CONST;
+G_DECLARE_FINAL_TYPE (GthreeAttribute, gthree_attribute, GTHREE, ATTRIBUTE, GthreeResource)
 
 GTHREE_API
 GthreeAttribute *gthree_attribute_new                        (const char           *name,
@@ -535,5 +539,3 @@ void                  gthree_attribute_get_point3d        (GthreeAttribute      
 
 
 G_END_DECLS
-
-#endif /* __GTHREE_ATTRIBUTE_H__ */

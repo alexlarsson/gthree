@@ -36,11 +36,16 @@ static int attribute_type_gl[] = {
    GL_BYTE
 };
 
+
 int
 gthree_attribute_type_length (GthreeAttributeType type)
 {
   return attribute_type_size[type];
 }
+
+G_DEFINE_BOXED_TYPE (GthreeAttributeArray, gthree_attribute_array,
+                     gthree_attribute_array_ref,
+                     gthree_attribute_array_unref)
 
 GthreeAttributeArray *
 gthree_attribute_array_new   (GthreeAttributeType   type,
@@ -944,10 +949,6 @@ struct _GthreeAttribute {
   int count;        /* May be smaller than the entire array if stacking */
   gboolean normalized;
 };
-
-typedef struct {
-  GthreeResourceClass parent_class;
-} GthreeAttributeClass;
 
 enum {
   PROP_0,
