@@ -40,7 +40,7 @@ typedef struct {
   /* memory manager */
   GPtrArray *actions;  // 'n_active_actions' followed by inactive ones
   int n_active_actions;
-  GHashTable *actions_by_clip; // ClipInfo
+  GHashTable *actions_by_clip; // GthreeAnimationClip -> ClipInfo
 
   GPtrArray *bindings;  // n_active_binding GthreePropertyMixer followed by inactive ones
   int n_active_bindings;
@@ -147,11 +147,36 @@ _gthree_animation_mixer_add_inactive_binding (GthreeAnimationMixer  *mixer,
 }
 
 static void
-_gthree_animation_mixer_remove_inactive_binding (GthreeAnimationMixer  *mixer,
+_gthree_animation_mixer_remove_inactive_binding (GthreeAnimationMixer *mixer,
                                                  GthreePropertyMixer *binding)
 {
-  //GthreeAnimationMixerPrivate *priv = gthree_animation_mixer_get_instance_private (mixer);
-  g_warning ("TODO _gthree_animation_mixer_remove_inactive_binding");
+  GthreeAnimationMixerPrivate *priv = gthree_animation_mixer_get_instance_private (mixer);
+  GthreePropertyBinding *prop_binding;
+  GthreePropertyMixer *last_inactive_binding;
+  GthreeObject *root;
+  const char *track_name;
+  GHashTable *bindings_by_name;
+  int cache_index;
+
+  prop_binding = gthree_property_mixer_get_binding (binding);
+
+  root = gthree_property_binding_get_root (prop_binding);
+  track_name = gthree_property_binding_get_path (prop_binding);
+
+  bindings_by_name = g_hash_table_lookup (priv->bindings_by_root_and_name, root);
+
+  last_inactive_binding = g_ptr_array_index (priv->bindings, priv->bindings->len - 1);
+  cache_index = binding->cache_index;
+
+  last_inactive_binding->cache_index = cache_index;
+  g_ptr_array_index (priv->bindings, cache_index) = last_inactive_binding;
+
+  g_ptr_array_set_size (priv->bindings, priv->bindings->len - 1); // pop
+
+  g_hash_table_remove (bindings_by_name, track_name);
+
+  if (g_hash_table_size (bindings_by_name) == 0)
+    g_hash_table_remove (priv->bindings_by_root_and_name, root);
 }
 
 static void
@@ -186,8 +211,18 @@ static void
 _gthree_animation_mixer_remove_inactive_bindings_for_action (GthreeAnimationMixer  *mixer,
                                                              GthreeAnimationAction *action)
 {
-  //GthreeAnimationMixerPrivate *priv = gthree_animation_mixer_get_instance_private (mixer);
-  g_warning ("TODO");
+  GPtrArray *bindings;
+  int i;
+
+  bindings = _gthree_animation_action_get_property_bindings (action);
+
+  for (i = 0; i < bindings->len; i++)
+    {
+      GthreePropertyMixer *binding = g_ptr_array_index (bindings, i);
+
+      if (--binding->reference_count == 0)
+        _gthree_animation_mixer_remove_inactive_binding (mixer, binding);
+    }
 }
 
 
@@ -195,8 +230,53 @@ static void
 _gthree_animation_mixer_remove_inactive_action (GthreeAnimationMixer  *mixer,
                                                 GthreeAnimationAction *action)
 {
-  //GthreeAnimationMixerPrivate *priv = gthree_animation_mixer_get_instance_private (mixer);
-  g_warning ("TODO");
+  GthreeAnimationMixerPrivate *priv = gthree_animation_mixer_get_instance_private (mixer);
+  GthreeAnimationActionMixerData *action_data = _gthree_animation_action_get_mixer_data (action);
+  GthreeAnimationAction *last_inactive_action;
+  GthreeAnimationActionMixerData *last_inactive_action_data;
+  GthreeAnimationAction *last_known_action;
+  GthreeAnimationActionMixerData *last_known_action_data;
+  GthreeAnimationClip *clip;
+  ClipInfo *actions_for_clip;
+  GPtrArray *known_actions_for_clip;
+  int by_clip_cache_index;
+  int cache_index;
+  GthreeObject *root;
+
+  last_inactive_action = g_ptr_array_index (priv->actions, priv->actions->len - 1);
+  last_inactive_action_data = _gthree_animation_action_get_mixer_data (last_inactive_action);
+
+  cache_index = action_data->cache_index;
+
+  last_inactive_action_data->cache_index = cache_index;
+
+  g_ptr_array_index (priv->actions, cache_index) = last_inactive_action;
+  g_ptr_array_set_size (priv->actions, priv->actions->len - 1); // pop
+
+  action_data->cache_index = -1;
+
+  clip = gthree_animation_action_get_clip (action);
+
+  actions_for_clip = g_hash_table_lookup (priv->actions_by_clip, clip);
+
+  known_actions_for_clip = actions_for_clip->known_actions;
+  last_known_action = g_ptr_array_index (known_actions_for_clip, known_actions_for_clip->len - 1);
+  last_known_action_data = _gthree_animation_action_get_mixer_data (last_known_action);
+  by_clip_cache_index = action_data->by_clip_cache_index;
+
+  last_known_action_data->by_clip_cache_index = by_clip_cache_index;
+  g_ptr_array_index (known_actions_for_clip, by_clip_cache_index) = last_known_action;
+
+  g_ptr_array_set_size (known_actions_for_clip, known_actions_for_clip->len - 1); // pop
+  action_data->by_clip_cache_index = -1;
+
+  root = gthree_animation_action_get_root (action);
+  g_hash_table_remove (actions_for_clip->action_by_root, root);
+
+  if (known_actions_for_clip->len == 0)
+    g_hash_table_remove (priv->actions_by_clip, clip);
+
+  _gthree_animation_mixer_remove_inactive_bindings_for_action (mixer, action);
 }
 
 static void
@@ -658,8 +738,14 @@ gthree_animation_mixer_uncache_action (GthreeAnimationMixer  *mixer,
                                        GthreeAnimationClip *clip,
                                        GthreeObject *optional_root)
 {
-  //GthreeAnimationMixerPrivate *priv = gthree_animation_mixer_get_instance_private (mixer);
-  g_warning ("TODO gthree_animation_mixer_uncache_action");
+  GthreeAnimationAction *action;
+
+  action = gthree_animation_mixer_existing_action (mixer, clip, optional_root);
+  if (action)
+    {
+      _gthree_animation_mixer_deactivate_action (mixer, action);
+      _gthree_animation_mixer_remove_inactive_action (mixer, action);
+    }
 }
 
 float

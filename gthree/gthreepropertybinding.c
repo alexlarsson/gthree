@@ -291,6 +291,23 @@ ghtree_property_sanitize_name (const char *name)
   return g_string_free (s, FALSE);
 }
 
+
+GthreeObject *
+gthree_property_binding_get_root (GthreePropertyBinding *binding)
+{
+  GthreePropertyBindingPrivate *priv = gthree_property_binding_get_instance_private (binding);
+
+  return priv->root;
+}
+
+const char *
+gthree_property_binding_get_path (GthreePropertyBinding *binding)
+{
+  GthreePropertyBindingPrivate *priv = gthree_property_binding_get_instance_private (binding);
+
+  return priv->path;
+}
+
 GthreeParsedPath *
 gthree_property_binding_get_parsed_path (GthreePropertyBinding *binding)
 {
@@ -547,7 +564,6 @@ ghtree_property_binding_set_value_floatarray (GthreePropertyBinding *binding,
 
   priv->set_property (priv->resolved_object, new_array);
 }
-
 
 static void
 ghtree_property_binding_bind (GthreePropertyBinding *binding)

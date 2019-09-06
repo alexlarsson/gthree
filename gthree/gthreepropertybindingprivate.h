@@ -59,6 +59,8 @@ GthreePropertyBinding *gthree_property_binding_new (GthreeObject     *root,
                                                     const char       *path,
                                                     GthreeParsedPath *parsed_path);
 
+GthreeObject *    gthree_property_binding_get_root        (GthreePropertyBinding *binding);
+const char *      gthree_property_binding_get_path        (GthreePropertyBinding *binding);
 GthreeParsedPath *gthree_property_binding_get_parsed_path (GthreePropertyBinding *binding);
 void              ghtree_property_binding_get_value       (GthreePropertyBinding *binding,
                                                            float                 *buffer,
