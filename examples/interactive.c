@@ -11,12 +11,57 @@ GthreePerspectiveCamera *camera;
 GthreeObject *intersected;
 graphene_vec3_t intersected_color;
 
+cairo_surface_t *texture_surface;
+GthreeTexture *texture;
+
+void
+update_surface (float u, float v)
+{
+  cairo_t *cr = cairo_create (texture_surface);
+
+  // Flip y for OpenGL
+  cairo_scale (cr, 1, -1);
+  cairo_translate (cr, 0, -256);
+
+  cairo_set_source_rgb (cr, 0, 1, 0);
+  cairo_paint (cr);
+
+  cairo_arc (cr, 256 * u, 256 * v, 32, 0, 2 * M_PI);
+  cairo_close_path (cr);
+
+  cairo_set_source_rgb (cr, 0, 0, 1);
+  cairo_fill_preserve (cr);
+  cairo_set_source_rgb (cr, 0, 0, 0);
+  cairo_set_line_width (cr, 8);
+  cairo_stroke (cr);
+
+  cairo_destroy (cr);
+
+  gthree_texture_set_needs_update (texture, TRUE);
+}
+
+static void
+init_texture (void)
+{
+  texture_surface =  cairo_image_surface_create (CAIRO_FORMAT_RGB24, 256, 256);
+
+  cairo_t *cr = cairo_create (texture_surface);
+  cairo_set_source_rgb (cr, 0, 1, 0);
+  cairo_paint (cr);
+  cairo_destroy (cr);
+
+  texture = gthree_texture_new_from_surface (texture_surface);
+  gthree_texture_set_flip_y (texture, FALSE); // We'll just draw upside down to avoid performance penalty
+}
+
 GthreeScene *
 init_scene (void)
 {
   graphene_vec3_t color, pos, scale;
   graphene_euler_t rotation;
   int i;
+
+  init_texture ();
 
   g_autoptr(GthreeGeometry) geometry = gthree_geometry_new_box (20, 42, 20, 1, 1, 1);
   g_autoptr(GthreeDirectionalLight) directional_light = NULL;
@@ -121,6 +166,7 @@ tick (GtkWidget     *widget,
         {
           GthreeMaterial *material = gthree_mesh_get_material (GTHREE_MESH (intersected), j);
           gthree_mesh_lambert_material_set_color (GTHREE_MESH_LAMBERT_MATERIAL (material), &intersected_color);
+          gthree_mesh_lambert_material_set_map (GTHREE_MESH_LAMBERT_MATERIAL (material), NULL);
         }
       intersected = NULL;
     }
@@ -129,14 +175,24 @@ tick (GtkWidget     *widget,
     {
       GthreeRayIntersection *intersection = g_ptr_array_index (intersections, 0);
       intersected = intersection->object;
+
+      update_surface (graphene_vec2_get_x (&intersection->uv),
+                      graphene_vec2_get_y (&intersection->uv));
+
       intersected_color = *gthree_mesh_lambert_material_get_color (GTHREE_MESH_LAMBERT_MATERIAL (gthree_mesh_get_material (GTHREE_MESH (intersected), 0)));
       for (int j = 0; j < 6; j++)
         {
           GthreeMaterial *material = gthree_mesh_get_material (GTHREE_MESH (intersected), j);
           if (j == intersection->material_index)
-            gthree_mesh_lambert_material_set_color (GTHREE_MESH_LAMBERT_MATERIAL (material), green ());
+            {
+              gthree_mesh_lambert_material_set_color (GTHREE_MESH_LAMBERT_MATERIAL (material), white ());
+              gthree_mesh_lambert_material_set_map (GTHREE_MESH_LAMBERT_MATERIAL (material), texture);
+            }
           else
-            gthree_mesh_lambert_material_set_color (GTHREE_MESH_LAMBERT_MATERIAL (material), red ());
+            {
+              gthree_mesh_lambert_material_set_color (GTHREE_MESH_LAMBERT_MATERIAL (material), red ());
+              gthree_mesh_lambert_material_set_map (GTHREE_MESH_LAMBERT_MATERIAL (material), NULL);
+            }
         }
     }
 
