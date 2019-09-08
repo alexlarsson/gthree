@@ -26,13 +26,14 @@ update_surface (float u, float v)
   cairo_set_source_rgb (cr, 0, 1, 0);
   cairo_paint (cr);
 
-  cairo_arc (cr, 256 * u, 256 * v, 32, 0, 2 * M_PI);
+  // box primitive has v == 0 at the bottom, so flip y here.
+  cairo_arc (cr, 256 * u, 256 - 256 * v, 20, 0, 2 * M_PI);
   cairo_close_path (cr);
 
-  cairo_set_source_rgb (cr, 0, 0, 1);
+  cairo_set_source_rgb (cr, 1, 1, 1);
   cairo_fill_preserve (cr);
   cairo_set_source_rgb (cr, 0, 0, 0);
-  cairo_set_line_width (cr, 8);
+  cairo_set_line_width (cr, 6);
   cairo_stroke (cr);
 
   cairo_destroy (cr);
