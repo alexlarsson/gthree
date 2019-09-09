@@ -1,0 +1,13 @@
+Changes in 0.2.0
+================
+
+ * Requires graphene 1.9.7 for new API
+ * Object: added setters and getters for the up direction
+ * Object: Setting custom matrix now updates scale and rotation
+ * Support shadow maps, see examples/shadows
+ * New light type GthreeSpotLight
+ * Support for raycasting, see examples/interactive
+ * Fix regressions with clear color handling
+ * Fix crash when disabling all lights
+ * Initial cut at API docs
+ * Graphene can now be built as a subproject
