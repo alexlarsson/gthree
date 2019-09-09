@@ -1286,8 +1286,7 @@ init_material (GthreeRenderer *renderer,
         }
     }
 
-  if (priv->lights)
-    material_apply_light_setup (m_uniforms, &priv->light_setup, FALSE);
+  material_apply_light_setup (m_uniforms, &priv->light_setup, FALSE);
 
   gthree_shader_update_uniform_locations_for_program (shader, program);
 
@@ -2129,7 +2128,7 @@ set_program (GthreeRenderer *renderer,
             {
               /* We marked the uniforms so they are uploaded, but we also need to sync
                * the actual values from the light uniforms into the material uniforms
-               * (these are note the same because the location differs for each instance)
+               * (these are not the same because the location differs for each instance)
                */
               material_apply_light_setup (m_uniforms, &priv->light_setup, TRUE);
             }
