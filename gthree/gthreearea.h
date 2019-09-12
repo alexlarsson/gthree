@@ -1,14 +1,9 @@
 #ifndef __GTHREE_AREA_H__
 #define __GTHREE_AREA_H__
 
-#if !defined (__GTHREE_H_INSIDE__) && !defined (GTHREE_COMPILATION)
-#error "Only <gthree/gthree.h> can be included directly."
-#endif
-
 #include <gtk/gtk.h>
 
-#include <gthree/gthreescene.h>
-#include <gthree/gthreecamera.h>
+#include <gthree/gthree.h>
 
 G_BEGIN_DECLS
 

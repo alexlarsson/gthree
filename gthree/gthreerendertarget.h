@@ -6,6 +6,7 @@
 #endif
 
 #include <gio/gio.h>
+#include <cairo.h>
 #include <gthree/gthreeenums.h>
 #include <gthree/gthreetypes.h>
 #include <gthree/gthreeresource.h>
@@ -74,7 +75,7 @@ void           gthree_render_target_download          (GthreeRenderTarget *targe
                                                        guchar     *data,
                                                        gsize       stride);
 void           gthree_render_target_download_area     (GthreeRenderTarget *target,
-                                                       const GdkRectangle *area,
+                                                       const cairo_rectangle_int_t *area,
                                                        guchar     *data,
                                                        gsize       stride);
 

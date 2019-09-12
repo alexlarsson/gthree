@@ -7,7 +7,6 @@
 
 #include <graphene.h>
 
-#include <gdk/gdk.h>
 #include <gthree/gthreeobject.h>
 
 G_BEGIN_DECLS

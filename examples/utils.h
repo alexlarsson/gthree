@@ -1,4 +1,5 @@
 #include <gthree/gthree.h>
+#include <gthree/gthreearea.h>
 
 GdkPixbuf *examples_load_pixbuf (const char *file);
 GthreeGeometry *examples_load_geometry (const char *name);

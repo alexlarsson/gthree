@@ -18,6 +18,7 @@ gthree_binary_age = 10000 * gthree_major_version + 100 * gthree_minor_version + 
 
 gthree_api_version = '1.0'
 gthree_api_path = 'gthree-@0@/gthree'.format(gthree_api_version)
+gthree_gtk3_api_path = 'gthree-gtk3-@0@/gthree'.format(gthree_api_version)
 
 add_project_arguments('-D_GNU_SOURCE', language: 'c')
 
@@ -28,7 +29,9 @@ glib_dep       = dependency('glib-2.0', version: '>= 2.43.2')
 gobject_dep    = dependency('gobject-2.0', version: '>= 2.43.2')
 graphene_dep   = dependency('graphene-gobject-1.0', version: '>= 1.10.0',
                             fallback: ['graphene', 'graphene_dep'])
-gtk_dep        = dependency('gtk+-3.0', version: '>= 3.22')
+gdkpixbuf_dep  = dependency('gdk-pixbuf-2.0')
+cairo_dep      = dependency('cairo-gobject')
+gtk3_dep       = dependency('gtk+-3.0', version: '>= 3.22')
 epoxy_dep      = dependency('epoxy', version: '>= 1.4')
 json_glib_dep  = dependency('json-glib-1.0', version: '>= 1.2.0')
 
@@ -57,8 +60,9 @@ common_ldflags = []
 gthree_conf = configuration_data()
 gthree_conf.set_quoted('VERSION', meson.project_version())
 
-gthree_packages = ' '.join([ 'glib-2.0', 'gobject-2.0', 'graphene-gobject-1.0', 'gtk+-3.0' ])
+gthree_packages = ' '.join([ 'glib-2.0', 'gobject-2.0', 'graphene-gobject-1.0' ])
 gthree_private_packages = ' '.join([ 'epoxy', 'json-glib-1.0' ])
+gthree_gtk3_packages = ' '.join([ 'gthree-1.0', 'gtk+-3.0' ])
 
 # Compat variables for pkgconfig
 pkgconf = configuration_data()
@@ -70,8 +74,9 @@ pkgconf.set('VERSION', meson.project_version())
 pkgconf.set('srcdir', '.')
 pkgconf.set('GTHREE_PACKAGES', gthree_packages)
 pkgconf.set('GTHREE_PRIVATE_PACKAGES', gthree_private_packages)
+pkgconf.set('GTHREE_GTK3_PACKAGES', gthree_gtk3_packages)
 
-foreach pkg: [ 'gthree-1.0.pc', ]
+foreach pkg: [ 'gthree-1.0.pc', 'gthree-gtk3-1.0.pc', ]
   configure_file(input: pkg + '.in',
                  output: pkg,
                  configuration: pkgconf,

@@ -128,24 +128,6 @@ gthree_ambient_light_get_type
 </SECTION>
 
 <SECTION>
-<FILE>gthreearea</FILE>
-GthreeArea
-GthreeAreaClass
-<SUBSECTION>
-gthree_area_new
-gthree_area_set_camera
-gthree_area_get_camera
-gthree_area_set_scene
-gthree_area_get_scene
-gthree_area_get_renderer
-<SUBSECTION Standard>
-GTHREE_AREA
-GTHREE_IS_AREA
-GTHREE_TYPE_AREA
-gthree_area_get_type
-</SECTION>
-
-<SECTION>
 <FILE>gthreeattribute</FILE>
 GthreeAttribute
 GthreeAttributeArray

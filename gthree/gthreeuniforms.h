@@ -2,7 +2,6 @@
 #define __GTHREE_UNIFORMS_H__
 
 #include <glib-object.h>
-#include <gdk/gdk.h>
 #include <graphene.h>
 
 #include <gthree/gthreetypes.h>

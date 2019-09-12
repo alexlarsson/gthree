@@ -29,12 +29,6 @@
     </chapter>
   </part>
 
-  <part id="widget">
-    <title>Widget</title>
-
-    <xi:include href="xml/gthreearea.xml" />
-  </part>
-
   <part id="base-types">
     <title>Types</title>
 

@@ -35,12 +35,12 @@ libexample_sources = ['utils.c', 'prop-editor.c']  + example_resources
 libexample = static_library(
   'libexample',
   libexample_sources,
-  dependencies: [libgthree_dep, libm],
+  dependencies: [libgthree_gtk3_dep, libm],
 )
 
 example_dep = declare_dependency(
   link_whole: libexample,
-  dependencies: [libgthree_dep, libm]
+  dependencies: [libgthree_gtk3_dep, libm]
 )
 
 foreach example_name : examples
