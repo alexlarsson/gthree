@@ -546,7 +546,10 @@ gthree_texture_realize (GthreeTexture *texture)
 
   if (!priv->gl_texture)
     {
-      gthree_resource_set_realized_for (GTHREE_RESOURCE (texture), gdk_gl_context_get_current ());
+      GthreeRenderer *current_renderer = gthree_renderer_get_current ();
+      g_assert (current_renderer != NULL);
+      gthree_resource_set_realized_for (GTHREE_RESOURCE (texture), current_renderer);
+
       glGenTextures (1, &priv->gl_texture);
 #ifdef DEBUG_LABELS
       if (priv->name)

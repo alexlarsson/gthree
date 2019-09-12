@@ -68,7 +68,7 @@ static GQuark list_head_q;
 static GQuark lazy_deletes_q;
 
 static void
-gl_context_init (void)
+renderer_init (void)
 {
   if (list_head_q != 0)
     return;
@@ -78,22 +78,22 @@ gl_context_init (void)
 }
 
 static ListNode *
-gl_context_get_list_head (GdkGLContext  *context)
+renderer_get_list_head (GthreeRenderer  *renderer)
 {
   ListNode *head;
 
-  head = g_object_get_qdata (G_OBJECT (context), list_head_q);
+  head = g_object_get_qdata (G_OBJECT (renderer), list_head_q);
   if (head == NULL)
     {
       head = list_head_new ();
-      g_object_set_qdata_full (G_OBJECT (context),  list_head_q, head, g_free);
+      g_object_set_qdata_full (G_OBJECT (renderer),  list_head_q, head, g_free);
     }
 
   return head;
 }
 
 typedef struct {
-  GdkGLContext *gl_context;
+  GthreeRenderer *renderer;
   gboolean used;
 
   ListNode resource_list;
@@ -113,10 +113,10 @@ gthree_resource_finalize (GObject *obj)
   GthreeResource *resource = GTHREE_RESOURCE (obj);
   GthreeResourcePrivate *priv = gthree_resource_get_instance_private (resource);
 
-  if (priv->gl_context != NULL)
+  if (priv->renderer != NULL)
     gthree_resource_unrealize (resource);
 
-  g_assert (priv->gl_context == NULL);
+  g_assert (priv->renderer == NULL);
 
   G_OBJECT_CLASS (gthree_resource_parent_class)->finalize (obj);
 }
@@ -134,7 +134,7 @@ gthree_resource_class_init (GthreeResourceClass *klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
-  gl_context_init ();
+  renderer_init ();
 
   gobject_class->finalize = gthree_resource_finalize;
   klass->set_used = gthree_resource_real_set_used;
@@ -145,7 +145,7 @@ gthree_resource_is_realized (GthreeResource *resource)
 {
   GthreeResourcePrivate *priv = gthree_resource_get_instance_private (resource);
 
-  return priv->gl_context != NULL;
+  return priv->renderer != NULL;
 }
 
 static GthreeResource *
@@ -167,15 +167,15 @@ node_to_resource (ListNode *node)
 }
 
 void
-gthree_resources_unrealize_all_for (GdkGLContext *context)
+gthree_resources_unrealize_all_for (GthreeRenderer *renderer)
 {
   ListNode *head, *node;
 
-  gl_context_init ();
+  renderer_init ();
 
-  g_assert (gdk_gl_context_get_current () == context);
+  gthree_renderer_push_current (renderer);
 
-  head = gl_context_get_list_head (context);
+  head = renderer_get_list_head (renderer);
   node = head->next;
   while (node != head)
     {
@@ -187,17 +187,19 @@ gthree_resources_unrealize_all_for (GdkGLContext *context)
       gthree_resource_unrealize (resource);
     }
 
-  gthree_resources_flush_deletes (context);
+  gthree_resources_flush_deletes (renderer);
+
+  gthree_renderer_pop_current (renderer);
 }
 
 void
-gthree_resources_set_all_unused_for (GdkGLContext *context)
+gthree_resources_set_all_unused_for (GthreeRenderer *renderer)
 {
   ListNode *head, *node;
 
-  gl_context_init ();
+  renderer_init ();
 
-  head = gl_context_get_list_head (context);
+  head = renderer_get_list_head (renderer);
   node = head->next;
   while (node != head)
     {
@@ -210,15 +212,15 @@ gthree_resources_set_all_unused_for (GdkGLContext *context)
 }
 
 void
-gthree_resources_unrealize_unused_for (GdkGLContext *context)
+gthree_resources_unrealize_unused_for (GthreeRenderer *renderer)
 {
   ListNode *head, *node;
 
-  gl_context_init ();
+  renderer_init ();
 
-  g_assert (gdk_gl_context_get_current () == context);
+  gthree_renderer_push_current (renderer);
 
-  head = gl_context_get_list_head (context);
+  head = renderer_get_list_head (renderer);
   node = head->next;
   while (node != head)
     {
@@ -232,22 +234,24 @@ gthree_resources_unrealize_unused_for (GdkGLContext *context)
         gthree_resource_unrealize (resource);
     }
 
-  gthree_resources_flush_deletes (context);
+  gthree_resources_flush_deletes (renderer);
+
+  gthree_renderer_pop_current (renderer);
 }
 
 void
 gthree_resource_set_realized_for (GthreeResource *resource,
-                                  GdkGLContext   *context)
+                                  GthreeRenderer   *renderer)
 {
   GthreeResourcePrivate *priv = gthree_resource_get_instance_private (resource);
   ListNode *head;
 
-  g_assert (context != NULL);
-  g_assert (priv->gl_context == NULL);
+  g_assert (renderer != NULL);
+  g_assert (priv->renderer == NULL);
 
-  priv->gl_context = g_object_ref (context);
+  priv->renderer = g_object_ref (renderer);
 
-  head = gl_context_get_list_head (context);
+  head = renderer_get_list_head (renderer);
   list_append (head, &priv->resource_list);
 }
 
@@ -257,14 +261,14 @@ gthree_resource_unrealize (GthreeResource *resource)
   GthreeResourcePrivate *priv = gthree_resource_get_instance_private (resource);
   GthreeResourceClass *class = GTHREE_RESOURCE_GET_CLASS(resource);
 
-  g_assert (priv->gl_context != NULL);
+  g_assert (priv->renderer != NULL);
 
   class->unrealize (resource);
 
   list_node_unlink (&priv->resource_list);
 
-  g_object_unref (priv->gl_context);
-  priv->gl_context = NULL;
+  g_object_unref (priv->renderer);
+  priv->renderer = NULL;
 }
 
 gboolean
@@ -312,15 +316,15 @@ struct LazyDelete {
 
 
 static GArray *
-gl_context_get_lazy_deletes (GdkGLContext  *context)
+renderer_get_lazy_deletes (GthreeRenderer  *renderer)
 {
   GArray *array;
 
-  array = g_object_get_qdata (G_OBJECT (context), lazy_deletes_q);
+  array = g_object_get_qdata (G_OBJECT (renderer), lazy_deletes_q);
   if (array == NULL)
     {
       array = g_array_new (FALSE, FALSE, sizeof (struct LazyDelete));
-      g_object_set_qdata_full (G_OBJECT (context),  lazy_deletes_q, array, (GDestroyNotify)g_array_unref);
+      g_object_set_qdata_full (G_OBJECT (renderer),  lazy_deletes_q, array, (GDestroyNotify)g_array_unref);
     }
 
   return array;
@@ -333,20 +337,20 @@ gthree_resource_lazy_delete (GthreeResource *resource,
 {
   GthreeResourcePrivate *priv = gthree_resource_get_instance_private (resource);
 
-  if (gdk_gl_context_get_current () == priv->gl_context)
+  if (gthree_renderer_get_current () == priv->renderer)
     do_delete (kind, id);
   else
     {
-      GArray *array = gl_context_get_lazy_deletes (priv->gl_context);
+      GArray *array = renderer_get_lazy_deletes (priv->renderer);
       struct LazyDelete lazy = {kind, id};
       g_array_append_val (array, lazy);
     }
 }
 
 void
-gthree_resources_flush_deletes (GdkGLContext *context)
+gthree_resources_flush_deletes (GthreeRenderer *renderer)
 {
-  GArray *array = gl_context_get_lazy_deletes (context);
+  GArray *array = renderer_get_lazy_deletes (renderer);
   int i;
 
   for (i = 0; i < array->len; i++)

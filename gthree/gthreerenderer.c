@@ -30,6 +30,9 @@
 static graphene_vec3_t cube_directions[6];
 static graphene_vec3_t cube_ups[6];
 
+/* We keep track of the current renderer, as a proxy for the per-renderer gl context being active */
+static GPrivate thread_current_renderer = G_PRIVATE_INIT (NULL);
+
 typedef struct {
   GthreeObject *object;
   GthreeGeometry *geometry;
@@ -48,7 +51,7 @@ struct _GthreeRenderList {
 };
 
 typedef struct {
-  GdkGLContext *gl_context;
+  GList *current_stack;
 
   int width;
   int height;
@@ -202,23 +205,47 @@ pop_debug_group (void)
 }
 
 
+/* Call this whenever we're sure that the renderer gl context is
+   current, this is used by the resource system to track of whether
+   the contex is currently valid or not. */
+void
+gthree_renderer_push_current (GthreeRenderer *renderer)
+{
+  GthreeRenderer *current = g_private_get (&thread_current_renderer);
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  priv->current_stack = g_list_prepend (priv->current_stack, current);
+
+  g_private_replace (&thread_current_renderer, renderer);
+}
+
+void
+gthree_renderer_pop_current (GthreeRenderer *renderer)
+{
+  GthreeRenderer *old_current;
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  g_assert (priv->current_stack != NULL);
+  old_current = priv->current_stack->data;
+  priv->current_stack = g_list_delete_link (priv->current_stack, priv->current_stack);
+  g_private_replace (&thread_current_renderer, old_current);
+}
+
+GthreeRenderer *
+gthree_renderer_get_current (void)
+{
+  GthreeRenderer *current;
+
+  current = g_private_get (&thread_current_renderer);
+
+  return current;
+}
+
 GthreeRenderer *
 gthree_renderer_new ()
 {
-  GthreeRenderer *renderer;
-  GdkGLContext *gl_context;
-  GthreeRendererPrivate *priv;
-
-  gl_context = gdk_gl_context_get_current ();
-  g_assert (gl_context != NULL);
-
-  renderer = g_object_new (gthree_renderer_get_type (),
-                           NULL);
-
-  priv = gthree_renderer_get_instance_private (renderer);
-  priv->gl_context = g_object_ref (gl_context);
-
-  return renderer;
+  return g_object_new (gthree_renderer_get_type (),
+                       NULL);
 }
 
 static void
@@ -226,6 +253,8 @@ gthree_renderer_init (GthreeRenderer *renderer)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
   GLint fbo_id = 0;
+
+  gthree_renderer_push_current (renderer);
 
   glGetIntegerv(GL_FRAMEBUFFER_BINDING, &fbo_id);
   priv->window_framebuffer = fbo_id;
@@ -298,6 +327,7 @@ gthree_renderer_init (GthreeRenderer *renderer)
 
   //priv->compressed_texture_formats = _glExtensionCompressedTextureS3TC ? glGetParameter( _gl.COMPRESSED_TEXTURE_FORMATS ) : [];
 
+  gthree_renderer_pop_current (renderer);
 }
 
 static void
@@ -306,7 +336,7 @@ gthree_renderer_finalize (GObject *obj)
   GthreeRenderer *renderer = GTHREE_RENDERER (obj);
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
 
-  g_assert (gdk_gl_context_get_current () == priv->gl_context);
+  gthree_renderer_push_current (renderer);
 
   g_clear_object (&priv->current_render_target);
 
@@ -338,7 +368,7 @@ gthree_renderer_finalize (GObject *obj)
   g_clear_object (&priv->bg_plane_mesh);
   g_clear_object (&priv->current_bg_texture);
 
-  g_clear_object (&priv->gl_context);
+  gthree_renderer_pop_current (renderer);
 
   G_OBJECT_CLASS (gthree_renderer_parent_class)->finalize (obj);
 }
@@ -732,6 +762,8 @@ gthree_renderer_set_render_target (GthreeRenderer *renderer,
   int framebuffer;
   int pixel_ratio;
 
+  gthree_renderer_push_current (renderer);
+
   if (render_target)
     g_object_ref (render_target);
 
@@ -807,6 +839,8 @@ gthree_renderer_set_render_target (GthreeRenderer *renderer,
                                 activeMipMapLevel || 0 );
 #endif
     }
+
+  gthree_renderer_pop_current (renderer);
 }
 
 
@@ -847,22 +881,24 @@ gthree_renderer_clear (GthreeRenderer *renderer,
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
 
-  g_assert (gdk_gl_context_get_current () == priv->gl_context);
+  gthree_renderer_push_current (renderer);
 
   if (color)
     set_clear_color (renderer, &priv->clear_color, 1);
 
   clear (color, depth, stencil);
+
+  gthree_renderer_pop_current (renderer);
 }
 
 void
 gthree_renderer_clear_depth (GthreeRenderer *renderer)
 {
-  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
-
-  g_assert (gdk_gl_context_get_current () == priv->gl_context);
+  gthree_renderer_push_current (renderer);
 
   clear (FALSE, TRUE, FALSE);
+
+  gthree_renderer_pop_current (renderer);
 }
 
 void
@@ -870,11 +906,13 @@ gthree_renderer_clear_color (GthreeRenderer *renderer)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
 
-  g_assert (gdk_gl_context_get_current () == priv->gl_context);
+  gthree_renderer_push_current (renderer);
 
   set_clear_color (renderer, &priv->clear_color, 1);
 
   clear (TRUE, FALSE, FALSE);
+
+  gthree_renderer_pop_current (renderer);
 }
 
 static void
@@ -2783,9 +2821,9 @@ gthree_renderer_render (GthreeRenderer *renderer,
   GthreeMaterial *override_material;
   gpointer fog;
 
-  push_debug_group ("gthree render to %p", priv->current_render_target);
+  gthree_renderer_push_current (renderer);
 
-  g_assert (gdk_gl_context_get_current () == priv->gl_context);
+  push_debug_group ("gthree render to %p", priv->current_render_target);
 
   g_list_free (priv->lights);
   priv->lights = NULL;
@@ -2818,7 +2856,7 @@ gthree_renderer_render (GthreeRenderer *renderer,
   priv->clipping_enabled = clipping_init (renderer, camera);
 
   /* Flush lazily deleted resources to avoid leaking until widget unrealize */
-  gthree_resources_flush_deletes (priv->gl_context);
+  gthree_resources_flush_deletes (renderer);
 
   gthree_render_list_init (priv->current_render_list);
 
@@ -2884,6 +2922,8 @@ gthree_renderer_render (GthreeRenderer *renderer,
     }
 
   pop_debug_group ();
+
+  gthree_renderer_pop_current (renderer);
 }
 
 guint

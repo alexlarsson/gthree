@@ -422,11 +422,15 @@ gthree_render_target_realize (GthreeRenderTarget *target)
   GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
   gboolean is_cube = FALSE, is_multisample = FALSE, supports_mips = FALSE;
   GthreeTexture *texture;
+  GthreeRenderer *current_renderer;
 
   if (priv->gl_framebuffer)
     return;
 
-  gthree_resource_set_realized_for (GTHREE_RESOURCE (target), gdk_gl_context_get_current ());
+  current_renderer = gthree_renderer_get_current ();
+  g_assert (current_renderer != NULL);
+  gthree_resource_set_realized_for (GTHREE_RESOURCE (target), current_renderer);
+
   glGenFramebuffers (1, &priv->gl_framebuffer);
 #ifdef DEBUG_LABELS
   {
@@ -541,7 +545,7 @@ gthree_render_target_download_area (GthreeRenderTarget *target,
   GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
   cairo_surface_t *surface;
   int alpha_size = 0;
-  gboolean is_gles = gdk_gl_context_get_use_es (gdk_gl_context_get_current ());
+  gboolean is_gles = FALSE; // TODO: Check this like gdk_gl_context_get_use_es()
   g_autofree guchar *row = g_malloc (stride);
   int i;
 

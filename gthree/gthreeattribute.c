@@ -1636,7 +1636,10 @@ gthree_attribute_update (GthreeAttribute *attribute, gint buffer_type)
 {
   if (attribute->array->gl_buffer == 0)
     {
-      gthree_resource_set_realized_for (GTHREE_RESOURCE (attribute), gdk_gl_context_get_current ());
+      GthreeRenderer *current_renderer = gthree_renderer_get_current ();
+      g_assert (current_renderer != NULL);
+      gthree_resource_set_realized_for (GTHREE_RESOURCE (attribute), current_renderer);
+
       gthree_attribute_array_create_buffer (attribute->array, buffer_type);
     }
   else if (attribute->array->dirty)

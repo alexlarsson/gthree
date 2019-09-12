@@ -186,7 +186,7 @@ gthree_area_unrealize (GtkWidget *widget)
 
   gtk_gl_area_make_current (glarea);
 
-  gthree_resources_unrealize_all_for (gtk_gl_area_get_context (glarea));
+  gthree_resources_unrealize_all_for (priv->renderer);
 
   g_clear_object (&priv->renderer);
 

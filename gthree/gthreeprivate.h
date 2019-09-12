@@ -279,6 +279,9 @@ void gthree_mesh_material_set_num_supported_morph_targets (GthreeMeshMaterial *m
 void gthree_mesh_material_set_num_supported_morph_normals (GthreeMeshMaterial *material,
                                                            int num_supported);
 
+void            gthree_renderer_push_current (GthreeRenderer *renderer);
+void            gthree_renderer_pop_current  (GthreeRenderer *renderer);
+GthreeRenderer *gthree_renderer_get_current  (void);
 
 typedef enum {
   GTHREE_RESOURCE_KIND_TEXTURE,
