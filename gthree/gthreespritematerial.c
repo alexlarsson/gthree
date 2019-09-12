@@ -227,7 +227,7 @@ gthree_sprite_material_set_color (GthreeSpriteMaterial *sprite_material,
 {
   GthreeSpriteMaterialPrivate *priv = gthree_sprite_material_get_instance_private (sprite_material);
 
-  if (gdk_rgba_equal (color, &priv->color))
+  if (graphene_vec3_equal (color, &priv->color))
     return;
 
   priv->color = *color;

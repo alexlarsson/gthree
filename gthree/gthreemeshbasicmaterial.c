@@ -318,7 +318,7 @@ gthree_mesh_basic_material_set_color (GthreeMeshBasicMaterial *basic,
 {
   GthreeMeshBasicMaterialPrivate *priv = gthree_mesh_basic_material_get_instance_private (basic);
 
-  if (gdk_rgba_equal (color, &priv->color))
+  if (graphene_vec3_equal (color, &priv->color))
     return;
 
   priv->color = *color;

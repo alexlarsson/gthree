@@ -158,11 +158,11 @@ gthree_line_basic_material_get_color (GthreeLineBasicMaterial *line_basic)
 
 void
 gthree_line_basic_material_set_color (GthreeLineBasicMaterial *line_basic,
-                                 const graphene_vec3_t *color)
+                                      const graphene_vec3_t *color)
 {
   GthreeLineBasicMaterialPrivate *priv = gthree_line_basic_material_get_instance_private (line_basic);
 
-  if (gdk_rgba_equal (color, &priv->color))
+  if (graphene_vec3_equal (color, &priv->color))
     return;
 
   priv->color = *color;

@@ -340,7 +340,7 @@ gthree_mesh_lambert_material_set_color (GthreeMeshLambertMaterial *lambert,
 {
   GthreeMeshLambertMaterialPrivate *priv = gthree_mesh_lambert_material_get_instance_private (lambert);
 
-  if (gdk_rgba_equal (color, &priv->color))
+  if (graphene_vec3_equal (color, &priv->color))
     return;
 
   priv->color = *color;

@@ -235,7 +235,7 @@ gthree_points_material_set_color (GthreePointsMaterial *points_material,
 {
   GthreePointsMaterialPrivate *priv = gthree_points_material_get_instance_private (points_material);
 
-  if (gdk_rgba_equal (color, &priv->color))
+  if (graphene_vec3_equal (color, &priv->color))
     return;
 
   priv->color = *color;

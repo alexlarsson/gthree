@@ -497,7 +497,7 @@ gthree_mesh_phong_material_set_color (GthreeMeshPhongMaterial *phong,
 {
   GthreeMeshPhongMaterialPrivate *priv = gthree_mesh_phong_material_get_instance_private (phong);
 
-  if (gdk_rgba_equal (color, &priv->color))
+  if (graphene_vec3_equal (color, &priv->color))
     return;
 
   priv->color = *color;
