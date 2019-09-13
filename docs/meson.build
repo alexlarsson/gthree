@@ -5,6 +5,10 @@ private_headers = [
   'gthreepropertymixerprivate.h',
 ]
 
+gtk3_headers = [
+  'gthreearea.h',
+]
+
 content_files = [
   'overview.xml',
   'resources.xml',
@@ -33,10 +37,37 @@ gnome.gtkdoc('gthree',
   scan_args: [
     '--rebuild-types',
     '--ignore-decorators=GTHREE_API',
-    '--ignore-headers=' + ' '.join(private_headers),
+    '--ignore-headers=' + ' '.join(private_headers + gtk3_headers),
   ],
   mkdb_args: [
     '--default-include=gthree/gthree.h',
+  ],
+  fixxref_args: [
+    '--html-dir=@0@'.format(docpath),
+    '--extra-dir=@0@'.format(join_paths(glib_docpath, 'glib')),
+    '--extra-dir=@0@'.format(join_paths(glib_docpath, 'gobject')),
+    '--extra-dir=@0@'.format(join_paths(glib_docpath, 'gio')),
+    '--extra-dir=@0@'.format(join_paths(gtk_docpath, 'gtk')),
+    '--extra-dir=@0@'.format(join_paths(gtk_docpath, 'gdk')),
+    '--extra-dir=@0@'.format(join_paths(graphene_docpath, 'graphene')),
+  ],
+  content_files: content_files,
+  expand_content_files: expand_content_files,
+  install: true,
+)
+
+gnome.gtkdoc('gthree-gtk3',
+  main_xml: 'gthree-gtk3-docs.xml',
+  src_dir: gthree_inc,
+  dependencies: libgthree_gtk3_dep,
+  gobject_typesfile: 'gthree-gtk3.types',
+  scan_args: [
+    '--rebuild-types',
+    '--ignore-decorators=GTHREE_API',
+    '--ignore-headers=' + ' '.join(private_headers),
+  ],
+  mkdb_args: [
+    '--default-include=gthree/gthreearea.h',
   ],
   fixxref_args: [
     '--html-dir=@0@'.format(docpath),

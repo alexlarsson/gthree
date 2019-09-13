@@ -4,12 +4,10 @@
 #define __GTHREE_H_INSIDE__
 
 #include <glib-object.h>
-#include <gdk/gdk.h>
 #include <gthree/gthreetypes.h>
 #include <gthree/gthreetypebuiltins.h>
 #include <gthree/gthreeenums.h>
 #include <gthree/gthreeattribute.h>
-#include <gthree/gthreearea.h>
 #include <gthree/gthreemeshmaterial.h>
 #include <gthree/gthreemeshbasicmaterial.h>
 #include <gthree/gthreecamera.h>

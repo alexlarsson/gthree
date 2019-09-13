@@ -531,14 +531,14 @@ gthree_render_target_download (GthreeRenderTarget *target,
                                gsize       stride)
 {
   GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
-  GdkRectangle all = { 0, 0, priv->width, priv->height };
+  cairo_rectangle_int_t all = { 0, 0, priv->width, priv->height };
 
   gthree_render_target_download_area (target, &all, data, stride);
 }
 
 void
 gthree_render_target_download_area (GthreeRenderTarget *target,
-                                    const GdkRectangle *area,
+                                    const cairo_rectangle_int_t *area,
                                     guchar     *data,
                                     gsize       stride)
 {

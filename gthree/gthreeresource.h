@@ -6,7 +6,6 @@
 #endif
 
 #include <glib-object.h>
-#include <gdk/gdk.h>
 #include <gthree/gthreetypes.h>
 
 G_BEGIN_DECLS

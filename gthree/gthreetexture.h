@@ -7,6 +7,7 @@
 
 #include <glib-object.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
+#include <cairo.h>
 #include <graphene.h>
 #include <gthree/gthreetypes.h>
 #include <gthree/gthreeenums.h>
