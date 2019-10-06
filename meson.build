@@ -23,7 +23,7 @@ gthree_gtk3_api_path = 'gthree-gtk3-@0@/gthree'.format(gthree_api_version)
 add_project_arguments('-D_GNU_SOURCE', language: 'c')
 
 cc = meson.get_compiler('c')
-libm = cc.find_library('m', required : false)
+libm = cc.find_library('m', required: false)
 
 glib_dep       = dependency('glib-2.0', version: '>= 2.43.2')
 gobject_dep    = dependency('gobject-2.0', version: '>= 2.43.2')
@@ -31,7 +31,8 @@ graphene_dep   = dependency('graphene-gobject-1.0', version: '>= 1.10.0',
                             fallback: ['graphene', 'graphene_dep'])
 gdkpixbuf_dep  = dependency('gdk-pixbuf-2.0')
 cairo_dep      = dependency('cairo-gobject')
-gtk3_dep       = dependency('gtk+-3.0', version: '>= 3.22')
+gtk3_dep       = dependency('gtk+-3.0', version: '>= 3.22',
+                            required: get_option('gtk3'))
 epoxy_dep      = dependency('epoxy', version: '>= 1.4')
 json_glib_dep  = dependency('json-glib-1.0', version: '>= 1.2.0')
 
@@ -76,9 +77,14 @@ pkgconf.set('GTHREE_PACKAGES', gthree_packages)
 pkgconf.set('GTHREE_PRIVATE_PACKAGES', gthree_private_packages)
 pkgconf.set('GTHREE_GTK3_PACKAGES', gthree_gtk3_packages)
 
-foreach pkg: [ 'gthree-1.0.pc', 'gthree-gtk3-1.0.pc', ]
-  configure_file(input: pkg + '.in',
-                 output: pkg,
+pkgfiles = [ 'gthree-1.0.pc' ]
+if get_option('gtk3')
+  pkgfiles += [ 'gthree-gtk3-1.0.pc' ]
+endif
+
+foreach pkgfile: pkgfiles
+  configure_file(input: pkgfile + '.in',
+                 output: pkgfile,
                  configuration: pkgconf,
                  install_dir: join_paths(gthree_libdir, 'pkgconfig'))
 endforeach
@@ -90,7 +96,10 @@ configure_file(output: 'config.h', configuration: gthree_conf)
 root_inc = include_directories('.')
 
 subdir('gthree')
-subdir('examples')
+
+if get_option('gtk3')
+  subdir('examples')
+endif
 
 if get_option('gtk_doc')
   subdir('docs')

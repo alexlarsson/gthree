@@ -151,16 +151,7 @@ gthree_private_headers = [
     'gthreeprivate.h',
 ]
 
-gthree_gtk3_sources = [
-    'gthreearea.c',
-]
-
-gthree_gtk3_headers = [
-    'gthreearea.h',
-]
-
 install_headers(gthree_headers, subdir: gthree_api_path)
-install_headers(gthree_gtk3_headers, subdir: gthree_gtk3_api_path)
 
 gthree_marshalers = gnome.genmarshal('gthreemarshalers',
                                      sources: 'gthreemarshalers.list',
@@ -226,36 +217,48 @@ libgthree_dep = declare_dependency(sources: gthree_dep_sources,
                                    include_directories: [gthree_inc, root_inc],
                                    dependencies: gthree_deps)
 
-gthree_gtk3_deps = [libgthree_dep, gtk3_dep]
+if get_option('gtk3')
+  gthree_gtk3_sources = [
+    'gthreearea.c',
+  ]
 
-libgthree_gtk3 = shared_library('gthree-gtk3-1',
-                                sources: gthree_gtk3_sources,
-                                soversion: gthree_soversion,
-                                version: gthree_libversion,
-                                install: true,
-                                dependencies: gthree_gtk3_deps,
-                                include_directories: [ root_inc, gthree_inc ],
-                                c_args: common_cflags + gthree_cflags,
-                                link_args: common_ldflags)
-gthree_gtk3_dep_sources = []
+  gthree_gtk3_headers = [
+    'gthreearea.h',
+  ]
 
-if not meson.is_cross_build() and get_option('introspection')
-  libgthree_gtk3_gir = gnome.generate_gir(libgthree_gtk3,
-                                          sources: gthree_gtk3_sources + gthree_gtk3_headers,
-                                          namespace: 'GthreeGtk',
-                                          nsversion: gthree_api_version,
-                                          identifier_prefix: 'Gthree',
-                                          symbol_prefix: 'gthree',
-                                          export_packages: 'gthree',
-                                          includes: [ libgthree_gir[0], 'Gtk-3.0' ],
-                                          install: true,
-                                          dependencies: libgthree_gir_dep,
-                                          extra_args: extra_gir_args)
-   gthree_gtk3_dep_sources += libgthree_gtk3_gir
-   libgthree_gtk3_gir_dep = declare_dependency(sources: libgthree_gtk3_gir)
+  install_headers(gthree_gtk3_headers, subdir: gthree_gtk3_api_path)
+
+  gthree_gtk3_deps = [libgthree_dep, gtk3_dep]
+
+  libgthree_gtk3 = shared_library('gthree-gtk3-1',
+                                  sources: gthree_gtk3_sources,
+                                  soversion: gthree_soversion,
+                                  version: gthree_libversion,
+                                  install: true,
+                                  dependencies: gthree_gtk3_deps,
+                                  include_directories: [ root_inc, gthree_inc ],
+                                  c_args: common_cflags + gthree_cflags,
+                                  link_args: common_ldflags)
+  gthree_gtk3_dep_sources = []
+
+  if not meson.is_cross_build() and get_option('introspection')
+    libgthree_gtk3_gir = gnome.generate_gir(libgthree_gtk3,
+                                            sources: gthree_gtk3_sources + gthree_gtk3_headers,
+                                            namespace: 'GthreeGtk',
+                                            nsversion: gthree_api_version,
+                                            identifier_prefix: 'Gthree',
+                                            symbol_prefix: 'gthree',
+                                            export_packages: 'gthree',
+                                            includes: [ libgthree_gir[0], 'Gtk-3.0' ],
+                                            install: true,
+                                            dependencies: libgthree_gir_dep,
+                                            extra_args: extra_gir_args)
+     gthree_gtk3_dep_sources += libgthree_gtk3_gir
+     libgthree_gtk3_gir_dep = declare_dependency(sources: libgthree_gtk3_gir)
+  endif
+
+  libgthree_gtk3_dep = declare_dependency(sources: gthree_gtk3_dep_sources,
+                                          link_with: libgthree_gtk3,
+                                          include_directories: [gthree_inc, root_inc],
+                                          dependencies: gthree_gtk3_deps)
 endif
-
-libgthree_gtk3_dep = declare_dependency(sources: gthree_gtk3_dep_sources,
-                                        link_with: libgthree_gtk3,
-                                        include_directories: [gthree_inc, root_inc],
-                                        dependencies: gthree_gtk3_deps)

@@ -1,24 +1,24 @@
 examples = [
-  'testanimation',
-  'cairo',
-  'cubes',
-  'envmap',
-  'skinning',
-  'gtklogo',
-  'materials',
-  'properties',
-  'model',
-  'multi',
-  'normals',
-  'performance',
-  'points',
-  'shader',
-  'shadow',
-  'sprites',
-  'rendertarget',
-  'effects',
-  'morphtargets',
+  'cairo'
+  'cubes'
+  'effects'
+  'envmap'
+  'gtklogo'
   'interactive'
+  'materials'
+  'model'
+  'morphtargets'
+  'multi'
+  'normals'
+  'performance'
+  'points'
+  'properties'
+  'rendertarget'
+  'shader'
+  'shadow'
+  'skinning'
+  'sprites'
+  'testanimation'
 ]
 
 example_resources = gnome.compile_resources('gthree-example-resources',
