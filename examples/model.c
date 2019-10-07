@@ -494,7 +494,11 @@ main (int argc, char *argv[])
     { "resource:///org/gnome/gthree-examples/models/RobotExpressive.glb", "Robot" },
   };
 
+#ifdef USE_GTK4
+  gtk_init ();
+#else
   gtk_init (&argc, &argv);
+#endif
 
   env_maps = g_ptr_array_new_with_free_func (g_object_unref);
   for (i = 0; i < G_N_ELEMENTS (cubes); i++)
@@ -513,7 +517,9 @@ main (int argc, char *argv[])
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   gtk_window_set_title (GTK_WINDOW (window), "Models");
   gtk_window_set_default_size (GTK_WINDOW (window), 800, 600);
+#ifdef USE_GTK3
   gtk_container_set_border_width (GTK_CONTAINER (window), 12);
+#endif
   g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
 
   box = gtk_box_new (GTK_ORIENTATION_VERTICAL, FALSE);

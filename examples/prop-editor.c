@@ -459,12 +459,15 @@ property_editor_widget_new (GObject  *object, const char *name)
       gtk_container_add (GTK_CONTAINER (hbox), label);
 
       editor = property_editor (object, prop);
-      gtk_box_pack_end (GTK_BOX (hbox), editor, FALSE, TRUE, 0);
+      gtk_container_add (GTK_CONTAINER (hbox), editor);
 
       gtk_container_add (GTK_CONTAINER (vbox), hbox);
 
     }
 
+#ifdef USE_GTK3
   gtk_widget_show_all (vbox);
+#endif
+
   return vbox;
 }

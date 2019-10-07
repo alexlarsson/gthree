@@ -207,7 +207,6 @@ update_property_pane (void)
 
   hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 8);
   gtk_container_add (GTK_CONTAINER (property_pane), hbox);
-  gtk_widget_show (hbox);
 
   panel = property_editor_widget_new (G_OBJECT (current_material),
                                       g_type_name_from_instance ((gpointer)current_material) + strlen ("Gthree"));
@@ -225,7 +224,9 @@ update_property_pane (void)
                                       g_type_name_from_instance ((gpointer)directional_light) + strlen ("Gthree"));
   gtk_container_add (GTK_CONTAINER (hbox), panel);
 
+#ifdef USE_GTK3
   gtk_widget_show_all (property_pane);
+#endif
 }
 
 static void
@@ -254,12 +255,18 @@ main (int argc, char *argv[])
   graphene_point3d_t pos;
   int i;
 
+#ifdef USE_GTK4
+  gtk_init ();
+#else
   gtk_init (&argc, &argv);
+#endif
 
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   gtk_window_set_default_size (GTK_WINDOW (window), 800, 600);
   gtk_window_set_title (GTK_WINDOW (window), "Properties");
+#ifdef USE_GTK3
   gtk_container_set_border_width (GTK_CONTAINER (window), 12);
+#endif
   g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
 
   box = gtk_box_new (GTK_ORIENTATION_VERTICAL, FALSE);

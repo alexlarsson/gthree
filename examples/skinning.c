@@ -225,12 +225,18 @@ main (int argc, char *argv[])
   GthreeAmbientLight *ambient_light;
   GthreeDirectionalLight *directional_light;
 
+#ifdef USE_GTK4
+  gtk_init ();
+#else
   gtk_init (&argc, &argv);
+#endif
 
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   gtk_window_set_title (GTK_WINDOW (window), "Skinning");
   gtk_window_set_default_size (GTK_WINDOW (window), 800, 600);
+#ifdef USE_GTK3
   gtk_container_set_border_width (GTK_CONTAINER (window), 12);
+#endif
   g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
 
   box = gtk_box_new (GTK_ORIENTATION_VERTICAL, FALSE);
