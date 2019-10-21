@@ -1,5 +1,6 @@
 #include <gthree/gthree.h>
 #include <gthree/gthreearea.h>
+#include <gtk/gtk.h>
 
 GdkPixbuf *examples_load_pixbuf (const char *file);
 GthreeGeometry *examples_load_geometry (const char *name);
@@ -23,3 +24,6 @@ const graphene_vec3_t *grey (void);
 const graphene_vec3_t *light_grey (void);
 const graphene_vec3_t *dark_green (void);
 const graphene_vec3_t *orange (void);
+
+GtkWidget *examples_init (const char *title,
+                          GtkWidget **box);

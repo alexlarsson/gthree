@@ -494,12 +494,6 @@ main (int argc, char *argv[])
     { "resource:///org/gnome/gthree-examples/models/RobotExpressive.glb", "Robot" },
   };
 
-#ifdef USE_GTK4
-  gtk_init ();
-#else
-  gtk_init (&argc, &argv);
-#endif
-
   env_maps = g_ptr_array_new_with_free_func (g_object_unref);
   for (i = 0; i < G_N_ELEMENTS (cubes); i++)
     {
@@ -514,23 +508,7 @@ main (int argc, char *argv[])
       g_ptr_array_add (env_maps, cube_texture);
     }
 
-  window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-  gtk_window_set_title (GTK_WINDOW (window), "Models");
-  gtk_window_set_default_size (GTK_WINDOW (window), 800, 600);
-#ifdef USE_GTK3
-  gtk_container_set_border_width (GTK_CONTAINER (window), 12);
-#endif
-  g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
-
-  box = gtk_box_new (GTK_ORIENTATION_VERTICAL, FALSE);
-  gtk_box_set_spacing (GTK_BOX (box), 6);
-  gtk_container_add (GTK_CONTAINER (window), box);
-  gtk_widget_show (box);
-
-  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
-  gtk_box_set_spacing (GTK_BOX (hbox), 6);
-  gtk_container_add (GTK_CONTAINER (box), hbox);
-  gtk_widget_show (hbox);
+  window = examples_init ("Models", &box);
 
   area = gthree_area_new (NULL, NULL);
 
@@ -552,7 +530,7 @@ main (int argc, char *argv[])
 
   gtk_widget_set_hexpand (area, TRUE);
   gtk_widget_set_vexpand (area, TRUE);
-  gtk_container_add (GTK_CONTAINER (hbox), area);
+  gtk_container_add (GTK_CONTAINER (box), area);
   gtk_widget_show (area);
 
   gtk_widget_add_tick_callback (GTK_WIDGET (area), tick, area, NULL);
@@ -612,17 +590,11 @@ main (int argc, char *argv[])
   gtk_widget_show (check);
   g_signal_connect (check, "toggled", G_CALLBACK (fade_animations_toggled), NULL);
 
-  morph_scale =scale = gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL, 0, 1.0, 0.01);
+  morph_scale = scale = gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL, 0, 1.0, 0.01);
   gtk_widget_set_size_request (scale, 100, -1);
   gtk_container_add (GTK_CONTAINER (hbox), scale);
   gtk_widget_show (scale);
   g_signal_connect (morph_scale, "value-changed", G_CALLBACK (morph_scale_changed), NULL);
-
-  button = gtk_button_new_with_label ("Quit");
-  gtk_widget_set_hexpand (button, TRUE);
-  gtk_container_add (GTK_CONTAINER (box), button);
-  g_signal_connect_swapped (button, "clicked", G_CALLBACK (gtk_widget_destroy), window);
-  gtk_widget_show (button);
 
   gtk_widget_show (window);
 
