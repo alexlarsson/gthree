@@ -29,3 +29,5 @@ GtkWidget *examples_init (const char *title,
                           GtkWidget **box);
 GtkEventController *motion_controller_for (GtkWidget *widget);
 GtkEventController *click_controller_for (GtkWidget *widget);
+GtkEventController *scroll_controller_for (GtkWidget *widget);
+GtkEventController *drag_controller_for (GtkWidget *widget);

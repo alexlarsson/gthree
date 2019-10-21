@@ -233,6 +233,23 @@ motion_controller_for (GtkWidget *widget)
   return motion;
 }
 
+
+GtkEventController *
+scroll_controller_for (GtkWidget *widget)
+{
+  GtkEventController *controller;
+
+#ifdef USE_GTK4
+  controller = gtk_event_controller_scroll_new (GTK_EVENT_CONTROLLER_SCROLL_VERTICAL);
+  gtk_widget_add_controller (widget, controller);
+#else
+  controller = gtk_event_controller_scroll_new (widget, GTK_EVENT_CONTROLLER_SCROLL_BOTH_AXES);
+  gtk_widget_add_events (widget, GDK_SCROLL_MASK|GDK_SMOOTH_SCROLL_MASK);
+#endif
+
+  return controller;
+}
+
 GtkEventController *
 click_controller_for (GtkWidget *widget)
 {
@@ -244,6 +261,22 @@ click_controller_for (GtkWidget *widget)
 #else
   controller = GTK_EVENT_CONTROLLER (gtk_gesture_multi_press_new (widget));
   gtk_widget_add_events (widget, GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
+#endif
+
+  return controller;
+}
+
+GtkEventController *
+drag_controller_for (GtkWidget *widget)
+{
+  GtkEventController *controller;
+
+#ifdef USE_GTK4
+  controller = GTK_EVENT_CONTROLLER (gtk_gesture_drag_new ());
+  gtk_widget_add_controller (widget, controller);
+#else
+  controller = GTK_EVENT_CONTROLLER (gtk_gesture_drag_new (widget));
+  gtk_widget_add_events (widget, GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_POINTER_MOTION_MASK);
 #endif
 
   return controller;

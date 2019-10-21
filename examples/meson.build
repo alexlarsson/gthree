@@ -6,6 +6,7 @@ examples = [
   'gtklogo',
   'interactive',
   'materials',
+  'model',
   'morphtargets',
   'multi',
   'normals',
@@ -19,12 +20,6 @@ examples = [
   'sprites',
   'testanimation',
 ]
-
-examples_gtk3 = examples + [
-  'model',
-]
-
-examples_gtk4 = examples
 
 example_resources = gnome.compile_resources('gthree-example-resources',
                                             'examples.gresource.xml',
@@ -56,7 +51,7 @@ if get_option('gtk3')
       libgthree_gtk3_dep, libm ],
   )
 
-  foreach example : examples_gtk3
+  foreach example : examples
     executable(
       '@0@-gtk3'.format(example),
       '@0@.c'.format(example),
@@ -83,7 +78,7 @@ if get_option('gtk4')
       libgthree_gtk4_dep, libm ],
   )
 
-  foreach example : examples_gtk4
+  foreach example : examples
     executable(
       '@0@-gtk4'.format(example),
       '@0@.c'.format(example),
