@@ -2,10 +2,13 @@ examples = [
   'cairo',
   'cubes',
   'effects',
+  'envmap',
   'gtklogo',
+  'interactive',
   'materials',
   'morphtargets',
   'normals',
+  'performance',
   'points',
   'properties',
   'rendertarget',
@@ -17,11 +20,8 @@ examples = [
 ]
 
 examples_gtk3 = examples + [
-  'envmap',
-  'interactive',
   'model',
   'multi',
-  'performance',
 ]
 
 examples_gtk4 = examples

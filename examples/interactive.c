@@ -119,6 +119,18 @@ init_scene (void)
   return scene;
 }
 
+static int cursor_x, cursor_y;
+
+static void
+motion_cb (GtkEventControllerMotion *controller,
+           gdouble                   x,
+           gdouble                   y,
+           gpointer                  user_data)
+{
+  cursor_x = x;
+  cursor_y = y;
+}
+
 static gboolean
 tick (GtkWidget     *widget,
       GdkFrameClock *frame_clock,
@@ -129,7 +141,6 @@ tick (GtkWidget     *widget,
   float relative_time;
   graphene_vec3_t pos;
   graphene_point3d_t point;
-  int cursor_x, cursor_y;
   float x, y;
   g_autoptr(GthreeRaycaster) raycaster = gthree_raycaster_new ();
   g_autoptr(GPtrArray) intersections = NULL;
@@ -154,7 +165,6 @@ tick (GtkWidget     *widget,
                                                 0, 0, 0));
   gthree_object_update_matrix_world (GTHREE_OBJECT (scene), FALSE);
 
-  gtk_widget_get_pointer (widget, &cursor_x, &cursor_y);
   x = ((float)cursor_x / gtk_widget_get_allocated_width (widget)) * 2 - 1;
   y = -((float)cursor_y / gtk_widget_get_allocated_height (widget)) * 2 + 1;
 
@@ -217,6 +227,7 @@ main (int argc, char *argv[])
   GtkWidget *window, *box, *area;
   GthreeScene *scene;
   graphene_point3d_t pos;
+  GtkEventController *motion;
 
   window = examples_init ("Interactive", &box);
 
@@ -233,6 +244,9 @@ main (int argc, char *argv[])
   gtk_widget_set_vexpand (area, TRUE);
   gtk_container_add (GTK_CONTAINER (box), area);
   gtk_widget_show (area);
+
+  motion = motion_controller_for (GTK_WIDGET (area));
+  g_signal_connect (motion, "motion", (GCallback)motion_cb, NULL);
 
   gtk_widget_add_tick_callback (GTK_WIDGET (area), tick, area, NULL);
 

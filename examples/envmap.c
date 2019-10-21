@@ -80,6 +80,19 @@ init_scene (void)
   return scene;
 }
 
+static int cursor_x, cursor_y;
+
+static void
+motion_cb (GtkEventControllerMotion *controller,
+           gdouble                   x,
+           gdouble                   y,
+           gpointer                  user_data)
+{
+  cursor_x = x;
+  cursor_y = y;
+}
+
+
 static gboolean
 tick (GtkWidget     *widget,
       GdkFrameClock *frame_clock,
@@ -90,7 +103,6 @@ tick (GtkWidget     *widget,
   graphene_euler_t euler;
   graphene_point3d_t pos;
   float relative_time, camera_angle, camera_height;
-  int cursor_x, cursor_y;
 
   frame_time = gdk_frame_clock_get_frame_time (frame_clock);
   if (first_frame_time == 0)
@@ -101,7 +113,6 @@ tick (GtkWidget     *widget,
   relative_time = (frame_time - first_frame_time) * 60 / (float) G_USEC_PER_SEC;
 
   /* Control camera with mouse */
-  gtk_widget_get_pointer (widget, &cursor_x, &cursor_y);
   camera_angle = (cursor_x)  * 2.0 * G_PI / gtk_widget_get_allocated_width (widget) - G_PI / 2.0;
   camera_height = (((float)cursor_y / gtk_widget_get_allocated_height (widget)) - 0.5) * 500;
 
@@ -140,6 +151,7 @@ main (int argc, char *argv[])
   GtkWidget *window, *box, *area;
   GthreeScene *scene;
   graphene_point3d_t pos;
+  GtkEventController *motion;
 
   window = examples_init ("Environment map", &box);
 
@@ -156,6 +168,9 @@ main (int argc, char *argv[])
   gtk_widget_set_vexpand (area, TRUE);
   gtk_container_add (GTK_CONTAINER (box), area);
   gtk_widget_show (area);
+
+  motion = motion_controller_for (GTK_WIDGET (area));
+  g_signal_connect (motion, "motion", (GCallback)motion_cb, NULL);
 
   gtk_widget_add_tick_callback (GTK_WIDGET (area), tick, area, NULL);
 

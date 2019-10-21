@@ -102,11 +102,14 @@ resize_area (GthreeArea *area,
 }
 
 static gboolean
-motion_event (GtkWidget      *widget,
-              GdkEventMotion *event)
+motion_event (GtkEventControllerMotion *controller,
+              gdouble                   x,
+              gdouble                   y,
+              gpointer                  user_data)
 {
-  pointer_x = (event->x - gtk_widget_get_allocated_width (widget) / 2) / (double)(gtk_widget_get_allocated_width (widget) / 2);
-  pointer_y = (event->y - gtk_widget_get_allocated_height (widget) / 2) / (double)(gtk_widget_get_allocated_height (widget) / 2);
+  GtkWidget *widget = gtk_event_controller_get_widget (GTK_EVENT_CONTROLLER (controller));
+  pointer_x = (x - gtk_widget_get_allocated_width (widget) / 2) / (double)(gtk_widget_get_allocated_width (widget) / 2);
+  pointer_y = (y - gtk_widget_get_allocated_height (widget) / 2) / (double)(gtk_widget_get_allocated_height (widget) / 2);
   return FALSE;
 }
 
@@ -116,6 +119,7 @@ main (int argc, char *argv[])
   GtkWidget *window, *box, *area;
   GthreeScene *scene;
   graphene_point3d_t pos;
+  GtkEventController *motion;
 
   window = examples_init ("Performance", &box);
 
@@ -128,12 +132,13 @@ main (int argc, char *argv[])
 
   area = gthree_area_new (scene, GTHREE_CAMERA (camera));
   g_signal_connect (area, "resize", G_CALLBACK (resize_area), camera);
-  gtk_widget_add_events (GTK_WIDGET (area), GDK_POINTER_MOTION_MASK);
-  g_signal_connect (area, "motion-notify-event", G_CALLBACK (motion_event), NULL);
   gtk_widget_set_hexpand (area, TRUE);
   gtk_widget_set_vexpand (area, TRUE);
   gtk_container_add (GTK_CONTAINER (box), area);
   gtk_widget_show (area);
+
+  motion = motion_controller_for (GTK_WIDGET (area));
+  g_signal_connect (motion, "motion", (GCallback)motion_event, NULL);
 
   gtk_widget_add_tick_callback (GTK_WIDGET (area), tick, area, NULL);
 

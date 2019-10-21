@@ -216,3 +216,19 @@ examples_init (const char *title,
 
   return window;
 }
+
+GtkEventController *
+motion_controller_for (GtkWidget *widget)
+{
+  GtkEventController *motion;
+
+#ifdef USE_GTK4
+  motion = gtk_event_controller_motion_new ();
+  gtk_widget_add_controller (widget, GTK_EVENT_CONTROLLER (motion));
+#else
+  motion = gtk_event_controller_motion_new (widget);
+  gtk_widget_add_events (widget, GDK_POINTER_MOTION_MASK);
+#endif
+
+  return motion;
+}
