@@ -18,9 +18,8 @@ static int current_model;
 static float current_distance = 3;
 static float current_angle_y, current_angle_x;
 static float press_angle_y, press_angle_x;
-static float press_y, press_x;
 
-static gboolean button_down;
+static gboolean dragging;
 static gboolean auto_rotate;
 static gboolean fade_animations;
 static float auto_rotate_start_time;
@@ -204,7 +203,7 @@ tick (GtkWidget     *widget,
                                                    frame_time * 13,
                                                    0));
 
-  if (auto_rotate && !button_down)
+  if (auto_rotate && !dragging)
     current_angle_y = current_angle_y + 0.3;
 
   gthree_object_set_rotation (GTHREE_OBJECT (camera_group),
@@ -343,53 +342,56 @@ auto_rotate_toggled (GtkToggleButton *toggle_button)
     }
 }
 
-static gboolean
-button_press_event_cb (GtkWidget      *widget,
-                       GdkEventButton *event,
-                       gpointer        data)
+
+static void
+drag_begin_cb (GtkGestureDrag *gesture,
+               gdouble         start_x,
+               gdouble         start_y,
+               gpointer        user_data)
 {
-  button_down = TRUE;
-
-  if (event->button == GDK_BUTTON_PRIMARY)
-    {
-      press_angle_x = current_angle_x;
-      press_angle_y = current_angle_y;
-      press_x = event->x;
-      press_y = event->y;
-    }
-
-  return TRUE;
+  dragging = TRUE;
+  press_angle_x = current_angle_x;
+  press_angle_y = current_angle_y;
 }
 
-static gboolean
-button_release_event_cb (GtkWidget      *widget,
-                         GdkEventButton *event,
-                         gpointer        data)
+static void
+drag_update_cb (GtkGestureDrag *gesture,
+                gdouble         offset_x,
+                gdouble         offset_y,
+                gpointer        user_data)
 {
-  button_down = FALSE;
-  return TRUE;
+  GtkWidget *widget = gtk_event_controller_get_widget (GTK_EVENT_CONTROLLER (gesture));
+  current_angle_y = press_angle_y - offset_x  * 180.0 / gtk_widget_get_allocated_width (widget);
+  current_angle_x = press_angle_x - offset_y  * 180.0 / gtk_widget_get_allocated_height (widget);
 }
 
-static gboolean
-motion_notify_event_cb (GtkWidget      *widget,
-                        GdkEventMotion *event,
-                        gpointer        data)
+static void
+drag_end_cb (GtkGestureDrag *gesture,
+             gdouble         offset_x,
+             gdouble         offset_y,
+             gpointer        user_data)
 {
-  if (event->state & GDK_BUTTON1_MASK)
-    {
-      current_angle_y = press_angle_y - (event->x - press_x)  * 180.0 / gtk_widget_get_allocated_width (widget);
-      current_angle_x = press_angle_x - (event->y - press_y)  * 180.0 / gtk_widget_get_allocated_height (widget);
-    }
-
-  return TRUE;
+  dragging = FALSE;
 }
 
+#ifdef USE_GTK4
+static void
+scroll_cb (GtkEventControllerScroll *controller,
+           gdouble                   dx,
+           gdouble                   dy,
+           gpointer                  user_data)
+{
+  current_distance += dy * 0.1;
+  current_distance = MAX (current_distance, 0.5);
+}
+#else
 static gboolean
 scroll_event_cb (GtkWidget   *widget,
                  GdkEvent    *event,
                  gpointer     data)
 {
   GdkScrollDirection direction;
+
   if (gdk_event_get_scroll_direction (event, &direction))
     {
       if (direction == GDK_SCROLL_UP)
@@ -401,6 +403,7 @@ scroll_event_cb (GtkWidget   *widget,
     }
   return TRUE;
 }
+#endif
 
 
 static void
@@ -484,6 +487,10 @@ main (int argc, char *argv[])
     { "cube/Bridge2", "Bridge" },
     { "cube/SwedishRoyalCastle", "Castle" },
   };
+  GtkEventController *drag;
+#ifdef USE_GTK4
+  GtkEventController *scroll;
+#endif
 
   struct {
     char *path;
@@ -493,8 +500,6 @@ main (int argc, char *argv[])
     { "resource:///org/gnome/gthree-examples/models/Soldier.glb", "Soldier" },
     { "resource:///org/gnome/gthree-examples/models/RobotExpressive.glb", "Robot" },
   };
-
-  gtk_init (&argc, &argv);
 
   env_maps = g_ptr_array_new_with_free_func (g_object_unref);
   for (i = 0; i < G_N_ELEMENTS (cubes); i++)
@@ -510,43 +515,35 @@ main (int argc, char *argv[])
       g_ptr_array_add (env_maps, cube_texture);
     }
 
-  window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-  gtk_window_set_title (GTK_WINDOW (window), "Models");
-  gtk_window_set_default_size (GTK_WINDOW (window), 800, 600);
-  gtk_container_set_border_width (GTK_CONTAINER (window), 12);
-  g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
-
-  box = gtk_box_new (GTK_ORIENTATION_VERTICAL, FALSE);
-  gtk_box_set_spacing (GTK_BOX (box), 6);
-  gtk_container_add (GTK_CONTAINER (window), box);
-  gtk_widget_show (box);
-
-  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
-  gtk_box_set_spacing (GTK_BOX (hbox), 6);
-  gtk_container_add (GTK_CONTAINER (box), hbox);
-  gtk_widget_show (hbox);
+  window = examples_init ("Models", &box);
 
   area = gthree_area_new (NULL, NULL);
 
+  drag = drag_controller_for (GTK_WIDGET (area));
+  g_signal_connect (drag, "drag-begin", (GCallback)drag_begin_cb, NULL);
+  g_signal_connect (drag, "drag-update", (GCallback)drag_update_cb, NULL);
+  g_signal_connect (drag, "drag-end", (GCallback)drag_end_cb, NULL);
+
+#ifdef USE_GTK4
+  scroll = scroll_controller_for (GTK_WIDGET (area));
+  g_signal_connect (scroll, "scroll", (GCallback)scroll_cb, NULL);
+#else
+  /* TODO: For whatever reason the scroll controller doesn't seem to work for gtk3 */
   gtk_widget_set_events (area, gtk_widget_get_events (area)
                          | GDK_SCROLL_MASK
                          | GDK_BUTTON_PRESS_MASK
                          | GDK_BUTTON_RELEASE_MASK
                          | GDK_POINTER_MOTION_MASK);
-  g_signal_connect (area, "motion-notify-event",
-                    G_CALLBACK (motion_notify_event_cb), NULL);
-  g_signal_connect (area, "button-press-event",
-                    G_CALLBACK (button_press_event_cb), NULL);
-  g_signal_connect (area, "button-release-event",
-                    G_CALLBACK (button_release_event_cb), NULL);
+
   g_signal_connect (area, "scroll-event",
                     G_CALLBACK (scroll_event_cb), NULL);
+#endif
 
   g_signal_connect (area, "resize", G_CALLBACK (resize_area), NULL);
 
   gtk_widget_set_hexpand (area, TRUE);
   gtk_widget_set_vexpand (area, TRUE);
-  gtk_container_add (GTK_CONTAINER (hbox), area);
+  gtk_container_add (GTK_CONTAINER (box), area);
   gtk_widget_show (area);
 
   gtk_widget_add_tick_callback (GTK_WIDGET (area), tick, area, NULL);
@@ -606,17 +603,11 @@ main (int argc, char *argv[])
   gtk_widget_show (check);
   g_signal_connect (check, "toggled", G_CALLBACK (fade_animations_toggled), NULL);
 
-  morph_scale =scale = gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL, 0, 1.0, 0.01);
+  morph_scale = scale = gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL, 0, 1.0, 0.01);
   gtk_widget_set_size_request (scale, 100, -1);
   gtk_container_add (GTK_CONTAINER (hbox), scale);
   gtk_widget_show (scale);
   g_signal_connect (morph_scale, "value-changed", G_CALLBACK (morph_scale_changed), NULL);
-
-  button = gtk_button_new_with_label ("Quit");
-  gtk_widget_set_hexpand (button, TRUE);
-  gtk_container_add (GTK_CONTAINER (box), button);
-  g_signal_connect_swapped (button, "clicked", G_CALLBACK (gtk_widget_destroy), window);
-  gtk_widget_show (button);
 
   gtk_widget_show (window);
 

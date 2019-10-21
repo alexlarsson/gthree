@@ -3,8 +3,8 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
 
-Name: Gthree Gtk3
-Description: Gtk3 widgets for Gthree
+Name: Gthree GTK 3
+Description: GTK 3 widgets for Gthree
 Version: 1.0
 Requires: @GTHREE_GTK3_PACKAGES@
 Libs: -L${libdir} -lgthree-gtk3-1

@@ -1,24 +1,24 @@
 examples = [
-  'testanimation',
   'cairo',
   'cubes',
+  'effects',
   'envmap',
-  'skinning',
   'gtklogo',
+  'interactive',
   'materials',
-  'properties',
   'model',
+  'morphtargets',
   'multi',
   'normals',
   'performance',
   'points',
+  'properties',
+  'rendertarget',
   'shader',
   'shadow',
+  'skinning',
   'sprites',
-  'rendertarget',
-  'effects',
-  'morphtargets',
-  'interactive'
+  'testanimation',
 ]
 
 example_resources = gnome.compile_resources('gthree-example-resources',
@@ -30,19 +30,61 @@ example_resources = gnome.compile_resources('gthree-example-resources',
                                             ],
                                             c_name: 'gthree_example')
 
-libexample_sources = ['utils.c', 'prop-editor.c']  + example_resources
+libexample_sources = [
+  'prop-editor.c',
+  'utils.c',
+] + example_resources
 
-libexample = static_library(
-  'libexample',
-  libexample_sources,
-  dependencies: [libgthree_gtk3_dep, libm],
-)
+if get_option('gtk3')
+  libexample_gtk3 = static_library(
+    'libexample-gtk3',
+    libexample_sources,
+    c_args: [ '-DUSE_GTK3' ],
+    dependencies: [
+      libgthree_gtk3_dep, libm ],
+    install: false,
+  )
 
-example_dep = declare_dependency(
-  link_whole: libexample,
-  dependencies: [libgthree_gtk3_dep, libm]
-)
+  libexample_gk3_dep = declare_dependency(
+    link_whole: libexample_gtk3,
+    dependencies: [
+      libgthree_gtk3_dep, libm ],
+  )
 
-foreach example_name : examples
-  executable(example_name, ['@0@.c'.format(example_name)], dependencies: example_dep)
-endforeach
+  foreach example : examples
+    executable(
+      '@0@-gtk3'.format(example),
+      '@0@.c'.format(example),
+      c_args: [ '-DUSE_GTK3' ],
+      dependencies: [
+        libexample_gk3_dep ],
+      install: false)
+  endforeach
+endif
+
+if get_option('gtk4')
+  libexample_gtk4 = static_library(
+    'libexample-gtk4',
+    libexample_sources,
+    c_args: [ '-DUSE_GTK4' ],
+    dependencies: [
+      libgthree_gtk4_dep, libm ],
+    install: false,
+  )
+
+  libexample_gk4_dep = declare_dependency(
+    link_whole: libexample_gtk4,
+    dependencies: [
+      libgthree_gtk4_dep, libm ],
+  )
+
+  foreach example : examples
+    executable(
+      '@0@-gtk4'.format(example),
+      '@0@.c'.format(example),
+      c_args: [ '-DUSE_GTK4' ],
+      dependencies: [
+        libexample_gk4_dep],
+      install: false)
+  endforeach
+endif

@@ -102,38 +102,26 @@ resize_area (GthreeArea *area,
 }
 
 static gboolean
-motion_event (GtkWidget      *widget,
-              GdkEventMotion *event)
+motion_event (GtkEventControllerMotion *controller,
+              gdouble                   x,
+              gdouble                   y,
+              gpointer                  user_data)
 {
-  pointer_x = (event->x - gtk_widget_get_allocated_width (widget) / 2) / (double)(gtk_widget_get_allocated_width (widget) / 2);
-  pointer_y = (event->y - gtk_widget_get_allocated_height (widget) / 2) / (double)(gtk_widget_get_allocated_height (widget) / 2);
+  GtkWidget *widget = gtk_event_controller_get_widget (GTK_EVENT_CONTROLLER (controller));
+  pointer_x = (x - gtk_widget_get_allocated_width (widget) / 2) / (double)(gtk_widget_get_allocated_width (widget) / 2);
+  pointer_y = (y - gtk_widget_get_allocated_height (widget) / 2) / (double)(gtk_widget_get_allocated_height (widget) / 2);
   return FALSE;
 }
 
 int
 main (int argc, char *argv[])
 {
-  GtkWidget *window, *box, *hbox, *button, *area;
+  GtkWidget *window, *box, *area;
   GthreeScene *scene;
   graphene_point3d_t pos;
+  GtkEventController *motion;
 
-  gtk_init (&argc, &argv);
-
-  window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-  gtk_window_set_title (GTK_WINDOW (window), "Performance");
-  gtk_window_set_default_size (GTK_WINDOW (window), 800, 600);
-  gtk_container_set_border_width (GTK_CONTAINER (window), 12);
-  g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
-
-  box = gtk_box_new (GTK_ORIENTATION_VERTICAL, FALSE);
-  gtk_box_set_spacing (GTK_BOX (box), 6);
-  gtk_container_add (GTK_CONTAINER (window), box);
-  gtk_widget_show (box);
-
-  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
-  gtk_box_set_spacing (GTK_BOX (hbox), 6);
-  gtk_container_add (GTK_CONTAINER (box), hbox);
-  gtk_widget_show (hbox);
+  window = examples_init ("Performance", &box);
 
   scene = init_scene ();
   camera = gthree_perspective_camera_new (60, 1, 1, 10000);
@@ -144,20 +132,15 @@ main (int argc, char *argv[])
 
   area = gthree_area_new (scene, GTHREE_CAMERA (camera));
   g_signal_connect (area, "resize", G_CALLBACK (resize_area), camera);
-  gtk_widget_add_events (GTK_WIDGET (area), GDK_POINTER_MOTION_MASK);
-  g_signal_connect (area, "motion-notify-event", G_CALLBACK (motion_event), NULL);
   gtk_widget_set_hexpand (area, TRUE);
   gtk_widget_set_vexpand (area, TRUE);
-  gtk_container_add (GTK_CONTAINER (hbox), area);
+  gtk_container_add (GTK_CONTAINER (box), area);
   gtk_widget_show (area);
 
-  gtk_widget_add_tick_callback (GTK_WIDGET (area), tick, area, NULL);
+  motion = motion_controller_for (GTK_WIDGET (area));
+  g_signal_connect (motion, "motion", (GCallback)motion_event, NULL);
 
-  button = gtk_button_new_with_label ("Quit");
-  gtk_widget_set_hexpand (button, TRUE);
-  gtk_container_add (GTK_CONTAINER (box), button);
-  g_signal_connect_swapped (button, "clicked", G_CALLBACK (gtk_widget_destroy), window);
-  gtk_widget_show (button);
+  gtk_widget_add_tick_callback (GTK_WIDGET (area), tick, area, NULL);
 
   gtk_widget_show (window);
 

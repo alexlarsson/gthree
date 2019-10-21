@@ -288,25 +288,9 @@ pass_toggled (GtkToggleButton *toggle_button, GthreePass *pass)
 int
 main (int argc, char *argv[])
 {
-  GtkWidget *window, *box, *hbox, *button, *area, *check;
+  GtkWidget *window, *box, *hbox, *area, *check;
 
-  gtk_init (&argc, &argv);
-
-  window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-  gtk_window_set_title (GTK_WINDOW (window), "Effects");
-  gtk_window_set_default_size (GTK_WINDOW (window), 800, 600);
-  gtk_container_set_border_width (GTK_CONTAINER (window), 12);
-  g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
-
-  box = gtk_box_new (GTK_ORIENTATION_VERTICAL, FALSE);
-  gtk_box_set_spacing (GTK_BOX (box), 6);
-  gtk_container_add (GTK_CONTAINER (window), box);
-  gtk_widget_show (box);
-
-  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
-  gtk_box_set_spacing (GTK_BOX (hbox), 6);
-  gtk_container_add (GTK_CONTAINER (box), hbox);
-  gtk_widget_show (hbox);
+  window = examples_init ("Effects", &box);
 
   init_scene ();
   init_scene2 ();
@@ -317,7 +301,7 @@ main (int argc, char *argv[])
   g_signal_connect (area, "render", G_CALLBACK (render_area), NULL);
   gtk_widget_set_hexpand (area, TRUE);
   gtk_widget_set_vexpand (area, TRUE);
-  gtk_container_add (GTK_CONTAINER (hbox), area);
+  gtk_container_add (GTK_CONTAINER (box), area);
   gtk_widget_show (area);
 
   gtk_widget_add_tick_callback (GTK_WIDGET (area), tick, area, NULL);
@@ -356,12 +340,6 @@ main (int argc, char *argv[])
   gtk_container_add (GTK_CONTAINER (hbox), check);
   gtk_widget_show (check);
   g_signal_connect (check, "toggled", G_CALLBACK (pass_toggled), greyscale_pass);
-
-  button = gtk_button_new_with_label ("Quit");
-  gtk_widget_set_hexpand (button, TRUE);
-  gtk_container_add (GTK_CONTAINER (box), button);
-  g_signal_connect_swapped (button, "clicked", G_CALLBACK (gtk_widget_destroy), window);
-  gtk_widget_show (button);
 
   gtk_widget_show (window);
 

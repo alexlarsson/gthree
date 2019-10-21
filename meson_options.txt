@@ -1,3 +1,12 @@
+option('gtk3',
+       description: 'Whether to build GTK 3 widget library',
+       type: 'boolean',
+       value: true)
+option('gtk4',
+       description: 'Whether to build GTK 4 widget library',
+       type: 'boolean',
+       value: false)
+
 option('introspection',
        description: 'Whether to build introspection files',
        type: 'boolean',

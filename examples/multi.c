@@ -66,10 +66,14 @@ tick (GtkWidget     *widget,
   return G_SOURCE_CONTINUE;
 }
 
-static gboolean
-clicked_z (GtkWidget      *widget,
-           GdkEventButton *event)
+static void
+clicked_z (GtkEventController *controller,
+           gint                n_press,
+           gdouble             x,
+           gdouble             y,
+           gpointer            user_data)
 {
+  GtkWidget *widget = gtk_event_controller_get_widget (GTK_EVENT_CONTROLLER (controller));
   graphene_point3d_t point = {0, 0, 0}, a, b, pos;
   float w, h, u;
 
@@ -79,8 +83,8 @@ clicked_z (GtkWidget      *widget,
   graphene_point3d_init_from_vec3 (&pos,
                                    gthree_object_get_position (GTHREE_OBJECT (cube)));
 
-  point.x = event->x / (0.5*w) - 1;
-  point.y = -event->y / (0.5*h) + 1;
+  point.x = x / (0.5*w) - 1;
+  point.y = -y / (0.5*h) + 1;
 
   point.z  = 0.0f;
   gthree_camera_unproject_point3d (GTHREE_CAMERA (camera_z), &point, &a);
@@ -94,14 +98,16 @@ clicked_z (GtkWidget      *widget,
   point.z = pos.z;
 
   gthree_object_set_position_point3d (GTHREE_OBJECT (cube), &point);
-
-  return TRUE;
 }
 
-static gboolean
-clicked_y (GtkWidget      *widget,
-           GdkEventButton *event)
+static void
+clicked_y (GtkEventController *controller,
+           gint                n_press,
+           gdouble             x,
+           gdouble             y,
+           gpointer            user_data)
 {
+  GtkWidget *widget = gtk_event_controller_get_widget (GTK_EVENT_CONTROLLER (controller));
   graphene_point3d_t point = {0, 0, 0}, a, b, pos;
   float w, h, u;
 
@@ -111,8 +117,8 @@ clicked_y (GtkWidget      *widget,
   graphene_point3d_init_from_vec3 (&pos,
                                    gthree_object_get_position (GTHREE_OBJECT (cube)));
 
-  point.x = event->x / (0.5*w) - 1;
-  point.y = -event->y / (0.5*h) + 1;
+  point.x = x / (0.5*w) - 1;
+  point.y = -y / (0.5*h) + 1;
 
   point.z  = 0.0f;
   gthree_camera_unproject_point3d (GTHREE_CAMERA (camera_y), &point, &a);
@@ -126,14 +132,16 @@ clicked_y (GtkWidget      *widget,
   point.z = a.z + u * (b.z - a.z);
 
   gthree_object_set_position_point3d (GTHREE_OBJECT (cube), &point);
-
-  return TRUE;
 }
 
-static gboolean
-clicked_x (GtkWidget      *widget,
-           GdkEventButton *event)
+static void
+clicked_x (GtkEventController *controller,
+           gint                n_press,
+           gdouble             x,
+           gdouble             y,
+           gpointer            user_data)
 {
+  GtkWidget *widget = gtk_event_controller_get_widget (GTK_EVENT_CONTROLLER (controller));
   graphene_point3d_t point = {0, 0, 0}, a, b, pos;
   float w, h, u;
 
@@ -143,8 +151,8 @@ clicked_x (GtkWidget      *widget,
   graphene_point3d_init_from_vec3 (&pos,
                                    gthree_object_get_position (GTHREE_OBJECT (cube)));
 
-  point.x = event->x / (0.5*w) - 1;
-  point.y = -event->y / (0.5*h) + 1;
+  point.x = x / (0.5*w) - 1;
+  point.y = -y / (0.5*h) + 1;
 
   point.z  = 0.0f;
   gthree_camera_unproject_point3d (GTHREE_CAMERA (camera_x), &point, &a);
@@ -158,8 +166,6 @@ clicked_x (GtkWidget      *widget,
   point.z = a.z + u * (b.z - a.z);
 
   gthree_object_set_position_point3d (GTHREE_OBJECT (cube), &point);
-
-  return TRUE;
 }
 
 static void
@@ -174,33 +180,18 @@ resize_area (GthreeArea *area,
 int
 main (int argc, char *argv[])
 {
-  GtkWidget *window, *box, *hbox, *button, *grid;
+  GtkWidget *window, *box, *grid;
   GthreeScene *scene;
   graphene_point3d_t pos;
   graphene_euler_t euler;
+  GtkEventController *click;
 
-  gtk_init (&argc, &argv);
-
-  window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-  gtk_window_set_title (GTK_WINDOW (window), "Multi views");
-  gtk_window_set_default_size (GTK_WINDOW (window), 800, 600);
-  gtk_container_set_border_width (GTK_CONTAINER (window), 12);
-  g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
-
-  box = gtk_box_new (GTK_ORIENTATION_VERTICAL, FALSE);
-  gtk_box_set_spacing (GTK_BOX (box), 6);
-  gtk_container_add (GTK_CONTAINER (window), box);
-  gtk_widget_show (box);
-
-  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
-  gtk_box_set_spacing (GTK_BOX (hbox), 6);
-  gtk_container_add (GTK_CONTAINER (box), hbox);
-  gtk_widget_show (hbox);
+  window = examples_init ("Multi views", &box);
 
   scene = init_scene ();
 
   grid = gtk_grid_new ();
-  gtk_container_add (GTK_CONTAINER (hbox), grid);
+  gtk_container_add (GTK_CONTAINER (box), grid);
   gtk_widget_show (grid);
   gtk_grid_set_row_homogeneous (GTK_GRID (grid), TRUE);
   gtk_grid_set_row_spacing (GTK_GRID (grid), 6);
@@ -216,13 +207,14 @@ main (int argc, char *argv[])
 
   area_z = gthree_area_new (scene, GTHREE_CAMERA (camera_z));
   g_signal_connect (area_z, "resize", G_CALLBACK (resize_area), camera_z);
-  gtk_widget_add_events (GTK_WIDGET (area_z), GDK_BUTTON_PRESS_MASK);
-  g_signal_connect (area_z, "button-press-event", G_CALLBACK (clicked_z), NULL);
   gtk_widget_set_hexpand (area_z, TRUE);
   gtk_widget_set_vexpand (area_z, TRUE);
   gtk_grid_attach (GTK_GRID (grid), area_z,
                    0, 1, 1, 1);
   gtk_widget_show (area_z);
+
+  click = click_controller_for (area_z);
+  g_signal_connect (click, "pressed", G_CALLBACK (clicked_z), NULL);
 
   camera_y = gthree_perspective_camera_new (45, 1, 1, 2000);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera_y));
@@ -234,13 +226,14 @@ main (int argc, char *argv[])
 
   area_y = gthree_area_new (scene, GTHREE_CAMERA (camera_y));
   g_signal_connect (area_y, "resize", G_CALLBACK (resize_area), camera_y);
-  gtk_widget_add_events (GTK_WIDGET (area_y), GDK_BUTTON_PRESS_MASK);
-  g_signal_connect (area_y, "button-press-event", G_CALLBACK (clicked_y), NULL);
   gtk_widget_set_hexpand (area_y, TRUE);
   gtk_widget_set_vexpand (area_y, TRUE);
   gtk_grid_attach (GTK_GRID (grid), area_y,
                    0, 0, 1, 1);
   gtk_widget_show (area_y);
+
+  click = click_controller_for (area_y);
+  g_signal_connect (click, "pressed", G_CALLBACK (clicked_y), NULL);
 
   camera_x = gthree_perspective_camera_new (45, 1, 1, 2000);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera_x));
@@ -252,21 +245,16 @@ main (int argc, char *argv[])
 
   area_x = gthree_area_new (scene, GTHREE_CAMERA (camera_x));
   g_signal_connect (area_x, "resize", G_CALLBACK (resize_area), camera_x);
-  gtk_widget_add_events (GTK_WIDGET (area_x), GDK_BUTTON_PRESS_MASK);
-  g_signal_connect (area_x, "button-press-event", G_CALLBACK (clicked_x), NULL);
   gtk_widget_set_hexpand (area_x, TRUE);
   gtk_widget_set_vexpand (area_x, TRUE);
   gtk_grid_attach (GTK_GRID (grid), area_x,
                    1, 1, 1, 1);
   gtk_widget_show (area_x);
 
-  gtk_widget_add_tick_callback (GTK_WIDGET (area_z), tick, NULL, NULL);
+  click = click_controller_for (area_x);
+  g_signal_connect (click, "pressed", G_CALLBACK (clicked_x), NULL);
 
-  button = gtk_button_new_with_label ("Quit");
-  gtk_widget_set_hexpand (button, TRUE);
-  gtk_container_add (GTK_CONTAINER (box), button);
-  g_signal_connect_swapped (button, "clicked", G_CALLBACK (gtk_widget_destroy), window);
-  gtk_widget_show (button);
+  gtk_widget_add_tick_callback (GTK_WIDGET (area_z), tick, NULL, NULL);
 
   gtk_widget_show (window);
 

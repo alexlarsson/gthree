@@ -163,3 +163,121 @@ examples_load_gltl (const char *name, GError **error)
 
   return loader;
 }
+
+GtkWidget *
+examples_init (const char *title,
+               GtkWidget **box)
+{
+  GtkWidget *window, *outer_box, *button;
+  g_autofree char *full_title = NULL;
+
+#ifdef USE_GTK4
+  gtk_init ();
+#else
+  gtk_init (NULL, NULL);
+#endif
+
+  window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+  full_title = g_strdup_printf ("%s - %s", title,
+#ifdef USE_GTK4
+                                "gtk 4"
+#else
+                                "gtk 3"
+#endif
+                                );
+  gtk_window_set_title (GTK_WINDOW (window), full_title);
+  gtk_window_set_default_size (GTK_WINDOW (window), 800, 600);
+#ifdef USE_GTK3
+  gtk_container_set_border_width (GTK_CONTAINER (window), 12);
+#endif
+  g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
+
+  outer_box = gtk_box_new (GTK_ORIENTATION_VERTICAL, FALSE);
+  gtk_box_set_spacing (GTK_BOX (outer_box), 6);
+#ifdef USE_GTK4
+  gtk_widget_set_margin_start (GTK_WIDGET (outer_box), 12);
+  gtk_widget_set_margin_end (GTK_WIDGET (outer_box), 12);
+  gtk_widget_set_margin_top (GTK_WIDGET (outer_box), 12);
+  gtk_widget_set_margin_bottom (GTK_WIDGET (outer_box), 12);
+#endif
+  gtk_container_add (GTK_CONTAINER (window), outer_box);
+  gtk_widget_show (outer_box);
+
+  *box = gtk_box_new (GTK_ORIENTATION_VERTICAL, FALSE);
+  gtk_box_set_spacing (GTK_BOX (*box), 6);
+  gtk_container_add (GTK_CONTAINER (outer_box), *box);
+  gtk_widget_show (*box);
+
+  button = gtk_button_new_with_label ("Quit");
+  gtk_widget_set_hexpand (button, TRUE);
+  gtk_container_add (GTK_CONTAINER (outer_box), button);
+  g_signal_connect_swapped (button, "clicked", G_CALLBACK (gtk_widget_destroy), window);
+  gtk_widget_show (button);
+
+  return window;
+}
+
+GtkEventController *
+motion_controller_for (GtkWidget *widget)
+{
+  GtkEventController *motion;
+
+#ifdef USE_GTK4
+  motion = gtk_event_controller_motion_new ();
+  gtk_widget_add_controller (widget, GTK_EVENT_CONTROLLER (motion));
+#else
+  motion = gtk_event_controller_motion_new (widget);
+  gtk_widget_add_events (widget, GDK_POINTER_MOTION_MASK);
+#endif
+
+  return motion;
+}
+
+
+GtkEventController *
+scroll_controller_for (GtkWidget *widget)
+{
+  GtkEventController *controller;
+
+#ifdef USE_GTK4
+  controller = gtk_event_controller_scroll_new (GTK_EVENT_CONTROLLER_SCROLL_VERTICAL);
+  gtk_widget_add_controller (widget, controller);
+#else
+  controller = gtk_event_controller_scroll_new (widget, GTK_EVENT_CONTROLLER_SCROLL_BOTH_AXES);
+  gtk_widget_add_events (widget, GDK_SCROLL_MASK|GDK_SMOOTH_SCROLL_MASK);
+#endif
+
+  return controller;
+}
+
+GtkEventController *
+click_controller_for (GtkWidget *widget)
+{
+  GtkEventController *controller;
+
+#ifdef USE_GTK4
+  controller = GTK_EVENT_CONTROLLER (gtk_gesture_click_new ());
+  gtk_widget_add_controller (widget, controller);
+#else
+  controller = GTK_EVENT_CONTROLLER (gtk_gesture_multi_press_new (widget));
+  gtk_widget_add_events (widget, GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
+#endif
+
+  return controller;
+}
+
+GtkEventController *
+drag_controller_for (GtkWidget *widget)
+{
+  GtkEventController *controller;
+
+#ifdef USE_GTK4
+  controller = GTK_EVENT_CONTROLLER (gtk_gesture_drag_new ());
+  gtk_widget_add_controller (widget, controller);
+#else
+  controller = GTK_EVENT_CONTROLLER (gtk_gesture_drag_new (widget));
+  gtk_widget_add_events (widget, GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_POINTER_MOTION_MASK);
+#endif
+
+  return controller;
+}
