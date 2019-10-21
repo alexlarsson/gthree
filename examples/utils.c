@@ -232,3 +232,19 @@ motion_controller_for (GtkWidget *widget)
 
   return motion;
 }
+
+GtkEventController *
+click_controller_for (GtkWidget *widget)
+{
+  GtkEventController *controller;
+
+#ifdef USE_GTK4
+  controller = GTK_EVENT_CONTROLLER (gtk_gesture_click_new ());
+  gtk_widget_add_controller (widget, controller);
+#else
+  controller = GTK_EVENT_CONTROLLER (gtk_gesture_multi_press_new (widget));
+  gtk_widget_add_events (widget, GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
+#endif
+
+  return controller;
+}

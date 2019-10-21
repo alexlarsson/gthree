@@ -7,6 +7,7 @@ examples = [
   'interactive',
   'materials',
   'morphtargets',
+  'multi',
   'normals',
   'performance',
   'points',
@@ -21,7 +22,6 @@ examples = [
 
 examples_gtk3 = examples + [
   'model',
-  'multi',
 ]
 
 examples_gtk4 = examples

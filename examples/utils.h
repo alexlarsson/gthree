@@ -28,3 +28,4 @@ const graphene_vec3_t *orange (void);
 GtkWidget *examples_init (const char *title,
                           GtkWidget **box);
 GtkEventController *motion_controller_for (GtkWidget *widget);
+GtkEventController *click_controller_for (GtkWidget *widget);
