@@ -18,6 +18,8 @@ typedef struct {
   GtkGLArea parent;
 } GthreeArea;
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeArea, g_object_unref)
+
 typedef struct {
   GtkGLAreaClass parent_class;
 } GthreeAreaClass;
