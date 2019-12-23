@@ -138,7 +138,7 @@ gthree_uniforms_merge (GthreeUniforms *uniforms,
 
 void
 gthree_uniforms_load (GthreeUniforms *uniforms,
-                     GthreeRenderer *renderer)
+                      GthreeRenderer *renderer)
 {
   GthreeUniformsPrivate *priv = gthree_uniforms_get_instance_private (uniforms);
   GHashTableIter iter;
@@ -834,7 +834,7 @@ gthree_uniform_load (GthreeUniform *uniform,
       if (uniform->value.texture)
         {
           int unit = gthree_renderer_allocate_texture_unit (renderer);
-          gthree_texture_load (uniform->value.texture, unit);
+          gthree_texture_load (uniform->value.texture, renderer, unit);
           glUniform1i(uniform->location, unit);
         }
 
@@ -861,7 +861,7 @@ gthree_uniform_load (GthreeUniform *uniform,
               if (texture)
                 {
                   units[i] = gthree_renderer_allocate_texture_unit (renderer);
-                  gthree_texture_load (texture, units[i]);
+                  gthree_texture_load (texture, renderer, units[i]);
                   glUniform1iv (uniform->location, len, units);
                 }
             }

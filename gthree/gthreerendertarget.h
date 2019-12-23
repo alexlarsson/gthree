@@ -70,11 +70,14 @@ GTHREE_API
 void           gthree_render_target_set_depth_texture (GthreeRenderTarget *target,
                                                        GthreeTexture *texture);
 GTHREE_API
-void           gthree_render_target_update_mipmap     (GthreeRenderTarget *target);
+void           gthree_render_target_update_mipmap     (GthreeRenderTarget *target,
+                                                       GthreeRenderer *renderer);
 void           gthree_render_target_download          (GthreeRenderTarget *target,
+                                                       GthreeRenderer *renderer,
                                                        guchar     *data,
                                                        gsize       stride);
 void           gthree_render_target_download_area     (GthreeRenderTarget *target,
+                                                       GthreeRenderer *renderer,
                                                        const cairo_rectangle_int_t *area,
                                                        guchar     *data,
                                                        gsize       stride);

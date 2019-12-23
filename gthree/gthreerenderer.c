@@ -771,7 +771,7 @@ gthree_renderer_set_render_target (GthreeRenderer *renderer,
   priv->current_render_target = render_target;
 
   if (render_target != NULL)
-    gthree_render_target_realize (render_target);
+    gthree_render_target_realize (render_target, renderer);
 
   framebuffer = priv->window_framebuffer;
   is_cube = FALSE;
@@ -2916,7 +2916,7 @@ gthree_renderer_render (GthreeRenderer *renderer,
   if (priv->current_render_target != NULL)
     {
       // Generate mipmap if we're using any kind of mipmap filtering
-      gthree_render_target_update_mipmap (priv->current_render_target);
+      gthree_render_target_update_mipmap (priv->current_render_target, renderer);
       // resolve multisample renderbuffers to a single-sample texture if necessary
       update_multisample_render_target (renderer, priv->current_render_target);
     }

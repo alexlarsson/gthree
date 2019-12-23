@@ -31,7 +31,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeTexture, g_object_unref)
 typedef struct {
   GthreeResourceClass parent_class;
 
-  void (*load) (GthreeTexture *texture, int slot);
+  void (*load) (GthreeTexture *texture, GthreeRenderer *renderer, int slot);
 
   gpointer padding[8];
 } GthreeTextureClass;

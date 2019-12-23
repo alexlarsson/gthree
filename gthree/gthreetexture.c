@@ -14,7 +14,9 @@ enum
 
 /*static guint texture_signals[LAST_SIGNAL] = { 0, };*/
 
-static void gthree_texture_real_load (GthreeTexture *texture, int slot);
+static void gthree_texture_real_load (GthreeTexture *texture,
+                                      GthreeRenderer *renderer,
+                                      int slot);
 static void gthree_texture_real_unrealize (GthreeResource *resource);
 
 typedef struct {
@@ -540,15 +542,13 @@ gthree_texture_real_unrealize (GthreeResource *resource)
 }
 
 void
-gthree_texture_realize (GthreeTexture *texture)
+gthree_texture_realize (GthreeTexture *texture, GthreeRenderer *renderer)
 {
   GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
 
   if (!priv->gl_texture)
     {
-      GthreeRenderer *current_renderer = gthree_renderer_get_current ();
-      g_assert (current_renderer != NULL);
-      gthree_resource_set_realized_for (GTHREE_RESOURCE (texture), current_renderer);
+      gthree_resource_set_realized_for (GTHREE_RESOURCE (texture), renderer);
 
       glGenTextures (1, &priv->gl_texture);
 #ifdef DEBUG_LABELS
@@ -559,11 +559,11 @@ gthree_texture_realize (GthreeTexture *texture)
 }
 
 void
-gthree_texture_bind (GthreeTexture *texture, int slot, int target)
+gthree_texture_bind (GthreeTexture *texture, GthreeRenderer *renderer, int slot, int target)
 {
   GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
 
-  gthree_texture_realize (texture);
+  gthree_texture_realize (texture, renderer);
 
   if (slot >= 0)
     glActiveTexture (GL_TEXTURE0 + slot);
@@ -660,11 +660,11 @@ gthree_texture_setup_framebuffer (GthreeTexture *texture,
 
 
 static void
-gthree_texture_real_load (GthreeTexture *texture, int slot)
+gthree_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer, int slot)
 {
   GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
 
-  gthree_texture_bind (texture, slot, GL_TEXTURE_2D);
+  gthree_texture_bind (texture, renderer, slot, GL_TEXTURE_2D);
 
   if (priv->needs_update && (priv->pixbuf || priv->surface))
     {
@@ -790,11 +790,11 @@ gthree_texture_real_load (GthreeTexture *texture, int slot)
 }
 
 void
-gthree_texture_load (GthreeTexture *texture, int slot)
+gthree_texture_load (GthreeTexture *texture, GthreeRenderer *renderer, int slot)
 {
   GthreeTextureClass *class = GTHREE_TEXTURE_GET_CLASS(texture);
 
-  class->load (texture, slot);
+  class->load (texture, renderer, slot);
 }
 
 void

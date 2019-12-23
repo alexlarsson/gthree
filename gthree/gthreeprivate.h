@@ -146,12 +146,15 @@ void gthree_texture_set_max_mip_level (GthreeTexture *texture,
                                        int level);
 int gthree_texture_get_max_mip_level (GthreeTexture *texture);
 void     gthree_texture_load             (GthreeTexture *texture,
+                                          GthreeRenderer *renderer,
                                           int            slot);
 gboolean gthree_texture_get_needs_update (GthreeTexture *texture);
 void     gthree_texture_set_needs_update (GthreeTexture *texture,
                                           gboolean       needs_update);
-void     gthree_texture_realize          (GthreeTexture *texture);
+void     gthree_texture_realize          (GthreeTexture *texture,
+                                          GthreeRenderer *renderer);
 void     gthree_texture_bind             (GthreeTexture *texture,
+                                          GthreeRenderer *renderer,
                                           int            slot,
                                           int            target);
 void     gthree_texture_set_parameters (guint texture_type,
@@ -159,7 +162,8 @@ void     gthree_texture_set_parameters (guint texture_type,
                                         gboolean is_image_power_of_two);
 
 guint gthree_render_target_get_gl_framebuffer (GthreeRenderTarget *target);
-void gthree_render_target_realize (GthreeRenderTarget *target);
+void gthree_render_target_realize (GthreeRenderTarget *target,
+                                   GthreeRenderer *renderer);
 const graphene_rect_t * gthree_render_target_get_viewport (GthreeRenderTarget *target);
 
 
