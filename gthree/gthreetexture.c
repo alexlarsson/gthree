@@ -17,7 +17,8 @@ enum
 static void gthree_texture_real_load (GthreeTexture *texture,
                                       GthreeRenderer *renderer,
                                       int slot);
-static void gthree_texture_real_unrealize (GthreeResource *resource);
+static void gthree_texture_real_unrealize (GthreeResource *resource,
+                                           GthreeRenderer *renderer);
 
 typedef struct {
   gboolean needs_update;
@@ -528,14 +529,15 @@ is_power_of_two (guint value)
 }
 
 static void
-gthree_texture_real_unrealize (GthreeResource *resource)
+gthree_texture_real_unrealize (GthreeResource *resource,
+                               GthreeRenderer *renderer)
 {
   GthreeTexture *texture = GTHREE_TEXTURE (resource);
   GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
 
   g_assert (priv->gl_texture != 0);
 
-  gthree_resource_lazy_delete (resource, GTHREE_RESOURCE_KIND_TEXTURE, priv->gl_texture);
+  gthree_resource_lazy_delete (resource, renderer, GTHREE_RESOURCE_KIND_TEXTURE, priv->gl_texture);
 
   priv->gl_texture = 0;
   priv->needs_update = TRUE;

@@ -114,7 +114,7 @@ gthree_resource_finalize (GObject *obj)
   GthreeResourcePrivate *priv = gthree_resource_get_instance_private (resource);
 
   if (priv->renderer != NULL)
-    gthree_resource_unrealize (resource);
+    gthree_resource_unrealize (resource, priv->renderer);
 
   g_assert (priv->renderer == NULL);
 
@@ -184,7 +184,7 @@ gthree_resources_unrealize_all_for (GthreeRenderer *renderer)
       /* Step to next before unrealizing and unlinking */
       node = node->next;
 
-      gthree_resource_unrealize (resource);
+      gthree_resource_unrealize (resource, renderer);
     }
 
   gthree_resources_flush_deletes (renderer);
@@ -231,7 +231,7 @@ gthree_resources_unrealize_unused_for (GthreeRenderer *renderer)
       node = node->next;
 
       if (!priv->used)
-        gthree_resource_unrealize (resource);
+        gthree_resource_unrealize (resource, renderer);
     }
 
   gthree_resources_flush_deletes (renderer);
@@ -256,14 +256,15 @@ gthree_resource_set_realized_for (GthreeResource *resource,
 }
 
 void
-gthree_resource_unrealize (GthreeResource *resource)
+gthree_resource_unrealize (GthreeResource *resource,
+                           GthreeRenderer *renderer)
 {
   GthreeResourcePrivate *priv = gthree_resource_get_instance_private (resource);
   GthreeResourceClass *class = GTHREE_RESOURCE_GET_CLASS(resource);
 
-  g_assert (priv->renderer != NULL);
+  g_assert (priv->renderer == renderer);
 
-  class->unrealize (resource);
+  class->unrealize (resource, renderer);
 
   list_node_unlink (&priv->resource_list);
 
@@ -332,16 +333,15 @@ renderer_get_lazy_deletes (GthreeRenderer  *renderer)
 
 void
 gthree_resource_lazy_delete (GthreeResource *resource,
+                             GthreeRenderer *renderer,
                              GthreeResourceKind kind,
                              guint             id)
 {
-  GthreeResourcePrivate *priv = gthree_resource_get_instance_private (resource);
-
-  if (gthree_renderer_get_current () == priv->renderer)
+  if (gthree_renderer_get_current () == renderer)
     do_delete (kind, id);
   else
     {
-      GArray *array = renderer_get_lazy_deletes (priv->renderer);
+      GArray *array = renderer_get_lazy_deletes (renderer);
       struct LazyDelete lazy = {kind, id};
       g_array_append_val (array, lazy);
     }

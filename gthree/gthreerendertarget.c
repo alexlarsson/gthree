@@ -95,20 +95,21 @@ gthree_render_target_set_used (GthreeResource *resource,
 }
 
 static void
-gthree_render_target_unrealize (GthreeResource *resource)
+gthree_render_target_unrealize (GthreeResource *resource,
+                                GthreeRenderer *renderer)
 {
   GthreeRenderTarget *target = GTHREE_RENDER_TARGET (resource);
   GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
 
   if (priv->gl_framebuffer)
     {
-      gthree_resource_lazy_delete (resource, GTHREE_RESOURCE_KIND_FRAMEBUFFER, priv->gl_framebuffer);
+      gthree_resource_lazy_delete (resource, renderer, GTHREE_RESOURCE_KIND_FRAMEBUFFER, priv->gl_framebuffer);
       priv->gl_framebuffer = 0;
     }
 
   if (priv->gl_depthbuffer)
     {
-      gthree_resource_lazy_delete (resource, GTHREE_RESOURCE_KIND_RENDERBUFFER, priv->gl_depthbuffer);
+      gthree_resource_lazy_delete (resource, renderer, GTHREE_RESOURCE_KIND_RENDERBUFFER, priv->gl_depthbuffer);
       priv->gl_depthbuffer = 0;
     }
 }

@@ -932,7 +932,8 @@ gthree_attribute_array_copy_uint16 (GthreeAttributeArray *array,
                                    n_items);
 }
 
-static void gthree_attribute_real_unrealize (GthreeResource *resource);
+static void gthree_attribute_real_unrealize (GthreeResource *resource,
+                                             GthreeRenderer *renderer);
 
 struct _GthreeAttribute {
   GthreeResource parent;
@@ -1225,14 +1226,15 @@ gthree_attribute_copy_at (GthreeAttribute      *attribute,
 }
 
 static void
-gthree_attribute_real_unrealize (GthreeResource *resource)
+gthree_attribute_real_unrealize (GthreeResource *resource,
+                                 GthreeRenderer *renderer)
 {
   GthreeAttribute *attribute = GTHREE_ATTRIBUTE (resource);
   GthreeAttributeArray *array = attribute->array;
 
   if (array->gl_buffer != 0)
     {
-      gthree_resource_lazy_delete (resource, GTHREE_RESOURCE_KIND_BUFFER, array->gl_buffer);
+      gthree_resource_lazy_delete (resource, renderer, GTHREE_RESOURCE_KIND_BUFFER, array->gl_buffer);
       array->gl_buffer = 0;
     }
 }

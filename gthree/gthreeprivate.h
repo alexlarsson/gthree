@@ -296,6 +296,7 @@ typedef enum {
 } GthreeResourceKind;
 
 void gthree_resource_lazy_delete (GthreeResource *resource,
+                                  GthreeRenderer *renderer,
                                   GthreeResourceKind kind,
                                   guint           id);
 

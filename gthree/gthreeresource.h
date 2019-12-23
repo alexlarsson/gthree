@@ -26,7 +26,8 @@ typedef struct {
 
   void (*set_used) (GthreeResource *resource,
                     gboolean        used);
-  void (*unrealize) (GthreeResource *resource);
+  void (*unrealize) (GthreeResource *resource,
+                     GthreeRenderer   *renderer);
 
   gpointer padding[8];
 } GthreeResourceClass;
@@ -49,7 +50,8 @@ void     gthree_resource_set_realized_for (GthreeResource  *resource,
 GTHREE_API
 gboolean gthree_resource_is_realized      (GthreeResource  *resource);
 GTHREE_API
-void     gthree_resource_unrealize        (GthreeResource  *resource);
+void     gthree_resource_unrealize        (GthreeResource  *resource,
+                                           GthreeRenderer   *renderer);
 GTHREE_API
 gboolean gthree_resource_get_used        (GthreeResource  *resource);
 GTHREE_API
