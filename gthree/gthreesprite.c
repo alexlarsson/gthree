@@ -101,14 +101,15 @@ gthree_sprite_finalize (GObject *obj)
 }
 
 static void
-gthree_sprite_update (GthreeObject *object)
+gthree_sprite_update (GthreeObject *object,
+                      GthreeRenderer *renderer)
 {
   GthreeSprite *sprite = GTHREE_SPRITE (object);
   GthreeSpritePrivate *priv = gthree_sprite_get_instance_private (sprite);
 
   //geometryGroup, customAttributesDirty, material;
 
-  gthree_geometry_update (priv->geometry);
+  gthree_geometry_update (priv->geometry, renderer);
 
   //material.attributes && clearCustomAttributes( material );
 }

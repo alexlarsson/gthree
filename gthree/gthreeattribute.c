@@ -1632,13 +1632,11 @@ gthree_attribute_get_point3d (GthreeAttribute      *attribute,
 
 
 void
-gthree_attribute_update (GthreeAttribute *attribute, gint buffer_type)
+gthree_attribute_update (GthreeAttribute *attribute, GthreeRenderer *renderer, gint buffer_type)
 {
   if (attribute->array->gl_buffer == 0)
     {
-      GthreeRenderer *current_renderer = gthree_renderer_get_current ();
-      g_assert (current_renderer != NULL);
-      gthree_resource_set_realized_for (GTHREE_RESOURCE (attribute), current_renderer);
+      gthree_resource_set_realized_for (GTHREE_RESOURCE (attribute), renderer);
 
       gthree_attribute_array_create_buffer (attribute->array, buffer_type);
     }

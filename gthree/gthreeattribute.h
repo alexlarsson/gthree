@@ -375,6 +375,7 @@ void                  gthree_attribute_copy_at            (GthreeAttribute      
                                                            guint                 n_items);
 GTHREE_API
 void                  gthree_attribute_update             (GthreeAttribute      *attribute,
+                                                           GthreeRenderer       *renderer,
                                                            int                   buffer_type);
 GTHREE_API
 guint8 *              gthree_attribute_peek_uint8         (GthreeAttribute      *attribute);

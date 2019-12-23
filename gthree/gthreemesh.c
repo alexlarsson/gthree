@@ -76,14 +76,15 @@ gthree_mesh_finalize (GObject *obj)
 }
 
 static void
-gthree_mesh_update (GthreeObject *object)
+gthree_mesh_update (GthreeObject *object,
+                    GthreeRenderer *renderer)
 {
   GthreeMesh *mesh = GTHREE_MESH (object);
   GthreeMeshPrivate *priv = gthree_mesh_get_instance_private (mesh);
 
   //geometryGroup, customAttributesDirty, material;
 
-  gthree_geometry_update (priv->geometry);
+  gthree_geometry_update (priv->geometry, renderer);
 
   //material.attributes && clearCustomAttributes( material );
 }

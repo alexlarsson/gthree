@@ -1084,12 +1084,13 @@ gthree_object_destroy_all_children (GthreeObject *object)
 }
 
 void
-gthree_object_update (GthreeObject *object)
+gthree_object_update (GthreeObject *object,
+                      GthreeRenderer *renderer)
 {
   GthreeObjectClass *class = GTHREE_OBJECT_GET_CLASS(object);
 
   if (class->update)
-    class->update (object);
+    class->update (object, renderer);
 }
 
 void

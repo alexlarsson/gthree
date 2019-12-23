@@ -168,7 +168,8 @@ const graphene_rect_t * gthree_render_target_get_viewport (GthreeRenderTarget *t
 
 
 GthreeGeometry *gthree_geometry_parse_json (JsonObject *object);
-void gthree_geometry_update           (GthreeGeometry   *geometry);
+void gthree_geometry_update           (GthreeGeometry   *geometry,
+                                       GthreeRenderer *renderer);
 void gthree_geometry_fill_render_list (GthreeGeometry   *geometry,
                                        GthreeRenderList *list,
                                        GthreeMaterial   *material,

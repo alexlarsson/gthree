@@ -1145,7 +1145,7 @@ project_object (GthreeRenderer *renderer,
 
           if (!gthree_object_get_is_frustum_culled (object) || gthree_object_is_in_frustum (object, &priv->frustum))
             {
-              gthree_object_update (object);
+              gthree_object_update (object, renderer);
 
               if (priv->sort_objects)
                 {
@@ -1660,7 +1660,7 @@ shadow_map_render_object (GthreeRenderer *renderer,
           gboolean uses_groups = FALSE;
 
           gthree_object_update_matrix_view (object, gthree_camera_get_world_inverse_matrix (shadow_camera));
-          gthree_object_update (object);
+          gthree_object_update (object, renderer);
 
           // TODO: Abstract this out into vfuncs
           if (GTHREE_IS_MESH (object))
@@ -2505,7 +2505,7 @@ render_item (GthreeRenderer *renderer,
   if (wireframe)
     {
       index = gthree_geometry_get_wireframe_index (geometry);
-      gthree_attribute_update (index, GL_ELEMENT_ARRAY_BUFFER);
+      gthree_attribute_update (index, renderer, GL_ELEMENT_ARRAY_BUFFER);
       range_factor = 2;
     }
 
@@ -2803,7 +2803,7 @@ gthree_renderer_render_background (GthreeRenderer *renderer,
 
   if (bg_mesh != NULL)
     {
-      gthree_object_update (GTHREE_OBJECT (bg_mesh));
+      gthree_object_update (GTHREE_OBJECT (bg_mesh), renderer);
 
       priv->current_render_list->use_background = TRUE;
       priv->current_render_list->current_z = 0;

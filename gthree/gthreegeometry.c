@@ -662,22 +662,23 @@ gthree_geometry_compute_vertex_normals (GthreeGeometry *geometry)
 }
 
 void
-gthree_geometry_update (GthreeGeometry *geometry)
+gthree_geometry_update (GthreeGeometry *geometry,
+                        GthreeRenderer *renderer)
 {
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
   GthreeAttribute *attribute;
   GHashTableIter iter;
 
   if (priv->index)
-    gthree_attribute_update (priv->index, GL_ELEMENT_ARRAY_BUFFER);
+    gthree_attribute_update (priv->index, renderer, GL_ELEMENT_ARRAY_BUFFER);
   if (priv->wireframe_index)
-    gthree_attribute_update (priv->wireframe_index, GL_ELEMENT_ARRAY_BUFFER);
+    gthree_attribute_update (priv->wireframe_index, renderer, GL_ELEMENT_ARRAY_BUFFER);
 
   g_hash_table_iter_init (&iter, priv->attributes);
   while (g_hash_table_iter_next (&iter, NULL, (gpointer *)&attribute))
     {
       // TODO: Only do this once per frame
-      gthree_attribute_update (attribute, GL_ARRAY_BUFFER);
+      gthree_attribute_update (attribute, renderer, GL_ARRAY_BUFFER);
     }
 
   if (priv->morph_attributes != NULL)
@@ -695,7 +696,7 @@ gthree_geometry_update (GthreeGeometry *geometry)
               GthreeAttribute *attribute = g_ptr_array_index (array, i);
 
               // TODO: Only do this once per frame
-              gthree_attribute_update (attribute, GL_ARRAY_BUFFER);
+              gthree_attribute_update (attribute, renderer, GL_ARRAY_BUFFER);
             }
         }
     }
