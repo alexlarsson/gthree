@@ -127,6 +127,7 @@ void gthree_render_list_push (GthreeRenderList *list,
                               GthreeGeometryGroup *group);
 void gthree_render_list_sort (GthreeRenderList *list);
 
+guint32 gthree_renderer_get_resource_id (GthreeRenderer *renderer);
 
 guint gthree_renderer_allocate_texture_unit (GthreeRenderer *renderer);
 

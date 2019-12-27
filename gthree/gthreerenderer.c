@@ -141,6 +141,9 @@ typedef struct {
   GthreeMesh *bg_plane_mesh;
   GthreeTexture *current_bg_texture;
 
+  /* Resources */
+  guint32 resource_id; /* Unique id for renderer, as small as possible to use as offset */
+
 } GthreeRendererPrivate;
 
 static void gthree_set_default_gl_state (GthreeRenderer *renderer);
@@ -164,6 +167,9 @@ static GQuark q_spotLights;
 static GQuark q_bindMatrix;
 static GQuark q_bindMatrixInverse;
 static GQuark q_boneMatrices;
+
+static GArray *free_resource_ids;
+static guint32 next_unused_resource_id = 0;
 
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeRenderer, gthree_renderer, G_TYPE_OBJECT);
 
@@ -254,6 +260,18 @@ gthree_renderer_init (GthreeRenderer *renderer)
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
   GLint fbo_id = 0;
 
+  if (free_resource_ids != NULL && free_resource_ids->len > 0)
+    {
+      priv->resource_id = g_array_index (free_resource_ids, guint32, 0);
+      g_array_remove_index (free_resource_ids, 0);
+    }
+  else
+    {
+      priv->resource_id = next_unused_resource_id++;
+    }
+
+  free_resource_ids = g_array_new (FALSE, FALSE, sizeof (guint32));
+
   gthree_renderer_push_current (renderer);
 
   glGetIntegerv(GL_FRAMEBUFFER_BINDING, &fbo_id);
@@ -335,6 +353,16 @@ gthree_renderer_finalize (GObject *obj)
 {
   GthreeRenderer *renderer = GTHREE_RENDERER (obj);
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  int i;
+
+  if (free_resource_ids == NULL)
+    free_resource_ids = g_array_new (FALSE, FALSE, sizeof (guint32));
+
+  for (i = 0;
+       i < free_resource_ids->len && priv->resource_id > g_array_index (free_resource_ids, guint32, i);
+       i++)
+    ;
+  g_array_insert_val (free_resource_ids,i,priv->resource_id);
 
   gthree_renderer_push_current (renderer);
 
@@ -413,6 +441,14 @@ gthree_renderer_class_init (GthreeRendererClass *klass)
   graphene_vec3_init (&cube_ups[4],  0,  0,  1);
   graphene_vec3_init (&cube_ups[5],  0,  0, -1);
 
+}
+
+guint32
+gthree_renderer_get_resource_id (GthreeRenderer *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  return priv->resource_id;
 }
 
 void
