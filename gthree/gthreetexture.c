@@ -21,8 +21,6 @@ static void gthree_texture_real_unrealize (GthreeResource *resource,
                                            GthreeRenderer *renderer);
 
 typedef struct {
-  gboolean needs_update;
-
   GdkPixbuf *pixbuf;
   cairo_surface_t *surface;
   char *name;
@@ -49,8 +47,13 @@ typedef struct {
   int unpack_alignment;
 
   guint max_mip_level;
-  guint gl_texture;
 } GthreeTexturePrivate;
+
+typedef struct {
+  GthreeResourceRealizeData parent;
+  guint gl_texture;
+} GthreeTextureRealizeData;
+
 
 enum {
   PROP_0,
@@ -101,8 +104,6 @@ gthree_texture_init (GthreeTexture *texture)
 
   priv->format = GTHREE_TEXTURE_FORMAT_RGBA;
   priv->type = GTHREE_DATA_TYPE_UNSIGNED_BYTE;
-
-  priv->needs_update = TRUE;
 
   graphene_vec2_init (&priv->offset, 0, 0);
   graphene_vec2_init (&priv->repeat, 1, 1);
@@ -230,6 +231,8 @@ gthree_texture_class_init (GthreeTextureClass *klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GthreeResourceClass *resource_class = GTHREE_RESOURCE_CLASS (klass);
 
+  resource_class->realize_data_size = sizeof (GthreeTextureRealizeData);
+
   gobject_class->set_property = gthree_texture_set_property;
   gobject_class->get_property = gthree_texture_get_property;
   gobject_class->finalize = gthree_texture_finalize;
@@ -266,21 +269,10 @@ gthree_texture_get_surface (GthreeTexture *texture)
   return priv->surface;
 }
 
-gboolean
-gthree_texture_get_needs_update (GthreeTexture *texture)
-{
-  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
-
-  return priv->needs_update;
-}
-
 void
-gthree_texture_set_needs_update (GthreeTexture *texture,
-                                 gboolean needs_update)
+gthree_texture_set_needs_update (GthreeTexture *texture)
 {
-  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
-
-  priv->needs_update = needs_update;
+  gthree_resource_mark_dirty (GTHREE_RESOURCE (texture));
 }
 
 void
@@ -532,30 +524,28 @@ static void
 gthree_texture_real_unrealize (GthreeResource *resource,
                                GthreeRenderer *renderer)
 {
-  GthreeTexture *texture = GTHREE_TEXTURE (resource);
-  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+  GthreeTextureRealizeData *data = gthree_resource_get_data_for (resource, renderer);
 
-  g_assert (priv->gl_texture != 0);
+  g_assert (data->gl_texture != 0);
 
-  gthree_renderer_lazy_delete (renderer, GTHREE_RESOURCE_KIND_TEXTURE, priv->gl_texture);
+  gthree_renderer_lazy_delete (renderer, GTHREE_RESOURCE_KIND_TEXTURE, data->gl_texture);
 
-  priv->gl_texture = 0;
-  priv->needs_update = TRUE;
+  data->gl_texture = 0;
 }
 
 void
 gthree_texture_realize (GthreeTexture *texture, GthreeRenderer *renderer)
 {
-  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+  GthreeTextureRealizeData *data = gthree_resource_get_data_for (GTHREE_RESOURCE (texture), renderer);
 
-  if (!priv->gl_texture)
+  if (!data->gl_texture)
     {
       gthree_resource_set_realized_for (GTHREE_RESOURCE (texture), renderer);
 
-      glGenTextures (1, &priv->gl_texture);
+      glGenTextures (1, &data->gl_texture);
 #ifdef DEBUG_LABELS
       if (priv->name)
-        glObjectLabel (GL_TEXTURE, priv->gl_texture, strlen (priv->name), priv->name);
+        glObjectLabel (GL_TEXTURE, data->gl_texture, strlen (priv->name), priv->name);
 #endif
     }
 }
@@ -563,13 +553,14 @@ gthree_texture_realize (GthreeTexture *texture, GthreeRenderer *renderer)
 void
 gthree_texture_bind (GthreeTexture *texture, GthreeRenderer *renderer, int slot, int target)
 {
-  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+  GthreeTextureRealizeData *data = gthree_resource_get_data_for (GTHREE_RESOURCE (texture), renderer);
 
-  gthree_texture_realize (texture, renderer);
+  if (!data->gl_texture)
+    gthree_texture_realize (texture, renderer);
 
   if (slot >= 0)
     glActiveTexture (GL_TEXTURE0 + slot);
-  glBindTexture (target, priv->gl_texture);
+  glBindTexture (target, data->gl_texture);
 }
 
 int
@@ -639,6 +630,7 @@ gthree_texture_get_internal_gl_format (guint gl_format,
 
 void
 gthree_texture_setup_framebuffer (GthreeTexture *texture,
+                                  GthreeRenderer *renderer,
                                   int width,
                                   int height,
                                   guint framebuffer,
@@ -647,6 +639,7 @@ gthree_texture_setup_framebuffer (GthreeTexture *texture,
 {
   GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
   guint gl_format, gl_type, gl_internal_format;
+  GthreeTextureRealizeData *data = gthree_resource_get_data_for (GTHREE_RESOURCE (texture), renderer);
 
   gl_format = gthree_texture_format_to_gl (priv->format);
   gl_type = gthree_texture_data_type_to_gl (priv->type);
@@ -656,7 +649,7 @@ gthree_texture_setup_framebuffer (GthreeTexture *texture,
                 width, height, 0, gl_format, gl_type, 0);
   glBindFramebuffer (GL_FRAMEBUFFER, framebuffer);
   glFramebufferTexture2D (GL_FRAMEBUFFER, attachment, texture_target,
-                          priv->gl_texture, 0);
+                          data->gl_texture, 0);
   glBindFramebuffer (GL_FRAMEBUFFER, 0);
 }
 
@@ -668,7 +661,7 @@ gthree_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer, int 
 
   gthree_texture_bind (texture, renderer, slot, GL_TEXTURE_2D);
 
-  if (priv->needs_update && (priv->pixbuf || priv->surface))
+  if (gthree_resource_get_dirty_for (GTHREE_RESOURCE (texture), renderer) && (priv->pixbuf || priv->surface))
     {
       guint width;
       guint height;
@@ -787,7 +780,7 @@ gthree_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer, int 
           gthree_texture_set_max_mip_level (texture, log2 (MAX (width, height)));
         }
 
-      priv->needs_update = FALSE;
+      gthree_resource_mark_clean_for (GTHREE_RESOURCE (texture), renderer);
     }
 }
 
@@ -921,9 +914,10 @@ gthree_texture_get_anisotropy (GthreeTexture *texture)
 }
 
 int
-gthree_texture_get_gl_texture (GthreeTexture *texture)
+gthree_texture_get_gl_texture (GthreeTexture *texture,
+                               GthreeRenderer *renderer)
 {
-  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+  GthreeTextureRealizeData *data = gthree_resource_get_data_for ((GthreeResource *)texture, renderer);
 
-  return priv->gl_texture;
+  return data->gl_texture;
 }

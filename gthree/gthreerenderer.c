@@ -143,7 +143,7 @@ typedef struct {
 
   /* Resources */
   guint32 resource_id; /* Unique id for renderer, as small as possible to use as offset */
-  GSList *realized_resources;
+  GPtrArray *realized_resources;
   GArray *lazy_deletes;
 
 } GthreeRendererPrivate;
@@ -274,6 +274,8 @@ gthree_renderer_init (GthreeRenderer *renderer)
 
   free_resource_ids = g_array_new (FALSE, FALSE, sizeof (guint32));
 
+  priv->realized_resources = g_ptr_array_new ();
+
   gthree_renderer_push_current (renderer);
 
   glGetIntegerv(GL_FRAMEBUFFER_BINDING, &fbo_id);
@@ -351,22 +353,27 @@ gthree_renderer_init (GthreeRenderer *renderer)
 }
 
 static void
-gthree_renderer_finalize (GObject *obj)
+release_resource_id (guint32 resource_id)
 {
-  GthreeRenderer *renderer = GTHREE_RENDERER (obj);
-  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
-  int i;
-
-  g_assert (priv->realized_resources == NULL);
+  int i = 0;
 
   if (free_resource_ids == NULL)
     free_resource_ids = g_array_new (FALSE, FALSE, sizeof (guint32));
 
-  for (i = 0;
-       i < free_resource_ids->len && priv->resource_id > g_array_index (free_resource_ids, guint32, i);
-       i++)
-    ;
-  g_array_insert_val (free_resource_ids,i,priv->resource_id);
+  while (i < free_resource_ids->len &&
+         resource_id > g_array_index (free_resource_ids, guint32, i))
+    i++;
+
+  g_array_insert_val (free_resource_ids, i, resource_id);
+}
+
+static void
+gthree_renderer_finalize (GObject *obj)
+{
+  GthreeRenderer *renderer = GTHREE_RENDERER (obj);
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  g_assert (priv->realized_resources->len == 0);
 
   /* TODO: Drop these, should not be needed, and if they are, move that to unrealize */
   gthree_renderer_push_current (renderer);
@@ -405,6 +412,9 @@ gthree_renderer_finalize (GObject *obj)
     g_array_unref (priv->lazy_deletes);
 
   gthree_renderer_pop_current (renderer);
+
+  release_resource_id (priv->resource_id);
+  g_ptr_array_unref (priv->realized_resources);
 
   G_OBJECT_CLASS (gthree_renderer_parent_class)->finalize (obj);
 }
@@ -465,9 +475,9 @@ gthree_renderer_mark_realized (GthreeRenderer *renderer,
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
 
-  /* TEST */ g_assert (g_slist_find (priv->realized_resources, resource) == NULL);
+  /* TEST */ g_assert (!g_ptr_array_find (priv->realized_resources, resource, NULL));
 
-  priv->realized_resources = g_slist_prepend (priv->realized_resources, resource);
+  g_ptr_array_add (priv->realized_resources, resource);
 }
 
 void
@@ -476,11 +486,10 @@ gthree_renderer_mark_unrealized (GthreeRenderer *renderer,
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
 
-  /* TEST */ g_assert (g_slist_find (priv->realized_resources, resource) != NULL);
+  if (!g_ptr_array_remove_fast (priv->realized_resources, resource))
+    g_warning ("Can't unrealize non-realized resource %p", resource);
 
-  priv->realized_resources = g_slist_remove (priv->realized_resources, resource);
-
-  /* TEST */ g_assert (g_slist_find (priv->realized_resources, resource) == NULL);
+  /* TEST */ g_assert (!g_ptr_array_find (priv->realized_resources, resource, NULL));
 }
 
 static void
@@ -555,12 +564,12 @@ gthree_renderer_unrealize (GthreeRenderer *renderer)
 
   gthree_renderer_push_current (renderer);
 
-  while (priv->realized_resources)
+  while (priv->realized_resources->len > 0)
     {
-      GthreeResource *resource = priv->realized_resources->data;
+      GthreeResource *resource = g_ptr_array_index (priv->realized_resources, 0);
       gthree_resource_unrealize (resource, renderer);
 
-      /* TEST */ g_assert (g_slist_find (priv->realized_resources, resource) == NULL);
+      /* TEST */ g_assert (!g_ptr_array_find (priv->realized_resources, resource, NULL));
     }
 
   gthree_renderer_flush_deletes (renderer);
@@ -574,11 +583,10 @@ void
 gthree_renderer_mark_resources_unused (GthreeRenderer *renderer)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
-  GSList *l;
 
-  for (l = priv->realized_resources; l != NULL; l = l->next)
+  for (int i = 0; i < priv->realized_resources->len; i++)
     {
-      GthreeResource *resource = l->data;
+      GthreeResource *resource = g_ptr_array_index (priv->realized_resources, i);
       gthree_resource_set_used (resource, FALSE);
     }
 }
@@ -587,16 +595,16 @@ void
 gthree_renderer_unrealize_unused (GthreeRenderer *renderer)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
-  GSList *l, *next;
+  g_autoptr(GPtrArray) copy = g_ptr_array_copy (priv->realized_resources, NULL, NULL);
 
   gthree_renderer_push_current (renderer);
 
-  for (l = priv->realized_resources; l != NULL; l = next)
+  for (int i = 0; i < copy->len; i++)
     {
-      GthreeResource *resource = l->data;
-      next = l->next;
+      GthreeResource *resource = g_ptr_array_index (copy, i);
 
-      if (!gthree_resource_get_used (resource))
+      /* Check is_realized, because a previous unrealize could have made more resources unrealized */
+      if (gthree_resource_is_realized_for (resource, renderer) && !gthree_resource_get_used (resource))
         gthree_resource_unrealize (resource, renderer);
     }
 
@@ -982,7 +990,7 @@ gthree_renderer_set_render_target (GthreeRenderer *renderer,
       else
 #endif
         {
-          framebuffer = gthree_render_target_get_gl_framebuffer (render_target);
+          framebuffer = gthree_render_target_get_gl_framebuffer (render_target, renderer);
         }
 
       graphene_rect_init_from_rect (&priv->current_viewport,
@@ -2482,7 +2490,7 @@ setup_vertex_attributes (GthreeRenderer *renderer,
               int offset = gthree_attribute_get_item_offset (geometry_attribute);
               int stride = gthree_attribute_get_stride (geometry_attribute);
 
-              int buffer = gthree_attribute_get_gl_buffer (geometry_attribute);
+              int buffer = gthree_attribute_get_gl_buffer (geometry_attribute, renderer);
               int type = gthree_attribute_get_gl_type (geometry_attribute);
               int bytes_per_element = gthree_attribute_get_gl_bytes_per_element (geometry_attribute);
 
@@ -2703,7 +2711,7 @@ render_item (GthreeRenderer *renderer,
     {
       setup_vertex_attributes (renderer, material, program, geometry);
       if (index != NULL)
-        glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, gthree_attribute_get_gl_buffer (index));
+        glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, gthree_attribute_get_gl_buffer (index, renderer));
     }
 
   data_count = -1;

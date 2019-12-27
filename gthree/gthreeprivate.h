@@ -132,6 +132,11 @@ void gthree_renderer_mark_realized (GthreeRenderer *renderer,
                                     GthreeResource *resource);
 void gthree_renderer_mark_unrealized (GthreeRenderer *renderer,
                                       GthreeResource *resource);
+void gthree_resource_mark_dirty (GthreeResource *resource);
+gboolean gthree_resource_get_dirty_for (GthreeResource  *resource,
+                                        GthreeRenderer   *renderer);
+void gthree_resource_mark_clean_for (GthreeResource *resource,
+                                     GthreeRenderer *renderer);
 
 guint gthree_renderer_allocate_texture_unit (GthreeRenderer *renderer);
 
@@ -141,6 +146,7 @@ int gthree_texture_format_to_gl (GthreeTextureFormat format);
 int gthree_texture_data_type_to_gl (GthreeDataType type);
 
 void gthree_texture_setup_framebuffer (GthreeTexture *texture,
+                                       GthreeRenderer *renderer,
                                        int width,
                                        int height,
                                        guint framebuffer,
@@ -153,9 +159,8 @@ int gthree_texture_get_max_mip_level (GthreeTexture *texture);
 void     gthree_texture_load             (GthreeTexture *texture,
                                           GthreeRenderer *renderer,
                                           int            slot);
-gboolean gthree_texture_get_needs_update (GthreeTexture *texture);
-void     gthree_texture_set_needs_update (GthreeTexture *texture,
-                                          gboolean       needs_update);
+gboolean gthree_texture_get_needs_update (GthreeTexture *texture,
+                                          GthreeRenderer *renderer);
 void     gthree_texture_realize          (GthreeTexture *texture,
                                           GthreeRenderer *renderer);
 void     gthree_texture_bind             (GthreeTexture *texture,
@@ -166,7 +171,8 @@ void     gthree_texture_set_parameters (guint texture_type,
                                         GthreeTexture *texture,
                                         gboolean is_image_power_of_two);
 
-guint gthree_render_target_get_gl_framebuffer (GthreeRenderTarget *target);
+guint gthree_render_target_get_gl_framebuffer (GthreeRenderTarget *target,
+                                               GthreeRenderer *renderer);
 void gthree_render_target_realize (GthreeRenderTarget *target,
                                    GthreeRenderer *renderer);
 const graphene_rect_t * gthree_render_target_get_viewport (GthreeRenderTarget *target);
@@ -217,7 +223,8 @@ GthreeAttribute *gthree_attribute_parse_json                 (JsonObject        
                                                               const char           *name);
 
 /* These are valid when realized */
-int gthree_attribute_get_gl_buffer            (GthreeAttribute *attribute);
+int gthree_attribute_get_gl_buffer            (GthreeAttribute *attribute,
+                                               GthreeRenderer *renderer);
 int gthree_attribute_get_gl_type              (GthreeAttribute *attribute);
 int gthree_attribute_get_gl_bytes_per_element (GthreeAttribute *attribute);
 

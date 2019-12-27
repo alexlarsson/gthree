@@ -75,7 +75,7 @@ gthree_cube_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer,
 
   gthree_texture_bind (texture, renderer, slot, GL_TEXTURE_CUBE_MAP);
 
-  if (gthree_texture_get_needs_update (texture))
+  if (gthree_resource_get_dirty_for (GTHREE_RESOURCE (texture), renderer))
     {
       guint width, height;
       gboolean is_compressed = FALSE; //texture instanceof THREE.CompressedTexture;
@@ -137,7 +137,7 @@ gthree_cube_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer,
           gthree_texture_set_max_mip_level (texture, log2 (MAX (width, height)));
         }
 
-      gthree_texture_set_needs_update (texture, FALSE);
+      gthree_resource_mark_clean_for (GTHREE_RESOURCE (texture), renderer);
     }
 }
 
