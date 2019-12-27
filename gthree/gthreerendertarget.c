@@ -103,13 +103,13 @@ gthree_render_target_unrealize (GthreeResource *resource,
 
   if (priv->gl_framebuffer)
     {
-      gthree_resource_lazy_delete (resource, renderer, GTHREE_RESOURCE_KIND_FRAMEBUFFER, priv->gl_framebuffer);
+      gthree_renderer_lazy_delete (renderer, GTHREE_RESOURCE_KIND_FRAMEBUFFER, priv->gl_framebuffer);
       priv->gl_framebuffer = 0;
     }
 
   if (priv->gl_depthbuffer)
     {
-      gthree_resource_lazy_delete (resource, renderer, GTHREE_RESOURCE_KIND_RENDERBUFFER, priv->gl_depthbuffer);
+      gthree_renderer_lazy_delete (renderer, GTHREE_RESOURCE_KIND_RENDERBUFFER, priv->gl_depthbuffer);
       priv->gl_depthbuffer = 0;
     }
 }

@@ -128,6 +128,10 @@ void gthree_render_list_push (GthreeRenderList *list,
 void gthree_render_list_sort (GthreeRenderList *list);
 
 guint32 gthree_renderer_get_resource_id (GthreeRenderer *renderer);
+void gthree_renderer_mark_realized (GthreeRenderer *renderer,
+                                    GthreeResource *resource);
+void gthree_renderer_mark_unrealized (GthreeRenderer *renderer,
+                                      GthreeResource *resource);
 
 guint gthree_renderer_allocate_texture_unit (GthreeRenderer *renderer);
 
@@ -296,10 +300,9 @@ typedef enum {
   GTHREE_RESOURCE_KIND_RENDERBUFFER,
 } GthreeResourceKind;
 
-void gthree_resource_lazy_delete (GthreeResource *resource,
-                                  GthreeRenderer *renderer,
+void gthree_renderer_lazy_delete (GthreeRenderer *renderer,
                                   GthreeResourceKind kind,
-                                  guint           id);
+                                  guint             id);
 
 GthreeGeometry *gthree_sprite_get_geometry (GthreeSprite *sprite);
 

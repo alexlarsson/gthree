@@ -537,7 +537,7 @@ gthree_texture_real_unrealize (GthreeResource *resource,
 
   g_assert (priv->gl_texture != 0);
 
-  gthree_resource_lazy_delete (resource, renderer, GTHREE_RESOURCE_KIND_TEXTURE, priv->gl_texture);
+  gthree_renderer_lazy_delete (renderer, GTHREE_RESOURCE_KIND_TEXTURE, priv->gl_texture);
 
   priv->gl_texture = 0;
   priv->needs_update = TRUE;

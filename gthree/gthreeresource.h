@@ -36,15 +36,6 @@ GTHREE_API
 GType gthree_resource_get_type (void) G_GNUC_CONST;
 
 GTHREE_API
-void gthree_resources_flush_deletes        (GthreeRenderer *renderer);
-GTHREE_API
-void gthree_resources_unrealize_all_for    (GthreeRenderer *renderer);
-GTHREE_API
-void gthree_resources_set_all_unused_for   (GthreeRenderer *renderer);
-GTHREE_API
-void gthree_resources_unrealize_unused_for (GthreeRenderer *renderer);
-
-GTHREE_API
 void     gthree_resource_set_realized_for (GthreeResource  *resource,
                                            GthreeRenderer   *renderer);
 GTHREE_API

@@ -143,6 +143,8 @@ typedef struct {
 
   /* Resources */
   guint32 resource_id; /* Unique id for renderer, as small as possible to use as offset */
+  GSList *realized_resources;
+  GArray *lazy_deletes;
 
 } GthreeRendererPrivate;
 
@@ -355,6 +357,8 @@ gthree_renderer_finalize (GObject *obj)
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
   int i;
 
+  g_assert (priv->realized_resources == NULL);
+
   if (free_resource_ids == NULL)
     free_resource_ids = g_array_new (FALSE, FALSE, sizeof (guint32));
 
@@ -364,6 +368,7 @@ gthree_renderer_finalize (GObject *obj)
     ;
   g_array_insert_val (free_resource_ids,i,priv->resource_id);
 
+  /* TODO: Drop these, should not be needed, and if they are, move that to unrealize */
   gthree_renderer_push_current (renderer);
 
   g_clear_object (&priv->current_render_target);
@@ -395,6 +400,9 @@ gthree_renderer_finalize (GObject *obj)
   g_clear_object (&priv->bg_box_mesh);
   g_clear_object (&priv->bg_plane_mesh);
   g_clear_object (&priv->current_bg_texture);
+
+  if (priv->lazy_deletes)
+    g_array_unref (priv->lazy_deletes);
 
   gthree_renderer_pop_current (renderer);
 
@@ -449,6 +457,152 @@ gthree_renderer_get_resource_id (GthreeRenderer *renderer)
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
 
   return priv->resource_id;
+}
+
+void
+gthree_renderer_mark_realized (GthreeRenderer *renderer,
+                               GthreeResource *resource)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  /* TEST */ g_assert (g_slist_find (priv->realized_resources, resource) == NULL);
+
+  priv->realized_resources = g_slist_prepend (priv->realized_resources, resource);
+}
+
+void
+gthree_renderer_mark_unrealized (GthreeRenderer *renderer,
+                               GthreeResource *resource)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  /* TEST */ g_assert (g_slist_find (priv->realized_resources, resource) != NULL);
+
+  priv->realized_resources = g_slist_remove (priv->realized_resources, resource);
+
+  /* TEST */ g_assert (g_slist_find (priv->realized_resources, resource) == NULL);
+}
+
+static void
+do_delete (GthreeResourceKind kind,
+           guint id)
+{
+  switch (kind)
+    {
+    case GTHREE_RESOURCE_KIND_TEXTURE:
+      glDeleteTextures (1, &id);
+      break;
+    case GTHREE_RESOURCE_KIND_BUFFER:
+      glDeleteBuffers (1, &id);
+      break;
+    case GTHREE_RESOURCE_KIND_FRAMEBUFFER:
+      glDeleteFramebuffers (1, &id);
+      break;
+    case GTHREE_RESOURCE_KIND_RENDERBUFFER:
+      glDeleteRenderbuffers (1, &id);
+      break;
+    }
+}
+
+struct LazyDelete {
+  GthreeResourceKind kind;
+  guint id;
+};
+
+void
+gthree_renderer_flush_deletes (GthreeRenderer *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  GArray *array = priv->lazy_deletes;
+  int i;
+
+  if (array == NULL)
+    return;
+
+  for (i = 0; i < array->len; i++)
+    {
+      struct LazyDelete *lazy = &g_array_index (array, struct LazyDelete, i);
+      do_delete (lazy->kind, lazy->id);
+    }
+
+  g_array_set_size (array, 0);
+}
+
+void
+gthree_renderer_lazy_delete (GthreeRenderer *renderer,
+                             GthreeResourceKind kind,
+                             guint             id)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  if (gthree_renderer_get_current () == renderer)
+    do_delete (kind, id);
+  else
+    {
+      struct LazyDelete lazy = {kind, id};
+
+      if (priv->lazy_deletes == NULL)
+        priv->lazy_deletes = g_array_new (FALSE, FALSE, sizeof (struct LazyDelete));
+
+      g_array_append_val (priv->lazy_deletes, lazy);
+    }
+}
+
+void
+gthree_renderer_unrealize (GthreeRenderer *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  gthree_renderer_push_current (renderer);
+
+  while (priv->realized_resources)
+    {
+      GthreeResource *resource = priv->realized_resources->data;
+      gthree_resource_unrealize (resource, renderer);
+
+      /* TEST */ g_assert (g_slist_find (priv->realized_resources, resource) == NULL);
+    }
+
+  gthree_renderer_flush_deletes (renderer);
+
+  /* TODO: Move pure render unrealize here from finalize */
+
+  gthree_renderer_pop_current (renderer);
+}
+
+void
+gthree_renderer_mark_resources_unused (GthreeRenderer *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  GSList *l;
+
+  for (l = priv->realized_resources; l != NULL; l = l->next)
+    {
+      GthreeResource *resource = l->data;
+      gthree_resource_set_used (resource, FALSE);
+    }
+}
+
+void
+gthree_renderer_unrealize_unused (GthreeRenderer *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  GSList *l, *next;
+
+  gthree_renderer_push_current (renderer);
+
+  for (l = priv->realized_resources; l != NULL; l = next)
+    {
+      GthreeResource *resource = l->data;
+      next = l->next;
+
+      if (!gthree_resource_get_used (resource))
+        gthree_resource_unrealize (resource, renderer);
+    }
+
+  gthree_renderer_flush_deletes (renderer);
+
+  gthree_renderer_pop_current (renderer);
 }
 
 void
@@ -2892,7 +3046,7 @@ gthree_renderer_render (GthreeRenderer *renderer,
   priv->clipping_enabled = clipping_init (renderer, camera);
 
   /* Flush lazily deleted resources to avoid leaking until widget unrealize */
-  gthree_resources_flush_deletes (renderer);
+  gthree_renderer_flush_deletes (renderer);
 
   gthree_render_list_init (priv->current_render_list);
 

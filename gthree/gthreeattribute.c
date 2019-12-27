@@ -1234,7 +1234,7 @@ gthree_attribute_real_unrealize (GthreeResource *resource,
 
   if (array->gl_buffer != 0)
     {
-      gthree_resource_lazy_delete (resource, renderer, GTHREE_RESOURCE_KIND_BUFFER, array->gl_buffer);
+      gthree_renderer_lazy_delete (renderer, GTHREE_RESOURCE_KIND_BUFFER, array->gl_buffer);
       array->gl_buffer = 0;
     }
 }
