@@ -23,7 +23,7 @@ typedef struct {
   gboolean vertex_colors;
 
   GthreeShader *shader;
-  gboolean needs_update;
+  guint32 valid_for_renderer_id;
 
   /* modified by the renderer to track state */
   GthreeMaterialProperties properties;
@@ -76,8 +76,6 @@ static void
 gthree_material_init (GthreeMaterial *material)
 {
   GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
-
-  priv->needs_update = TRUE;
 
   priv->visible = TRUE;
   priv->transparent = FALSE;
@@ -317,7 +315,7 @@ gthree_material_set_is_visible (GthreeMaterial *material,
 
   priv->visible = !!visible;
 
-  priv->needs_update = TRUE;
+  priv->valid_for_renderer_id = 0;
 }
 
 float
@@ -335,7 +333,7 @@ gthree_material_set_opacity (GthreeMaterial *material,
   GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
 
   priv->opacity = opacity;
-  priv->needs_update = TRUE;
+  gthree_material_set_needs_update (material);
 }
 
 float
@@ -353,7 +351,7 @@ gthree_material_set_alpha_test (GthreeMaterial *material,
   GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
 
   priv->alpha_test = alpha_test;
-  priv->needs_update = TRUE;
+  gthree_material_set_needs_update (material);
 }
 
 gboolean
@@ -372,7 +370,7 @@ gthree_material_set_is_transparent (GthreeMaterial *material,
 
   priv->transparent = !!transparent;
 
-  priv->needs_update = TRUE;
+  gthree_material_set_needs_update (material);
 }
 
 GthreeBlendMode
@@ -394,11 +392,12 @@ gthree_material_get_blend_mode (GthreeMaterial *material,
 }
 
 gboolean
-gthree_material_get_needs_update (GthreeMaterial *material)
+gthree_material_is_valid_for (GthreeMaterial *material,
+                              guint32         renderer_id)
 {
   GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
 
-  return priv->needs_update;
+  return priv->valid_for_renderer_id == renderer_id;
 }
 
 void
@@ -406,15 +405,16 @@ gthree_material_set_needs_update (GthreeMaterial *material)
 {
   GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
 
-  priv->needs_update = TRUE;
+  priv->valid_for_renderer_id = 0;
 }
 
 void
-gthree_material_mark_clean (GthreeMaterial *material)
+gthree_material_mark_valid_for   (GthreeMaterial *material,
+                                  guint32         renderer_id)
 {
   GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
 
-  priv->needs_update = FALSE;
+  priv->valid_for_renderer_id = renderer_id;
 }
 
 void
@@ -431,7 +431,7 @@ gthree_material_set_blend_mode (GthreeMaterial       *material,
   priv->blend_src_factor = src_factor;
   priv->blend_dst_factor = dst_factor;
 
-  priv->needs_update = TRUE;
+  gthree_material_set_needs_update (material);
 }
 
 
@@ -462,7 +462,7 @@ gthree_material_set_polygon_offset (GthreeMaterial       *material,
   priv->polygon_offset_factor = factor;
   priv->polygon_offset_units = units;
 
-  priv->needs_update = TRUE;
+  gthree_material_set_needs_update (material);
 }
 
 gboolean
@@ -481,7 +481,7 @@ gthree_material_set_depth_test (GthreeMaterial       *material,
 
   priv->depth_test = depth_test;
 
-  priv->needs_update = TRUE;
+  gthree_material_set_needs_update (material);
 }
 
 gboolean
@@ -500,7 +500,7 @@ gthree_material_set_depth_write (GthreeMaterial       *material,
 
   priv->depth_write = depth_write;
 
-  priv->needs_update = TRUE;
+  gthree_material_set_needs_update (material);
 }
 
 
@@ -520,7 +520,7 @@ gthree_material_set_side (GthreeMaterial *material,
 
   priv->side = side;
 
-  priv->needs_update = TRUE;
+  gthree_material_set_needs_update (material);
 }
 
 void

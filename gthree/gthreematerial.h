@@ -133,8 +133,6 @@ void              gthree_material_load_default_attribute   (GthreeMaterial      
                                                             int                      attribute_location,
                                                             GQuark                   attribute);
 GTHREE_API
-gboolean          gthree_material_get_needs_update         (GthreeMaterial          *material);
-GTHREE_API
 void              gthree_material_set_needs_update         (GthreeMaterial          *material);
 GTHREE_API
 gboolean          gthree_material_needs_camera_pos         (GthreeMaterial          *material);

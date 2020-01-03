@@ -213,9 +213,11 @@ GthreeSpotLightShadow *gthree_spot_light_shadow_new (void);
 void gthree_spot_light_shadow_update (GthreeSpotLightShadow *shadow,
                                       GthreeSpotLight *light);
 
-GthreeMaterialProperties *gthree_material_get_properties (GthreeMaterial  *material);
-void gthree_material_mark_clean (GthreeMaterial *material);
-
+GthreeMaterialProperties *gthree_material_get_properties   (GthreeMaterial *material);
+void                      gthree_material_mark_valid_for   (GthreeMaterial *material,
+                                                            guint32         renderer_id);
+gboolean                  gthree_material_is_valid_for     (GthreeMaterial *material,
+                                                            guint32         renderer_id);
 
 graphene_matrix_t *gthree_camera_get_projection_matrix_for_write (GthreeCamera *camera);
 

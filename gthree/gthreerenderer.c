@@ -142,7 +142,8 @@ typedef struct {
   GthreeTexture *current_bg_texture;
 
   /* Resources */
-  guint32 resource_id; /* Unique id for renderer, as small as possible to use as offset */
+  guint32 renderer_id; /* Globally unique id for renderer even after lifetime */
+  guint32 resource_id; /* Unique id for alive renderer, as small as possible to use as offset */
   GPtrArray *realized_resources;
   GArray *lazy_deletes;
 
@@ -172,6 +173,7 @@ static GQuark q_boneMatrices;
 
 static GArray *free_resource_ids;
 static guint32 next_unused_resource_id = 0;
+static guint32 next_renderer_id = 0;
 
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeRenderer, gthree_renderer, G_TYPE_OBJECT);
 
@@ -261,6 +263,8 @@ gthree_renderer_init (GthreeRenderer *renderer)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
   GLint fbo_id = 0;
+
+  priv->renderer_id = ++next_renderer_id;
 
   if (free_resource_ids != NULL && free_resource_ids->len > 0)
     {
@@ -2194,11 +2198,11 @@ set_program (GthreeRenderer *renderer,
      object) changed since we last initialized the material, even if
      the material itself didn't change */
   priv->light_setup.hash.obj_receive_shadow = gthree_object_get_receive_shadow (object) && priv->shadowmap_enabled;
-  if (gthree_material_get_needs_update (material) ||
+  if (!gthree_material_is_valid_for (material, priv->renderer_id) ||
       !gthree_light_setup_hash_equal (&material_properties->light_hash, &priv->light_setup.hash))
     {
       init_material (renderer, material, fog, object);
-      gthree_material_mark_clean (material);
+      gthree_material_mark_valid_for (material, priv->renderer_id);
     }
 
   program = material_properties->program;
