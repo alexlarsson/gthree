@@ -84,5 +84,5 @@ gthree_mesh_normal_material_set_shading_type (GthreeMeshNormalMaterial *normal,
 
   priv->shading_type = shading_type;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (normal), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (normal));
 }

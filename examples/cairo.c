@@ -89,7 +89,7 @@ tick (GtkWidget     *widget,
 
   cairo_destroy (cr);
 
-  gthree_texture_set_needs_update (texture, TRUE);
+  gthree_texture_set_needs_update (texture);
 
   gtk_widget_queue_draw (widget);
 

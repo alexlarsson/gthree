@@ -67,14 +67,15 @@ gthree_points_finalize (GObject *obj)
 }
 
 static void
-gthree_points_update (GthreeObject *object)
+gthree_points_update (GthreeObject *object,
+                      GthreeRenderer *renderer)
 {
   GthreePoints *points = GTHREE_POINTS (object);
   GthreePointsPrivate *priv = gthree_points_get_instance_private (points);
 
   //geometryGroup, customAttributesDirty, material;
 
-  gthree_geometry_update (priv->geometry);
+  gthree_geometry_update (priv->geometry, renderer);
 
   //material.attributes && clearCustomAttributes( material );
 }

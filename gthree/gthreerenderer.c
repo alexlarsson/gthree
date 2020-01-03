@@ -141,6 +141,12 @@ typedef struct {
   GthreeMesh *bg_plane_mesh;
   GthreeTexture *current_bg_texture;
 
+  /* Resources */
+  guint32 renderer_id; /* Globally unique id for renderer even after lifetime */
+  guint32 resource_id; /* Unique id for alive renderer, as small as possible to use as offset */
+  GPtrArray *realized_resources;
+  GArray *lazy_deletes;
+
 } GthreeRendererPrivate;
 
 static void gthree_set_default_gl_state (GthreeRenderer *renderer);
@@ -164,6 +170,10 @@ static GQuark q_spotLights;
 static GQuark q_bindMatrix;
 static GQuark q_bindMatrixInverse;
 static GQuark q_boneMatrices;
+
+static GArray *free_resource_ids;
+static guint32 next_unused_resource_id = 0;
+static guint32 next_renderer_id = 0;
 
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeRenderer, gthree_renderer, G_TYPE_OBJECT);
 
@@ -254,6 +264,22 @@ gthree_renderer_init (GthreeRenderer *renderer)
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
   GLint fbo_id = 0;
 
+  priv->renderer_id = ++next_renderer_id;
+
+  if (free_resource_ids != NULL && free_resource_ids->len > 0)
+    {
+      priv->resource_id = g_array_index (free_resource_ids, guint32, 0);
+      g_array_remove_index (free_resource_ids, 0);
+    }
+  else
+    {
+      priv->resource_id = next_unused_resource_id++;
+    }
+
+  free_resource_ids = g_array_new (FALSE, FALSE, sizeof (guint32));
+
+  priv->realized_resources = g_ptr_array_new ();
+
   gthree_renderer_push_current (renderer);
 
   glGetIntegerv(GL_FRAMEBUFFER_BINDING, &fbo_id);
@@ -331,11 +357,29 @@ gthree_renderer_init (GthreeRenderer *renderer)
 }
 
 static void
+release_resource_id (guint32 resource_id)
+{
+  int i = 0;
+
+  if (free_resource_ids == NULL)
+    free_resource_ids = g_array_new (FALSE, FALSE, sizeof (guint32));
+
+  while (i < free_resource_ids->len &&
+         resource_id > g_array_index (free_resource_ids, guint32, i))
+    i++;
+
+  g_array_insert_val (free_resource_ids, i, resource_id);
+}
+
+static void
 gthree_renderer_finalize (GObject *obj)
 {
   GthreeRenderer *renderer = GTHREE_RENDERER (obj);
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
 
+  g_assert (priv->realized_resources->len == 0);
+
+  /* TODO: Drop these, should not be needed, and if they are, move that to unrealize */
   gthree_renderer_push_current (renderer);
 
   g_clear_object (&priv->current_render_target);
@@ -368,7 +412,13 @@ gthree_renderer_finalize (GObject *obj)
   g_clear_object (&priv->bg_plane_mesh);
   g_clear_object (&priv->current_bg_texture);
 
+  if (priv->lazy_deletes)
+    g_array_unref (priv->lazy_deletes);
+
   gthree_renderer_pop_current (renderer);
+
+  release_resource_id (priv->resource_id);
+  g_ptr_array_unref (priv->realized_resources);
 
   G_OBJECT_CLASS (gthree_renderer_parent_class)->finalize (obj);
 }
@@ -413,6 +463,158 @@ gthree_renderer_class_init (GthreeRendererClass *klass)
   graphene_vec3_init (&cube_ups[4],  0,  0,  1);
   graphene_vec3_init (&cube_ups[5],  0,  0, -1);
 
+}
+
+guint32
+gthree_renderer_get_resource_id (GthreeRenderer *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  return priv->resource_id;
+}
+
+void
+gthree_renderer_mark_realized (GthreeRenderer *renderer,
+                               GthreeResource *resource)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  /* TEST */ g_assert (!g_ptr_array_find (priv->realized_resources, resource, NULL));
+
+  g_ptr_array_add (priv->realized_resources, resource);
+}
+
+void
+gthree_renderer_mark_unrealized (GthreeRenderer *renderer,
+                               GthreeResource *resource)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  if (!g_ptr_array_remove_fast (priv->realized_resources, resource))
+    g_warning ("Can't unrealize non-realized resource %p", resource);
+
+  /* TEST */ g_assert (!g_ptr_array_find (priv->realized_resources, resource, NULL));
+}
+
+static void
+do_delete (GthreeResourceKind kind,
+           guint id)
+{
+  switch (kind)
+    {
+    case GTHREE_RESOURCE_KIND_TEXTURE:
+      glDeleteTextures (1, &id);
+      break;
+    case GTHREE_RESOURCE_KIND_BUFFER:
+      glDeleteBuffers (1, &id);
+      break;
+    case GTHREE_RESOURCE_KIND_FRAMEBUFFER:
+      glDeleteFramebuffers (1, &id);
+      break;
+    case GTHREE_RESOURCE_KIND_RENDERBUFFER:
+      glDeleteRenderbuffers (1, &id);
+      break;
+    }
+}
+
+struct LazyDelete {
+  GthreeResourceKind kind;
+  guint id;
+};
+
+void
+gthree_renderer_flush_deletes (GthreeRenderer *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  GArray *array = priv->lazy_deletes;
+  int i;
+
+  if (array == NULL)
+    return;
+
+  for (i = 0; i < array->len; i++)
+    {
+      struct LazyDelete *lazy = &g_array_index (array, struct LazyDelete, i);
+      do_delete (lazy->kind, lazy->id);
+    }
+
+  g_array_set_size (array, 0);
+}
+
+void
+gthree_renderer_lazy_delete (GthreeRenderer *renderer,
+                             GthreeResourceKind kind,
+                             guint             id)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  if (gthree_renderer_get_current () == renderer)
+    do_delete (kind, id);
+  else
+    {
+      struct LazyDelete lazy = {kind, id};
+
+      if (priv->lazy_deletes == NULL)
+        priv->lazy_deletes = g_array_new (FALSE, FALSE, sizeof (struct LazyDelete));
+
+      g_array_append_val (priv->lazy_deletes, lazy);
+    }
+}
+
+void
+gthree_renderer_unrealize (GthreeRenderer *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  gthree_renderer_push_current (renderer);
+
+  while (priv->realized_resources->len > 0)
+    {
+      GthreeResource *resource = g_ptr_array_index (priv->realized_resources, 0);
+      gthree_resource_unrealize (resource, renderer);
+
+      /* TEST */ g_assert (!g_ptr_array_find (priv->realized_resources, resource, NULL));
+    }
+
+  gthree_renderer_flush_deletes (renderer);
+
+  /* TODO: Move pure render unrealize here from finalize */
+
+  gthree_renderer_pop_current (renderer);
+}
+
+void
+gthree_renderer_mark_resources_unused (GthreeRenderer *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  for (int i = 0; i < priv->realized_resources->len; i++)
+    {
+      GthreeResource *resource = g_ptr_array_index (priv->realized_resources, i);
+      gthree_resource_set_used (resource, FALSE);
+    }
+}
+
+void
+gthree_renderer_unrealize_unused (GthreeRenderer *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  g_autoptr(GPtrArray) copy = g_ptr_array_copy (priv->realized_resources, NULL, NULL);
+
+  gthree_renderer_push_current (renderer);
+
+  for (int i = 0; i < copy->len; i++)
+    {
+      GthreeResource *resource = g_ptr_array_index (copy, i);
+
+      /* Check is_realized, because a previous unrealize could have made more resources unrealized */
+      if (gthree_resource_is_realized_for (resource, renderer) && !gthree_resource_get_used (resource))
+        gthree_resource_unrealize (resource, renderer);
+    }
+
+  gthree_renderer_flush_deletes (renderer);
+
+  gthree_renderer_pop_current (renderer);
 }
 
 void
@@ -771,7 +973,7 @@ gthree_renderer_set_render_target (GthreeRenderer *renderer,
   priv->current_render_target = render_target;
 
   if (render_target != NULL)
-    gthree_render_target_realize (render_target);
+    gthree_render_target_realize (render_target, renderer);
 
   framebuffer = priv->window_framebuffer;
   is_cube = FALSE;
@@ -792,7 +994,7 @@ gthree_renderer_set_render_target (GthreeRenderer *renderer,
       else
 #endif
         {
-          framebuffer = gthree_render_target_get_gl_framebuffer (render_target);
+          framebuffer = gthree_render_target_get_gl_framebuffer (render_target, renderer);
         }
 
       graphene_rect_init_from_rect (&priv->current_viewport,
@@ -1145,7 +1347,7 @@ project_object (GthreeRenderer *renderer,
 
           if (!gthree_object_get_is_frustum_culled (object) || gthree_object_is_in_frustum (object, &priv->frustum))
             {
-              gthree_object_update (object);
+              gthree_object_update (object, renderer);
 
               if (priv->sort_objects)
                 {
@@ -1264,7 +1466,8 @@ init_material (GthreeRenderer *renderer,
 #endif
 
   program = gthree_program_cache_get (priv->program_cache, shader, &parameters, renderer);
-  g_clear_object (&material_properties->program);
+  /* This is owned by the cache, so it will live as long as the renderer (as it owns the cache and it never frees) */
+  /* This isn't a ref to avoid leaking the program until something else uses the material */
   material_properties->program = program;
 
   // TODO: thee.js uses the lightstate current_hash and other stuff to avoid some stuff here?
@@ -1660,7 +1863,7 @@ shadow_map_render_object (GthreeRenderer *renderer,
           gboolean uses_groups = FALSE;
 
           gthree_object_update_matrix_view (object, gthree_camera_get_world_inverse_matrix (shadow_camera));
-          gthree_object_update (object);
+          gthree_object_update (object, renderer);
 
           // TODO: Abstract this out into vfuncs
           if (GTHREE_IS_MESH (object))
@@ -1996,16 +2199,11 @@ set_program (GthreeRenderer *renderer,
      object) changed since we last initialized the material, even if
      the material itself didn't change */
   priv->light_setup.hash.obj_receive_shadow = gthree_object_get_receive_shadow (object) && priv->shadowmap_enabled;
-  if (!gthree_material_get_needs_update (material))
-    {
-      if (!gthree_light_setup_hash_equal (&material_properties->light_hash, &priv->light_setup.hash))
-        gthree_material_set_needs_update (material, TRUE);
-    }
-
-  if (gthree_material_get_needs_update (material))
+  if (!gthree_material_is_valid_for (material, priv->renderer_id) ||
+      !gthree_light_setup_hash_equal (&material_properties->light_hash, &priv->light_setup.hash))
     {
       init_material (renderer, material, fog, object);
-      gthree_material_set_needs_update (material, FALSE);
+      gthree_material_mark_valid_for (material, priv->renderer_id);
     }
 
   program = material_properties->program;
@@ -2292,7 +2490,7 @@ setup_vertex_attributes (GthreeRenderer *renderer,
               int offset = gthree_attribute_get_item_offset (geometry_attribute);
               int stride = gthree_attribute_get_stride (geometry_attribute);
 
-              int buffer = gthree_attribute_get_gl_buffer (geometry_attribute);
+              int buffer = gthree_attribute_get_gl_buffer (geometry_attribute, renderer);
               int type = gthree_attribute_get_gl_type (geometry_attribute);
               int bytes_per_element = gthree_attribute_get_gl_bytes_per_element (geometry_attribute);
 
@@ -2505,7 +2703,7 @@ render_item (GthreeRenderer *renderer,
   if (wireframe)
     {
       index = gthree_geometry_get_wireframe_index (geometry);
-      gthree_attribute_update (index, GL_ELEMENT_ARRAY_BUFFER);
+      gthree_attribute_update (index, renderer, GL_ELEMENT_ARRAY_BUFFER);
       range_factor = 2;
     }
 
@@ -2513,7 +2711,7 @@ render_item (GthreeRenderer *renderer,
     {
       setup_vertex_attributes (renderer, material, program, geometry);
       if (index != NULL)
-        glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, gthree_attribute_get_gl_buffer (index));
+        glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, gthree_attribute_get_gl_buffer (index, renderer));
     }
 
   data_count = -1;
@@ -2751,7 +2949,7 @@ gthree_renderer_render_background (GthreeRenderer *renderer,
           g_clear_object (&priv->current_bg_texture);
           priv->current_bg_texture = g_object_ref (bg_texture);
 
-          gthree_material_set_needs_update (material, TRUE);
+          gthree_material_set_needs_update (material);
         }
 
       bg_mesh = priv->bg_box_mesh;
@@ -2795,7 +2993,7 @@ gthree_renderer_render_background (GthreeRenderer *renderer,
 
           /* TODO: Handle uvTransform for texture */
 
-          gthree_material_set_needs_update (material, TRUE);
+          gthree_material_set_needs_update (material);
         }
 
       bg_mesh = priv->bg_plane_mesh;
@@ -2803,7 +3001,7 @@ gthree_renderer_render_background (GthreeRenderer *renderer,
 
   if (bg_mesh != NULL)
     {
-      gthree_object_update (GTHREE_OBJECT (bg_mesh));
+      gthree_object_update (GTHREE_OBJECT (bg_mesh), renderer);
 
       priv->current_render_list->use_background = TRUE;
       priv->current_render_list->current_z = 0;
@@ -2856,7 +3054,7 @@ gthree_renderer_render (GthreeRenderer *renderer,
   priv->clipping_enabled = clipping_init (renderer, camera);
 
   /* Flush lazily deleted resources to avoid leaking until widget unrealize */
-  gthree_resources_flush_deletes (renderer);
+  gthree_renderer_flush_deletes (renderer);
 
   gthree_render_list_init (priv->current_render_list);
 
@@ -2916,7 +3114,7 @@ gthree_renderer_render (GthreeRenderer *renderer,
   if (priv->current_render_target != NULL)
     {
       // Generate mipmap if we're using any kind of mipmap filtering
-      gthree_render_target_update_mipmap (priv->current_render_target);
+      gthree_render_target_update_mipmap (priv->current_render_target, renderer);
       // resolve multisample renderbuffers to a single-sample texture if necessary
       update_multisample_render_target (renderer, priv->current_render_target);
     }

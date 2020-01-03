@@ -53,14 +53,15 @@ gthree_line_segments_finalize (GObject *obj)
 }
 
 static void
-gthree_line_segments_update (GthreeObject *object)
+gthree_line_segments_update (GthreeObject *object,
+                             GthreeRenderer *renderer)
 {
   GthreeLineSegments *line_segments = GTHREE_LINE_SEGMENTS (object);
   GthreeLineSegmentsPrivate *priv = gthree_line_segments_get_instance_private (line_segments);
 
   //geometryGroup, customAttributesDirty, material;
 
-  gthree_geometry_update (priv->geometry);
+  gthree_geometry_update (priv->geometry, renderer);
 
   //material.attributes && clearCustomAttributes( material );
 }

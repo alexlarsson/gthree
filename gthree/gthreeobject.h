@@ -37,7 +37,8 @@ typedef struct {
   void (* parent_set)           (GthreeObject          *object,
                                  GthreeObject          *old_parent);
 
-  void (* update)               (GthreeObject          *object);
+  void (* update)               (GthreeObject          *object,
+                                 GthreeRenderer        *renderer);
   void (* destroy)              (GthreeObject          *object);
   gboolean (* update_matrix_world) (GthreeObject          *object,
                                     gboolean               force);
@@ -213,7 +214,8 @@ GTHREE_API
 void                         gthree_object_remove_child                 (GthreeObject                *object,
                                                                          GthreeObject                *child);
 GTHREE_API
-void                         gthree_object_update                       (GthreeObject                *object);
+void                         gthree_object_update                       (GthreeObject                *object,
+                                                                         GthreeRenderer              *renderer);
 GTHREE_API
 void                         gthree_object_destroy                      (GthreeObject                *object);
 GTHREE_API

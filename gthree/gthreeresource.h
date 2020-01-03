@@ -24,32 +24,36 @@ struct _GthreeResource {
 typedef struct {
   GObjectClass parent_class;
 
+  guint32 realize_data_size;
+
   void (*set_used) (GthreeResource *resource,
                     gboolean        used);
-  void (*unrealize) (GthreeResource *resource);
+  void (*unrealize) (GthreeResource *resource,
+                     GthreeRenderer   *renderer);
 
   gpointer padding[8];
 } GthreeResourceClass;
+
+typedef struct {
+  GthreeRenderer *realized_for;
+  gboolean dirty;
+} GthreeResourceRealizeData;
 
 GTHREE_API
 GType gthree_resource_get_type (void) G_GNUC_CONST;
 
 GTHREE_API
-void gthree_resources_flush_deletes        (GthreeRenderer *renderer);
-GTHREE_API
-void gthree_resources_unrealize_all_for    (GthreeRenderer *renderer);
-GTHREE_API
-void gthree_resources_set_all_unused_for   (GthreeRenderer *renderer);
-GTHREE_API
-void gthree_resources_unrealize_unused_for (GthreeRenderer *renderer);
-
-GTHREE_API
 void     gthree_resource_set_realized_for (GthreeResource  *resource,
                                            GthreeRenderer   *renderer);
 GTHREE_API
-gboolean gthree_resource_is_realized      (GthreeResource  *resource);
+gpointer gthree_resource_get_data_for  (GthreeResource  *resource,
+                                        GthreeRenderer   *renderer);
 GTHREE_API
-void     gthree_resource_unrealize        (GthreeResource  *resource);
+gboolean gthree_resource_is_realized_for  (GthreeResource  *resource,
+                                           GthreeRenderer   *renderer);
+GTHREE_API
+void     gthree_resource_unrealize        (GthreeResource  *resource,
+                                           GthreeRenderer   *renderer);
 GTHREE_API
 gboolean gthree_resource_get_used        (GthreeResource  *resource);
 GTHREE_API

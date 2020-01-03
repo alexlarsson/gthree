@@ -31,7 +31,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeTexture, g_object_unref)
 typedef struct {
   GthreeResourceClass parent_class;
 
-  void (*load) (GthreeTexture *texture, int slot);
+  void (*load) (GthreeTexture *texture, GthreeRenderer *renderer, int slot);
 
   gpointer padding[8];
 } GthreeTextureClass;
@@ -125,12 +125,10 @@ void                   gthree_texture_set_uuid             (GthreeTexture       
                                                             const char           *uuid);
 GTHREE_API
 const char *           gthree_texture_get_uuid             (GthreeTexture        *texture);
-int                    gthree_texture_get_gl_texture       (GthreeTexture        *texture);
+int                    gthree_texture_get_gl_texture       (GthreeTexture        *texture,
+                                                            GthreeRenderer       *renderer);
 GTHREE_API
-gboolean               gthree_texture_get_needs_update     (GthreeTexture        *texture);
-GTHREE_API
-void                   gthree_texture_set_needs_update     (GthreeTexture        *texture,
-                                                            gboolean              needs_update);
+void                   gthree_texture_set_needs_update     (GthreeTexture        *texture);
 
 
 G_END_DECLS

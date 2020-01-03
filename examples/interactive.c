@@ -38,7 +38,7 @@ update_surface (float u, float v)
 
   cairo_destroy (cr);
 
-  gthree_texture_set_needs_update (texture, TRUE);
+  gthree_texture_set_needs_update (texture);
 }
 
 static void

@@ -11,18 +11,19 @@ struct _GthreeAttributeArray {
   int stride; /* in nr of type items */
   int count;  /* in nr of stride items */
   int version;
-  /* TODO: move this to per-array? it can be in different ranges when reusing arrays interleaved or stacked */
-  int update_range_offset;
-  int update_range_count;
   gboolean dynamic;
 
-  /* realized state */
-
-  guint gl_buffer;
-  gboolean dirty;
+  GArray *realize_data; /* Used by GthreeAttribute * for sharing gl resources */
 
   guint8 data[0];
 };
+
+typedef struct {
+  guint32 realize_count;
+  guint gl_buffer;
+  int update_range_offset;
+  int update_range_count;
+} GthreeAttributeArrayRealizeData;
 
 static gsize attribute_type_size[] = { 8, 4, 4, 4, 2, 2, 1, 1};
 static int attribute_type_gl[] = {
@@ -57,7 +58,9 @@ gthree_attribute_array_new   (GthreeAttributeType   type,
   array->type = type;
   array->count = count;
   array->stride = stride;
-  array->update_range_count = -1;
+
+  if (array->realize_data)
+    g_array_unref (array->realize_data);
 
   return array;
 }
@@ -126,6 +129,19 @@ GthreeAttributeArray *gthree_attribute_array_reshape (GthreeAttributeArray *arra
   return reshaped;
 }
 
+static GthreeAttributeArrayRealizeData *
+gthree_attribute_array_get_realize_data_at (GthreeAttributeArray *array,
+                                            guint32 id)
+{
+  if (array->realize_data == NULL)
+    array->realize_data = g_array_new (FALSE, TRUE, sizeof (GthreeAttributeArrayRealizeData));
+
+  if (array->realize_data->len < id + 1)
+    g_array_set_size (array->realize_data, id + 1);
+
+  return &g_array_index (array->realize_data, GthreeAttributeArrayRealizeData, id);
+}
+
 GthreeAttributeArray *
 gthree_attribute_array_ref (GthreeAttributeArray *array)
 {
@@ -141,10 +157,7 @@ gthree_attribute_array_unref (GthreeAttributeArray *array)
   array->ref_count--;
 
   if (array->ref_count == 0)
-    {
-      g_assert (array->gl_buffer == 0);
-      g_free (array);
-    }
+    g_free (array);
 }
 
 GthreeAttributeType
@@ -169,49 +182,6 @@ int
 gthree_attribute_array_get_stride (GthreeAttributeArray *array)
 {
   return array->stride;
-}
-
-static void
-gthree_attribute_array_create_buffer (GthreeAttributeArray *array, int buffer_type)
-{
-  int usage = array->dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
-  int element_size = attribute_type_size[array->type];
-
-  if (array->gl_buffer == 0)
-    glGenBuffers (1, &array->gl_buffer);
-
-  glBindBuffer (buffer_type, array->gl_buffer);
-
-  glBufferData (buffer_type, gthree_attribute_array_get_len (array) * element_size, &array->data[0], usage);
-  array->dirty = FALSE;
-}
-
-static void
-gthree_attribute_array_update_buffer (GthreeAttributeArray *array, int buffer_type)
-{
-  int usage = array->dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
-  int element_size = attribute_type_size[array->type];
-
-  glBindBuffer (buffer_type, array->gl_buffer);
-  if (!array->dynamic)
-    {
-      glBufferData (buffer_type, gthree_attribute_array_get_len (array) * element_size, &array->data[0], usage);
-    }
-  else if (array->update_range_count == -1)
-    {
-      // Not using update ranges
-      glBufferSubData (buffer_type, 0,
-                       gthree_attribute_array_get_len (array) * element_size, &array->data[0]);
-    }
-  else
-    {
-      glBufferSubData (buffer_type, array->update_range_offset * element_size,
-                       array->update_range_count * element_size,
-                       ((guint8 *)&array->data[0]) + array->update_range_offset * element_size);
-      array->update_range_count = -1; // reset range
-    }
-
-  array->dirty = FALSE;
 }
 
 guint8 *
@@ -932,7 +902,8 @@ gthree_attribute_array_copy_uint16 (GthreeAttributeArray *array,
                                    n_items);
 }
 
-static void gthree_attribute_real_unrealize (GthreeResource *resource);
+static void gthree_attribute_real_unrealize (GthreeResource *resource,
+                                             GthreeRenderer *renderer);
 
 struct _GthreeAttribute {
   GthreeResource parent;
@@ -948,6 +919,10 @@ struct _GthreeAttribute {
 typedef struct {
   GthreeResourceClass parent_class;
 } GthreeAttributeClass;
+
+typedef struct {
+  GthreeResourceRealizeData parent;
+} GthreeAttributeRealizeData;
 
 enum {
   PROP_0,
@@ -1123,6 +1098,8 @@ gthree_attribute_class_init (GthreeAttributeClass *klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GthreeResourceClass *resource_class = GTHREE_RESOURCE_CLASS (klass);
 
+  resource_class->realize_data_size = sizeof (GthreeAttributeRealizeData);
+
   gobject_class->set_property = gthree_attribute_set_property;
   gobject_class->get_property = gthree_attribute_get_property;
   gobject_class->finalize = gthree_attribute_finalize;
@@ -1148,7 +1125,7 @@ gthree_attribute_get_array (GthreeAttribute *attribute)
 void
 gthree_attribute_set_needs_update (GthreeAttribute *attribute)
 {
-  attribute->array->dirty = TRUE;
+  gthree_resource_mark_dirty (GTHREE_RESOURCE (attribute));
 }
 
 void
@@ -1225,16 +1202,40 @@ gthree_attribute_copy_at (GthreeAttribute      *attribute,
 }
 
 static void
-gthree_attribute_real_unrealize (GthreeResource *resource)
+gthree_attribute_array_realize (GthreeAttributeArray *array,
+                                GthreeAttributeArrayRealizeData *data)
+{
+  data->realize_count++;
+  if (data->gl_buffer == 0)
+    {
+      data->update_range_count = -1;
+      data->update_range_offset = 0;
+
+      glGenBuffers (1, &data->gl_buffer);
+    }
+}
+
+static void
+gthree_attribute_array_unrealize (GthreeAttributeArray *array,
+                                  GthreeRenderer *renderer)
+{
+  GthreeAttributeArrayRealizeData *data = gthree_attribute_array_get_realize_data_at (array, gthree_renderer_get_resource_id (renderer));
+
+  data->realize_count--;
+  if (data->realize_count == 0)
+    {
+      gthree_renderer_lazy_delete (renderer, GTHREE_RESOURCE_KIND_BUFFER, data->gl_buffer);
+      data->gl_buffer = 0;
+    }
+}
+
+static void
+gthree_attribute_real_unrealize (GthreeResource *resource,
+                                 GthreeRenderer *renderer)
 {
   GthreeAttribute *attribute = GTHREE_ATTRIBUTE (resource);
-  GthreeAttributeArray *array = attribute->array;
-
-  if (array->gl_buffer != 0)
-    {
-      gthree_resource_lazy_delete (resource, GTHREE_RESOURCE_KIND_BUFFER, array->gl_buffer);
-      array->gl_buffer = 0;
-    }
+  if (gthree_resource_is_realized_for (resource, renderer))
+    gthree_attribute_array_unrealize (attribute->array, renderer);
 }
 
 guint8 *
@@ -1630,26 +1631,62 @@ gthree_attribute_get_point3d (GthreeAttribute      *attribute,
   gthree_attribute_array_get_point3d (attribute->array, index, attribute->item_offset, point);
 }
 
+static void
+gthree_attribute_array_update (GthreeAttributeArray *array,
+                               GthreeAttributeArrayRealizeData *data,
+                               gboolean allocate,
+                               gint buffer_type)
+{
+  int usage = array->dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
+  int element_size = attribute_type_size[array->type];
+
+  glBindBuffer (buffer_type, data->gl_buffer);
+  if (allocate || !array->dynamic)
+    {
+      glBufferData (buffer_type, gthree_attribute_array_get_len (array) * element_size,
+                    &array->data[0], usage);
+    }
+  else if (data->update_range_count == -1)
+    {
+      // Not using update ranges
+      glBufferSubData (buffer_type, 0,
+                       gthree_attribute_array_get_len (array) * element_size, &array->data[0]);
+    }
+  else
+    {
+      glBufferSubData (buffer_type, data->update_range_offset * element_size,
+                       data->update_range_count * element_size,
+                       ((guint8 *)&array->data[0]) + data->update_range_offset * element_size);
+      data->update_range_count = -1; // reset range
+    }
+}
 
 void
-gthree_attribute_update (GthreeAttribute *attribute, gint buffer_type)
+gthree_attribute_update (GthreeAttribute *attribute, GthreeRenderer *renderer, gint buffer_type)
 {
-  if (attribute->array->gl_buffer == 0)
-    {
-      GthreeRenderer *current_renderer = gthree_renderer_get_current ();
-      g_assert (current_renderer != NULL);
-      gthree_resource_set_realized_for (GTHREE_RESOURCE (attribute), current_renderer);
+  GthreeAttributeArray *array = attribute->array;
+  GthreeAttributeArrayRealizeData *array_data = gthree_attribute_array_get_realize_data_at (array, gthree_renderer_get_resource_id (renderer));
+  gboolean allocate = FALSE;
 
-      gthree_attribute_array_create_buffer (attribute->array, buffer_type);
+  if (!gthree_resource_is_realized_for (GTHREE_RESOURCE (attribute), renderer))
+    {
+      gthree_attribute_array_realize (array, array_data);
+      gthree_resource_set_realized_for (GTHREE_RESOURCE (attribute), renderer);
+      allocate = TRUE;
     }
-  else if (attribute->array->dirty)
-    gthree_attribute_array_update_buffer (attribute->array, buffer_type);
+
+  if (gthree_resource_get_dirty_for (GTHREE_RESOURCE (attribute), renderer))
+    {
+      gthree_attribute_array_update (array, array_data, allocate, buffer_type);
+      gthree_resource_mark_clean_for (GTHREE_RESOURCE (attribute), renderer);
+    }
 }
 
 int
-gthree_attribute_get_gl_buffer (GthreeAttribute *attribute)
+gthree_attribute_get_gl_buffer (GthreeAttribute *attribute, GthreeRenderer *renderer)
 {
-  return attribute->array->gl_buffer;
+  GthreeAttributeArrayRealizeData *data = gthree_attribute_array_get_realize_data_at (attribute->array, gthree_renderer_get_resource_id (renderer));
+  return data->gl_buffer;
 }
 
 int

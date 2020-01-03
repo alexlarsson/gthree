@@ -63,9 +63,10 @@ gthree_skinned_mesh_finalize (GObject *obj)
 }
 
 static void
-gthree_skinned_mesh_update (GthreeObject *object)
+gthree_skinned_mesh_update (GthreeObject *object,
+                            GthreeRenderer *renderer)
 {
-  GTHREE_OBJECT_CLASS (gthree_skinned_mesh_parent_class)->update (object);
+  GTHREE_OBJECT_CLASS (gthree_skinned_mesh_parent_class)->update (object, renderer);
 }
 
 static void

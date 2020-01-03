@@ -24,9 +24,13 @@ typedef struct {
   GthreeTexture *texture;
   GthreeTexture *depth_texture;
 
+} GthreeRenderTargetPrivate;
+
+typedef struct {
+  GthreeResourceRealizeData parent;
   guint gl_framebuffer;
   guint gl_depthbuffer;
-} GthreeRenderTargetPrivate;
+} GthreeRenderTargetRealizeData;
 
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeRenderTarget, gthree_render_target, GTHREE_TYPE_RESOURCE)
 
@@ -95,21 +99,21 @@ gthree_render_target_set_used (GthreeResource *resource,
 }
 
 static void
-gthree_render_target_unrealize (GthreeResource *resource)
+gthree_render_target_unrealize (GthreeResource *resource,
+                                GthreeRenderer *renderer)
 {
-  GthreeRenderTarget *target = GTHREE_RENDER_TARGET (resource);
-  GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
+  GthreeRenderTargetRealizeData *data = gthree_resource_get_data_for (resource, renderer);
 
-  if (priv->gl_framebuffer)
+  if (data->gl_framebuffer)
     {
-      gthree_resource_lazy_delete (resource, GTHREE_RESOURCE_KIND_FRAMEBUFFER, priv->gl_framebuffer);
-      priv->gl_framebuffer = 0;
+      gthree_renderer_lazy_delete (renderer, GTHREE_RESOURCE_KIND_FRAMEBUFFER, data->gl_framebuffer);
+      data->gl_framebuffer = 0;
     }
 
-  if (priv->gl_depthbuffer)
+  if (data->gl_depthbuffer)
     {
-      gthree_resource_lazy_delete (resource, GTHREE_RESOURCE_KIND_RENDERBUFFER, priv->gl_depthbuffer);
-      priv->gl_depthbuffer = 0;
+      gthree_renderer_lazy_delete (renderer, GTHREE_RESOURCE_KIND_RENDERBUFFER, data->gl_depthbuffer);
+      data->gl_depthbuffer = 0;
     }
 }
 
@@ -117,6 +121,8 @@ static void
 gthree_render_target_class_init (GthreeRenderTargetClass *klass)
 {
   GthreeResourceClass *resource_class = GTHREE_RESOURCE_CLASS (klass);
+
+  resource_class->realize_data_size = sizeof (GthreeRenderTargetRealizeData);
 
   G_OBJECT_CLASS (klass)->finalize = gthree_render_target_finalize;
   resource_class->unrealize = gthree_render_target_unrealize;
@@ -299,7 +305,7 @@ setup_renderbuffer_storage (GthreeRenderTarget *render_target, guint gl_renderbu
 
 // Setup GL resources for a non-texture depth buffer
 static void
-setup_depth_renderbuffer (GthreeRenderTarget *render_target)
+setup_depth_renderbuffer (GthreeRenderTarget *render_target, GthreeRenderTargetRealizeData *data)
 {
   GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (render_target);
   gboolean is_cube = FALSE;
@@ -334,15 +340,15 @@ setup_depth_renderbuffer (GthreeRenderTarget *render_target)
         }
       else
         {
-          glBindFramebuffer (GL_FRAMEBUFFER, priv->gl_framebuffer);
-          glGenRenderbuffers (1, &priv->gl_depthbuffer);
+          glBindFramebuffer (GL_FRAMEBUFFER, data->gl_framebuffer);
+          glGenRenderbuffers (1, &data->gl_depthbuffer);
 #ifdef DEBUG_LABELS
           {
             g_autofree char *label = g_strdup_printf ("rendertarget.%d.RB.depth", priv->instance_id);
-            glObjectLabel (GL_RENDERBUFFER, priv->gl_depthbuffer, strlen (label), label);
+            glObjectLabel (GL_RENDERBUFFER, data->gl_depthbuffer, strlen (label), label);
           }
 #endif
-          setup_renderbuffer_storage (render_target, priv->gl_depthbuffer, FALSE);
+          setup_renderbuffer_storage (render_target, data->gl_depthbuffer, FALSE);
         }
     }
 
@@ -363,10 +369,11 @@ gthree_render_target_is_power_of_two (GthreeRenderTarget *target)
 }
 
 guint
-gthree_render_target_get_gl_framebuffer (GthreeRenderTarget *target)
+gthree_render_target_get_gl_framebuffer (GthreeRenderTarget *target,
+                                         GthreeRenderer *renderer)
 {
-  GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
-  return priv->gl_framebuffer;
+  GthreeRenderTargetRealizeData *data = gthree_resource_get_data_for (GTHREE_RESOURCE (target), renderer);
+  return data->gl_framebuffer;
 }
 
 const graphene_rect_t *
@@ -398,7 +405,8 @@ generate_mipmap (guint target,
 }
 
 void
-gthree_render_target_update_mipmap (GthreeRenderTarget *target)
+gthree_render_target_update_mipmap (GthreeRenderTarget *target,
+                                    GthreeRenderer *renderer)
 {
   GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
   gboolean supports_mips = gthree_render_target_is_power_of_two (target);
@@ -410,32 +418,31 @@ gthree_render_target_update_mipmap (GthreeRenderTarget *target)
       if (renderTarget.isWebGLRenderTargetCube)
         target = GL_TEXTURE_CUBE_MAP;
 #endif
-      gthree_texture_bind (priv->texture, -1, target);
+      gthree_texture_bind (priv->texture, renderer, -1, target);
       generate_mipmap (target, priv->texture, priv->width, priv->height);
       glBindTexture (target, 0);
     }
 }
 
 void
-gthree_render_target_realize (GthreeRenderTarget *target)
+gthree_render_target_realize (GthreeRenderTarget *target,
+                              GthreeRenderer *renderer)
 {
   GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
+  GthreeRenderTargetRealizeData *data = gthree_resource_get_data_for (GTHREE_RESOURCE (target), renderer);
   gboolean is_cube = FALSE, is_multisample = FALSE, supports_mips = FALSE;
   GthreeTexture *texture;
-  GthreeRenderer *current_renderer;
 
-  if (priv->gl_framebuffer)
+  if (data->gl_framebuffer)
     return;
 
-  current_renderer = gthree_renderer_get_current ();
-  g_assert (current_renderer != NULL);
-  gthree_resource_set_realized_for (GTHREE_RESOURCE (target), current_renderer);
+  gthree_resource_set_realized_for (GTHREE_RESOURCE (target), renderer);
 
-  glGenFramebuffers (1, &priv->gl_framebuffer);
+  glGenFramebuffers (1, &data->gl_framebuffer);
 #ifdef DEBUG_LABELS
   {
     g_autofree char *label = g_strdup_printf ("rendertarget.%d.FB", priv->instance_id);
-    glObjectLabel (GL_FRAMEBUFFER, priv->gl_framebuffer, strlen (label), label);
+    glObjectLabel (GL_FRAMEBUFFER, data->gl_framebuffer, strlen (label), label);
   }
 #endif
 
@@ -508,12 +515,12 @@ gthree_render_target_realize (GthreeRenderTarget *target)
     }
   else
     {
-      gthree_texture_bind (texture, -1, GL_TEXTURE_2D);
+      gthree_texture_bind (texture, renderer, -1, GL_TEXTURE_2D);
       gthree_texture_set_parameters (GL_TEXTURE_2D, texture, supports_mips);
-      gthree_texture_setup_framebuffer (texture,
+      gthree_texture_setup_framebuffer (texture, renderer,
                                         priv->width,
                                         priv->height,
-                                        priv->gl_framebuffer,
+                                        data->gl_framebuffer,
                                         GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D);
       if (texture_needs_generate_mipmaps (texture, supports_mips))
         generate_mipmap (GL_TEXTURE_2D, texture, priv->width, priv->height);
@@ -522,22 +529,24 @@ gthree_render_target_realize (GthreeRenderTarget *target)
 
   // Setup depth and stencil buffers
   if (priv->depth_buffer)
-    setup_depth_renderbuffer (target);
+    setup_depth_renderbuffer (target, data);
 }
 
 void
 gthree_render_target_download (GthreeRenderTarget *target,
+                               GthreeRenderer *renderer,
                                guchar     *data,
                                gsize       stride)
 {
   GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
   cairo_rectangle_int_t all = { 0, 0, priv->width, priv->height };
 
-  gthree_render_target_download_area (target, &all, data, stride);
+  gthree_render_target_download_area (target, renderer, &all, data, stride);
 }
 
 void
 gthree_render_target_download_area (GthreeRenderTarget *target,
+                                    GthreeRenderer *renderer,
                                     const cairo_rectangle_int_t *area,
                                     guchar     *data,
                                     gsize       stride)
@@ -559,10 +568,10 @@ gthree_render_target_download_area (GthreeRenderTarget *target,
                                                  area->width, area->height, stride);
 
 
-  gthree_texture_bind (priv->texture, 0, GL_TEXTURE_2D);
+  gthree_texture_bind (priv->texture, renderer, 0, GL_TEXTURE_2D);
 
   glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
-                             GL_TEXTURE_2D, gthree_texture_get_gl_texture (priv->texture), 0);
+                             GL_TEXTURE_2D, gthree_texture_get_gl_texture (priv->texture, renderer), 0);
   glPixelStorei (GL_PACK_ALIGNMENT, 4);
   glPixelStorei (GL_PACK_ROW_LENGTH, cairo_image_surface_get_stride (surface) / 4);
 

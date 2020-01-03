@@ -64,7 +64,7 @@ is_power_of_two (guint value)
 }
 
 static void
-gthree_cube_texture_real_load (GthreeTexture *texture, int slot)
+gthree_cube_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer, int slot)
 {
   GthreeCubeTexture *cube = GTHREE_CUBE_TEXTURE (texture);
   GthreeCubeTexturePrivate *priv = gthree_cube_texture_get_instance_private (cube);
@@ -73,9 +73,9 @@ gthree_cube_texture_real_load (GthreeTexture *texture, int slot)
   GdkPixbuf *cube_pixbufs[6];
   //gboolean autoScaleCubemaps = TRUE; // TODO: Pass from renderer
 
-  gthree_texture_bind (texture, slot, GL_TEXTURE_CUBE_MAP);
+  gthree_texture_bind (texture, renderer, slot, GL_TEXTURE_CUBE_MAP);
 
-  if (gthree_texture_get_needs_update (texture))
+  if (gthree_resource_get_dirty_for (GTHREE_RESOURCE (texture), renderer))
     {
       guint width, height;
       gboolean is_compressed = FALSE; //texture instanceof THREE.CompressedTexture;
@@ -137,7 +137,7 @@ gthree_cube_texture_real_load (GthreeTexture *texture, int slot)
           gthree_texture_set_max_mip_level (texture, log2 (MAX (width, height)));
         }
 
-      gthree_texture_set_needs_update (texture, FALSE);
+      gthree_resource_mark_clean_for (GTHREE_RESOURCE (texture), renderer);
     }
 }
 
