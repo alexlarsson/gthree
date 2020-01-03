@@ -93,18 +93,11 @@ gthree_material_init (GthreeMaterial *material)
   priv->polygon_offset_units = 0;
   priv->alpha_test = 0;
   priv->side = GTHREE_SIDE_FRONT;
-
-  priv->properties.light_hash.num_point = -1; // Ensure we fill it once
 }
 
 static void
 gthree_material_finalize (GObject *obj)
 {
-  GthreeMaterial *material = GTHREE_MATERIAL (obj);
-  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
-
-  g_clear_object (&priv->properties.program);
-
   G_OBJECT_CLASS (gthree_material_parent_class)->finalize (obj);
 }
 

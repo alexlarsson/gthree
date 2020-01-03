@@ -1466,7 +1466,8 @@ init_material (GthreeRenderer *renderer,
 #endif
 
   program = gthree_program_cache_get (priv->program_cache, shader, &parameters, renderer);
-  g_clear_object (&material_properties->program);
+  /* This is owned by the cache, so it will live as long as the renderer (as it owns the cache and it never frees) */
+  /* This isn't a ref to avoid leaking the program until something else uses the material */
   material_properties->program = program;
 
   // TODO: thee.js uses the lightstate current_hash and other stuff to avoid some stuff here?

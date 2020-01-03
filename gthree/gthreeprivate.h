@@ -48,7 +48,7 @@ struct _GthreeLightSetup
 /* Keep track of what state the material is wired up for */
 struct _GthreeMaterialProperties
 {
-  GthreeProgram *program;
+  GthreeProgram *program; /* Not owned, only use while valid for the owning renderer */
   GthreeLightSetupHash light_hash;
 };
 

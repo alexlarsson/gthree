@@ -966,6 +966,7 @@ gthree_program_cache_remove (GthreeProgramCache *cache, GthreeProgram *program)
   priv->cache = NULL;
 }
 
+/* Returns instance owned by cache */
 GthreeProgram *
 gthree_program_cache_get (GthreeProgramCache *cache, GthreeShader *shader, GthreeProgramParameters *parameters, GthreeRenderer *renderer)
 {
@@ -978,7 +979,7 @@ gthree_program_cache_get (GthreeProgramCache *cache, GthreeShader *shader, Gthre
 
   program = g_hash_table_lookup (cache->hash, &key);
   if (program)
-    return g_object_ref (program);
+    return program;
 
   program = gthree_program_new (shader, parameters, renderer);
   priv = gthree_program_get_instance_private (program);
