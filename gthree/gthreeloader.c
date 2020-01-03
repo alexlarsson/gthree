@@ -1037,7 +1037,7 @@ parse_materials (GthreeLoader *loader, JsonObject *root, GError **error)
       g_autoptr(GthreeMeshStandardMaterial) material = NULL;
       JsonObject *pbr = NULL;
       graphene_vec3_t color;
-      float color_alpha;
+      float color_alpha = 1.0;
       double metallic_factor = 1.0, roughness_factor = 1.0;
       const char *alpha_mode = "OPAQUE";
 
