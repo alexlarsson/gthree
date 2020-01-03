@@ -725,7 +725,7 @@ gthree_mesh_standard_material_set_emissive_color (GthreeMeshStandardMaterial *st
 
   priv->emissive = *color;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (standard), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (standard));
 }
 
 
@@ -745,7 +745,7 @@ gthree_mesh_standard_material_set_emissive_map (GthreeMeshStandardMaterial *stan
 
   if (g_set_object (&priv->emissive_map, texture))
     {
-      gthree_material_set_needs_update (GTHREE_MATERIAL (standard), TRUE);
+      gthree_material_set_needs_update (GTHREE_MATERIAL (standard));
 
       g_object_notify_by_pspec (G_OBJECT (standard), obj_props[PROP_EMISSIVE_MAP]);
     }
@@ -767,7 +767,7 @@ gthree_mesh_standard_material_set_emissive_intensity (GthreeMeshStandardMaterial
 
   priv->emissive_intensity = value;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (standard), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (standard));
 
   g_object_notify_by_pspec (G_OBJECT (standard), obj_props[PROP_EMISSIVE_INTENSITY]);
 }
@@ -788,7 +788,7 @@ gthree_mesh_standard_material_set_refraction_ratio (GthreeMeshStandardMaterial *
 
   priv->refraction_ratio = ratio;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (standard), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (standard));
 
   g_object_notify_by_pspec (G_OBJECT (standard), obj_props[PROP_REFRACTION_RATIO]);
 }
@@ -813,7 +813,7 @@ gthree_mesh_standard_material_set_color (GthreeMeshStandardMaterial *standard,
 
   priv->color = *color;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (standard), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (standard));
 
   g_object_notify_by_pspec (G_OBJECT (standard), obj_props[PROP_COLOR]);
 }
@@ -826,7 +826,7 @@ gthree_mesh_standard_material_set_map (GthreeMeshStandardMaterial *standard,
 
   if (g_set_object (&priv->map, texture))
     {
-      gthree_material_set_needs_update (GTHREE_MATERIAL (standard), TRUE);
+      gthree_material_set_needs_update (GTHREE_MATERIAL (standard));
 
       g_object_notify_by_pspec (G_OBJECT (standard), obj_props[PROP_MAP]);
     }
@@ -848,7 +848,7 @@ gthree_mesh_standard_material_set_env_map (GthreeMeshStandardMaterial *standard,
 
   if (g_set_object (&priv->env_map, texture))
     {
-      gthree_material_set_needs_update (GTHREE_MATERIAL (standard), TRUE);
+      gthree_material_set_needs_update (GTHREE_MATERIAL (standard));
 
       g_object_notify_by_pspec (G_OBJECT (standard), obj_props[PROP_ENV_MAP]);
     }
@@ -878,7 +878,7 @@ gthree_mesh_standard_material_set_roughness (GthreeMeshStandardMaterial *standar
 
   priv->roughness = value;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (standard), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (standard));
 
   g_object_notify_by_pspec (G_OBJECT (standard), obj_props[PROP_ROUGHNESS]);
 }
@@ -899,7 +899,7 @@ gthree_mesh_standard_material_set_metalness (GthreeMeshStandardMaterial *standar
 
   priv->metalness = value;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (standard), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (standard));
 
   g_object_notify_by_pspec (G_OBJECT (standard), obj_props[PROP_METALNESS]);
 }
@@ -920,7 +920,7 @@ gthree_mesh_standard_material_set_light_map (GthreeMeshStandardMaterial *standar
 
   if (g_set_object (&priv->light_map, texture))
     {
-      gthree_material_set_needs_update (GTHREE_MATERIAL (standard), TRUE);
+      gthree_material_set_needs_update (GTHREE_MATERIAL (standard));
 
       g_object_notify_by_pspec (G_OBJECT (standard), obj_props[PROP_LIGHT_MAP]);
     }
@@ -942,7 +942,7 @@ gthree_mesh_standard_material_set_light_map_intensity (GthreeMeshStandardMateria
 
   priv->light_map_intensity = value;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (standard), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (standard));
 
   g_object_notify_by_pspec (G_OBJECT (standard), obj_props[PROP_LIGHT_MAP_INTENSITY]);
 }
@@ -963,7 +963,7 @@ gthree_mesh_standard_material_set_ao_map (GthreeMeshStandardMaterial *standard,
 
   if (g_set_object (&priv->ao_map, texture))
     {
-      gthree_material_set_needs_update (GTHREE_MATERIAL (standard), TRUE);
+      gthree_material_set_needs_update (GTHREE_MATERIAL (standard));
 
       g_object_notify_by_pspec (G_OBJECT (standard), obj_props[PROP_AO_MAP]);
     }
@@ -985,7 +985,7 @@ gthree_mesh_standard_material_set_ao_map_intensity (GthreeMeshStandardMaterial *
 
   priv->ao_map_intensity = value;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (standard), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (standard));
 
   g_object_notify_by_pspec (G_OBJECT (standard), obj_props[PROP_AO_MAP_INTENSITY]);
 
@@ -1007,7 +1007,7 @@ gthree_mesh_standard_material_set_bump_map (GthreeMeshStandardMaterial *standard
 
   if (g_set_object (&priv->bump_map, texture))
     {
-      gthree_material_set_needs_update (GTHREE_MATERIAL (standard), TRUE);
+      gthree_material_set_needs_update (GTHREE_MATERIAL (standard));
 
       g_object_notify_by_pspec (G_OBJECT (standard), obj_props[PROP_BUMP_MAP]);
     }
@@ -1029,7 +1029,7 @@ gthree_mesh_standard_material_set_bump_scale (GthreeMeshStandardMaterial *standa
 
   priv->bump_scale = value;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (standard), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (standard));
 
   g_object_notify_by_pspec (G_OBJECT (standard), obj_props[PROP_BUMP_SCALE]);
 }
@@ -1050,7 +1050,7 @@ gthree_mesh_standard_material_set_normal_map (GthreeMeshStandardMaterial *standa
 
   if (g_set_object (&priv->normal_map, texture))
     {
-      gthree_material_set_needs_update (GTHREE_MATERIAL (standard), TRUE);
+      gthree_material_set_needs_update (GTHREE_MATERIAL (standard));
 
       g_object_notify_by_pspec (G_OBJECT (standard), obj_props[PROP_NORMAL_MAP]);
     }
@@ -1072,7 +1072,7 @@ gthree_mesh_standard_material_set_normal_map_type (GthreeMeshStandardMaterial *s
 
   priv->normal_map_type = type;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (standard), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (standard));
 
   g_object_notify_by_pspec (G_OBJECT (standard), obj_props[PROP_NORMAL_MAP_TYPE]);
 }
@@ -1093,7 +1093,7 @@ gthree_mesh_standard_material_set_normal_map_scale (GthreeMeshStandardMaterial *
 
   priv->normal_scale = *scale;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (standard), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (standard));
 
   //g_object_notify_by_pspec (G_OBJECT (standard), obj_props[PROP_NORM]);
 }
@@ -1114,7 +1114,7 @@ gthree_mesh_standard_material_set_displacement_map (GthreeMeshStandardMaterial *
 
   if (g_set_object (&priv->displacement_map, texture))
     {
-      gthree_material_set_needs_update (GTHREE_MATERIAL (standard), TRUE);
+      gthree_material_set_needs_update (GTHREE_MATERIAL (standard));
 
       g_object_notify_by_pspec (G_OBJECT (standard), obj_props[PROP_DISPLACEMENT_MAP]);
     }
@@ -1136,7 +1136,7 @@ gthree_mesh_standard_material_set_displacement_scale  (GthreeMeshStandardMateria
 
   priv->displacement_scale = value;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (standard), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (standard));
 
   g_object_notify_by_pspec (G_OBJECT (standard), obj_props[PROP_DISPLACEMENT_SCALE]);
 }
@@ -1158,7 +1158,7 @@ gthree_mesh_standard_material_set_displacement_bias (GthreeMeshStandardMaterial 
 
   priv->displacement_bias = value;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (standard), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (standard));
 
   g_object_notify_by_pspec (G_OBJECT (standard), obj_props[PROP_DISPLACEMENT_BIAS]);
 }
@@ -1179,7 +1179,7 @@ gthree_mesh_standard_material_set_roughness_map (GthreeMeshStandardMaterial *sta
 
   if (g_set_object (&priv->roughness_map, texture))
     {
-      gthree_material_set_needs_update (GTHREE_MATERIAL (standard), TRUE);
+      gthree_material_set_needs_update (GTHREE_MATERIAL (standard));
 
       g_object_notify_by_pspec (G_OBJECT (standard), obj_props[PROP_ROUGHNESS_MAP]);
     }
@@ -1201,7 +1201,7 @@ gthree_mesh_standard_material_set_metalness_map (GthreeMeshStandardMaterial *sta
 
   if (g_set_object (&priv->metalness_map, texture))
     {
-      gthree_material_set_needs_update (GTHREE_MATERIAL (standard), TRUE);
+      gthree_material_set_needs_update (GTHREE_MATERIAL (standard));
 
       g_object_notify_by_pspec (G_OBJECT (standard), obj_props[PROP_METALNESS_MAP]);
     }
@@ -1223,7 +1223,7 @@ gthree_mesh_standard_material_set_alpha_map (GthreeMeshStandardMaterial *standar
 
   if (g_set_object (&priv->alpha_map, texture))
     {
-      gthree_material_set_needs_update (GTHREE_MATERIAL (standard), TRUE);
+      gthree_material_set_needs_update (GTHREE_MATERIAL (standard));
 
       g_object_notify_by_pspec (G_OBJECT (standard), obj_props[PROP_ALPHA_MAP]);
     }
@@ -1245,7 +1245,7 @@ gthree_mesh_standard_material_set_env_map_intensity (GthreeMeshStandardMaterial 
 
   priv->env_map_intensity = value;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (standard), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (standard));
 
   g_object_notify_by_pspec (G_OBJECT (standard), obj_props[PROP_ENV_MAP_INTENSITY]);
 }

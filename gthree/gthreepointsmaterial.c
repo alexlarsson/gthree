@@ -240,7 +240,7 @@ gthree_points_material_set_color (GthreePointsMaterial *points_material,
 
   priv->color = *color;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (points_material), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (points_material));
 
   g_object_notify_by_pspec (G_OBJECT (points_material), obj_props[PROP_COLOR]);
 }
@@ -253,7 +253,7 @@ gthree_points_material_set_map (GthreePointsMaterial *points_material,
 
   if (g_set_object (&priv->map, texture))
     {
-      gthree_material_set_needs_update (GTHREE_MATERIAL (points_material), TRUE);
+      gthree_material_set_needs_update (GTHREE_MATERIAL (points_material));
 
       g_object_notify_by_pspec (G_OBJECT (points_material), obj_props[PROP_MAP]);
     }
@@ -285,7 +285,7 @@ gthree_points_material_set_size (GthreePointsMaterial *points_material,
 
   priv->size = size;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (points_material), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (points_material));
   g_object_notify_by_pspec (G_OBJECT (points_material), obj_props[PROP_SIZE]);
 }
 
@@ -306,6 +306,6 @@ gthree_points_material_set_size_attenuation (GthreePointsMaterial *points_materi
 
   priv->size_attenuation = size_attenuation;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (points_material), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (points_material));
   g_object_notify_by_pspec (G_OBJECT (points_material), obj_props[PROP_SIZE_ATTENUATION]);
 }

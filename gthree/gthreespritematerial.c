@@ -232,7 +232,7 @@ gthree_sprite_material_set_color (GthreeSpriteMaterial *sprite_material,
 
   priv->color = *color;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (sprite_material), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (sprite_material));
 
   g_object_notify_by_pspec (G_OBJECT (sprite_material), obj_props[PROP_COLOR]);
 }
@@ -245,7 +245,7 @@ gthree_sprite_material_set_map (GthreeSpriteMaterial *sprite_material,
 
   if (g_set_object (&priv->map, texture))
     {
-      gthree_material_set_needs_update (GTHREE_MATERIAL (sprite_material), TRUE);
+      gthree_material_set_needs_update (GTHREE_MATERIAL (sprite_material));
 
       g_object_notify_by_pspec (G_OBJECT (sprite_material), obj_props[PROP_MAP]);
     }
@@ -277,7 +277,7 @@ gthree_sprite_material_set_rotation (GthreeSpriteMaterial *sprite_material,
 
   priv->rotation = rotation;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (sprite_material), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (sprite_material));
   g_object_notify_by_pspec (G_OBJECT (sprite_material), obj_props[PROP_ROTATION]);
 }
 
@@ -298,6 +298,6 @@ gthree_sprite_material_set_size_attenuation (GthreeSpriteMaterial *sprite_materi
 
   priv->size_attenuation = size_attenuation;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (sprite_material), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (sprite_material));
   g_object_notify_by_pspec (G_OBJECT (sprite_material), obj_props[PROP_SIZE_ATTENUATION]);
 }

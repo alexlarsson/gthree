@@ -214,6 +214,8 @@ void gthree_spot_light_shadow_update (GthreeSpotLightShadow *shadow,
                                       GthreeSpotLight *light);
 
 GthreeMaterialProperties *gthree_material_get_properties (GthreeMaterial  *material);
+void gthree_material_mark_clean (GthreeMaterial *material);
+
 
 graphene_matrix_t *gthree_camera_get_projection_matrix_for_write (GthreeCamera *camera);
 

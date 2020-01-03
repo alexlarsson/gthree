@@ -2197,13 +2197,13 @@ set_program (GthreeRenderer *renderer,
   if (!gthree_material_get_needs_update (material))
     {
       if (!gthree_light_setup_hash_equal (&material_properties->light_hash, &priv->light_setup.hash))
-        gthree_material_set_needs_update (material, TRUE);
+        gthree_material_set_needs_update (material);
     }
 
   if (gthree_material_get_needs_update (material))
     {
       init_material (renderer, material, fog, object);
-      gthree_material_set_needs_update (material, FALSE);
+      gthree_material_mark_clean (material);
     }
 
   program = material_properties->program;
@@ -2949,7 +2949,7 @@ gthree_renderer_render_background (GthreeRenderer *renderer,
           g_clear_object (&priv->current_bg_texture);
           priv->current_bg_texture = g_object_ref (bg_texture);
 
-          gthree_material_set_needs_update (material, TRUE);
+          gthree_material_set_needs_update (material);
         }
 
       bg_mesh = priv->bg_box_mesh;
@@ -2993,7 +2993,7 @@ gthree_renderer_render_background (GthreeRenderer *renderer,
 
           /* TODO: Handle uvTransform for texture */
 
-          gthree_material_set_needs_update (material, TRUE);
+          gthree_material_set_needs_update (material);
         }
 
       bg_mesh = priv->bg_plane_mesh;

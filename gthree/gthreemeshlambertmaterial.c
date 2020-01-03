@@ -323,7 +323,7 @@ gthree_mesh_lambert_material_set_emissive_color (GthreeMeshLambertMaterial *lamb
 
   priv->emissive = *color;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (lambert), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (lambert));
 }
 
 const graphene_vec3_t *
@@ -345,7 +345,7 @@ gthree_mesh_lambert_material_set_color (GthreeMeshLambertMaterial *lambert,
 
   priv->color = *color;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (lambert), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (lambert));
 
   g_object_notify_by_pspec (G_OBJECT (lambert), obj_props[PROP_COLOR]);
 }
@@ -366,7 +366,7 @@ gthree_mesh_lambert_material_set_refraction_ratio (GthreeMeshLambertMaterial *la
 
   priv->refraction_ratio = ratio;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (lambert), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (lambert));
 
   g_object_notify_by_pspec (G_OBJECT (lambert), obj_props[PROP_REFRACTION_RATIO]);
 }
@@ -387,7 +387,7 @@ gthree_mesh_lambert_material_set_reflectivity (GthreeMeshLambertMaterial *lamber
 
   priv->reflectivity = reflectivity;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (lambert), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (lambert));
 
   g_object_notify_by_pspec (G_OBJECT (lambert), obj_props[PROP_REFRACTION_RATIO]);
 }
@@ -401,7 +401,7 @@ gthree_mesh_lambert_material_set_map (GthreeMeshLambertMaterial *lambert,
 
   if (g_set_object (&priv->map, texture))
     {
-      gthree_material_set_needs_update (GTHREE_MATERIAL (lambert), TRUE);
+      gthree_material_set_needs_update (GTHREE_MATERIAL (lambert));
 
       g_object_notify_by_pspec (G_OBJECT (lambert), obj_props[PROP_MAP]);
     }
@@ -423,7 +423,7 @@ gthree_mesh_lambert_material_set_env_map (GthreeMeshLambertMaterial *lambert,
 
   if (g_set_object (&priv->env_map, texture))
     {
-      gthree_material_set_needs_update (GTHREE_MATERIAL (lambert), TRUE);
+      gthree_material_set_needs_update (GTHREE_MATERIAL (lambert));
 
       g_object_notify_by_pspec (G_OBJECT (lambert), obj_props[PROP_ENV_MAP]);
     }
@@ -448,7 +448,7 @@ gthree_mesh_lambert_material_set_combine (GthreeMeshLambertMaterial *lambert,
 
   priv->combine = combine;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (lambert), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (lambert));
 
   g_object_notify_by_pspec (G_OBJECT (lambert), obj_props[PROP_COMBINE]);
 }

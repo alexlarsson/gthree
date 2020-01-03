@@ -262,7 +262,7 @@ gthree_shader_material_set_shading_type (GthreeShaderMaterial *shader,
 
   priv->shading_type = shading_type;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (shader), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (shader));
 
   g_object_notify_by_pspec (G_OBJECT (shader), obj_props[PROP_SHADING_TYPE]);
 }
@@ -279,7 +279,7 @@ gthree_shader_material_set_vertex_colors (GthreeShaderMaterial *shader,
 
   priv->vertex_colors = vertex_colors;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (shader), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (shader));
 
   g_object_notify_by_pspec (G_OBJECT (shader), obj_props[PROP_VERTEX_COLORS]);
 }
@@ -305,7 +305,7 @@ gthree_shader_material_set_use_lights (GthreeShaderMaterial *shader,
 
   priv->use_lights = use_lights;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (shader), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (shader));
 
   g_object_notify_by_pspec (G_OBJECT (shader), obj_props[PROP_USE_LIGHTS]);
 }

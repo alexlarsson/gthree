@@ -323,7 +323,7 @@ gthree_mesh_basic_material_set_color (GthreeMeshBasicMaterial *basic,
 
   priv->color = *color;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (basic), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (basic));
 
   g_object_notify_by_pspec (G_OBJECT (basic), obj_props[PROP_COLOR]);
 }
@@ -344,7 +344,7 @@ gthree_mesh_basic_material_set_refraction_ratio (GthreeMeshBasicMaterial *basic,
 
   priv->refraction_ratio = ratio;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (basic), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (basic));
 
   g_object_notify_by_pspec (G_OBJECT (basic), obj_props[PROP_REFRACTION_RATIO]);
 }
@@ -365,7 +365,7 @@ gthree_mesh_basic_material_set_reflectivity (GthreeMeshBasicMaterial *basic,
 
   priv->reflectivity = reflectivity;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (basic), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (basic));
 
   g_object_notify_by_pspec (G_OBJECT (basic), obj_props[PROP_REFRACTION_RATIO]);
 }
@@ -378,7 +378,7 @@ gthree_mesh_basic_material_set_map (GthreeMeshBasicMaterial *basic,
 
   if (g_set_object (&priv->map, texture))
     {
-      gthree_material_set_needs_update (GTHREE_MATERIAL (basic), TRUE);
+      gthree_material_set_needs_update (GTHREE_MATERIAL (basic));
 
       g_object_notify_by_pspec (G_OBJECT (basic), obj_props[PROP_MAP]);
     }
@@ -400,7 +400,7 @@ gthree_mesh_basic_material_set_env_map (GthreeMeshBasicMaterial *basic,
 
   if (g_set_object (&priv->env_map, texture))
     {
-      gthree_material_set_needs_update (GTHREE_MATERIAL (basic), TRUE);
+      gthree_material_set_needs_update (GTHREE_MATERIAL (basic));
 
       g_object_notify_by_pspec (G_OBJECT (basic), obj_props[PROP_ENV_MAP]);
     }
@@ -425,7 +425,7 @@ gthree_mesh_basic_material_set_combine (GthreeMeshBasicMaterial *basic,
 
   priv->combine = combine;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (basic), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (basic));
 
   g_object_notify_by_pspec (G_OBJECT (basic), obj_props[PROP_COMBINE]);
 }

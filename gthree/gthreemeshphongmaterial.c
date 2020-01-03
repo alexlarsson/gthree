@@ -377,7 +377,7 @@ gthree_mesh_phong_material_set_emissive_color (GthreeMeshPhongMaterial *phong,
 
   priv->emissive = *color;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (phong), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (phong));
 }
 
 const graphene_vec3_t *
@@ -396,7 +396,7 @@ gthree_mesh_phong_material_set_specular_color (GthreeMeshPhongMaterial *phong,
 
   priv->specular = *color;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (phong), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (phong));
 }
 
 float
@@ -414,7 +414,7 @@ gthree_mesh_phong_material_set_shininess (GthreeMeshPhongMaterial *phong,
   GthreeMeshPhongMaterialPrivate *priv = gthree_mesh_phong_material_get_instance_private (phong);
 
   priv->shininess = shininess;
-  gthree_material_set_needs_update (GTHREE_MATERIAL (phong), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (phong));
 }
 
 gboolean
@@ -436,7 +436,7 @@ gthree_mesh_phong_material_set_flat_shading (GthreeMeshPhongMaterial *phong,
 
   priv->flat_shading = flat_shading;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (phong), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (phong));
 
   g_object_notify_by_pspec (G_OBJECT (phong), obj_props[PROP_FLAT_SHADING]);
 }
@@ -457,7 +457,7 @@ gthree_mesh_phong_material_set_refraction_ratio (GthreeMeshPhongMaterial *phong,
 
   priv->refraction_ratio = ratio;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (phong), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (phong));
 
   g_object_notify_by_pspec (G_OBJECT (phong), obj_props[PROP_REFRACTION_RATIO]);
 }
@@ -478,7 +478,7 @@ gthree_mesh_phong_material_set_reflectivity (GthreeMeshPhongMaterial *phong,
 
   priv->reflectivity = reflectivity;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (phong), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (phong));
 
   g_object_notify_by_pspec (G_OBJECT (phong), obj_props[PROP_REFRACTION_RATIO]);
 }
@@ -502,7 +502,7 @@ gthree_mesh_phong_material_set_color (GthreeMeshPhongMaterial *phong,
 
   priv->color = *color;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (phong), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (phong));
 
   g_object_notify_by_pspec (G_OBJECT (phong), obj_props[PROP_COLOR]);
 }
@@ -515,7 +515,7 @@ gthree_mesh_phong_material_set_map (GthreeMeshPhongMaterial *phong,
 
   if (g_set_object (&priv->map, texture))
     {
-      gthree_material_set_needs_update (GTHREE_MATERIAL (phong), TRUE);
+      gthree_material_set_needs_update (GTHREE_MATERIAL (phong));
 
       g_object_notify_by_pspec (G_OBJECT (phong), obj_props[PROP_MAP]);
     }
@@ -537,7 +537,7 @@ gthree_mesh_phong_material_set_env_map (GthreeMeshPhongMaterial *phong,
 
   if (g_set_object (&priv->env_map, texture))
     {
-      gthree_material_set_needs_update (GTHREE_MATERIAL (phong), TRUE);
+      gthree_material_set_needs_update (GTHREE_MATERIAL (phong));
 
       g_object_notify_by_pspec (G_OBJECT (phong), obj_props[PROP_ENV_MAP]);
     }
@@ -562,7 +562,7 @@ gthree_mesh_phong_material_set_combine (GthreeMeshPhongMaterial *phong,
 
   priv->combine = combine;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (phong), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (phong));
 
   g_object_notify_by_pspec (G_OBJECT (phong), obj_props[PROP_COMBINE]);
 }

@@ -402,11 +402,19 @@ gthree_material_get_needs_update (GthreeMaterial *material)
 }
 
 void
-gthree_material_set_needs_update (GthreeMaterial *material, gboolean needs_update)
+gthree_material_set_needs_update (GthreeMaterial *material)
 {
   GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
 
-  priv->needs_update = needs_update;
+  priv->needs_update = TRUE;
+}
+
+void
+gthree_material_mark_clean (GthreeMaterial *material)
+{
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  priv->needs_update = FALSE;
 }
 
 void
@@ -527,7 +535,7 @@ gthree_material_set_vertex_colors (GthreeMaterial *material,
 
   priv->vertex_colors = vertex_colors;
 
-  gthree_material_set_needs_update (material, TRUE);
+  gthree_material_set_needs_update (material);
 
   g_object_notify_by_pspec (G_OBJECT (material), obj_props[PROP_VERTEX_COLORS]);
 }

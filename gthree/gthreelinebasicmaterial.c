@@ -167,7 +167,7 @@ gthree_line_basic_material_set_color (GthreeLineBasicMaterial *line_basic,
 
   priv->color = *color;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (line_basic), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (line_basic));
 
   g_object_notify_by_pspec (G_OBJECT (line_basic), obj_props[PROP_COLOR]);
 }
@@ -191,7 +191,7 @@ gthree_line_basic_material_set_line_width (GthreeLineBasicMaterial *line_basic,
 
   priv->line_width = line_width;
 
-  gthree_material_set_needs_update (GTHREE_MATERIAL (line_basic), TRUE);
+  gthree_material_set_needs_update (GTHREE_MATERIAL (line_basic));
 
   g_object_notify_by_pspec (G_OBJECT (line_basic), obj_props[PROP_COLOR]);
 }
