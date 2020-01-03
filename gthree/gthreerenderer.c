@@ -2194,13 +2194,8 @@ set_program (GthreeRenderer *renderer,
      object) changed since we last initialized the material, even if
      the material itself didn't change */
   priv->light_setup.hash.obj_receive_shadow = gthree_object_get_receive_shadow (object) && priv->shadowmap_enabled;
-  if (!gthree_material_get_needs_update (material))
-    {
-      if (!gthree_light_setup_hash_equal (&material_properties->light_hash, &priv->light_setup.hash))
-        gthree_material_set_needs_update (material);
-    }
-
-  if (gthree_material_get_needs_update (material))
+  if (gthree_material_get_needs_update (material) ||
+      !gthree_light_setup_hash_equal (&material_properties->light_hash, &priv->light_setup.hash))
     {
       init_material (renderer, material, fog, object);
       gthree_material_mark_clean (material);
