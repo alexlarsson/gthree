@@ -3,6 +3,7 @@
 #include "gthreeloader.h"
 #include "gthreeattribute.h"
 #include "gthreemeshstandardmaterial.h"
+#include "gthreemeshspecglosmaterial.h"
 #include "gthreeperspectivecamera.h"
 #include "gthreeorthographiccamera.h"
 #include "gthreemeshbasicmaterial.h"
@@ -490,6 +491,8 @@ parse_quaternion (JsonArray *quat_j, graphene_quaternion_t *q)
 static gboolean
 supports_extension (const char *extension)
 {
+  if (strcmp (extension, "KHR_materials_pbrSpecularGlossiness") == 0)
+    return TRUE;
   return FALSE;
 }
 
@@ -1034,47 +1037,101 @@ parse_materials (GthreeLoader *loader, JsonObject *root, GError **error)
   for (i = 0; i < len; i++)
     {
       JsonObject *material_j = json_array_get_object_element (materials_j, i);
-      g_autoptr(GthreeMeshStandardMaterial) material = NULL;
-      JsonObject *pbr = NULL;
+      g_autoptr(GthreeMeshMaterial) material = NULL;
+      JsonObject *extensions = NULL;
       graphene_vec3_t color;
       float color_alpha = 1.0;
-      double metallic_factor = 1.0, roughness_factor = 1.0;
       const char *alpha_mode = "OPAQUE";
+      g_autofree char *name = NULL;
+
+      if (json_object_has_member (material_j, "name"))
+        name = g_strdup (json_object_get_string_member (material_j, "name"));
+      else
+        name = g_strdup_printf ("material_%d", i);
 
       graphene_vec3_init (&color, 1.0, 1.0, 1.0);
 
-      if (json_object_has_member (material_j, "pbrMetallicRoughness"))
-        pbr = json_object_get_object_member (material_j, "pbrMetallicRoughness");
+      if (json_object_has_member (material_j, "extensions"))
+        extensions = json_object_get_object_member (material_j, "extensions");
 
-      if (pbr && json_object_has_member (pbr, "baseColorFactor"))
-        parse_color (json_object_get_array_member (pbr, "baseColorFactor"), &color, &color_alpha);
-      if (pbr && json_object_has_member (pbr, "metallicFactor"))
-        metallic_factor = json_object_get_double_member (pbr, "metallicFactor");
-      if (pbr && json_object_has_member (pbr, "roughnessFactor"))
-        roughness_factor = json_object_get_double_member (pbr, "roughnessFactor");
-
-      material = gthree_mesh_standard_material_new ();
-
-      gthree_mesh_standard_material_set_color (material, &color);
-      gthree_material_set_opacity (GTHREE_MATERIAL (material), color_alpha);
-      gthree_mesh_standard_material_set_roughness (material, roughness_factor);
-      gthree_mesh_standard_material_set_metalness (material, metallic_factor);
-
-      if (pbr)
+      if (extensions &&
+          json_object_has_member (extensions, "KHR_materials_pbrSpecularGlossiness"))
         {
+          JsonObject *specglos = json_object_get_object_member (extensions, "KHR_materials_pbrSpecularGlossiness");
+          double glossiness_factor = 1.0;
+          graphene_vec3_t specular_factor;
+
+          graphene_vec3_init (&specular_factor, 1.0, 1.0, 1.0);
+
+          material = GTHREE_MESH_MATERIAL (gthree_mesh_specglos_material_new ());
+
+          if (json_object_has_member (specglos, "diffuseFactor"))
+            parse_color (json_object_get_array_member (specglos, "diffuseFactor"), &color, &color_alpha);
+          gthree_mesh_specglos_material_set_color (GTHREE_MESH_SPECGLOS_MATERIAL (material), &color);
+          gthree_material_set_opacity (GTHREE_MATERIAL (material), color_alpha);
+
+          if (json_object_has_member (specglos, "specularFactor"))
+            parse_color (json_object_get_array_member (specglos, "specularFactor"), &specular_factor, NULL);
+          gthree_mesh_specglos_material_set_specular_factor (GTHREE_MESH_SPECGLOS_MATERIAL (material), &specular_factor);
+
+          if (json_object_has_member (specglos, "glossinessFactor"))
+            glossiness_factor = json_object_get_double_member (specglos, "glossinessFactor");
+          gthree_mesh_specglos_material_set_glossiness (GTHREE_MESH_SPECGLOS_MATERIAL (material), glossiness_factor);
+
+          if (json_object_has_member (specglos, "diffuseTexture"))
+            {
+              g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, json_object_get_object_member (specglos, "diffuseTexture"));
+              gthree_mesh_specglos_material_set_map (GTHREE_MESH_SPECGLOS_MATERIAL (material), texture);
+            }
+
+          if (json_object_has_member (specglos, "specularGlossinessTexture"))
+            {
+              g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, json_object_get_object_member (specglos, "specularGlossinessTexture"));
+              gthree_mesh_specglos_material_set_specular_map (GTHREE_MESH_SPECGLOS_MATERIAL (material), texture);
+              gthree_mesh_specglos_material_set_glossiness_map (GTHREE_MESH_SPECGLOS_MATERIAL (material), texture);
+            }
+
+        }
+      else if (json_object_has_member (material_j, "pbrMetallicRoughness"))
+        {
+          JsonObject *pbr = json_object_get_object_member (material_j, "pbrMetallicRoughness");
+          double metallic_factor = 1.0, roughness_factor = 1.0;
+
+          material = GTHREE_MESH_MATERIAL (gthree_mesh_standard_material_new ());
+
+          if (json_object_has_member (pbr, "baseColorFactor"))
+            parse_color (json_object_get_array_member (pbr, "baseColorFactor"), &color, &color_alpha);
+
+          gthree_mesh_standard_material_set_color (GTHREE_MESH_STANDARD_MATERIAL (material), &color);
+          gthree_material_set_opacity (GTHREE_MATERIAL (material), color_alpha);
+
+          if (json_object_has_member (pbr, "metallicFactor"))
+            metallic_factor = json_object_get_double_member (pbr, "metallicFactor");
+          gthree_mesh_standard_material_set_metalness (GTHREE_MESH_STANDARD_MATERIAL (material), metallic_factor);
+
+          if (json_object_has_member (pbr, "roughnessFactor"))
+            roughness_factor = json_object_get_double_member (pbr, "roughnessFactor");
+          gthree_mesh_standard_material_set_roughness (GTHREE_MESH_STANDARD_MATERIAL (material), roughness_factor);
+
           if (json_object_has_member (pbr, "baseColorTexture"))
             {
               g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, json_object_get_object_member (pbr, "baseColorTexture"));
-              gthree_mesh_standard_material_set_map (material, texture);
+              gthree_mesh_standard_material_set_map (GTHREE_MESH_STANDARD_MATERIAL (material), texture);
             }
 
           if (json_object_has_member (pbr, "metallicRoughnessTexture"))
             {
               g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, json_object_get_object_member (pbr, "metallicRoughnessTexture"));
-              gthree_mesh_standard_material_set_roughness_map (material, texture);
-              gthree_mesh_standard_material_set_metalness_map (material, texture);
+              gthree_mesh_standard_material_set_roughness_map (GTHREE_MESH_STANDARD_MATERIAL (material), texture);
+              gthree_mesh_standard_material_set_metalness_map (GTHREE_MESH_STANDARD_MATERIAL (material), texture);
             }
         }
+      else
+        {
+          material = GTHREE_MESH_MATERIAL (gthree_mesh_standard_material_new ());
+        }
+
+      gthree_material_set_name (GTHREE_MATERIAL (material), name);
 
       if (json_object_has_member (material_j, "normalTexture"))
         {
@@ -1083,13 +1140,13 @@ parse_materials (GthreeLoader *loader, JsonObject *root, GError **error)
           graphene_vec2_t normal_scale;
           float scale = 1.0;
 
-          gthree_mesh_standard_material_set_normal_map (material, texture);
+          g_object_set (material, "normal-map", texture, NULL);
 
           if (json_object_has_member (texture_j, "scale"))
             scale = json_object_get_double_member (texture_j, "scale");
           graphene_vec2_init (&normal_scale, scale, scale);
 
-          gthree_mesh_standard_material_set_normal_map_scale (material, &normal_scale);
+          g_object_set (material, "normal-scale", &normal_scale, NULL);
         }
 
       if (json_object_has_member (material_j, "occlusionTexture"))
@@ -1098,11 +1155,12 @@ parse_materials (GthreeLoader *loader, JsonObject *root, GError **error)
           g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, texture_j);
           double intensity = 1.0;
 
-          gthree_mesh_standard_material_set_ao_map (material, texture);
+          g_object_set (material, "ao-map", texture, NULL);
 
           if (json_object_get_member (texture_j, "strength"))
             intensity = json_object_get_double_member (texture_j, "strength");
-          gthree_mesh_standard_material_set_ao_map_intensity (material, intensity);
+
+          g_object_set (material, "ao-map-intensity", intensity, NULL);
         }
 
       if (json_object_has_member (material_j, "emissiveFactor"))
@@ -1110,7 +1168,7 @@ parse_materials (GthreeLoader *loader, JsonObject *root, GError **error)
           graphene_vec3_t e_color;
 
           parse_color (json_object_get_array_member (material_j, "emissiveFactor"), &e_color, NULL);
-          gthree_mesh_standard_material_set_emissive_color (material, &e_color);
+          g_object_set (material, "emissive-color", &e_color, NULL);
         }
 
       if (json_object_has_member (material_j, "emissiveTexture"))
@@ -1118,7 +1176,7 @@ parse_materials (GthreeLoader *loader, JsonObject *root, GError **error)
           JsonObject *texture_j = json_object_get_object_member (material_j, "emissiveTexture");
           g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, texture_j);
 
-          gthree_mesh_standard_material_set_emissive_map (material, texture);
+          g_object_set (material, "emissive-map", texture, NULL);
         }
 
       if (json_object_has_member (material_j, "doubleSided") &&
