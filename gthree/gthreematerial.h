@@ -56,6 +56,11 @@ GTHREE_API
 GType gthree_material_get_type (void) G_GNUC_CONST;
 
 GTHREE_API
+const char *     gthree_material_get_name                 (GthreeMaterial           *material);
+GTHREE_API
+void             gthree_material_set_name                 (GthreeMaterial           *material,
+                                                           const char               *name);
+GTHREE_API
 GthreeMaterial *  gthree_material_clone                    (GthreeMaterial          *material);
 
 GTHREE_API

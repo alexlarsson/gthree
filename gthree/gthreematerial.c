@@ -6,6 +6,8 @@
 #include "gthreetypebuiltins.h"
 
 typedef struct {
+  char *name;
+
   gboolean transparent;
   float opacity;
   gboolean visible;
@@ -98,6 +100,11 @@ gthree_material_init (GthreeMaterial *material)
 static void
 gthree_material_finalize (GObject *obj)
 {
+  GthreeMaterial *material = GTHREE_MATERIAL(obj);
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  g_free (priv->name);
+
   G_OBJECT_CLASS (gthree_material_parent_class)->finalize (obj);
 }
 
@@ -291,6 +298,25 @@ gthree_material_class_init (GthreeMaterialClass *klass)
 
   g_object_class_install_properties (gobject_class, N_PROPS, obj_props);
 }
+
+const char *
+gthree_material_get_name (GthreeMaterial *material)
+{
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  return priv->name;
+}
+
+void
+gthree_material_set_name (GthreeMaterial *material,
+                          const char     *name)
+{
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  g_free (priv->name);
+  priv->name = g_strdup (name);
+}
+
 
 gboolean
 gthree_material_get_is_visible (GthreeMaterial *material)
