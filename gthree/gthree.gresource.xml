@@ -40,6 +40,8 @@
     <file>shader_chunks/fog_pars_fragment.glsl</file>
     <file>shader_chunks/fog_pars_vertex.glsl</file>
     <file>shader_chunks/fog_vertex.glsl</file>
+    <file>shader_chunks/glossinessmap_fragment.glsl</file>
+    <file>shader_chunks/glossinessmap_pars_fragment.glsl</file>
     <file>shader_chunks/gradientmap_pars_fragment.glsl</file>
     <file>shader_chunks/lightmap_fragment.glsl</file>
     <file>shader_chunks/lightmap_pars_fragment.glsl</file>
@@ -52,6 +54,7 @@
     <file>shader_chunks/lights_phong_pars_fragment.glsl</file>
     <file>shader_chunks/lights_physical_fragment.glsl</file>
     <file>shader_chunks/lights_physical_pars_fragment.glsl</file>
+    <file>shader_chunks/lights_specglos_fragment.glsl</file>
     <file>shader_chunks/logdepthbuf_fragment.glsl</file>
     <file>shader_chunks/logdepthbuf_pars_fragment.glsl</file>
     <file>shader_chunks/logdepthbuf_pars_vertex.glsl</file>
@@ -81,6 +84,7 @@
     <file>shader_chunks/skinning_pars_vertex.glsl</file>
     <file>shader_chunks/skinning_vertex.glsl</file>
     <file>shader_chunks/skinnormal_vertex.glsl</file>
+    <file>shader_chunks/specularmap2_fragment.glsl</file>
     <file>shader_chunks/specularmap_fragment.glsl</file>
     <file>shader_chunks/specularmap_pars_fragment.glsl</file>
     <file>shader_chunks/tonemapping_fragment.glsl</file>
@@ -114,6 +118,7 @@
     <file>shader_lib/meshphong_vert.glsl</file>
     <file>shader_lib/meshphysical_frag.glsl</file>
     <file>shader_lib/meshphysical_vert.glsl</file>
+    <file>shader_lib/meshspecglos_frag.glsl</file>
     <file>shader_lib/normal_frag.glsl</file>
     <file>shader_lib/normal_vert.glsl</file>
     <file>shader_lib/points_frag.glsl</file>

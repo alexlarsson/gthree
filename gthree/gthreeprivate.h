@@ -73,6 +73,7 @@ struct  _GthreeProgramParameters {
   guint displacement_map : 1;
   guint specular_map : 1;
   guint roughness_map : 1;
+  guint glossiness_map : 1;
   guint metalness_map : 1;
   guint gradient_map : 1;
   guint alpha_map : 1;

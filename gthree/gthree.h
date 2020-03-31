@@ -35,6 +35,7 @@
 #include <gthree/gthreemeshlambertmaterial.h>
 #include <gthree/gthreemeshphongmaterial.h>
 #include <gthree/gthreemeshstandardmaterial.h>
+#include <gthree/gthreemeshspecglosmaterial.h>
 #include <gthree/gthreemeshnormalmaterial.h>
 #include <gthree/gthreemeshdepthmaterial.h>
 #include <gthree/gthreemeshdistancematerial.h>

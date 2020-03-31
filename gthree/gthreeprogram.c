@@ -505,6 +505,8 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
         g_string_append (vertex, "#define USE_SPECULARMAP\n");
       if (parameters->roughness_map)
         g_string_append (vertex, "#define USE_ROUGHNESSMAP\n");
+      if (parameters->glossiness_map)
+        g_string_append (vertex, "#define USE_GLOSSINESSMAP\n");
       if (parameters->metalness_map)
         g_string_append (vertex, "#define USE_METALNESSMAP\n");
       if (parameters->alpha_map)
@@ -644,6 +646,8 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
         g_string_append (fragment, "#define USE_SPECULARMAP\n");
       if (parameters->roughness_map)
         g_string_append (fragment, "#define USE_ROUGHNESSMAP\n");
+      if (parameters->glossiness_map)
+        g_string_append (fragment, "#define USE_GLOSSINESSMAP\n");
       if (parameters->metalness_map)
         g_string_append (fragment, "#define USE_METALNESSMAP\n");
       if (parameters->alpha_map)
