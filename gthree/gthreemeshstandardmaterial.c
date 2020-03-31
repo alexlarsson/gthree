@@ -66,7 +66,7 @@ enum {
   PROP_BUMP_SCALE,
   PROP_NORMAL_MAP,
   PROP_NORMAL_MAP_TYPE,
-  //PROP_NORMAL_SCALE,
+  PROP_NORMAL_SCALE,
   PROP_DISPLACEMENT_MAP,
   PROP_DISPLACEMENT_SCALE,
   PROP_DISPLACEMENT_BIAS,
@@ -419,11 +419,9 @@ gthree_mesh_standard_material_set_property (GObject *obj,
       gthree_mesh_standard_material_set_normal_map_type (standard, g_value_get_enum (value));
       break;
 
-      /* Need to handle vec2 gobject properties..
     case PROP_NORMAL_SCALE:
-      g_assert_not_reached ();
+      gthree_mesh_standard_material_set_normal_map_scale (standard, g_value_get_boxed (value));
       break;
-      */
 
     case PROP_DISPLACEMENT_MAP:
       gthree_mesh_standard_material_set_displacement_map (standard, g_value_get_object (value));
@@ -537,11 +535,9 @@ gthree_mesh_standard_material_get_property (GObject *obj,
       g_value_set_enum (value, priv->normal_map_type);
       break;
 
-      /* Need to handle vec2 gobject properties..
     case PROP_NORMAL_SCALE:
-      g_assert_not_reached (); 
+      g_value_set_boxed (value, &priv->normal_scale);
       break;
-      */
 
     case PROP_DISPLACEMENT_MAP:
       g_value_set_object (value, priv->displacement_map);
@@ -663,14 +659,12 @@ gthree_mesh_standard_material_class_init (GthreeMeshStandardMaterialClass *klass
                        GTHREE_TYPE_NORMAL_MAP_TYPE,
                        GTHREE_NORMAL_MAP_TYPE_TANGENT_SPACE,
                        G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-  /* Need to handle vec2 gobject properties..
   obj_props[PROP_NORMAL_SCALE] =
-    g_param_spec_float ("normal-scale", "Normal scale", "Normal scale",
-                        0.f, 10.f, 1.0f,
+    g_param_spec_boxed ("normal-scale", "Normal scale", "Normal scale",
+                        GRAPHENE_TYPE_VEC2,
                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-  */
   obj_props[PROP_DISPLACEMENT_MAP] =
-    g_param_spec_object ("displaement-map", "Displaement map", "Displacement map",
+    g_param_spec_object ("displacement-map", "Displacement map", "Displacement map",
                          GTHREE_TYPE_TEXTURE,
                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   obj_props[PROP_DISPLACEMENT_SCALE] =
@@ -1095,7 +1089,7 @@ gthree_mesh_standard_material_set_normal_map_scale (GthreeMeshStandardMaterial *
 
   gthree_material_set_needs_update (GTHREE_MATERIAL (standard));
 
-  //g_object_notify_by_pspec (G_OBJECT (standard), obj_props[PROP_NORM]);
+  g_object_notify_by_pspec (G_OBJECT (standard), obj_props[PROP_NORMAL_SCALE]);
 }
 
 GthreeTexture *
