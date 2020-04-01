@@ -9,6 +9,7 @@
 typedef struct {
   graphene_vec3_t bg_color;
   gboolean bg_color_is_set;
+  float bg_alpha;
   GthreeTexture *bg_texture;
   GthreeMaterial *override_material;
 } GthreeScenePrivate;
@@ -30,6 +31,9 @@ gthree_scene_new ()
 static void
 gthree_scene_init (GthreeScene *scene)
 {
+  GthreeScenePrivate *priv = gthree_scene_get_instance_private (scene);
+
+  priv->bg_alpha = -1;
   gthree_object_set_matrix_auto_update (GTHREE_OBJECT (scene), FALSE);
 }
 
@@ -67,6 +71,24 @@ gthree_scene_set_background_color (GthreeScene   *scene,
     }
   else
     priv->bg_color_is_set = FALSE;
+}
+
+/* negative alpha means unset */
+float
+gthree_scene_get_background_alpha (GthreeScene *scene)
+{
+  GthreeScenePrivate *priv = gthree_scene_get_instance_private (scene);
+
+  return priv->bg_alpha;
+}
+
+/* negative alpha means unset */
+void
+gthree_scene_set_background_alpha (GthreeScene   *scene,
+                                   float alpha)
+{
+  GthreeScenePrivate *priv = gthree_scene_get_instance_private (scene);
+  priv->bg_alpha = alpha;
 }
 
 GthreeTexture *

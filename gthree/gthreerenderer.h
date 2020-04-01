@@ -77,6 +77,11 @@ void                gthree_renderer_set_clear_color           (GthreeRenderer   
 GTHREE_API
 const graphene_vec3_t *gthree_renderer_get_clear_color        (GthreeRenderer     *renderer);
 GTHREE_API
+void                gthree_renderer_set_clear_alpha           (GthreeRenderer     *renderer,
+                                                               float               alpha);
+GTHREE_API
+float               gthree_renderer_get_clear_alpha           (GthreeRenderer     *renderer);
+GTHREE_API
 void                gthree_renderer_set_gamma_factor          (GthreeRenderer     *renderer,
                                                                float               factor);
 GTHREE_API

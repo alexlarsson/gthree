@@ -63,6 +63,7 @@ typedef struct {
   gboolean auto_clear_depth;
   gboolean auto_clear_stencil;
   graphene_vec3_t clear_color;
+  float clear_alpha;
   gboolean sort_objects;
   float gamma_factor;
   gboolean physically_correct_lights;
@@ -294,6 +295,7 @@ gthree_renderer_init (GthreeRenderer *renderer)
   priv->auto_clear_color = TRUE;
   priv->auto_clear_depth = TRUE;
   priv->auto_clear_stencil = TRUE;
+  priv->clear_alpha = 1.0;
   priv->sort_objects = TRUE;
   priv->width = 1;
   priv->height = 1;
@@ -786,6 +788,23 @@ gthree_renderer_get_clear_color  (GthreeRenderer     *renderer)
 }
 
 void
+gthree_renderer_set_clear_alpha (GthreeRenderer *renderer,
+                                 float alpha)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  priv->clear_alpha = alpha;
+}
+
+float
+gthree_renderer_get_clear_alpha  (GthreeRenderer     *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  return priv->clear_alpha;
+}
+
+void
 gthree_renderer_set_gamma_factor (GthreeRenderer *renderer,
                                    float           factor)
 {
@@ -1086,7 +1105,7 @@ gthree_renderer_clear (GthreeRenderer *renderer,
   gthree_renderer_push_current (renderer);
 
   if (color)
-    set_clear_color (renderer, &priv->clear_color, 1);
+    set_clear_color (renderer, &priv->clear_color, priv->clear_alpha);
 
   clear (color, depth, stencil);
 
@@ -1110,7 +1129,7 @@ gthree_renderer_clear_color (GthreeRenderer *renderer)
 
   gthree_renderer_push_current (renderer);
 
-  set_clear_color (renderer, &priv->clear_color, 1);
+  set_clear_color (renderer, &priv->clear_color, priv->clear_alpha);
 
   clear (TRUE, FALSE, FALSE);
 
@@ -2895,18 +2914,25 @@ gthree_renderer_render_background (GthreeRenderer *renderer,
   gboolean force_clear = FALSE;
   GthreeMesh *bg_mesh = NULL;
   const graphene_vec3_t *clear_color = NULL;
+  float clear_alpha;
 
   if (bg_color == NULL)
-    clear_color = &priv->clear_color;
+    {
+      clear_color = &priv->clear_color;
+    }
   else
     {
       clear_color = bg_color;
       force_clear = TRUE;
     }
 
+  clear_alpha = gthree_scene_get_background_alpha (scene);
+  if (clear_alpha < 0)
+    clear_alpha = priv->clear_alpha;
+
   if (priv->auto_clear || force_clear)
     {
-      set_clear_color (renderer, clear_color, 1);
+      set_clear_color (renderer, clear_color, clear_alpha);
       clear (priv->auto_clear_color, priv->auto_clear_depth, priv->auto_clear_stencil);
     }
 

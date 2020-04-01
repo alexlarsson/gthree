@@ -46,6 +46,11 @@ GTHREE_API
 void            gthree_scene_set_background_color   (GthreeScene   *scene,
                                                      const graphene_vec3_t *color);
 GTHREE_API
+float           gthree_scene_get_background_alpha   (GthreeScene   *scene);
+GTHREE_API
+void            gthree_scene_set_background_alpha   (GthreeScene   *scene,
+                                                     float          alpha);
+GTHREE_API
 GthreeTexture * gthree_scene_get_background_texture (GthreeScene   *scene);
 GTHREE_API
 void            gthree_scene_set_background_texture (GthreeScene   *scene,
