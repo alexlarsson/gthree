@@ -280,7 +280,11 @@ tick (GtkWidget     *widget,
   static gint64 first_frame_time = 0;
   float angle;
   graphene_vec3_t color;
+#ifdef USE_GTK4
+  float r, g, b;
+#else
   double r, g, b;
+#endif
 
   frame_time = gdk_frame_clock_get_frame_time (frame_clock);
   if (first_frame_time == 0)
@@ -347,8 +351,9 @@ int
 main (int argc, char *argv[])
 {
   GtkWidget *window, *box, *area;
+  gboolean done = FALSE;
 
-  window = examples_init ("Materials", &box);
+  window = examples_init ("Materials", &box, &done);
 
   init_scene ();
   area = gthree_area_new (scene, GTHREE_CAMERA (camera));
@@ -362,7 +367,8 @@ main (int argc, char *argv[])
 
   gtk_widget_show (window);
 
-  gtk_main ();
+  while (!done)
+    g_main_context_iteration (NULL, TRUE);
 
   return EXIT_SUCCESS;
 }

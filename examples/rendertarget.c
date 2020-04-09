@@ -136,8 +136,9 @@ int
 main (int argc, char *argv[])
 {
   GtkWidget *window, *box, *area;
+  gboolean done = FALSE;
 
-  window = examples_init ("Render targets", &box);
+  window = examples_init ("Render targets", &box, &done);
 
   init_scene ();
 
@@ -153,7 +154,8 @@ main (int argc, char *argv[])
 
   gtk_widget_show (window);
 
-  gtk_main ();
+  while (!done)
+    g_main_context_iteration (NULL, TRUE);
 
   return EXIT_SUCCESS;
 }

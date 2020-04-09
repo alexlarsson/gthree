@@ -185,8 +185,9 @@ main (int argc, char *argv[])
   graphene_point3d_t pos;
   graphene_euler_t euler;
   GtkEventController *click;
+  gboolean done = FALSE;
 
-  window = examples_init ("Multi views", &box);
+  window = examples_init ("Multi views", &box, &done);
 
   scene = init_scene ();
 
@@ -258,7 +259,8 @@ main (int argc, char *argv[])
 
   gtk_widget_show (window);
 
-  gtk_main ();
+  while (!done)
+    g_main_context_iteration (NULL, TRUE);
 
   return EXIT_SUCCESS;
 }

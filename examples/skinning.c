@@ -224,8 +224,9 @@ main (int argc, char *argv[])
   graphene_point3d_t pos;
   GthreeAmbientLight *ambient_light;
   GthreeDirectionalLight *directional_light;
+  gboolean done = FALSE;
 
-  window = examples_init ("Skinning", &box);
+  window = examples_init ("Skinning", &box, &done);
 
   scene = init_scene ();
 
@@ -257,7 +258,8 @@ main (int argc, char *argv[])
 
   gtk_widget_show (window);
 
-  gtk_main ();
+  while (!done)
+    g_main_context_iteration (NULL, TRUE);
 
   return EXIT_SUCCESS;
 }
