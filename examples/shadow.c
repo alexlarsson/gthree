@@ -193,8 +193,9 @@ int
 main (int argc, char *argv[])
 {
   GtkWidget *window, *box, *area;
+  gboolean done = FALSE;
 
-  window = examples_init ("Shadows", &box);
+  window = examples_init ("Shadows", &box, &done);
 
   init_scene ();
   area = gthree_area_new (scene, GTHREE_CAMERA (camera));
@@ -209,7 +210,8 @@ main (int argc, char *argv[])
 
   gtk_widget_show (window);
 
-  gtk_main ();
+  while (!done)
+    g_main_context_iteration (NULL, TRUE);
 
   return EXIT_SUCCESS;
 }

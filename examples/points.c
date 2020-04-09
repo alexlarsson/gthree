@@ -161,8 +161,9 @@ main (int argc, char *argv[])
   GthreeScene *scene;
   GthreePerspectiveCamera *camera;
   graphene_point3d_t pos;
+  gboolean done = FALSE;
 
-  window = examples_init ("Points", &box);
+  window = examples_init ("Points", &box, &done);
 
   scene = init_scene ();
   camera = gthree_perspective_camera_new (27, 1, 5, 3500);
@@ -182,7 +183,8 @@ main (int argc, char *argv[])
 
   gtk_widget_show (window);
 
-  gtk_main ();
+  while (!done)
+    g_main_context_iteration (NULL, TRUE);
 
   return EXIT_SUCCESS;
 }

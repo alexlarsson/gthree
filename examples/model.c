@@ -491,6 +491,7 @@ main (int argc, char *argv[])
 #ifdef USE_GTK4
   GtkEventController *scroll;
 #endif
+  gboolean done = FALSE;
 
   struct {
     char *path;
@@ -515,7 +516,7 @@ main (int argc, char *argv[])
       g_ptr_array_add (env_maps, cube_texture);
     }
 
-  window = examples_init ("Models", &box);
+  window = examples_init ("Models", &box, &done);
 
   area = gthree_area_new (NULL, NULL);
 
@@ -613,7 +614,8 @@ main (int argc, char *argv[])
 
   update_scene (GTHREE_AREA (area));
 
-  gtk_main ();
+  while (!done)
+    g_main_context_iteration (NULL, TRUE);
 
   return EXIT_SUCCESS;
 }

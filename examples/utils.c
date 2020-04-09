@@ -164,9 +164,21 @@ examples_load_gltl (const char *name, GError **error)
   return loader;
 }
 
+void
+examples_quit_cb (GtkWidget *widget,
+                  gpointer   data)
+{
+  gboolean *done = data;
+
+  *done = TRUE;
+
+  g_main_context_wakeup (NULL);
+}
+
 GtkWidget *
 examples_init (const char *title,
-               GtkWidget **box)
+               GtkWidget **box,
+               gboolean   *done)
 {
   GtkWidget *window, *outer_box, *button;
   g_autofree char *full_title = NULL;
@@ -177,7 +189,12 @@ examples_init (const char *title,
   gtk_init (NULL, NULL);
 #endif
 
+#ifdef USE_GTK4
+  window = gtk_window_new ();
+#else
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+#endif
+
   full_title = g_strdup_printf ("%s - %s", title,
 #ifdef USE_GTK4
                                 "gtk 4"
@@ -190,7 +207,7 @@ examples_init (const char *title,
 #ifdef USE_GTK3
   gtk_container_set_border_width (GTK_CONTAINER (window), 12);
 #endif
-  g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
+  g_signal_connect (window, "destroy", G_CALLBACK (examples_quit_cb), done);
 
   outer_box = gtk_box_new (GTK_ORIENTATION_VERTICAL, FALSE);
   gtk_box_set_spacing (GTK_BOX (outer_box), 6);
