@@ -2,3 +2,4 @@
 directory = graphene
 url = https://github.com/ebassi/graphene
 revision = head
+depth = 1
