@@ -35,7 +35,11 @@ cairo_dep      = dependency('cairo-gobject')
 gtk3_dep       = dependency('gtk+-3.0', version: '>= 3.22',
                             required: get_option('gtk3'))
 gtk4_dep       = dependency('gtk4', version: '>= 3.96',
-                            required: get_option('gtk4'))
+                            required: get_option('gtk4'),
+                            fallback: ['gtk', 'libgtk_dep'],
+                            default_options: ['media=none', 'print-backends=none',
+                                              'demos=false',
+                                              'build-examples=false', 'build-tests=false'])
 epoxy_dep      = dependency('epoxy', version: '>= 1.4')
 json_glib_dep  = dependency('json-glib-1.0', version: '>= 1.2.0')
 
@@ -50,6 +54,14 @@ if graphene_dep.type_name() == 'internal'
 else
   graphene_is_subproject = false
   graphene_subproject_typelib_dir = ''
+endif
+
+if gtk4_dep.type_name() == 'internal'
+  gtk4_is_subproject = true
+  gtk4_subproject_typelib_dir = join_paths(meson.build_root(), 'subprojects', 'gtk', 'src')
+else
+  gtk4_is_subproject = false
+  gtk4_subproject_typelib_dir = ''
 endif
 
 # Maintain version scheme with libtool

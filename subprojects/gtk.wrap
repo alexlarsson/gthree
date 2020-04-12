@@ -1,0 +1,5 @@
+[wrap-git]
+directory = gtk
+url = https://gitlab.gnome.org/GNOME/gtk
+revision = head
+depth = 1

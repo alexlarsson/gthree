@@ -7,6 +7,9 @@ if not meson.is_cross_build() and get_option('introspection')
   if graphene_is_subproject
     extra_gir_args = extra_gir_args + ['--add-include-path', graphene_subproject_typelib_dir]
   endif
+  if gtk4_is_subproject
+    extra_gir_args = extra_gir_args + ['--add-include-path', gtk4_subproject_typelib_dir]
+  endif
 endif
 
 gthree_sources = [
