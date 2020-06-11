@@ -24,6 +24,10 @@ const graphene_vec3_t *grey (void);
 const graphene_vec3_t *light_grey (void);
 const graphene_vec3_t *dark_green (void);
 const graphene_vec3_t *orange (void);
+void rgb_init_from_hsl (graphene_vec3_t *color,
+                        double   hue,
+                        double   saturation,
+                        double   lightness);
 
 GtkWidget *examples_init (const char *title,
                           GtkWidget **box,
