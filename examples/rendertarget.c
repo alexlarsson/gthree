@@ -22,7 +22,6 @@ void
 init_scene (void)
 {
   GthreeGeometry *geometry;
-  graphene_point3d_t pos;
 
   geometry = gthree_geometry_new_box (80, 80, 80, 1, 1, 1);
 
@@ -34,8 +33,8 @@ init_scene (void)
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (mesh));
 
   camera = gthree_perspective_camera_new (30, 1, 1, 10000);
-  gthree_object_set_position_point3d (GTHREE_OBJECT (camera),
-                              graphene_point3d_init (&pos, 0, 0, 400));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (camera),
+                                  0, 0, 400);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
 
 
@@ -49,8 +48,8 @@ init_scene (void)
   gthree_object_add_child (GTHREE_OBJECT (scene2), GTHREE_OBJECT (mesh2));
 
   camera2 = gthree_perspective_camera_new (30, 1, 1, 10000);
-  gthree_object_set_position_point3d (GTHREE_OBJECT (camera2),
-                              graphene_point3d_init (&pos, 0, 0, 400));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (camera2),
+                                  0, 0, 400);
   gthree_object_add_child (GTHREE_OBJECT (scene2), GTHREE_OBJECT (camera2));
 
   // Ensure it is large so we hit mipmaps
@@ -69,7 +68,6 @@ tick (GtkWidget     *widget,
   static gint64 first_frame_time = 0;
   gint64 frame_time;
   float relative_time;
-  graphene_euler_t euler;
 
   frame_time = gdk_frame_clock_get_frame_time (frame_clock);
   if (first_frame_time == 0)
@@ -79,19 +77,15 @@ tick (GtkWidget     *widget,
      can use some nice numbers when defining animation speed below */
   relative_time = (frame_time - first_frame_time) * 60 / (float) G_USEC_PER_SEC;
 
-  gthree_object_set_rotation (GTHREE_OBJECT (mesh),
-                              graphene_euler_init (&euler,
-                                                   0.0 * relative_time,
-                                                   2.0 * relative_time,
-                                                   1.0 * relative_time
-                                                   ));
+  gthree_object_set_rotation_xyz (GTHREE_OBJECT (mesh),
+                                  0.0 * relative_time,
+                                  2.0 * relative_time,
+                                  1.0 * relative_time);
 
-  gthree_object_set_rotation (GTHREE_OBJECT (mesh2),
-                              graphene_euler_init (&euler,
-                                                   2.0 * relative_time,
-                                                   0.0 * relative_time,
-                                                   1.0 * relative_time
-                                                   ));
+  gthree_object_set_rotation_xyz (GTHREE_OBJECT (mesh2),
+                                  2.0 * relative_time,
+                                  0.0 * relative_time,
+                                  1.0 * relative_time);
 
   gtk_widget_queue_draw (widget);
 

@@ -108,8 +108,6 @@ tick (GtkWidget     *widget,
   static gint64 first_frame_time = 0;
   gint64 frame_time;
   float relative_time;
-  graphene_euler_t rot;
-  graphene_vec3_t pos;
 
   frame_time = gdk_frame_clock_get_frame_time (frame_clock);
   if (first_frame_time == 0)
@@ -120,24 +118,21 @@ tick (GtkWidget     *widget,
   relative_time = (frame_time - first_frame_time) * 60 / (float) G_USEC_PER_SEC;
 
   if (points)
-  gthree_object_set_rotation (GTHREE_OBJECT (points),
-                              graphene_euler_init (&rot,
-                                                   relative_time * 0.25,
-                                                   relative_time * 0.5,
-                                                   0));
+  gthree_object_set_rotation_xyz (GTHREE_OBJECT (points),
+                                  relative_time * 0.25,
+                                  relative_time * 0.5,
+                                  0);
 
 
   if (flakes)
     {
-      gthree_object_set_position (GTHREE_OBJECT (flakes),
-                                  graphene_vec3_init (&pos,
-                                                      sin (relative_time / 100) * 1000,
-                                                      sin (0.5 * relative_time / 100) * 1000,
-                                                      0));
-      gthree_object_set_rotation (GTHREE_OBJECT (flakes),
-                                  graphene_euler_init (&rot,
-                                                       0,0,
-                                                       relative_time * 0.25));
+      gthree_object_set_position_xyz (GTHREE_OBJECT (flakes),
+                                      sin (relative_time / 100) * 1000,
+                                      sin (0.5 * relative_time / 100) * 1000,
+                                      0);
+      gthree_object_set_rotation_xyz (GTHREE_OBJECT (flakes),
+                                      0,0,
+                                      relative_time * 0.25);
     }
 
   gtk_widget_queue_draw (widget);
@@ -160,7 +155,6 @@ main (int argc, char *argv[])
   GtkWidget *window, *box, *area;
   GthreeScene *scene;
   GthreePerspectiveCamera *camera;
-  graphene_point3d_t pos;
   gboolean done = FALSE;
 
   window = examples_init ("Points", &box, &done);
@@ -169,8 +163,8 @@ main (int argc, char *argv[])
   camera = gthree_perspective_camera_new (27, 1, 5, 3500);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
 
-  gthree_object_set_position_point3d (GTHREE_OBJECT (camera),
-                                      graphene_point3d_init (&pos, 0, 0, 2750));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (camera),
+                                  0, 0, 2750);
 
   area = gthree_area_new (scene, GTHREE_CAMERA (camera));
   g_signal_connect (area, "resize", G_CALLBACK (resize_area), camera);

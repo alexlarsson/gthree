@@ -139,7 +139,6 @@ tick (GtkWidget     *widget,
   static gint64 first_frame_time = 0;
   gint64 frame_time;
   float relative_time;
-  graphene_vec3_t pos;
   graphene_point3d_t point;
   float x, y;
   g_autoptr(GthreeRaycaster) raycaster = gthree_raycaster_new ();
@@ -154,11 +153,10 @@ tick (GtkWidget     *widget,
   relative_time = (frame_time - first_frame_time) * 60 / (float) G_USEC_PER_SEC;
 
   float radius = 100;
-  gthree_object_set_position (GTHREE_OBJECT (camera),
-                              graphene_vec3_init (&pos,
-                                                  radius * sinf (relative_time / 200),
-                                                  radius * sinf (relative_time / 200),
-                                                  radius * cosf (relative_time / 200)));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (camera),
+                                  radius * sinf (relative_time / 200),
+                                  radius * sinf (relative_time / 200),
+                                  radius * cosf (relative_time / 200));
 
   gthree_object_look_at (GTHREE_OBJECT (camera),
                          graphene_point3d_init (&point,
@@ -226,7 +224,6 @@ main (int argc, char *argv[])
 {
   GtkWidget *window, *box, *area;
   GthreeScene *scene;
-  graphene_point3d_t pos;
   GtkEventController *motion;
   gboolean done = FALSE;
 
@@ -236,8 +233,7 @@ main (int argc, char *argv[])
   camera = gthree_perspective_camera_new (70, 1, 1, 10000);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
 
-  gthree_object_set_position_point3d (GTHREE_OBJECT (camera),
-                              graphene_point3d_init (&pos, 0, 0, 400));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (camera), 0, 0, 400);
 
   area = gthree_area_new (scene, GTHREE_CAMERA (camera));
   g_signal_connect (area, "resize", G_CALLBACK (resize_area), camera);

@@ -94,7 +94,6 @@ init_scene (void)
 {
   GthreeScene *scene;
   GthreeAmbientLight *ambient_light;
-  graphene_point3d_t pos;
   int i;
 
   scene = gthree_scene_new ();
@@ -109,7 +108,7 @@ init_scene (void)
       objects = g_list_prepend (objects, obj);
 
       gthree_object_add_child (GTHREE_OBJECT (scene), obj);
-      gthree_object_set_position_point3d (obj, graphene_point3d_init (&pos, i * 70 - 100, 0, 0));
+      gthree_object_set_position_xyz (obj, i * 70 - 100, 0, 0);
       gthree_object_add_child (obj, face_normals (GTHREE_MESH (obj), 10, red (), 1));
     }
 
@@ -122,7 +121,6 @@ tick (GtkWidget     *widget,
       gpointer       user_data)
 {
   static graphene_point3d_t rot = { 0, 0, 0};
-  graphene_euler_t euler;
   GList *l;
 
   rot.x += 1.8;
@@ -133,7 +131,7 @@ tick (GtkWidget     *widget,
     {
       GthreeObject *obj = l->data;
 
-      gthree_object_set_rotation (obj, graphene_euler_init (&euler, rot.x, rot.y, rot.z));
+      gthree_object_set_rotation_xyz (obj, rot.x, rot.y, rot.z);
     }
 
   gtk_widget_queue_draw (widget);
@@ -156,7 +154,6 @@ main (int argc, char *argv[])
   GtkWidget *window, *box, *area;
   GthreeScene *scene;
   GthreePerspectiveCamera *camera;
-  graphene_point3d_t pos;
   gboolean done = FALSE;
 
   window = examples_init ("Normals", &box, &done);
@@ -165,8 +162,8 @@ main (int argc, char *argv[])
   camera = gthree_perspective_camera_new (30, 1, 1, 10000);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
 
-  gthree_object_set_position_point3d (GTHREE_OBJECT (camera),
-                              graphene_point3d_init (&pos, 0, 0, 400));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (camera),
+                                  0, 0, 400);
 
   area = gthree_area_new (scene, GTHREE_CAMERA (camera));
   g_signal_connect (area, "resize", G_CALLBACK (resize_area), camera);

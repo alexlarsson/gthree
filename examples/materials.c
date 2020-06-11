@@ -85,8 +85,6 @@ init_scene (void)
   GdkPixbuf *pixbuf;
   GthreeMesh *floor;
   int i, n_faces;
-  graphene_point3d_t pos = { 0, 0, 0};
-  graphene_euler_t euler;
   GthreeMesh *particle_light;
 
   scene = gthree_scene_new ();
@@ -99,8 +97,7 @@ init_scene (void)
 
   camera = gthree_perspective_camera_new (45, 1, 1, 2000);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
-  gthree_object_set_position_point3d (GTHREE_OBJECT (camera),
-                              graphene_point3d_init (&pos, 0, 200, 2000));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (camera), 0, 200, 2000);
 
   material_lambert = gthree_mesh_lambert_material_new ();
   gthree_mesh_lambert_material_set_color (material_lambert, light_grey ());
@@ -222,8 +219,7 @@ init_scene (void)
   floor = gthree_mesh_new (floor_geometry, GTHREE_MATERIAL (material_wireframe));
 
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (floor));
-  gthree_object_set_position_point3d (GTHREE_OBJECT (floor),
-                              graphene_point3d_init (&pos, 0, -75, 0));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (floor), 0, -75, 0);
 
 
   for (i = 0; i < n_materials; i++)
@@ -231,16 +227,14 @@ init_scene (void)
       GthreeMesh *sphere = gthree_mesh_new (geometries[i], materials[i]);
       if (materials[i] == NULL)
         gthree_mesh_set_materials (sphere, multi_materials);
-      gthree_object_set_position_point3d (GTHREE_OBJECT (sphere),
-                                  graphene_point3d_init (&pos,
-                                                         (i % 4 ) * 200 - 400,
-                                                         0,
-                                                         (i / 4) * 200 - 200));
-      gthree_object_set_rotation (GTHREE_OBJECT (sphere),
-                                  graphene_euler_init (&euler,
-                                                       g_random_double_range (0, 360),
-                                                       g_random_double_range (0, 360),
-                                                       g_random_double_range (0, 360)));
+      gthree_object_set_position_xyz (GTHREE_OBJECT (sphere),
+                                      (i % 4 ) * 200 - 400,
+                                      0,
+                                      (i / 4) * 200 - 200);
+      gthree_object_set_rotation_xyz (GTHREE_OBJECT (sphere),
+                                      g_random_double_range (0, 360),
+                                      g_random_double_range (0, 360),
+                                      g_random_double_range (0, 360));
 
       gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (sphere));
 
@@ -261,9 +255,8 @@ init_scene (void)
   gthree_object_add_child (GTHREE_OBJECT (point_light), GTHREE_OBJECT (particle_light));
 
   directional_light = gthree_directional_light_new (white (), 0.125);
-  gthree_object_set_position_point3d (GTHREE_OBJECT (directional_light),
-                              graphene_point3d_init (&pos,
-                                                     1, 1, -1));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (directional_light),
+                                  1, 1, -1);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (directional_light));
 }
 
@@ -272,7 +265,6 @@ tick (GtkWidget     *widget,
       GdkFrameClock *frame_clock,
       gpointer       user_data)
 {
-  graphene_point3d_t pos;
   const graphene_euler_t *old_rot;
   graphene_euler_t rot;
   GList *l;
@@ -291,13 +283,11 @@ tick (GtkWidget     *widget,
     first_frame_time = frame_time;
   angle = (frame_time - first_frame_time) / 4000000.0;
 
-  gthree_object_set_position_point3d (GTHREE_OBJECT (camera),
-                              graphene_point3d_init (&pos,
-                                                     cos (angle) * 1000,
-                                                     200,
-                                                     sin (angle) * 1000));
-  gthree_object_look_at (GTHREE_OBJECT (camera),
-                         graphene_point3d_init (&pos, 0, 0, 0));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (camera),
+                                  cos (angle) * 1000,
+                                  200,
+                                  sin (angle) * 1000);
+  gthree_object_look_at_xyz (GTHREE_OBJECT (camera), 0, 0, 0);
 
   for (l = objects; l != NULL; l = l->next)
     {
@@ -327,11 +317,10 @@ tick (GtkWidget     *widget,
       gthree_mesh_phong_material_set_emissive_color (GTHREE_MESH_PHONG_MATERIAL (materials[anim_material2]), &color);
     }
 
-  gthree_object_set_position_point3d (GTHREE_OBJECT (point_light),
-                              graphene_point3d_init (&pos,
-                                                     sin (angle * 7) * 300,
-                                                     cos (angle * 5) * 400,
-                                                     cos (angle * 3) * 300));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (point_light),
+                                  sin (angle * 7) * 300,
+                                  cos (angle * 5) * 400,
+                                  cos (angle * 3) * 300);
 
 
   gtk_widget_queue_draw (widget);

@@ -138,17 +138,16 @@ init_scene (void)
   for (i = 0; i < N_SEGMENTS+1; i++)
     {
       GthreeBone *bone = gthree_bone_new ();
-      graphene_point3d_t p;
       GthreeMesh *dot;
 
       g_ptr_array_add (bones, bone);
 
       if (i == 0)
-        gthree_object_set_position_point3d (GTHREE_OBJECT (bone),
-                                    graphene_point3d_init (&p, 0, - (N_SEGMENTS) * SEGMENT_HEIGHT / 2, 0));
+        gthree_object_set_position_xyz (GTHREE_OBJECT (bone),
+                                        0, - (N_SEGMENTS) * SEGMENT_HEIGHT / 2, 0);
       else
-        gthree_object_set_position_point3d (GTHREE_OBJECT (bone),
-                                    graphene_point3d_init (&p, 0, SEGMENT_HEIGHT, 0));
+        gthree_object_set_position_xyz (GTHREE_OBJECT (bone),
+                                        0, SEGMENT_HEIGHT, 0);
 
       dot = gthree_mesh_new (dot_geometry, GTHREE_MATERIAL (dot_material));
       gthree_object_add_child (GTHREE_OBJECT (bone), GTHREE_OBJECT (dot));
@@ -175,7 +174,6 @@ tick (GtkWidget     *widget,
       GdkFrameClock *frame_clock,
       gpointer       user_data)
 {
-  graphene_euler_t rot;
   graphene_point3d_t pos;
   gint64 frame_time;
   static gint64 first_frame_time = 0;
@@ -191,9 +189,8 @@ tick (GtkWidget     *widget,
     {
       GthreeBone *bone = g_ptr_array_index (bones, i);
 
-      graphene_euler_init (&rot,
-                           0,  sin (angle / 40) * 15, 0);
-      gthree_object_set_rotation (GTHREE_OBJECT (bone), &rot);
+      gthree_object_set_rotation_xyz (GTHREE_OBJECT (bone),
+                                      0,  sin (angle / 40) * 15, 0);
 
       graphene_point3d_init_from_vec3 (&pos,
                                        gthree_object_get_position (GTHREE_OBJECT (bone)));
@@ -221,7 +218,6 @@ main (int argc, char *argv[])
   GtkWidget *window, *box, *area;
   GthreeScene *scene;
   GthreePerspectiveCamera *camera;
-  graphene_point3d_t pos;
   GthreeAmbientLight *ambient_light;
   GthreeDirectionalLight *directional_light;
   gboolean done = FALSE;
@@ -234,18 +230,17 @@ main (int argc, char *argv[])
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));
 
   directional_light = gthree_directional_light_new (white (), 0.125);
-  gthree_object_set_position_point3d (GTHREE_OBJECT (directional_light),
-                              graphene_point3d_init (&pos,
-                                                     1, 1, -1));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (directional_light),
+                                  1, 1, -1);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (directional_light));
 
   camera = gthree_perspective_camera_new (30, 1, 1, 10000);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
 
-  gthree_object_set_position_point3d (GTHREE_OBJECT (camera),
-                              graphene_point3d_init (&pos, 0, 13, 50));
-  gthree_object_look_at (GTHREE_OBJECT (camera),
-                         graphene_point3d_init (&pos, 0, 0, 0));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (camera),
+                                  0, 13, 50);
+  gthree_object_look_at_xyz (GTHREE_OBJECT (camera),
+                             0, 0, 0);
 
   area = gthree_area_new (scene, GTHREE_CAMERA (camera));
   g_signal_connect (area, "resize", G_CALLBACK (resize_area), camera);

@@ -47,7 +47,6 @@ light_scene (void)
   GthreeMeshBasicMaterial *material_light;
   GthreeGeometry *geometry_light;
   GthreeMesh *particle_light;
-  graphene_point3d_t pos;
 
   ambient_light = gthree_ambient_light_new (white ());
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));
@@ -62,21 +61,17 @@ light_scene (void)
 
   point_light = gthree_point_light_new (white (), 1, 0);
   gthree_object_add_child (GTHREE_OBJECT (point_light_group), GTHREE_OBJECT (point_light));
-  gthree_object_set_position_point3d (GTHREE_OBJECT (point_light),
-                              graphene_point3d_init (&pos, scene_radius, 0, 0));
-  gthree_object_set_scale_point3d (GTHREE_OBJECT (point_light),
-                           graphene_point3d_init (&pos,
-                                                  scene_radius / 40,
-                                                  scene_radius / 40,
-                                                  scene_radius / 40));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (point_light),
+                                  scene_radius, 0, 0);
+  gthree_object_set_scale_uniform (GTHREE_OBJECT (point_light),
+                                   scene_radius / 40);
 
   particle_light = gthree_mesh_new (geometry_light, GTHREE_MATERIAL (material_light));
   gthree_object_add_child (GTHREE_OBJECT (point_light), GTHREE_OBJECT (particle_light));
 
   directional_light = gthree_directional_light_new (white (), 0.125);
-  gthree_object_set_position_point3d (GTHREE_OBJECT (directional_light),
-                              graphene_point3d_init (&pos,
-                                                     1, 1, -1));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (directional_light),
+                                  1, 1, -1);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (directional_light));
 }
 
@@ -177,8 +172,6 @@ tick (GtkWidget     *widget,
       GdkFrameClock *frame_clock,
       gpointer       user_data)
 {
-  graphene_point3d_t pos;
-  graphene_euler_t rot;
   static gint64 last_frame_time_i = 0;
   static gint64 first_frame_time_i = 0;
   gint64 frame_time_i;
@@ -197,22 +190,20 @@ tick (GtkWidget     *widget,
   // Scale to some random useful float value
   frame_time = (frame_time_i - first_frame_time_i) / 100000.0;
 
-  gthree_object_set_rotation (GTHREE_OBJECT (point_light_group),
-                              graphene_euler_init (&rot,
-                                                   frame_time * 7,
-                                                   frame_time * 13,
-                                                   0));
+  gthree_object_set_rotation_xyz (GTHREE_OBJECT (point_light_group),
+                                  frame_time * 7,
+                                  frame_time * 13,
+                                  0);
 
   if (auto_rotate && !dragging)
     current_angle_y = current_angle_y + 0.3;
 
-  gthree_object_set_rotation (GTHREE_OBJECT (camera_group),
-                                graphene_euler_init (&rot,
-                                                     current_angle_x,
-                                                     current_angle_y,
-                                                     0));
-  gthree_object_set_position_point3d (GTHREE_OBJECT (camera),
-                              graphene_point3d_init (&pos, 0, 0, current_distance * scene_radius));
+  gthree_object_set_rotation_xyz (GTHREE_OBJECT (camera_group),
+                                  current_angle_x,
+                                  current_angle_y,
+                                  0);
+  gthree_object_set_position_xyz (GTHREE_OBJECT (camera),
+                                  0, 0, current_distance * scene_radius);
 
 
   gtk_widget_queue_draw (widget);

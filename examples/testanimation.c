@@ -26,7 +26,6 @@ init_scene (void)
   GthreeAttributeArray *pos_values;
   GthreeAttributeArray *rot_values;
   GthreeAttributeArray *scale_values;
-  graphene_point3d_t pos;
   float times_data[] = {  0, 5, 7, 10 };
   float pos_data[] = {
     0,  0,  0,
@@ -54,9 +53,8 @@ init_scene (void)
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));
 
   directional_light = gthree_directional_light_new (blue (), 1.2);
-  gthree_object_set_position_point3d (GTHREE_OBJECT (directional_light),
-                              graphene_point3d_init (&pos,
-                                                     1, 1, -1));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (directional_light),
+                                  1, 1, -1);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (directional_light));
 
   geometry = gthree_geometry_new_box (60, 60, 60, 1, 1, 1);
@@ -130,7 +128,6 @@ main (int argc, char *argv[])
   GtkWidget *window, *box, *area;
   GthreeScene *scene;
   GthreePerspectiveCamera *camera;
-  graphene_point3d_t pos;
   gboolean done = FALSE;
 
   window = examples_init ("Animations", &box, &done);
@@ -139,8 +136,8 @@ main (int argc, char *argv[])
   camera = gthree_perspective_camera_new (30, 1, 1, 10000);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
 
-  gthree_object_set_position_point3d (GTHREE_OBJECT (camera),
-                              graphene_point3d_init (&pos, 0, 0, 400));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (camera),
+                                  0, 0, 400);
 
   area = gthree_area_new (scene, GTHREE_CAMERA (camera));
   g_signal_connect (area, "resize", G_CALLBACK (resize_area), camera);

@@ -50,14 +50,12 @@ tick (GtkWidget     *widget,
       gpointer       user_data)
 {
   static graphene_point3d_t rot = { 0, 0, 0};
-  graphene_euler_t euler;
 
   rot.y += 1;
   rot.z += 0.25;
 
-  gthree_object_set_rotation (GTHREE_OBJECT (cube),
-                              graphene_euler_init (&euler,
-                                                   rot.x, rot.y, rot.z));
+  gthree_object_set_rotation_xyz (GTHREE_OBJECT (cube),
+                                  rot.x, rot.y, rot.z);
 
   gtk_widget_queue_draw (area_z);
   gtk_widget_queue_draw (area_y);
@@ -182,8 +180,6 @@ main (int argc, char *argv[])
 {
   GtkWidget *window, *box, *grid;
   GthreeScene *scene;
-  graphene_point3d_t pos;
-  graphene_euler_t euler;
   GtkEventController *click;
   gboolean done = FALSE;
 
@@ -203,8 +199,8 @@ main (int argc, char *argv[])
   camera_z = gthree_perspective_camera_new (45, 1, 1, 2000);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera_z));
 
-  gthree_object_set_position_point3d (GTHREE_OBJECT (camera_z),
-                              graphene_point3d_init (&pos, 0, 0, 1000));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (camera_z),
+                                  0, 0, 1000);
 
   area_z = gthree_area_new (scene, GTHREE_CAMERA (camera_z));
   g_signal_connect (area_z, "resize", G_CALLBACK (resize_area), camera_z);
@@ -220,10 +216,10 @@ main (int argc, char *argv[])
   camera_y = gthree_perspective_camera_new (45, 1, 1, 2000);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera_y));
 
-  gthree_object_set_position_point3d (GTHREE_OBJECT (camera_y),
-                              graphene_point3d_init (&pos, 0, 1000, 0));
-  gthree_object_set_rotation (GTHREE_OBJECT (camera_y),
-                              graphene_euler_init (&euler, -90, 0, 0));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (camera_y),
+                                  0, 1000, 0);
+  gthree_object_set_rotation_xyz (GTHREE_OBJECT (camera_y),
+                                  -90, 0, 0);
 
   area_y = gthree_area_new (scene, GTHREE_CAMERA (camera_y));
   g_signal_connect (area_y, "resize", G_CALLBACK (resize_area), camera_y);
@@ -239,10 +235,10 @@ main (int argc, char *argv[])
   camera_x = gthree_perspective_camera_new (45, 1, 1, 2000);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera_x));
 
-  gthree_object_set_position_point3d (GTHREE_OBJECT (camera_x),
-                              graphene_point3d_init (&pos, 1000, 0, 0));
-  gthree_object_set_rotation (GTHREE_OBJECT (camera_x),
-                              graphene_euler_init (&euler, 0, -90, 0));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (camera_x),
+                                  1000, 0, 0);
+  gthree_object_set_rotation_xyz (GTHREE_OBJECT (camera_x),
+                                  0, -90, 0);
 
   area_x = gthree_area_new (scene, GTHREE_CAMERA (camera_x));
   g_signal_connect (area_x, "resize", G_CALLBACK (resize_area), camera_x);

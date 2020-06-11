@@ -218,7 +218,6 @@ tick (GtkWidget     *widget,
   static gint64 first_frame_time = 0;
   gint64 frame_time;
   float relative_time;
-  graphene_euler_t euler;
   GList *l;
 
   frame_time = gdk_frame_clock_get_frame_time (frame_clock);
@@ -233,20 +232,16 @@ tick (GtkWidget     *widget,
     {
       GthreeObject *cube = l->data;
 
-      gthree_object_set_rotation (cube,
-                                  graphene_euler_init (&euler,
-                                                       0.0 * relative_time,
-                                                       2.0 * relative_time,
-                                                       1.0 * relative_time
-                                                       ));
+      gthree_object_set_rotation_xyz (cube,
+                                      0.0 * relative_time,
+                                      2.0 * relative_time,
+                                      1.0 * relative_time);
 
       cube = gthree_object_get_first_child (cube);
-      gthree_object_set_rotation (cube,
-                                  graphene_euler_init (&euler,
-                                                        0.0 * relative_time,
-                                                       -4.0 * relative_time,
-                                                        0.0 * relative_time
-                                                       ));
+      gthree_object_set_rotation_xyz (cube,
+                                      0.0 * relative_time,
+                                      -4.0 * relative_time,
+                                      0.0 * relative_time);
     }
 
   gtk_widget_queue_draw (widget);
@@ -269,7 +264,6 @@ main (int argc, char *argv[])
   GtkWidget *window, *box, *area;
   GthreeScene *scene;
   GthreePerspectiveCamera *camera;
-  graphene_point3d_t pos;
   gboolean done = FALSE;
 
   window = examples_init ("Cubes", &box, &done);
@@ -278,8 +272,7 @@ main (int argc, char *argv[])
   camera = gthree_perspective_camera_new (30, 1, 1, 10000);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
 
-  gthree_object_set_position_point3d (GTHREE_OBJECT (camera),
-                              graphene_point3d_init (&pos, 0, 0, 400));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (camera), 0, 0, 400);
 
   area = gthree_area_new (scene, GTHREE_CAMERA (camera));
   g_signal_connect (area, "resize", G_CALLBACK (resize_area), camera);

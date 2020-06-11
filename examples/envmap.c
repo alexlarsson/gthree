@@ -17,7 +17,6 @@ init_scene (void)
   GdkPixbuf *pixbufs[6];
   GthreeAmbientLight *ambient_light;
   GthreePointLight *point_light;
-  graphene_point3d_t pos;
 
   examples_load_cube_pixbufs ("cube/SwedishRoyalCastle", pixbufs);
 
@@ -40,29 +39,20 @@ init_scene (void)
 
   geometry = gthree_geometry_new_sphere (40, 32, 16);
   obj1 = gthree_mesh_new (geometry, GTHREE_MATERIAL (material));
-  gthree_object_set_position_point3d (GTHREE_OBJECT (obj1),
-                              graphene_point3d_init (&pos,
-                                                     -80,
-                                                     0,
-                                                     0));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (obj1),
+                                  -80, 0, 0);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (obj1));
 
   geometry = gthree_geometry_new_sphere (40, 32, 16);
   obj2 = gthree_mesh_new (geometry, GTHREE_MATERIAL (material2));
-  gthree_object_set_position_point3d (GTHREE_OBJECT (obj2),
-                              graphene_point3d_init (&pos,
-                                                     0,
-                                                     0,
-                                                     0));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (obj2),
+                                  0, 0, 0);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (obj2));
 
   geometry = gthree_geometry_new_box (70, 70, 70, 1, 1, 1);
   obj3 = gthree_mesh_new (geometry, GTHREE_MATERIAL (material));
-  gthree_object_set_position_point3d (GTHREE_OBJECT (obj3),
-                              graphene_point3d_init (&pos,
-                                                     80,
-                                                     0,
-                                                     0));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (obj3),
+                                  80, 0, 0);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (obj3));
 
   ambient_light = gthree_ambient_light_new (white ());
@@ -71,11 +61,8 @@ init_scene (void)
   point_light = gthree_point_light_new (white (), 1, 0);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (point_light));
 
-  gthree_object_set_position_point3d (GTHREE_OBJECT (point_light),
-                              graphene_point3d_init (&pos,
-                                                     1000,
-                                                     800,
-                                                     400));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (point_light),
+                                  1000, 800, 400);
 
   return scene;
 }
@@ -100,8 +87,6 @@ tick (GtkWidget     *widget,
 {
   static gint64 first_frame_time = 0;
   gint64 frame_time;
-  graphene_euler_t euler;
-  graphene_point3d_t pos;
   float relative_time, camera_angle, camera_height;
 
   frame_time = gdk_frame_clock_get_frame_time (frame_clock);
@@ -116,20 +101,16 @@ tick (GtkWidget     *widget,
   camera_angle = (cursor_x)  * 2.0 * G_PI / gtk_widget_get_allocated_width (widget) - G_PI / 2.0;
   camera_height = (((float)cursor_y / gtk_widget_get_allocated_height (widget)) - 0.5) * 500;
 
-  gthree_object_set_position_point3d (GTHREE_OBJECT (camera),
-                              graphene_point3d_init (&pos,
-                                                     cos (camera_angle) * 500,
-                                                     camera_height,
-                                                     sin (camera_angle) * 500));
-  gthree_object_look_at (GTHREE_OBJECT (camera),
-                         graphene_point3d_init (&pos, 0, 0, 0));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (camera),
+                                  cos (camera_angle) * 500,
+                                  camera_height,
+                                  sin (camera_angle) * 500);
+  gthree_object_look_at_xyz (GTHREE_OBJECT (camera), 0, 0, 0);
 
-  gthree_object_set_rotation (GTHREE_OBJECT (obj3),
-                              graphene_euler_init (&euler,
-                                                   0.5 * relative_time,
-                                                   0.2 * relative_time,
-                                                   0.0 * relative_time
-                                                   ));
+  gthree_object_set_rotation_xyz (GTHREE_OBJECT (obj3),
+                                  0.5 * relative_time,
+                                  0.2 * relative_time,
+                                  0.0 * relative_time);
 
   gtk_widget_queue_draw (widget);
 
@@ -150,7 +131,6 @@ main (int argc, char *argv[])
 {
   GtkWidget *window, *box, *area;
   GthreeScene *scene;
-  graphene_point3d_t pos;
   GtkEventController *motion;
   gboolean done = FALSE;
 
@@ -160,8 +140,7 @@ main (int argc, char *argv[])
   camera = gthree_perspective_camera_new (30, 1, 1, 5000);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
 
-  gthree_object_set_position_point3d (GTHREE_OBJECT (camera),
-                              graphene_point3d_init (&pos, 0, 0, 500));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (camera), 0, 0, 500);
 
   area = gthree_area_new (scene, GTHREE_CAMERA (camera));
   g_signal_connect (area, "resize", G_CALLBACK (resize_area), camera);
