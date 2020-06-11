@@ -166,6 +166,7 @@ static GQuark q_cameraPosition;
 static GQuark q_clippingPlanes;
 static GQuark q_ambientLightColor;
 static GQuark q_directionalLights;
+static GQuark q_hemisphereLights;
 static GQuark q_pointLights;
 static GQuark q_spotLights;
 static GQuark q_bindMatrix;
@@ -322,6 +323,7 @@ gthree_renderer_init (GthreeRenderer *renderer)
   priv->light_setup.spot_shadow_map = g_ptr_array_new ();
   priv->light_setup.spot_shadow_map_matrix = g_array_new (FALSE, FALSE, sizeof (graphene_matrix_t));
   priv->light_setup.shadow = g_ptr_array_new ();
+  priv->light_setup.hemi = g_ptr_array_new ();
 
   priv->current_render_list = gthree_render_list_new ();
 
@@ -407,6 +409,7 @@ gthree_renderer_finalize (GObject *obj)
   g_ptr_array_free (priv->light_setup.spot_shadow_map, TRUE);
   g_array_free (priv->light_setup.spot_shadow_map_matrix, TRUE);
   g_ptr_array_free (priv->light_setup.shadow, TRUE);
+  g_ptr_array_free (priv->light_setup.hemi, TRUE);
 
   gthree_render_list_free (priv->current_render_list);
 
@@ -445,6 +448,7 @@ gthree_renderer_class_init (GthreeRendererClass *klass)
   INIT_QUARK(clippingPlanes);
   INIT_QUARK(ambientLightColor);
   INIT_QUARK(directionalLights);
+  INIT_QUARK(hemisphereLights);
   INIT_QUARK(pointLights);
   INIT_QUARK(spotLights);
   INIT_QUARK(bindMatrix);
@@ -1403,6 +1407,7 @@ material_apply_light_setup (GthreeUniforms *m_uniforms,
   gthree_uniforms_set_uarray (m_uniforms, "directionalLights", light_setup->directional, update_only);
   gthree_uniforms_set_uarray (m_uniforms, "pointLights", light_setup->point, update_only);
   gthree_uniforms_set_uarray (m_uniforms, "spotLights", light_setup->spot, update_only);
+  gthree_uniforms_set_uarray (m_uniforms, "hemisphereLights", light_setup->hemi, update_only);
 
   gthree_uniforms_set_texture_array (m_uniforms, "directionalShadowMap", light_setup->directional_shadow_map);
   gthree_uniforms_set_matrix4_array (m_uniforms, "directionalShadowMatrix", light_setup->directional_shadow_map_matrix);
@@ -1444,6 +1449,7 @@ init_material (GthreeRenderer *renderer,
   parameters.num_dir_lights = priv->light_setup.directional->len;
   parameters.num_point_lights = priv->light_setup.point->len;
   parameters.num_spot_lights = priv->light_setup.spot->len;
+  parameters.num_hemi_lights = priv->light_setup.hemi->len;
 
   max_bones = 0;
   if (GTHREE_IS_SKINNED_MESH (object))
@@ -1596,6 +1602,7 @@ setup_lights (GthreeRenderer *renderer, GthreeCamera *camera)
   g_ptr_array_set_size (setup->spot, 0);
   g_ptr_array_set_size (setup->spot_shadow_map, 0);
   g_array_set_size (setup->spot_shadow_map_matrix, 0);
+  g_ptr_array_set_size (setup->hemi, 0);
 
   for (l = priv->lights; l != NULL; l = l->next)
     {
@@ -1607,6 +1614,7 @@ setup_lights (GthreeRenderer *renderer, GthreeCamera *camera)
   setup->hash.num_directional = setup->directional->len;
   setup->hash.num_point = setup->point->len;
   setup->hash.num_spot = setup->spot->len;
+  setup->hash.num_hemi = setup->hemi->len;
   setup->hash.num_shadow = setup->shadow->len;
 }
 
@@ -2177,7 +2185,7 @@ mark_uniforms_lights_needs_update (GthreeUniforms *uniforms, gboolean needs_upda
   if (uni)
     gthree_uniform_set_needs_update (uni, needs_update);
 
-  uni = gthree_uniforms_lookup (uniforms, q_directionalLights);
+  uni = gthree_uniforms_lookup (uniforms, q_hemisphereLights);
   if (uni)
     gthree_uniform_set_needs_update (uni, needs_update);
 

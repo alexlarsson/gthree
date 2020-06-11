@@ -23,6 +23,7 @@ typedef struct {
   guint8 num_point;
   guint8 num_spot;
   guint8 num_shadow;
+  guint8 num_hemi;
   guint8 obj_receive_shadow;
 } GthreeLightSetupHash;
 
@@ -41,6 +42,7 @@ struct _GthreeLightSetup
   GPtrArray *spot_shadow_map;
   GArray *spot_shadow_map_matrix;
   GPtrArray *shadow;
+  GPtrArray *hemi;
 
   GthreeLightSetupHash hash;
 };

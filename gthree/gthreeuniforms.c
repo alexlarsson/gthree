@@ -1056,13 +1056,17 @@ static GthreeUniformsDefinition lights_lib[] = {
     }
   */
 
-/*
-  lightProbe: { value: [] },
-  hemisphereLights: { value: [], properties: {
+  {"hemisphereLights", GTHREE_UNIFORM_TYPE_UNIFORMS_ARRAY, NULL},
+  /*
+    properties: {
     direction: {},
     skyColor: {},
     groundColor: {}
-  } },
+    }
+  */
+
+/*
+  lightProbe: { value: [] },
   // TODO (abelnation): RectAreaLight BRDF data needs to be moved from example to main src
   rectAreaLights: { value: [], properties: {
     color: {},
