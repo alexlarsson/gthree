@@ -103,6 +103,10 @@ const graphene_vec3_t *     gthree_object_get_up                        (GthreeO
 GTHREE_API
 void                         gthree_object_look_at                      (GthreeObject                *object,
                                                                          graphene_point3d_t          *pos);
+void                         gthree_object_look_at_xyz                  (GthreeObject                *object,
+                                                                         float                        x,
+                                                                         float                        y,
+                                                                         float                        z);
 GTHREE_API
 const graphene_matrix_t *    gthree_object_get_matrix                   (GthreeObject                *object);
 GTHREE_API
@@ -111,6 +115,11 @@ void                         gthree_object_set_matrix                   (GthreeO
 GTHREE_API
 void                         gthree_object_apply_matrix                 (GthreeObject                *object,
                                                                          const graphene_matrix_t     *matrix);
+GTHREE_API
+void                         gthree_object_set_position_xyz             (GthreeObject                *object,
+                                                                         float                        x,
+                                                                         float                        y,
+                                                                         float                        z);
 GTHREE_API
 void                         gthree_object_set_position                 (GthreeObject                *object,
                                                                          const graphene_vec3_t       *vec);
@@ -136,6 +145,14 @@ GTHREE_API
 void                         gthree_object_set_scale                    (GthreeObject                *object,
                                                                          const graphene_vec3_t       *scale);
 GTHREE_API
+void                         gthree_object_set_scale_xyz                (GthreeObject                *object,
+                                                                         float                        x,
+                                                                         float                        y,
+                                                                         float                        z);
+GTHREE_API
+void                         gthree_object_set_scale_uniform            (GthreeObject                *object,
+                                                                         float                        scale);
+GTHREE_API
 void                         gthree_object_set_scale_point3d            (GthreeObject                *object,
                                                                          const graphene_point3d_t    *scale);
 GTHREE_API
@@ -148,6 +165,11 @@ const graphene_quaternion_t *gthree_object_get_quaternion               (GthreeO
 GTHREE_API
 void                         gthree_object_set_rotation                 (GthreeObject                *object,
                                                                          const graphene_euler_t      *rot);
+GTHREE_API
+void                         gthree_object_set_rotation_xyz             (GthreeObject                *object,
+                                                                         float                        x,
+                                                                         float                        y,
+                                                                         float                        z);
 GTHREE_API
 const graphene_euler_t *     gthree_object_get_rotation                 (GthreeObject                *object);
 GTHREE_API

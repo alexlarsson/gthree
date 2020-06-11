@@ -548,12 +548,36 @@ gthree_object_look_at (GthreeObject *object,
 }
 
 void
+gthree_object_look_at_xyz (GthreeObject *object,
+                           float         x,
+                           float         y,
+                           float         z)
+{
+  graphene_point3d_t pos;
+
+  graphene_point3d_init (&pos, x, y, z);
+  gthree_object_look_at (object, &pos);
+}
+
+void
 gthree_object_set_position (GthreeObject *object,
                             const graphene_vec3_t *vec)
 {
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
 
   priv->position = *vec;
+  priv->matrix_need_update = TRUE;
+}
+
+void
+gthree_object_set_position_xyz (GthreeObject *object,
+                                float x,
+                                float y,
+                                float z)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  graphene_vec3_init (&priv->position, x, y, z);
   priv->matrix_need_update = TRUE;
 }
 
@@ -627,6 +651,25 @@ gthree_object_set_scale (GthreeObject             *object,
 }
 
 void
+gthree_object_set_scale_xyz (GthreeObject                *object,
+                             float                        x,
+                             float                        y,
+                             float                        z)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  graphene_vec3_init (&priv->scale, x, y, z);
+  priv->matrix_need_update = TRUE;
+}
+
+void
+gthree_object_set_scale_uniform (GthreeObject            *object,
+                                 float                    scale)
+{
+  gthree_object_set_scale_xyz (object, scale, scale, scale);
+}
+
+void
 gthree_object_set_scale_point3d (GthreeObject                *object,
                                  const graphene_point3d_t    *scale)
 {
@@ -664,6 +707,17 @@ gthree_object_set_rotation (GthreeObject *object,
   priv->euler_valid = TRUE;
   graphene_quaternion_init_from_euler (&priv->quaternion, rot);
   priv->matrix_need_update = TRUE;
+}
+
+void
+gthree_object_set_rotation_xyz (GthreeObject *object,
+                                float         x,
+                                float         y,
+                                float         z)
+{
+  graphene_euler_t euler;
+
+  gthree_object_set_rotation (object, graphene_euler_init (&euler, x, y, z));
 }
 
 const graphene_euler_t *
