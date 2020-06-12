@@ -19,6 +19,7 @@ examples = [
   'skinning',
   'sprites',
   'testanimation',
+  'clipping',
 ]
 
 example_resources = gnome.compile_resources('gthree-example-resources',
