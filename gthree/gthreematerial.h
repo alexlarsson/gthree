@@ -145,6 +145,22 @@ GTHREE_API
 gboolean          gthree_material_needs_view_matrix        (GthreeMaterial          *material);
 GTHREE_API
 gboolean          gthree_material_needs_lights             (GthreeMaterial          *material);
+GTHREE_API
+GArray *          gthree_material_get_clipping_planes      (GthreeMaterial          *material);
+GTHREE_API
+int               gthree_material_get_n_clipping_planes    (GthreeMaterial          *material);
+GTHREE_API
+const graphene_plane_t *gthree_material_get_clipping_plane (GthreeMaterial          *material,
+                                                            int                      index);
+GTHREE_API
+int               gthree_material_set_clipping_plane       (GthreeMaterial          *material,
+                                                            int                      index,
+                                                            const graphene_plane_t  *plane);
+GTHREE_API
+gboolean          gthree_material_get_clip_intersection    (GthreeMaterial          *material);
+GTHREE_API
+void              gthree_material_set_clip_intersection    (GthreeMaterial          *material,
+                                                            gboolean                 clip_intersection);
 
 G_END_DECLS
 

@@ -27,6 +27,9 @@ typedef struct {
   GthreeShader *shader;
   guint32 valid_for_renderer_id;
 
+  GArray *clipping_planes;
+  gboolean clip_intersection;
+
   /* modified by the renderer to track state */
   GthreeMaterialProperties properties;
 } GthreeMaterialPrivate;
@@ -41,6 +44,7 @@ enum {
   PROP_VERTEX_COLORS,
   PROP_SIDE,
   PROP_ALPHA_TEST,
+  PROP_CLIP_INTERSECTION,
 
   N_PROPS
 };
@@ -95,6 +99,8 @@ gthree_material_init (GthreeMaterial *material)
   priv->polygon_offset_units = 0;
   priv->alpha_test = 0;
   priv->side = GTHREE_SIDE_FRONT;
+  priv->clip_intersection = FALSE;
+  priv->clipping_planes = g_array_new (FALSE, TRUE, sizeof (graphene_plane_t));
 }
 
 static void
@@ -104,6 +110,7 @@ gthree_material_finalize (GObject *obj)
   GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
 
   g_free (priv->name);
+  g_array_free (priv->clipping_planes, TRUE);
 
   G_OBJECT_CLASS (gthree_material_parent_class)->finalize (obj);
 }
@@ -136,6 +143,10 @@ gthree_material_set_property (GObject *obj,
 
     case PROP_OPACITY:
       gthree_material_set_opacity (material, g_value_get_float (value));
+      break;
+
+    case PROP_CLIP_INTERSECTION:
+      gthree_material_set_clip_intersection (material, g_value_get_boolean (value));
       break;
 
     default:
@@ -172,6 +183,10 @@ gthree_material_get_property (GObject *obj,
 
     case PROP_OPACITY:
       g_value_set_float (value, priv->opacity);
+      break;
+
+    case PROP_CLIP_INTERSECTION:
+      g_value_set_boolean (value, priv->clip_intersection);
       break;
 
     default:
@@ -295,6 +310,10 @@ gthree_material_class_init (GthreeMaterialClass *klass)
     g_param_spec_float ("alpha-test", "Alpha test", "Alpha test",
                         0.f, 1.f, 0.0f,
                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_CLIP_INTERSECTION] =
+    g_param_spec_boolean ("clip-intersection", "Clip Intersection", "Clip Intersection",
+                          FALSE,
+                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, N_PROPS, obj_props);
 }
@@ -600,4 +619,69 @@ gthree_material_get_properties (GthreeMaterial  *material)
 {
   GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
   return &priv->properties;
+}
+
+GArray *
+gthree_material_get_clipping_planes (GthreeMaterial *material)
+{
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+  return priv->clipping_planes;
+}
+
+int
+gthree_material_get_n_clipping_planes (GthreeMaterial *material)
+{
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+  return priv->clipping_planes->len;
+}
+
+const graphene_plane_t *
+gthree_material_get_clipping_plane (GthreeMaterial *material,
+                                    int             index)
+{
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  return &g_array_index (priv->clipping_planes, graphene_plane_t, index);
+}
+
+int
+gthree_material_set_clipping_plane (GthreeMaterial          *material,
+                                    int                      index,
+                                    const graphene_plane_t  *plane)
+{
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  if (index < 0 || index >= priv->clipping_planes->len)
+    {
+      /* Out of bounds => append */
+      index = priv->clipping_planes->len;
+      if (plane != NULL)
+        g_array_append_val (priv->clipping_planes, *plane);
+    }
+  else if (plane != NULL)
+    g_array_index (priv->clipping_planes, graphene_plane_t, index) = *plane;
+  else
+    g_array_remove_index (priv->clipping_planes, index);
+
+  gthree_material_set_needs_update (material);
+
+  /* Return the index we added/removed */
+  return index;
+}
+
+gboolean
+gthree_material_get_clip_intersection (GthreeMaterial *material)
+{
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+  return priv->clip_intersection;
+}
+
+void
+gthree_material_set_clip_intersection  (GthreeMaterial          *material,
+                                        gboolean                 clip_intersection)
+{
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  priv->clip_intersection = clip_intersection;
+  gthree_material_set_needs_update (material);
 }

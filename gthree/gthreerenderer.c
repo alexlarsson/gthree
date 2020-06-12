@@ -74,6 +74,7 @@ typedef struct {
   GPtrArray *shadowmap_depth_materials;
   GPtrArray *shadowmap_distance_materials;
 
+  gboolean local_clipping_enabled;
   GArray *clipping_planes;
 
   graphene_rect_t viewport;
@@ -104,7 +105,7 @@ typedef struct {
   guint old_blend_equation;
   guint old_blend_src;
   guint old_blend_dst;
-  guint old_num_global_planes;
+  guint old_num_global_clipping_planes;
   graphene_vec4_t old_clear_color;
   GthreeRenderTarget *current_render_target;
   GthreeProgram *current_program;
@@ -113,7 +114,12 @@ typedef struct {
   graphene_rect_t current_viewport; // Either ->viewport, or from the render target
   guint current_framebuffer;
   GArray *clipping_state;
+  gboolean clipping_state_is_global;
+  GArray *global_clipping_state;
   guint num_clipping_planes;
+  guint num_clipping_intersections;
+  guint old_local_clipping_enabled;
+  gboolean rendering_shadows;
 
   GthreeGeometry *current_geometry_program_geometry;
   GthreeProgram *current_geometry_program_program;
@@ -310,6 +316,7 @@ gthree_renderer_init (GthreeRenderer *renderer)
 
   priv->clipping_planes = g_array_new (FALSE, FALSE, sizeof (graphene_plane_t));
   priv->clipping_state = g_array_new (FALSE, FALSE, sizeof (float));
+  priv->global_clipping_state = g_array_new (FALSE, FALSE, sizeof (float));
 
   priv->current_framebuffer = 0;
 
@@ -397,6 +404,7 @@ gthree_renderer_finalize (GObject *obj)
 
   g_array_free (priv->clipping_planes, TRUE);
   g_array_free (priv->clipping_state, TRUE);
+  g_array_free (priv->global_clipping_state, TRUE);
 
   g_list_free (priv->lights);
   g_ptr_array_free (priv->light_setup.directional, TRUE);
@@ -875,6 +883,23 @@ gthree_renderer_set_shadow_map_needs_update (GthreeRenderer     *renderer,
   priv->shadowmap_needs_update = needs_update;
 }
 
+void
+gthree_renderer_set_local_clipping_enabled (GthreeRenderer     *renderer,
+                                            gboolean            enabled)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  priv->local_clipping_enabled = enabled;
+}
+
+gboolean
+gthree_renderer_get_local_clipping_enabled (GthreeRenderer     *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  return priv->local_clipping_enabled;
+}
+
 int
 gthree_renderer_get_n_clipping_planes (GthreeRenderer *renderer)
 {
@@ -918,7 +943,7 @@ gthree_renderer_get_clipping_plane (GthreeRenderer     *renderer,
   return &g_array_index (priv->clipping_planes, graphene_plane_t, index);
 }
 
-void
+int
 gthree_renderer_set_clipping_plane (GthreeRenderer     *renderer,
                                     int                 index,
                                     const graphene_plane_t *plane)
@@ -926,18 +951,18 @@ gthree_renderer_set_clipping_plane (GthreeRenderer     *renderer,
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
 
   if (index < 0 || index >= priv->clipping_planes->len)
-    return;
+    {
+      /* Out of bounds => append */
+      index = priv->clipping_planes->len;
+      if (plane != NULL)
+        g_array_append_val (priv->clipping_planes, *plane);
+    }
+  else if (plane != NULL)
+    g_array_index (priv->clipping_planes, graphene_plane_t, index) = *plane;
+  else
+    g_array_remove_index (priv->clipping_planes, index);
 
-  g_array_index (priv->clipping_planes, graphene_plane_t, index) = *plane;
-}
-
-void
-gthree_renderer_add_clipping_plane (GthreeRenderer     *renderer,
-                                    const graphene_plane_t *plane)
-{
-  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
-
-  g_array_append_val (priv->clipping_planes, *plane);
+  return index;
 }
 
 void
@@ -1467,6 +1492,7 @@ init_material (GthreeRenderer *renderer,
   parameters.morph_normals = GTHREE_IS_MESH_MATERIAL (material) && gthree_mesh_material_get_morph_normals (GTHREE_MESH_MATERIAL (material));
 
   parameters.num_clipping_planes = priv->num_clipping_planes;
+  parameters.num_clip_intersection = priv->num_clipping_intersections;
 
   parameters.shadow_map_enabled = priv->shadowmap_enabled && gthree_object_get_receive_shadow (object) && priv->shadows != NULL;
   parameters.shadow_map_type = priv->shadowmap_type;
@@ -1550,6 +1576,8 @@ init_material (GthreeRenderer *renderer,
           uni = gthree_uniform_newq (q_clippingPlanes, GTHREE_UNIFORM_TYPE_FLOAT4_ARRAY);
           gthree_uniforms_add (m_uniforms, uni); // takes ownership
         }
+      material_properties->num_clipping_planes = priv->num_clipping_planes;
+      material_properties->num_intersection = priv->num_clipping_intersections;
     }
 
   material_apply_light_setup (m_uniforms, &priv->light_setup, FALSE);
@@ -1627,14 +1655,15 @@ project_planes (GthreeRenderer *renderer,
                 gboolean skip_transform)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  guint flat_size = dst_offset + n_planes * 4;
+
+  g_array_set_size (priv->clipping_state, flat_size);
 
   if (n_planes != 0)
     {
-      guint flat_size = dst_offset + n_planes * 4;
       graphene_matrix_t viewNormalMatrix;
       float *dst_array;
 
-      g_array_set_size (priv->clipping_state, flat_size);
       dst_array = (float *)priv->clipping_state->data;
 
       if (!skip_transform)
@@ -1691,9 +1720,11 @@ clipping_init (GthreeRenderer *renderer,
 
   enabled =
     priv->clipping_planes->len != 0 ||
+    priv->local_clipping_enabled ||
     // enable state of previous frame - the clipping code has to
     // run another frame in order to reset the state:
-    priv->old_num_global_planes != 0;
+    priv->old_num_global_clipping_planes != 0 ||
+    priv->old_local_clipping_enabled;
 
   project_planes (renderer,
                   (const graphene_plane_t *)priv->clipping_planes->data,
@@ -1701,7 +1732,14 @@ clipping_init (GthreeRenderer *renderer,
                   camera,
                   0, FALSE);
 
-  priv->old_num_global_planes = priv->clipping_planes->len;
+  priv->old_local_clipping_enabled = priv->local_clipping_enabled;
+  priv->old_num_global_clipping_planes = priv->num_clipping_planes;
+  priv->clipping_state_is_global = TRUE;
+
+  /* Save global state */
+  g_array_set_size (priv->global_clipping_state, priv->clipping_state->len);
+  memcpy ((guchar *)priv->global_clipping_state->data, (guchar *)priv->clipping_state->data,
+          sizeof (float) * priv->clipping_state->len);
 
   return enabled;
 }
@@ -1709,13 +1747,91 @@ clipping_init (GthreeRenderer *renderer,
 static void
 clipping_begin_shadows (GthreeRenderer *renderer)
 {
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  priv->rendering_shadows = TRUE;
   // TODO
 }
 
 static void
 clipping_end_shadows (GthreeRenderer *renderer)
 {
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  priv->rendering_shadows = FALSE;
   // TODO
+}
+
+static void
+clipping_reset_global_state (GthreeRenderer *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  if (priv->clipping_state_is_global)
+    return;
+
+  priv->clipping_state_is_global = TRUE;
+
+  g_array_set_size (priv->clipping_state, priv->global_clipping_state->len);
+  memcpy ((guchar *)priv->clipping_state->data, (guchar *)priv->global_clipping_state->data,
+          sizeof (float) * priv->global_clipping_state->len);
+
+  priv->num_clipping_planes = priv->old_num_global_clipping_planes;
+  priv->num_clipping_intersections = 0;
+}
+
+static void
+clipping_set_state (GthreeRenderer *renderer, GthreeCamera *camera, GthreeMaterial *material, gboolean use_cache)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  GArray *material_planes = gthree_material_get_clipping_planes (material);
+  gboolean clip_shadows = FALSE; // gthree_material_get_clip_shadows (material);
+  int i;
+
+  if (!priv->old_local_clipping_enabled ||
+      material_planes == NULL || material_planes->len == 0 ||
+      (priv->rendering_shadows && !clip_shadows))
+    {
+      // there's no local clipping
+      if (priv->rendering_shadows)
+        {
+          // there's no global clipping
+          //TODO: projectPlanes( null );
+        }
+      else
+        {
+          clipping_reset_global_state (renderer);
+        }
+    }
+  else
+    {
+      int n_global = priv->rendering_shadows ? 0 : priv->old_num_global_clipping_planes;
+      int l_global = n_global * 4;
+
+      /* TODO: We're not using the caching of materials clipping planes from three.js */
+
+      project_planes (renderer,
+                      (const graphene_plane_t *)material_planes->data,
+                      material_planes->len,
+                      camera,
+                      l_global, FALSE);
+
+
+      /* Copy in global planes first */
+      if (n_global > 0)
+        {
+          float *src_array = (float *)priv->global_clipping_state->data;
+          float *dst_array = (float *)priv->clipping_state->data;
+
+          for (i = 0; i < l_global; i++)
+            dst_array[i] = src_array[i];
+
+          priv->num_clipping_planes += n_global;
+        }
+
+      priv->num_clipping_intersections = gthree_material_get_clip_intersection (material) ? material_planes->len :  0;
+      priv->clipping_state_is_global = FALSE;
+    }
 }
 
 #define SHADER_MAP_MORPHING_FLAG (1<<0)
@@ -2211,14 +2327,16 @@ set_program (GthreeRenderer *renderer,
   GthreeUniforms *m_uniforms;
   GthreeMaterialProperties *material_properties = gthree_material_get_properties (material);
 
-#ifdef TODO
-  // This is only needed for local clipping
   if (priv->clipping_enabled)
     {
-      if (camera !== priv->current_camera)
-        clipping_set_state (renderer, camera);
+      if (priv->local_clipping_enabled || camera != priv->current_camera)
+        {
+          gboolean use_cache =
+            camera == priv->current_camera && priv->current_material == material;
+
+          clipping_set_state (renderer, camera, material, use_cache);
+        }
     }
-#endif
 
   priv->used_texture_units = 0;
 
@@ -2227,7 +2345,9 @@ set_program (GthreeRenderer *renderer,
      the material itself didn't change */
   priv->light_setup.hash.obj_receive_shadow = gthree_object_get_receive_shadow (object) && priv->shadowmap_enabled;
   if (!gthree_material_is_valid_for (material, priv->renderer_id) ||
-      !gthree_light_setup_hash_equal (&material_properties->light_hash, &priv->light_setup.hash))
+      !gthree_light_setup_hash_equal (&material_properties->light_hash, &priv->light_setup.hash) ||
+      material_properties->num_clipping_planes != priv->num_clipping_planes ||
+      material_properties->num_intersection != priv->num_clipping_intersections)
     {
       init_material (renderer, material, fog, object);
       gthree_material_mark_valid_for (material, priv->renderer_id);

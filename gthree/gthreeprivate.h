@@ -52,6 +52,8 @@ struct _GthreeMaterialProperties
 {
   GthreeProgram *program; /* Not owned, only use while valid for the owning renderer */
   GthreeLightSetupHash light_hash;
+  guint num_clipping_planes;
+  guint num_intersection;
 };
 
 struct  _GthreeProgramParameters {
