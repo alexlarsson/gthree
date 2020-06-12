@@ -2207,11 +2207,10 @@ render_shadow_map (GthreeRenderer *renderer,
                                    3, &_lookTarget);
 
           graphene_point3d_t p;
-          gthree_object_look_at (GTHREE_OBJECT (shadow_camera),
-                                 graphene_point3d_init (&p,
-                                                        graphene_vec4_get_x (&_lookTarget),
-                                                        graphene_vec4_get_y (&_lookTarget),
-                                                        graphene_vec4_get_z (&_lookTarget)));
+          gthree_object_look_at_xyz (GTHREE_OBJECT (shadow_camera),
+                                     graphene_vec4_get_x (&_lookTarget),
+                                     graphene_vec4_get_y (&_lookTarget),
+                                     graphene_vec4_get_z (&_lookTarget));
           gthree_object_update_matrix_world (GTHREE_OBJECT (shadow_camera), FALSE);
           gthree_camera_update_matrix (shadow_camera);
 
@@ -2236,17 +2235,12 @@ render_shadow_map (GthreeRenderer *renderer,
         {
           if (GTHREE_IS_POINT_LIGHT (light))
             {
-              graphene_point3d_t p;
               graphene_vec3_t _lookTarget;
               graphene_vec3_add (gthree_object_get_position (GTHREE_OBJECT (shadow_camera)),
                                  &cube_directions[face], &_lookTarget);
 
               gthree_object_set_up (GTHREE_OBJECT (shadow_camera), &cube_ups[face]);
-              gthree_object_look_at (GTHREE_OBJECT (shadow_camera),
-                                     graphene_point3d_init (&p,
-                                                            graphene_vec3_get_x (&_lookTarget),
-                                                            graphene_vec3_get_y (&_lookTarget),
-                                                            graphene_vec3_get_z (&_lookTarget)));
+              gthree_object_look_at (GTHREE_OBJECT (shadow_camera), &_lookTarget);
 
               gthree_object_update_matrix_world (GTHREE_OBJECT (shadow_camera), FALSE);
               gthree_camera_update_matrix (shadow_camera);

@@ -534,17 +534,25 @@ gthree_object_get_up (GthreeObject *object)
 
 void
 gthree_object_look_at (GthreeObject *object,
-                       graphene_point3d_t *pos)
+                       const graphene_vec3_t *pos)
 {
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
   graphene_matrix_t m;
-  graphene_vec3_t vec;
 
-  graphene_point3d_to_vec3 (pos, &vec);
-  graphene_matrix_init_look_at (&m, &priv->position, &vec, &priv->up);
+  graphene_matrix_init_look_at (&m, &priv->position, pos, &priv->up);
   graphene_quaternion_init_from_matrix (&priv->quaternion, &m);
   priv->matrix_need_update = TRUE;
   priv->euler_valid = FALSE;
+}
+
+void
+gthree_object_look_at_point3d (GthreeObject *object,
+                               const graphene_point3d_t *pos)
+{
+  graphene_vec3_t vec;
+
+  graphene_point3d_to_vec3 (pos, &vec);
+  gthree_object_look_at (object, &vec);
 }
 
 void
@@ -553,9 +561,9 @@ gthree_object_look_at_xyz (GthreeObject *object,
                            float         y,
                            float         z)
 {
-  graphene_point3d_t pos;
+  graphene_vec3_t pos;
 
-  graphene_point3d_init (&pos, x, y, z);
+  graphene_vec3_init (&pos, x, y, z);
   gthree_object_look_at (object, &pos);
 }
 

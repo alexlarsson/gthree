@@ -102,7 +102,9 @@ GTHREE_API
 const graphene_vec3_t *     gthree_object_get_up                        (GthreeObject                *object);
 GTHREE_API
 void                         gthree_object_look_at                      (GthreeObject                *object,
-                                                                         graphene_point3d_t          *pos);
+                                                                         const graphene_vec3_t       *pos);
+void                         gthree_object_look_at_point3d              (GthreeObject                *object,
+                                                                         const graphene_point3d_t    *pos);
 void                         gthree_object_look_at_xyz                  (GthreeObject                *object,
                                                                          float                        x,
                                                                          float                        y,
