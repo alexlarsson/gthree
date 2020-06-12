@@ -139,7 +139,6 @@ tick (GtkWidget     *widget,
   static gint64 first_frame_time = 0;
   gint64 frame_time;
   float relative_time;
-  graphene_point3d_t point;
   float x, y;
   g_autoptr(GthreeRaycaster) raycaster = gthree_raycaster_new ();
   g_autoptr(GPtrArray) intersections = NULL;
@@ -158,9 +157,7 @@ tick (GtkWidget     *widget,
                                   radius * sinf (relative_time / 200),
                                   radius * cosf (relative_time / 200));
 
-  gthree_object_look_at (GTHREE_OBJECT (camera),
-                         graphene_point3d_init (&point,
-                                                0, 0, 0));
+  gthree_object_look_at_xyz (GTHREE_OBJECT (camera), 0, 0, 0);
   gthree_object_update_matrix_world (GTHREE_OBJECT (scene), FALSE);
 
   x = ((float)cursor_x / gtk_widget_get_allocated_width (widget)) * 2 - 1;

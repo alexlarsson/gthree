@@ -72,8 +72,7 @@ tick (GtkWidget     *widget,
   pos.x += (pointer_x * 8000 - pos.x) * 0.5;
   pos.y += (pointer_y * 8000 - pos.y) * 0.5;
   gthree_object_set_position_point3d (GTHREE_OBJECT (camera), &pos);
-  gthree_object_look_at (GTHREE_OBJECT (camera),
-                         graphene_point3d_init (&pos, 0, 0, 0));
+  gthree_object_look_at_xyz (GTHREE_OBJECT (camera), 0, 0, 0);
 
   for (l = objects; l != NULL; l = l->next)
     {
