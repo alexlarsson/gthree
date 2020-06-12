@@ -5,6 +5,7 @@
 
 #include <gthree/gthree.h>
 #include "utils.h"
+#include "orbitcontrols.h"
 
 static GPtrArray *env_maps;
 static GPtrArray *model_paths;
@@ -15,16 +16,9 @@ static GtkWidget *morph_scale;
 static int current_env_map;
 static int current_model;
 
-static float current_distance = 3;
-static float current_angle_y, current_angle_x;
-static float press_angle_y, press_angle_x;
-
-static gboolean dragging;
+static OrbitControls *orbit;
 static gboolean auto_rotate;
 static gboolean fade_animations;
-static float auto_rotate_start_time;
-static float auto_rotate_start_angle;
-static float last_frame_time;
 
 static GthreeScene *scene;
 static GthreeAnimationMixer *mixer;
@@ -34,7 +28,6 @@ static float scene_radius;
 static graphene_point3d_t scene_center;
 
 /* These are owned by the scene */
-static GthreeGroup *camera_group;
 static GthreePerspectiveCamera *camera;
 static GthreeGroup *point_light_group;
 static GthreePointLight *point_light;
@@ -139,15 +132,21 @@ get_scene_size (void)
 }
 
 static void
-add_camera (void)
+add_camera (GthreeArea *area)
 {
-  /* Generate default camera */
-  camera_group = gthree_group_new ();
-  gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera_group));
-  gthree_object_set_position_point3d (GTHREE_OBJECT (camera_group), &scene_center);
+  graphene_vec3_t target;
 
+  /* Generate default camera */
   camera = gthree_perspective_camera_new (37, 1.5, scene_radius / 1000, scene_radius * 1000);
-  gthree_object_add_child (GTHREE_OBJECT (camera_group), GTHREE_OBJECT (camera));
+  gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
+
+  gthree_object_set_position_xyz (GTHREE_OBJECT (camera),
+                                  scene_center.x, scene_center.y, scene_radius * 3);
+
+  orbit = orbit_controls_new (GTHREE_OBJECT (camera), GTK_WIDGET (area));
+  graphene_vec3_init (&target, scene_center.x, scene_center.y, scene_center.z);
+  orbit_controls_set_target (orbit, &target);
+  orbit_controls_set_auto_rotate (orbit, auto_rotate);
 }
 
 static void
@@ -173,9 +172,7 @@ tick (GtkWidget     *widget,
       gpointer       user_data)
 {
   static gint64 last_frame_time_i = 0;
-  static gint64 first_frame_time_i = 0;
   gint64 frame_time_i;
-  float frame_time;
 
   frame_time_i = gdk_frame_clock_get_frame_time (frame_clock);
   if (last_frame_time_i != 0)
@@ -183,32 +180,9 @@ tick (GtkWidget     *widget,
       float delta_time_sec = (frame_time_i - last_frame_time_i) / (float) G_USEC_PER_SEC;
       gthree_animation_mixer_update (mixer, delta_time_sec);
     }
-  else
-    first_frame_time_i = frame_time_i;
   last_frame_time_i = frame_time_i;
 
-  // Scale to some random useful float value
-  frame_time = (frame_time_i - first_frame_time_i) / 100000.0;
-
-  gthree_object_set_rotation_xyz (GTHREE_OBJECT (point_light_group),
-                                  frame_time * 7,
-                                  frame_time * 13,
-                                  0);
-
-  if (auto_rotate && !dragging)
-    current_angle_y = current_angle_y + 0.3;
-
-  gthree_object_set_rotation_xyz (GTHREE_OBJECT (camera_group),
-                                  current_angle_x,
-                                  current_angle_y,
-                                  0);
-  gthree_object_set_position_xyz (GTHREE_OBJECT (camera),
-                                  0, 0, current_distance * scene_radius);
-
-
   gtk_widget_queue_draw (widget);
-
-  last_frame_time = frame_time;
 
   return G_SOURCE_CONTINUE;
 }
@@ -230,10 +204,15 @@ update_scene (GthreeArea *area)
   g_clear_object (&mixer);
   g_clear_object (&scene);
   g_clear_object (&loader);
+  if (orbit)
+    {
+      orbit_controls_free (orbit);
+      orbit = NULL;
+    }
 
   load_scene ();
   get_scene_size ();
-  add_camera ();
+  add_camera (area);
   light_scene ();
   apply_env_map ();
 
@@ -324,78 +303,8 @@ static void
 auto_rotate_toggled (GtkToggleButton *toggle_button)
 {
   auto_rotate = gtk_toggle_button_get_active (toggle_button);
-  if (auto_rotate)
-    {
-      const graphene_euler_t *current_rot = gthree_object_get_rotation (GTHREE_OBJECT (camera_group));
-
-      auto_rotate_start_angle = graphene_euler_get_y (current_rot);
-      auto_rotate_start_time = last_frame_time;
-    }
+  orbit_controls_set_auto_rotate (orbit, auto_rotate);
 }
-
-
-static void
-drag_begin_cb (GtkGestureDrag *gesture,
-               gdouble         start_x,
-               gdouble         start_y,
-               gpointer        user_data)
-{
-  dragging = TRUE;
-  press_angle_x = current_angle_x;
-  press_angle_y = current_angle_y;
-}
-
-static void
-drag_update_cb (GtkGestureDrag *gesture,
-                gdouble         offset_x,
-                gdouble         offset_y,
-                gpointer        user_data)
-{
-  GtkWidget *widget = gtk_event_controller_get_widget (GTK_EVENT_CONTROLLER (gesture));
-  current_angle_y = press_angle_y - offset_x  * 180.0 / gtk_widget_get_allocated_width (widget);
-  current_angle_x = press_angle_x - offset_y  * 180.0 / gtk_widget_get_allocated_height (widget);
-}
-
-static void
-drag_end_cb (GtkGestureDrag *gesture,
-             gdouble         offset_x,
-             gdouble         offset_y,
-             gpointer        user_data)
-{
-  dragging = FALSE;
-}
-
-#ifdef USE_GTK4
-static void
-scroll_cb (GtkEventControllerScroll *controller,
-           gdouble                   dx,
-           gdouble                   dy,
-           gpointer                  user_data)
-{
-  current_distance += dy * 0.1;
-  current_distance = MAX (current_distance, 0.5);
-}
-#else
-static gboolean
-scroll_event_cb (GtkWidget   *widget,
-                 GdkEvent    *event,
-                 gpointer     data)
-{
-  GdkScrollDirection direction;
-
-  if (gdk_event_get_scroll_direction (event, &direction))
-    {
-      if (direction == GDK_SCROLL_UP)
-        current_distance += 0.1;
-      else if (direction == GDK_SCROLL_DOWN)
-        current_distance -= 0.1;
-
-      current_distance = MAX (current_distance, 0.5);
-    }
-  return TRUE;
-}
-#endif
-
 
 static void
 add_custom_model (const char *url)
@@ -478,10 +387,6 @@ main (int argc, char *argv[])
     { "cube/Bridge2", "Bridge" },
     { "cube/SwedishRoyalCastle", "Castle" },
   };
-  GtkEventController *drag;
-#ifdef USE_GTK4
-  GtkEventController *scroll;
-#endif
   gboolean done = FALSE;
 
   struct {
@@ -511,26 +416,6 @@ main (int argc, char *argv[])
 
   area = gthree_area_new (NULL, NULL);
 
-  drag = drag_controller_for (GTK_WIDGET (area));
-  g_signal_connect (drag, "drag-begin", (GCallback)drag_begin_cb, NULL);
-  g_signal_connect (drag, "drag-update", (GCallback)drag_update_cb, NULL);
-  g_signal_connect (drag, "drag-end", (GCallback)drag_end_cb, NULL);
-
-#ifdef USE_GTK4
-  scroll = scroll_controller_for (GTK_WIDGET (area));
-  g_signal_connect (scroll, "scroll", (GCallback)scroll_cb, NULL);
-#else
-  /* TODO: For whatever reason the scroll controller doesn't seem to work for gtk3 */
-  gtk_widget_set_events (area, gtk_widget_get_events (area)
-                         | GDK_SCROLL_MASK
-                         | GDK_BUTTON_PRESS_MASK
-                         | GDK_BUTTON_RELEASE_MASK
-                         | GDK_POINTER_MOTION_MASK);
-
-  g_signal_connect (area, "scroll-event",
-                    G_CALLBACK (scroll_event_cb), NULL);
-#endif
-
   g_signal_connect (area, "resize", G_CALLBACK (resize_area), NULL);
 
   gtk_widget_set_hexpand (area, TRUE);
@@ -538,6 +423,7 @@ main (int argc, char *argv[])
   gtk_container_add (GTK_CONTAINER (box), area);
   gtk_widget_show (area);
 
+  /* Need a tick for the animations */
   gtk_widget_add_tick_callback (GTK_WIDGET (area), tick, area, NULL);
 
   hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);

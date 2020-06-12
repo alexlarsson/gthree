@@ -487,8 +487,8 @@ orbit_controls_new (GthreeObject *object, GtkWidget *darea)
   g_signal_connect (orbit->scroll, "scroll", (GCallback)scroll_cb, orbit);
 #else
   /* TODO: For whatever reason the scroll controller doesn't seem to work for gtk3 */
-  gtk_widget_set_events (orbit->darea, gtk_widget_get_events (orbit->darea)
-                         | GDK_SCROLL_MASK
+  gtk_widget_add_events (orbit->darea,
+                         GDK_SCROLL_MASK
                          | GDK_BUTTON_PRESS_MASK
                          | GDK_BUTTON_RELEASE_MASK
                          | GDK_POINTER_MOTION_MASK);
