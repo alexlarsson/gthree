@@ -33,6 +33,7 @@ example_resources = gnome.compile_resources('gthree-example-resources',
 libexample_sources = [
   'prop-editor.c',
   'utils.c',
+  'orbitcontrols.c',
 ] + example_resources
 
 if get_option('gtk3')

@@ -380,3 +380,129 @@ rgb_init_from_hsl (graphene_vec3_t *color,
 
   graphene_vec3_init (color, red, green, blue);
 }
+
+void
+quaternion_from_unit_vectors (graphene_quaternion_t *q,
+                              const graphene_vec3_t *from,
+                              const graphene_vec3_t *to)
+{
+  // assumes direction vectors from and to are normalized
+  float EPS = 0.000001;
+  float r = graphene_vec3_dot (from, to) + 1.0;
+  graphene_vec3_t cross;
+
+  if (r < EPS)
+    {
+      r = 0;
+      if (fabs (graphene_vec3_get_x (from)) > fabs (graphene_vec3_get_z (from)))
+        graphene_quaternion_init (q,
+                                  -graphene_vec3_get_y (from),
+                                  graphene_vec3_get_x (from),
+                                  0,
+                                  r);
+      else
+        graphene_quaternion_init (q,
+                                  0,
+                                  -graphene_vec3_get_z (from),
+                                  graphene_vec3_get_y (from),
+                                  r);
+    }
+  else
+    {
+      graphene_vec3_cross (from, to, &cross);
+      graphene_quaternion_init (q,
+                                graphene_vec3_get_x (&cross),
+                                graphene_vec3_get_y (&cross),
+                                graphene_vec3_get_z (&cross),
+                                r);
+  }
+
+  graphene_quaternion_normalize (q, q);
+}
+
+void
+vec3_apply_quaternion (const graphene_vec3_t *v,
+                       const graphene_quaternion_t *q,
+                       graphene_vec3_t *res)
+{
+  float x, y, z;
+  float qx, qy, qz, qw;
+  graphene_vec4_t qv;
+
+  x = graphene_vec3_get_x (v);
+  y = graphene_vec3_get_y (v);
+  z = graphene_vec3_get_z (v);
+
+  graphene_quaternion_to_vec4 (q, &qv);
+
+  qx = graphene_vec4_get_x (&qv);
+  qy = graphene_vec4_get_y (&qv);
+  qz = graphene_vec4_get_z (&qv);
+  qw = graphene_vec4_get_w (&qv);
+
+  // calculate quat * vector
+
+  float ix = qw * x + qy * z - qz * y;
+  float iy = qw * y + qz * x - qx * z;
+  float iz = qw * z + qx * y - qy * x;
+  float iw = - qx * x - qy * y - qz * z;
+
+  // calculate result * inverse quat
+
+  graphene_vec3_init (res,
+                      ix * qw + iw * - qx + iy * - qz - iz * - qy,
+                      iy * qw + iw * - qy + iz * - qx - ix * - qz,
+                      iz * qw + iw * - qz + ix * - qy - iy * - qx);
+}
+
+graphene_vec3_t *
+vec3_init_from_spherical (graphene_vec3_t *v,
+                          const Spherical *s)
+{
+  float radius = s->radius;
+  float sinPhiRadius = sinf (s->phi) * radius;
+  graphene_vec3_init (v,
+                      sinPhiRadius * sinf (s->theta),
+                      cosf (s->phi) * radius,
+                      sinPhiRadius * cosf (s->theta));
+  return v;
+}
+
+Spherical *
+spherical_init (Spherical *s,
+                float radius,
+                float phi,
+                float theta)
+{
+  s->radius = radius;
+  s->phi = phi;
+  s->theta = theta;
+  return s;
+}
+
+void
+spherical_set_from_vec3 (Spherical *s,
+                         const graphene_vec3_t *v)
+{
+  float radius = graphene_vec3_length (v);
+  float theta = 0;
+  float phi = 0;
+
+  if (radius != 0)
+    {
+      theta = atan2f (graphene_vec3_get_x (v), graphene_vec3_get_z (v));
+      phi = acosf (CLAMP (graphene_vec3_get_y (v) / radius, -1.0, 1.0));
+    }
+  s->radius = radius;
+  s->phi = phi;
+  s->theta = theta;
+}
+
+// restrict phi to be betwee EPS and PI-EPS
+void
+spherical_make_safe (Spherical *s)
+{
+  float EPS = 0.000001;
+
+  s->phi = fmaxf (EPS, fminf (G_PI - EPS, s->phi));
+}

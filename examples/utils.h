@@ -36,3 +36,27 @@ GtkEventController *motion_controller_for (GtkWidget *widget);
 GtkEventController *click_controller_for (GtkWidget *widget);
 GtkEventController *scroll_controller_for (GtkWidget *widget);
 GtkEventController *drag_controller_for (GtkWidget *widget);
+
+typedef struct {
+  float radius;
+  float phi;
+  float theta;
+} Spherical;
+
+Spherical *spherical_init (Spherical *s,
+                           float radius,
+                           float phi,
+                           float theta);
+void spherical_set_from_vec3 (Spherical *s,
+                              const graphene_vec3_t *v);
+void spherical_make_safe (Spherical *s);
+
+graphene_vec3_t *vec3_init_from_spherical (graphene_vec3_t *v,
+                                           const Spherical *s);
+void vec3_apply_quaternion (const graphene_vec3_t *v,
+                            const graphene_quaternion_t *q,
+                            graphene_vec3_t *res);
+
+void quaternion_from_unit_vectors (graphene_quaternion_t *q,
+                                   const graphene_vec3_t *from,
+                                   const graphene_vec3_t *to);
