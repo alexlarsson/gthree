@@ -188,7 +188,7 @@ main (int argc, char *argv[])
   scene = init_scene ();
 
   grid = gtk_grid_new ();
-  gtk_container_add (GTK_CONTAINER (box), grid);
+  gtk_box_append (GTK_BOX (box), grid);
   gtk_widget_show (grid);
   gtk_grid_set_row_homogeneous (GTK_GRID (grid), TRUE);
   gtk_grid_set_row_spacing (GTK_GRID (grid), 6);

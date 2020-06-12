@@ -217,18 +217,31 @@ examples_init (const char *title,
   gtk_widget_set_margin_top (GTK_WIDGET (outer_box), 12);
   gtk_widget_set_margin_bottom (GTK_WIDGET (outer_box), 12);
 #endif
+
+#ifdef USE_GTK4
+  gtk_window_set_child (GTK_WINDOW (window), outer_box);
+#else
   gtk_container_add (GTK_CONTAINER (window), outer_box);
+#endif
+
   gtk_widget_show (outer_box);
 
   *box = gtk_box_new (GTK_ORIENTATION_VERTICAL, FALSE);
   gtk_box_set_spacing (GTK_BOX (*box), 6);
-  gtk_container_add (GTK_CONTAINER (outer_box), *box);
+  gtk_box_append (GTK_BOX (outer_box), *box);
   gtk_widget_show (*box);
 
   button = gtk_button_new_with_label ("Quit");
   gtk_widget_set_hexpand (button, TRUE);
-  gtk_container_add (GTK_CONTAINER (outer_box), button);
-  g_signal_connect_swapped (button, "clicked", G_CALLBACK (gtk_widget_destroy), window);
+  gtk_box_append (GTK_BOX (outer_box), button);
+
+  g_signal_connect_swapped (button, "clicked",
+#ifdef USE_GTK4
+                            G_CALLBACK (gtk_window_destroy),
+#else
+                            G_CALLBACK (gtk_widget_destroy),
+#endif
+                            window);
   gtk_widget_show (button);
 
   return window;

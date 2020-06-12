@@ -278,7 +278,7 @@ main (int argc, char *argv[])
   g_signal_connect (area, "resize", G_CALLBACK (resize_area), camera);
   gtk_widget_set_hexpand (area, TRUE);
   gtk_widget_set_vexpand (area, TRUE);
-  gtk_container_add (GTK_CONTAINER (box), area);
+  gtk_box_append (GTK_BOX (box), area);
   gtk_widget_show (area);
 
   gtk_widget_add_tick_callback (GTK_WIDGET (area), tick, area, NULL);

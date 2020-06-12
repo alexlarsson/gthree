@@ -420,7 +420,7 @@ main (int argc, char *argv[])
 
   gtk_widget_set_hexpand (area, TRUE);
   gtk_widget_set_vexpand (area, TRUE);
-  gtk_container_add (GTK_CONTAINER (box), area);
+  gtk_box_append (GTK_BOX (box), area);
   gtk_widget_show (area);
 
   /* Need a tick for the animations */
@@ -428,7 +428,7 @@ main (int argc, char *argv[])
 
   hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
   gtk_box_set_spacing (GTK_BOX (hbox), 6);
-  gtk_container_add (GTK_CONTAINER (box), hbox);
+  gtk_box_append (GTK_BOX (box), hbox);
   gtk_widget_show (hbox);
 
   model_paths = g_ptr_array_new_with_free_func (g_free);
@@ -445,11 +445,11 @@ main (int argc, char *argv[])
 
   g_signal_connect (combo, "changed", G_CALLBACK (model_combo_changed), area);
 
-  gtk_container_add (GTK_CONTAINER (hbox), combo);
+  gtk_box_append (GTK_BOX (hbox), combo);
   gtk_widget_show (combo);
 
   button = gtk_button_new_with_label ("Open");
-  gtk_container_add (GTK_CONTAINER (hbox), button);
+  gtk_box_append (GTK_BOX (hbox), button);
   g_signal_connect (button, "clicked", G_CALLBACK (open_model), NULL);
   gtk_widget_show (button);
 
@@ -459,11 +459,11 @@ main (int argc, char *argv[])
   gtk_combo_box_set_active (GTK_COMBO_BOX (combo), 0);
   g_signal_connect (combo, "changed", G_CALLBACK (env_map_combo_changed), NULL);
 
-  gtk_container_add (GTK_CONTAINER (hbox), combo);
+  gtk_box_append (GTK_BOX (hbox), combo);
   gtk_widget_show (combo);
 
   check = gtk_check_button_new_with_label ("Auto rotate");
-  gtk_container_add (GTK_CONTAINER (hbox), check);
+  gtk_box_append (GTK_BOX (hbox), check);
   gtk_widget_show (check);
   g_signal_connect (check, "toggled", G_CALLBACK (auto_rotate_toggled), NULL);
 
@@ -473,17 +473,17 @@ main (int argc, char *argv[])
   gtk_combo_box_set_active (GTK_COMBO_BOX (combo), 0);
   g_signal_connect (combo, "changed", G_CALLBACK (animations_combo_changed), NULL);
 
-  gtk_container_add (GTK_CONTAINER (hbox), combo);
+  gtk_box_append (GTK_BOX (hbox), combo);
   gtk_widget_show (combo);
 
   check = gtk_check_button_new_with_label ("Fade animations");
-  gtk_container_add (GTK_CONTAINER (hbox), check);
+  gtk_box_append (GTK_BOX (hbox), check);
   gtk_widget_show (check);
   g_signal_connect (check, "toggled", G_CALLBACK (fade_animations_toggled), NULL);
 
   morph_scale = scale = gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL, 0, 1.0, 0.01);
   gtk_widget_set_size_request (scale, 100, -1);
-  gtk_container_add (GTK_CONTAINER (hbox), scale);
+  gtk_box_append (GTK_BOX (hbox), scale);
   gtk_widget_show (scale);
   g_signal_connect (morph_scale, "value-changed", G_CALLBACK (morph_scale_changed), NULL);
 

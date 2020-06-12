@@ -445,7 +445,7 @@ property_editor_widget_new (GObject  *object, const char *name)
   props = g_object_class_list_properties (G_OBJECT_GET_CLASS (object), &num_properties);
 
   label = gtk_label_new (name);
-  gtk_container_add (GTK_CONTAINER (vbox), label);
+  gtk_box_append (GTK_BOX (vbox), label);
 
   for (i = 0; i < num_properties; i++)
     {
@@ -456,12 +456,12 @@ property_editor_widget_new (GObject  *object, const char *name)
 
       hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 2);
       label = gtk_label_new (g_param_spec_get_nick (prop));
-      gtk_container_add (GTK_CONTAINER (hbox), label);
+      gtk_box_append (GTK_BOX (hbox), label);
 
       editor = property_editor (object, prop);
-      gtk_container_add (GTK_CONTAINER (hbox), editor);
+      gtk_box_append (GTK_BOX (hbox), editor);
 
-      gtk_container_add (GTK_CONTAINER (vbox), hbox);
+      gtk_box_append (GTK_BOX (vbox), hbox);
 
     }
 

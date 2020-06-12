@@ -115,7 +115,11 @@ drag_begin_cb (GtkGestureDrag *gesture,
 
   device = gtk_gesture_get_device (GTK_GESTURE (gesture));
   gdk_device_get_state (device,
+#ifdef USE_GTK4
+                        gtk_native_get_surface (gtk_widget_get_native (orbit->darea)),
+#else
                         gtk_widget_get_window (orbit->darea),
+#endif
                         NULL, &mask);
 
   button = gtk_gesture_single_get_current_button (GTK_GESTURE_SINGLE (gesture));
@@ -483,7 +487,7 @@ orbit_controls_new (GthreeObject *object, GtkWidget *darea)
   g_signal_connect (orbit->drag, "drag-end", (GCallback)drag_end_cb, orbit);
 
 #ifdef USE_GTK4
-  orbit->scroll = scroll_controller_for (GTK_WIDGET (area));
+  orbit->scroll = scroll_controller_for (GTK_WIDGET (darea));
   g_signal_connect (orbit->scroll, "scroll", (GCallback)scroll_cb, orbit);
 #else
   /* TODO: For whatever reason the scroll controller doesn't seem to work for gtk3 */

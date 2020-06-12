@@ -124,7 +124,7 @@ main (int argc, char *argv[])
   g_signal_connect_after (area, "realize", G_CALLBACK (realize_area), NULL);
   gtk_widget_set_hexpand (area, TRUE);
   gtk_widget_set_vexpand (area, TRUE);
-  gtk_container_add (GTK_CONTAINER (box), area);
+  gtk_box_append (GTK_BOX (box), area);
   gtk_widget_show (area);
 
   orbit = orbit_controls_new (GTHREE_OBJECT (camera), area);
@@ -132,7 +132,7 @@ main (int argc, char *argv[])
 
   check = gtk_check_button_new_with_label ("Clip intersection");
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (check), TRUE);
-  gtk_container_add (GTK_CONTAINER (box), check);
+  gtk_box_append (GTK_BOX (box), check);
   gtk_widget_show (check);
   g_signal_connect (check, "toggled", G_CALLBACK (clip_intersection_toggled), area);
 

@@ -194,30 +194,41 @@ static void
 update_property_pane (void)
 {
   GtkWidget *hbox, *panel;
+
+#ifdef USE_GTK4
+  GtkWidget *child = NULL;
+  while ((child = gtk_widget_get_first_child (property_pane)) != NULL)
+    gtk_widget_unparent (child);
+#else
   GList *children = gtk_container_get_children (GTK_CONTAINER (property_pane));
   GList *l;
 
   for (l = children; l != NULL; l = l->next)
     gtk_widget_destroy (l->data);
+#endif
 
   hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 8);
+#ifdef USE_GTK4
+  gtk_scrolled_window_set_child (GTK_SCROLLED_WINDOW(property_pane), hbox);
+#else
   gtk_container_add (GTK_CONTAINER (property_pane), hbox);
+#endif
 
   panel = property_editor_widget_new (G_OBJECT (current_material),
                                       g_type_name_from_instance ((gpointer)current_material) + strlen ("Gthree"));
-  gtk_container_add (GTK_CONTAINER (hbox), panel);
+  gtk_box_append (GTK_BOX (hbox), panel);
 
   panel = property_editor_widget_new (G_OBJECT (ambient_light),
                                       g_type_name_from_instance ((gpointer)ambient_light) + strlen ("Gthree"));
-  gtk_container_add (GTK_CONTAINER (hbox), panel);
+  gtk_box_append (GTK_BOX (hbox), panel);
 
   panel = property_editor_widget_new (G_OBJECT (point_light),
                                       g_type_name_from_instance ((gpointer)point_light) + strlen ("Gthree"));
-  gtk_container_add (GTK_CONTAINER (hbox), panel);
+  gtk_box_append (GTK_BOX (hbox), panel);
 
   panel = property_editor_widget_new (G_OBJECT (directional_light),
                                       g_type_name_from_instance ((gpointer)directional_light) + strlen ("Gthree"));
-  gtk_container_add (GTK_CONTAINER (hbox), panel);
+  gtk_box_append (GTK_BOX (hbox), panel);
 
 #ifdef USE_GTK3
   gtk_widget_show_all (property_pane);
@@ -263,7 +274,7 @@ main (int argc, char *argv[])
   g_signal_connect (area, "resize", G_CALLBACK (resize_area), camera);
   gtk_widget_set_hexpand (area, TRUE);
   gtk_widget_set_vexpand (area, TRUE);
-  gtk_container_add (GTK_CONTAINER (box), area);
+  gtk_box_append (GTK_BOX (box), area);
   gtk_widget_show (area);
 
   gtk_widget_add_tick_callback (GTK_WIDGET (area), tick, area, NULL);
@@ -277,11 +288,11 @@ main (int argc, char *argv[])
   g_signal_connect (combo, "changed", (GCallback)material_combo_changed, NULL);
 
   gtk_widget_show (combo);
-  gtk_container_add (GTK_CONTAINER (box), combo);
+  gtk_box_append (GTK_BOX (box), combo);
 
   sw = gtk_scrolled_window_new (NULL, NULL);
   gtk_scrolled_window_set_min_content_height (GTK_SCROLLED_WINDOW (sw), 300);
-  gtk_container_add (GTK_CONTAINER (box), sw);
+  gtk_box_append (GTK_BOX (box), sw);
   gtk_widget_show (sw);
 
   property_pane = sw;
