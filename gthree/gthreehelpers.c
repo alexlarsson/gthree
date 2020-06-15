@@ -116,8 +116,11 @@ gthree_plane_helper_update_matrix_world (GthreeObject *object,
 
   gthree_object_set_scale_xyz (object, 0.5 * helper->size, 0.5 * helper->size, scale);
 
-  // renderer flips side when determinant < 0; flipping not wanted here
-  gthree_material_set_side (GTHREE_MATERIAL (helper->mesh_material), scale < 0 ? GTHREE_SIDE_BACK : GTHREE_SIDE_FRONT);
+  // TODO: For some reason three.js instead does
+  // ( scale < 0 ) ? BackSide : FrontSide
+  // And that gets the same results as the below (in e.g. the clipping example. I have no idea why...
+  // Three.js has this comment: "renderer flips side when determinant < 0; flipping not wanted here"
+  gthree_material_set_side (GTHREE_MATERIAL (helper->mesh_material), GTHREE_SIDE_BACK);
 
   gthree_object_look_at (object, &normal);
 
