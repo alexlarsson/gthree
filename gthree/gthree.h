@@ -46,6 +46,7 @@
 #include <gthree/gthreepoints.h>
 #include <gthree/gthreepointsmaterial.h>
 #include <gthree/gthreeprimitives.h>
+#include <gthree/gthreehelpers.h>
 #include <gthree/gthreebone.h>
 #include <gthree/gthreelinearinterpolant.h>
 #include <gthree/gthreediscreteinterpolant.h>
