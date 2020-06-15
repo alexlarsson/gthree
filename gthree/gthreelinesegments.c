@@ -33,7 +33,6 @@ static void
 gthree_line_segments_class_init (GthreeLineSegmentsClass *klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  GthreeObjectClass *object_class = GTHREE_OBJECT_CLASS (klass);
 
   gobject_class->finalize = gthree_line_segments_finalize;
 }
