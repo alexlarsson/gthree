@@ -1384,7 +1384,7 @@ project_object (GthreeRenderer *renderer,
           if (gthree_object_get_cast_shadow (object))
             priv->shadows = g_list_append (priv->shadows, object);
         }
-      else if (GTHREE_IS_MESH (object) || GTHREE_IS_LINE_SEGMENTS (object) || GTHREE_IS_SPRITE (object) || GTHREE_IS_POINTS (object))
+      else if (GTHREE_IS_MESH (object) || GTHREE_IS_LINE (object) || GTHREE_IS_SPRITE (object) || GTHREE_IS_POINTS (object))
         {
           if (GTHREE_IS_SKINNED_MESH (object))
             {
@@ -1996,7 +1996,7 @@ shadow_map_render_object (GthreeRenderer *renderer,
     return;
 
   if (gthree_object_check_layer (object, gthree_object_get_layer_mask (GTHREE_OBJECT (camera))) &&
-      (GTHREE_IS_MESH (object) || GTHREE_IS_LINE_SEGMENTS (object) || GTHREE_IS_POINTS (object)))
+      (GTHREE_IS_MESH (object) || GTHREE_IS_LINE (object) || GTHREE_IS_POINTS (object)))
     {
       if (gthree_object_get_cast_shadow (object) &&
           (!gthree_object_get_is_frustum_culled (object) || gthree_object_is_in_frustum (object, frustum)))
@@ -2907,13 +2907,16 @@ render_item (GthreeRenderer *renderer,
             }
         }
     }
-  else if (GTHREE_IS_LINE_SEGMENTS (object))
+  else if (GTHREE_IS_LINE (object))
     {
       float width = 1.0;
       if (GTHREE_IS_LINE_BASIC_MATERIAL (material))
         width = gthree_line_basic_material_get_line_width (GTHREE_LINE_BASIC_MATERIAL (material));
       set_line_width (renderer, width);
-      draw_mode = GL_LINES;
+      if (GTHREE_IS_LINE_SEGMENTS (object))
+        draw_mode = GL_LINES;
+      else
+        draw_mode = GL_LINE_STRIP;
     }
   else if (GTHREE_IS_SPRITE (object))
     {
