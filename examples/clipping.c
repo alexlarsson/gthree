@@ -7,15 +7,25 @@
 #include "utils.h"
 #include "orbitcontrols.h"
 
-GthreeGroup *group = NULL;
+static GthreeGroup *group = NULL;
+static GthreeGroup *helpers = NULL;
+static graphene_plane_t clip_planes[3];
+
+static void
+update_planes (float value)
+{
+  graphene_vec3_t v;
+  graphene_plane_init (&clip_planes[0], graphene_vec3_init (&v,  1,  0,  0), value);
+  graphene_plane_init (&clip_planes[1], graphene_vec3_init (&v,  0, -1,  0), value);
+  graphene_plane_init (&clip_planes[2], graphene_vec3_init (&v,  0,  0, -1), value);
+}
 
 GthreeScene *
 init_scene (void)
 {
   GthreeScene *scene;
   g_autoptr(GthreeHemisphereLight) light = NULL;
-  graphene_plane_t clip_planes[3];
-  graphene_vec3_t v;
+  const graphene_vec3_t *colors[] = { red (), green (), blue () };
   int i;
 
   scene = gthree_scene_new ();
@@ -28,9 +38,7 @@ init_scene (void)
   group = gthree_group_new ();
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (group));
 
-  graphene_plane_init (&clip_planes[0], graphene_vec3_init (&v,  1,  0,  0), 0);
-  graphene_plane_init (&clip_planes[1], graphene_vec3_init (&v,  0, -1,  0), 0);
-  graphene_plane_init (&clip_planes[2], graphene_vec3_init (&v,  0,  0, -1), 0);
+  update_planes (0);
 
   for (i = 0; i <= 30; i+=2)
     {
@@ -59,8 +67,13 @@ init_scene (void)
       gthree_object_add_child (GTHREE_OBJECT (group), GTHREE_OBJECT (mesh));
     }
 
-  // TODO: Plane helpers
-  // TODO: Change planes
+  helpers = gthree_group_new ();
+  for (i = 0; i < 3; i++)
+    {
+      g_autoptr(GthreePlaneHelper) helper = gthree_plane_helper_new (&clip_planes[i], 2, colors[i]);
+      gthree_object_add_child (GTHREE_OBJECT (helpers), GTHREE_OBJECT (helper));
+    }
+  gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (helpers));
 
   return scene;
 }
@@ -101,10 +114,53 @@ clip_intersection_toggled (GtkToggleButton *toggle_button,
   gtk_widget_queue_draw (area);
 }
 
+static void
+show_helpers_toggled (GtkToggleButton *toggle_button,
+                      GtkWidget *area)
+{
+  gboolean visible = gtk_toggle_button_get_active (toggle_button);
+
+  gthree_object_set_visible (GTHREE_OBJECT (helpers), visible);
+
+  gtk_widget_queue_draw (area);
+}
+
+static void
+scale_value_changed  (GtkRange *range,
+                      GtkWidget *area)
+{
+  gdouble value = gtk_range_get_value (range);
+  GthreeObject *child;
+  int i;
+
+  update_planes (value);
+
+  for (child = gthree_object_get_first_child (GTHREE_OBJECT (group));
+       child != NULL;
+       child = gthree_object_get_next_sibling (child))
+    {
+      GthreeMaterial *material = gthree_mesh_get_material (GTHREE_MESH (child), 0);
+
+      gthree_material_set_clipping_plane (material, 0, &clip_planes[0]);
+      gthree_material_set_clipping_plane (material, 1, &clip_planes[1]);
+      gthree_material_set_clipping_plane (material, 2, &clip_planes[2]);
+    }
+
+  for (i = 0, child = gthree_object_get_first_child (GTHREE_OBJECT (helpers));
+       child != NULL;
+       i++, child = gthree_object_get_next_sibling (child))
+    {
+      gthree_plane_helper_set_plane (GTHREE_PLANE_HELPER (child), &clip_planes[i]);
+    }
+
+  gtk_widget_queue_draw (area);
+}
+
+
 int
 main (int argc, char *argv[])
 {
-  GtkWidget *window, *box, *area, *check;
+  GtkWidget *window, *box, *area, *check, *hbox, *scale;
   GthreePerspectiveCamera *camera;
   GthreeScene *scene;
   gboolean done = FALSE;
@@ -130,11 +186,28 @@ main (int argc, char *argv[])
   orbit = orbit_controls_new (GTHREE_OBJECT (camera), area);
   orbit_controls_set_enable_pan (orbit, FALSE);
 
+  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
+  gtk_widget_show (hbox);
+  gtk_box_append (GTK_BOX (box), hbox);
+
   check = gtk_check_button_new_with_label ("Clip intersection");
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (check), TRUE);
-  gtk_box_append (GTK_BOX (box), check);
+  gtk_box_append (GTK_BOX (hbox), check);
   gtk_widget_show (check);
   g_signal_connect (check, "toggled", G_CALLBACK (clip_intersection_toggled), area);
+
+  check = gtk_check_button_new_with_label ("Show helpers");
+  gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (check), TRUE);
+  gtk_box_append (GTK_BOX (hbox), check);
+  gtk_widget_show (check);
+  g_signal_connect (check, "toggled", G_CALLBACK (show_helpers_toggled), area);
+
+  scale = gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL, -1, 1, 0.01);
+  gtk_range_set_value (GTK_RANGE (scale), 0);
+  gtk_widget_set_hexpand (scale, TRUE);
+  gtk_box_append (GTK_BOX (hbox), scale);
+  gtk_widget_show (scale);
+  g_signal_connect (scale, "value-changed", G_CALLBACK (scale_value_changed), area);
 
   gtk_widget_show (window);
 
