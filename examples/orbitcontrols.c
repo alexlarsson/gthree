@@ -330,6 +330,11 @@ drag_update_cb (GtkGestureDrag *gesture,
   if (!orbit->enabled)
     return;
 
+  if (gtk_gesture_get_sequence_state (GTK_GESTURE (gesture), NULL) == GTK_EVENT_SEQUENCE_NONE)
+    {
+      gtk_gesture_set_state (GTK_GESTURE (gesture), GTK_EVENT_SEQUENCE_CLAIMED);
+    }
+
   if (!gtk_gesture_drag_get_offset (gesture, &x, &y))
     return;
   graphene_vec2_init (&dragEnd, x, y);
