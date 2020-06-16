@@ -17,7 +17,7 @@ static GtkWidget *morph_scale;
 static int current_env_map;
 static int current_model;
 
-static OrbitControls *orbit;
+static GthreeOrbitControls *orbit;
 static gboolean auto_rotate;
 static gboolean fade_animations;
 
@@ -144,10 +144,10 @@ add_camera (GthreeArea *area)
   gthree_object_set_position_xyz (GTHREE_OBJECT (camera),
                                   scene_center.x, scene_center.y, scene_radius * 3);
 
-  orbit = orbit_controls_new (GTHREE_OBJECT (camera), GTK_WIDGET (area));
+  orbit = gthree_orbit_controls_new (GTHREE_OBJECT (camera), GTK_WIDGET (area));
   graphene_vec3_init (&target, scene_center.x, scene_center.y, scene_center.z);
-  orbit_controls_set_target (orbit, &target);
-  orbit_controls_set_auto_rotate (orbit, auto_rotate);
+  gthree_orbit_controls_set_target (orbit, &target);
+  gthree_orbit_controls_set_auto_rotate (orbit, auto_rotate);
 }
 
 static void
@@ -205,11 +205,7 @@ update_scene (GthreeArea *area)
   g_clear_object (&mixer);
   g_clear_object (&scene);
   g_clear_object (&loader);
-  if (orbit)
-    {
-      orbit_controls_free (orbit);
-      orbit = NULL;
-    }
+  g_clear_object (&orbit);
 
   load_scene ();
   get_scene_size ();
@@ -304,7 +300,7 @@ static void
 auto_rotate_toggled (GtkToggleButton *toggle_button)
 {
   auto_rotate = gtk_toggle_button_get_active (toggle_button);
-  orbit_controls_set_auto_rotate (orbit, auto_rotate);
+  gthree_orbit_controls_set_auto_rotate (orbit, auto_rotate);
 }
 
 static void

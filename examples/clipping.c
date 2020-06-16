@@ -164,7 +164,7 @@ main (int argc, char *argv[])
   GthreePerspectiveCamera *camera;
   GthreeScene *scene;
   gboolean done = FALSE;
-  g_autoptr(OrbitControls) orbit = NULL;
+  g_autoptr(GthreeOrbitControls) orbit = NULL;
 
   window = examples_init ("Clipping intersection", &box, &done);
 
@@ -183,8 +183,8 @@ main (int argc, char *argv[])
   gtk_box_append (GTK_BOX (box), area);
   gtk_widget_show (area);
 
-  orbit = orbit_controls_new (GTHREE_OBJECT (camera), area);
-  orbit_controls_set_enable_pan (orbit, FALSE);
+  orbit = gthree_orbit_controls_new (GTHREE_OBJECT (camera), area);
+  gthree_orbit_controls_set_enable_pan (orbit, FALSE);
 
   hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
   gtk_widget_show (hbox);
