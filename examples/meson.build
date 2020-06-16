@@ -22,6 +22,12 @@ examples = [
   'clipping',
 ]
 
+install_subdir('textures',
+               install_dir : get_option('datadir') / 'gthree-examples',
+               exclude_files: ['snowflake.png'])
+install_subdir('models',
+               install_dir : get_option('datadir') / 'gthree-examples')
+
 example_resources = gnome.compile_resources('gthree-example-resources',
                                             'examples.gresource.xml',
                                             source_dir: [

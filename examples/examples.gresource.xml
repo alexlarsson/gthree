@@ -1,37 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gresources>
   <gresource prefix="/org/gnome/gthree-examples">
-    <file compressed="true">models/Suzanne.js</file>
-    <file compressed="true">models/RobotExpressive.glb</file>
-    <file compressed="true">models/Soldier.glb</file>
-    <file compressed="true">models/WaterBottle.glb</file>
-    <file compressed="true">models/LittlestTokyo.glb</file>
-    <file>textures/brick_bump.jpg</file>
-    <file>textures/brick_diffuse.jpg</file>
-    <file>textures/brick_roughness.jpg</file>
-    <file>textures/crate.gif</file>
-    <file>textures/disturb.jpg</file>
-    <file>textures/sprite0.png</file>
-    <file>textures/sprite1.png</file>
-    <file>textures/sprite2.png</file>
     <file>textures/snowflake.png</file>
-    <file>textures/cube/SwedishRoyalCastle/nx.jpg</file>
-    <file>textures/cube/SwedishRoyalCastle/ny.jpg</file>
-    <file>textures/cube/SwedishRoyalCastle/nz.jpg</file>
-    <file>textures/cube/SwedishRoyalCastle/px.jpg</file>
-    <file>textures/cube/SwedishRoyalCastle/py.jpg</file>
-    <file>textures/cube/SwedishRoyalCastle/pz.jpg</file>
-    <file>textures/cube/Bridge2/nx.jpg</file>
-    <file>textures/cube/Bridge2/ny.jpg</file>
-    <file>textures/cube/Bridge2/nz.jpg</file>
-    <file>textures/cube/Bridge2/px.jpg</file>
-    <file>textures/cube/Bridge2/py.jpg</file>
-    <file>textures/cube/Bridge2/pz.jpg</file>
-    <file>textures/cube/Park2/nx.jpg</file>
-    <file>textures/cube/Park2/ny.jpg</file>
-    <file>textures/cube/Park2/nz.jpg</file>
-    <file>textures/cube/Park2/px.jpg</file>
-    <file>textures/cube/Park2/py.jpg</file>
-    <file>textures/cube/Park2/pz.jpg</file>
 </gresource>
 </gresources>

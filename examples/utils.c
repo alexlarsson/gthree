@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "config.h"
 
 const graphene_vec3_t *black (void)
 {
@@ -100,6 +101,13 @@ examples_load_pixbuf (const char *file)
 
   pixbuf = gdk_pixbuf_new_from_resource (full, NULL);
   if (pixbuf == NULL)
+    {
+      g_free (full);
+      full = g_build_filename (DATADIR "/gthree-examples/textures/", file, NULL);
+      pixbuf = gdk_pixbuf_new_from_file (full, NULL);
+    }
+
+  if (pixbuf == NULL)
     g_error ("could not load %s", file);
 
   g_free (full);
@@ -132,7 +140,17 @@ examples_load_geometry (const char *name)
   GBytes *bytes;
 
   file = g_build_filename ("/org/gnome/gthree-examples/models/", name, NULL);
-  bytes = g_resources_lookup_data (file, G_RESOURCE_LOOKUP_FLAGS_NONE, &error);
+  bytes = g_resources_lookup_data (file, G_RESOURCE_LOOKUP_FLAGS_NONE, NULL);
+  if (bytes == NULL)
+    {
+      char *data;
+      gsize size;
+      g_free (file);
+      file = g_build_filename (DATADIR "/gthree-examples/textures/", file, NULL);
+      if (!g_file_get_contents (file, &data, &size, &error))
+        bytes = g_bytes_new_take (data, size);
+    }
+
   if (bytes == NULL)
     g_error ("can't load model %s: %s", name, error->message);
 

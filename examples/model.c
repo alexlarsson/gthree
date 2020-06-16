@@ -3,6 +3,7 @@
 
 #include <epoxy/gl.h>
 
+#include "config.h"
 #include <gthree/gthree.h>
 #include "utils.h"
 #include "orbitcontrols.h"
@@ -393,9 +394,9 @@ main (int argc, char *argv[])
     char *path;
     char *name;
   } models[] = {
-    { "resource:///org/gnome/gthree-examples/models/WaterBottle.glb", "WaterBottle" },
-    { "resource:///org/gnome/gthree-examples/models/Soldier.glb", "Soldier" },
-    { "resource:///org/gnome/gthree-examples/models/RobotExpressive.glb", "Robot" },
+    { DATADIR "/gthree-examples/models/WaterBottle.glb", "WaterBottle" },
+    { DATADIR "/gthree-examples/models/Soldier.glb", "Soldier" },
+    { DATADIR "/gthree-examples/models/RobotExpressive.glb", "Robot" },
   };
 
   env_maps = g_ptr_array_new_with_free_func (g_object_unref);

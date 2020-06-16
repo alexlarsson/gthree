@@ -75,6 +75,7 @@ common_ldflags = []
 
 gthree_conf = configuration_data()
 gthree_conf.set_quoted('VERSION', meson.project_version())
+gthree_conf.set_quoted('DATADIR', gthree_datadir)
 
 gthree_packages = ' '.join([ 'glib-2.0', 'gobject-2.0', 'graphene-gobject-1.0' ])
 gthree_private_packages = ' '.join([ 'epoxy', 'json-glib-1.0' ])
