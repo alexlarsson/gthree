@@ -30,15 +30,13 @@ void
 init_scene (void)
 {
   GthreeGeometry *geometry;
-  GdkPixbuf *crate_pixbuf;
   GthreeTexture *texture;
 
   geometry = gthree_geometry_new_box (80, 80, 80, 1, 1, 1);
 
   scene = gthree_scene_new ();
 
-  crate_pixbuf = examples_load_pixbuf ("crate.gif");
-  texture = gthree_texture_new (crate_pixbuf);
+  texture = examples_load_texture ("crate.gif");
 
   material = gthree_mesh_basic_material_new ();
   gthree_mesh_basic_material_set_map (GTHREE_MESH_BASIC_MATERIAL (material), texture);

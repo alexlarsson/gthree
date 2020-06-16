@@ -18,15 +18,12 @@ GList *cubes;
 GthreeScene *
 init_scene (void)
 {
-  GdkPixbuf *crate_pixbuf;
   GthreeMeshBasicMaterial *material;
   GthreeGeometry *geometry;
   GthreeTexture *texture;
   graphene_point3d_t pos = { 0, 0, 0};
 
-  crate_pixbuf = examples_load_pixbuf ("crate.gif");
-
-  texture = gthree_texture_new (crate_pixbuf);
+  texture = examples_load_texture ("crate.gif");
 
   material = gthree_mesh_basic_material_new ();
   gthree_material_set_vertex_colors (GTHREE_MATERIAL (material), FALSE);

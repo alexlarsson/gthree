@@ -134,14 +134,11 @@ init_scene (void)
 {
   int i;
 
-  GdkPixbuf *crate_pixbuf;
   GthreeTexture *texture;
   GthreeObject *cube;
   graphene_point3d_t pos = { 0, 0, 0};
 
-  crate_pixbuf = examples_load_pixbuf ("crate.gif");
-
-  texture = gthree_texture_new (crate_pixbuf);
+  texture = examples_load_texture ("crate.gif");
 
   material_simple = gthree_mesh_basic_material_new ();
   gthree_mesh_basic_material_set_color (material_simple, cyan ());

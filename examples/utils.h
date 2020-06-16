@@ -9,11 +9,12 @@ static inline void gtk_box_append (GtkBox *box, GtkWidget *child) {
 #endif
 
 GdkPixbuf *examples_load_pixbuf (const char *file);
+GthreeTexture *examples_load_texture (const char *file);
 GthreeGeometry *examples_load_geometry (const char *name);
 void examples_load_cube_pixbufs (const char *dir,
                                  GdkPixbuf *pixbufs[6]);
 
-GthreeLoader *examples_load_gltl (const char *name, GError **error);
+GthreeLoader *examples_load_gltl (const char *name);
 
 const graphene_vec3_t *black (void);
 const graphene_vec3_t *white (void);

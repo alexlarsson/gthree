@@ -115,6 +115,13 @@ examples_load_pixbuf (const char *file)
   return pixbuf;
 }
 
+GthreeTexture *
+examples_load_texture (const char *file)
+{
+  g_autoptr(GdkPixbuf) pixbuf = examples_load_pixbuf (file);
+  return gthree_texture_new (pixbuf);
+}
+
 void
 examples_load_cube_pixbufs (const char *dir,
                             GdkPixbuf *pixbufs[6])
@@ -146,8 +153,8 @@ examples_load_geometry (const char *name)
       char *data;
       gsize size;
       g_free (file);
-      file = g_build_filename (DATADIR "/gthree-examples/textures/", file, NULL);
-      if (!g_file_get_contents (file, &data, &size, &error))
+      file = g_build_filename (DATADIR "/gthree-examples/models/", name, NULL);
+      if (g_file_get_contents (file, &data, &size, &error))
         bytes = g_bytes_new_take (data, size);
     }
 
@@ -164,20 +171,31 @@ examples_load_geometry (const char *name)
 }
 
 GthreeLoader *
-examples_load_gltl (const char *name, GError **error)
+examples_load_gltl (const char *name)
 {
   GthreeLoader *loader;
+  GError *error = NULL;
   char *file;
   g_autoptr(GBytes) bytes = NULL;
 
   file = g_build_filename ("/org/gnome/gthree-examples/models/", name, NULL);
-  bytes = g_resources_lookup_data (file, G_RESOURCE_LOOKUP_FLAGS_NONE, error);
+  bytes = g_resources_lookup_data (file, G_RESOURCE_LOOKUP_FLAGS_NONE, NULL);
   if (bytes == NULL)
-    return FALSE;
+    {
+      char *data;
+      gsize size;
+      g_free (file);
+      file = g_build_filename (DATADIR "/gthree-examples/models/", name, NULL);
+      if (g_file_get_contents (file, &data, &size, &error))
+        bytes = g_bytes_new_take (data, size);
+    }
 
-  loader = gthree_loader_parse_gltf (bytes, NULL, error);
+  if (bytes == NULL)
+    g_error ("can't load model: %s", error->message);
+
+  loader = gthree_loader_parse_gltf (bytes, NULL, &error);
   if (loader == NULL)
-    return NULL;
+    g_error ("can't parse model: %s", error->message);
 
   return loader;
 }

@@ -154,9 +154,8 @@ init_scene (void)
   GthreeShader *shader;
   GthreeShaderMaterial *material;
   GthreeTexture *texture;
-  GdkPixbuf *disturb;
 
-  disturb = examples_load_pixbuf ("disturb.jpg");
+  texture = examples_load_texture ("disturb.jpg");
 
   scene = gthree_scene_new ();
 
@@ -178,7 +177,6 @@ init_scene (void)
   pos.x += 70;
   pos.y -= 80;
 
-  texture = gthree_texture_new (disturb);
   shader2_uniforms = gthree_uniforms_new_from_definitions (shader2_uniforms_defs, G_N_ELEMENTS (shader2_uniforms_defs));
   gthree_uniforms_set_texture (shader2_uniforms, "texture", texture);
 

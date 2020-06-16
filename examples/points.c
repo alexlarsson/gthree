@@ -51,8 +51,7 @@ init_cube (GthreeScene *scene)
 static void
 init_snow (GthreeScene *scene)
 {
-  g_autoptr(GdkPixbuf) snowflake_pixbuf = examples_load_pixbuf ("snowflake.png");
-  g_autoptr(GthreeTexture) snowflake_texture = gthree_texture_new (snowflake_pixbuf);
+  g_autoptr(GthreeTexture) snowflake_texture = examples_load_texture ("snowflake.png");
 
   int n_flakes = 10000;
 
