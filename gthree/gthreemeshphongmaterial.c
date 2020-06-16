@@ -20,6 +20,12 @@ typedef struct {
   GthreeTexture *map;
   GthreeTexture *env_map;
 
+  GthreeTexture *specular_map;
+
+  GthreeTexture *normal_map;
+  GthreeNormalMapType normal_map_type;
+  graphene_vec2_t normal_scale;
+
 } GthreeMeshPhongMaterialPrivate;
 
 
@@ -33,9 +39,13 @@ enum {
   PROP_REFRACTION_RATIO,
   PROP_MAP,
   PROP_ENV_MAP,
+  PROP_SPECULAR_MAP,
   PROP_COMBINE,
   PROP_SHININESS,
   PROP_FLAT_SHADING,
+  PROP_NORMAL_MAP,
+  PROP_NORMAL_MAP_TYPE,
+  PROP_NORMAL_SCALE,
 
   N_PROPS
 };
@@ -74,6 +84,9 @@ gthree_mesh_phong_material_init (GthreeMeshPhongMaterial *phong)
   priv->reflectivity = 1;
   priv->refraction_ratio = 0.98;
   priv->shininess = 30;
+
+  priv->normal_map_type = GTHREE_NORMAL_MAP_TYPE_TANGENT_SPACE;
+  graphene_vec2_init (&priv->normal_scale, 1.0, 1.0);
 }
 
 static void
@@ -84,6 +97,8 @@ gthree_mesh_phong_material_finalize (GObject *obj)
 
   g_clear_object (&priv->map);
   g_clear_object (&priv->env_map);
+  g_clear_object (&priv->specular_map);
+  g_clear_object (&priv->normal_map);
 
   G_OBJECT_CLASS (gthree_mesh_phong_material_parent_class)->finalize (obj);
 }
@@ -111,6 +126,10 @@ gthree_mesh_phong_material_real_set_params (GthreeMaterial *material,
       params->env_map_encoding = gthree_texture_get_encoding (priv->env_map);
       params->env_map_mode = gthree_texture_get_mapping (priv->env_map);
     }
+
+  params->specular_map = priv->specular_map != NULL;
+  params->normal_map = priv->normal_map != NULL;
+  params->object_space_normal_map = priv->normal_map_type == GTHREE_NORMAL_MAP_TYPE_OBJECT_SPACE;
 
   params->flat_shading = priv->flat_shading;
 
@@ -166,6 +185,30 @@ gthree_mesh_phong_material_real_set_uniforms (GthreeMaterial *material,
       uni = gthree_uniforms_lookup_from_string (uniforms, "refractionRatio");
       if (uni != NULL)
         gthree_uniform_set_float (uni, priv->refraction_ratio);
+    }
+
+  if (priv->specular_map)
+    {
+      uni = gthree_uniforms_lookup_from_string (uniforms, "specularMap");
+      if (uni != NULL)
+        gthree_uniform_set_texture (uni, priv->specular_map);
+    }
+
+  if (priv->normal_map)
+    {
+      float sign = 1.0;
+      graphene_vec2_t normal_scale;
+
+      uni = gthree_uniforms_lookup_from_string (uniforms, "normalMap");
+      if (uni != NULL)
+        gthree_uniform_set_texture (uni, priv->normal_map);
+
+      if (gthree_material_get_side (GTHREE_MATERIAL (material)) == GTHREE_SIDE_BACK)
+        sign = -1;
+
+      graphene_vec2_scale (&priv->normal_scale, sign, &normal_scale);
+
+      gthree_uniforms_set_vec2 (uniforms, "normalScale", &normal_scale);
     }
 }
 
@@ -229,6 +272,22 @@ gthree_mesh_phong_material_set_property (GObject *obj,
       gthree_mesh_phong_material_set_env_map (phong, g_value_get_object (value));
       break;
 
+    case PROP_SPECULAR_MAP:
+      gthree_mesh_phong_material_set_specular_map (phong, g_value_get_object (value));
+      break;
+
+    case PROP_NORMAL_MAP:
+      gthree_mesh_phong_material_set_normal_map (phong, g_value_get_object (value));
+      break;
+
+    case PROP_NORMAL_MAP_TYPE:
+      gthree_mesh_phong_material_set_normal_map_type (phong, g_value_get_enum (value));
+      break;
+
+    case PROP_NORMAL_SCALE:
+      gthree_mesh_phong_material_set_normal_map_scale (phong, g_value_get_boxed (value));
+      break;
+
     case PROP_COMBINE:
       gthree_mesh_phong_material_set_combine (phong, g_value_get_enum (value));
       break;
@@ -283,6 +342,22 @@ gthree_mesh_phong_material_get_property (GObject *obj,
 
     case PROP_ENV_MAP:
       g_value_set_object (value, priv->env_map);
+      break;
+
+    case PROP_SPECULAR_MAP:
+      g_value_set_object (value, priv->specular_map);
+      break;
+
+    case PROP_NORMAL_MAP:
+      g_value_set_object (value, priv->normal_map);
+      break;
+
+    case PROP_NORMAL_MAP_TYPE:
+      g_value_set_enum (value, priv->normal_map_type);
+      break;
+
+    case PROP_NORMAL_SCALE:
+      g_value_set_boxed (value, &priv->normal_scale);
       break;
 
     case PROP_COMBINE:
@@ -353,6 +428,23 @@ gthree_mesh_phong_material_class_init (GthreeMeshPhongMaterialClass *klass)
     g_param_spec_object ("env-map", "Env Map", "Env Map",
                          GTHREE_TYPE_TEXTURE,
                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_SPECULAR_MAP] =
+    g_param_spec_object ("specular-map", "Specular Map", "Specular Map",
+                         GTHREE_TYPE_TEXTURE,
+                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_NORMAL_MAP] =
+    g_param_spec_object ("normal-map", "Normal map", "Normal map",
+                         GTHREE_TYPE_TEXTURE,
+                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_NORMAL_MAP_TYPE] =
+    g_param_spec_enum ("normal-map-type", "Normal map type", "Normal map type",
+                       GTHREE_TYPE_NORMAL_MAP_TYPE,
+                       GTHREE_NORMAL_MAP_TYPE_TANGENT_SPACE,
+                       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_NORMAL_SCALE] =
+    g_param_spec_boxed ("normal-scale", "Normal scale", "Normal scale",
+                        GRAPHENE_TYPE_VEC2,
+                        G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   obj_props[PROP_FLAT_SHADING] =
     g_param_spec_boolean ("flat-shading", "Flat shading", "Flat shading",
                           FALSE,
@@ -549,6 +641,92 @@ gthree_mesh_phong_material_get_env_map (GthreeMeshPhongMaterial *phong)
   GthreeMeshPhongMaterialPrivate *priv = gthree_mesh_phong_material_get_instance_private (phong);
 
   return priv->env_map;
+}
+
+void
+gthree_mesh_phong_material_set_specular_map (GthreeMeshPhongMaterial *phong,
+                                             GthreeTexture *texture)
+{
+  GthreeMeshPhongMaterialPrivate *priv = gthree_mesh_phong_material_get_instance_private (phong);
+
+  if (g_set_object (&priv->specular_map, texture))
+    {
+      gthree_material_set_needs_update (GTHREE_MATERIAL (phong));
+
+      g_object_notify_by_pspec (G_OBJECT (phong), obj_props[PROP_SPECULAR_MAP]);
+    }
+}
+
+GthreeTexture *
+gthree_mesh_phong_material_get_specular_map (GthreeMeshPhongMaterial *phong)
+{
+  GthreeMeshPhongMaterialPrivate *priv = gthree_mesh_phong_material_get_instance_private (phong);
+
+  return priv->specular_map;
+}
+
+GthreeTexture *
+gthree_mesh_phong_material_get_normal_map (GthreeMeshPhongMaterial *phong)
+{
+  GthreeMeshPhongMaterialPrivate *priv = gthree_mesh_phong_material_get_instance_private (phong);
+
+  return priv->normal_map;
+}
+
+void
+gthree_mesh_phong_material_set_normal_map (GthreeMeshPhongMaterial *phong,
+                                           GthreeTexture              *texture)
+{
+  GthreeMeshPhongMaterialPrivate *priv = gthree_mesh_phong_material_get_instance_private (phong);
+
+  if (g_set_object (&priv->normal_map, texture))
+    {
+      gthree_material_set_needs_update (GTHREE_MATERIAL (phong));
+
+      g_object_notify_by_pspec (G_OBJECT (phong), obj_props[PROP_NORMAL_MAP]);
+    }
+}
+
+GthreeNormalMapType
+gthree_mesh_phong_material_get_normal_map_type (GthreeMeshPhongMaterial *phong)
+{
+  GthreeMeshPhongMaterialPrivate *priv = gthree_mesh_phong_material_get_instance_private (phong);
+
+  return priv->normal_map_type;
+}
+
+void
+gthree_mesh_phong_material_set_normal_map_type (GthreeMeshPhongMaterial *phong,
+                                                GthreeNormalMapType         type)
+{
+  GthreeMeshPhongMaterialPrivate *priv = gthree_mesh_phong_material_get_instance_private (phong);
+
+  priv->normal_map_type = type;
+
+  gthree_material_set_needs_update (GTHREE_MATERIAL (phong));
+
+  g_object_notify_by_pspec (G_OBJECT (phong), obj_props[PROP_NORMAL_MAP_TYPE]);
+}
+
+const graphene_vec2_t *
+gthree_mesh_phong_material_get_normal_map_scale (GthreeMeshPhongMaterial *phong)
+{
+  GthreeMeshPhongMaterialPrivate *priv = gthree_mesh_phong_material_get_instance_private (phong);
+
+  return &priv->normal_scale;
+}
+
+void
+gthree_mesh_phong_material_set_normal_map_scale (GthreeMeshPhongMaterial *phong,
+                                                 graphene_vec2_t            *scale)
+{
+  GthreeMeshPhongMaterialPrivate *priv = gthree_mesh_phong_material_get_instance_private (phong);
+
+  priv->normal_scale = *scale;
+
+  gthree_material_set_needs_update (GTHREE_MATERIAL (phong));
+
+  g_object_notify_by_pspec (G_OBJECT (phong), obj_props[PROP_NORMAL_SCALE]);
 }
 
 void

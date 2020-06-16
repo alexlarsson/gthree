@@ -63,6 +63,26 @@ GTHREE_API
 void              gthree_mesh_phong_material_set_env_map          (GthreeMeshPhongMaterial *phong,
                                                                    GthreeTexture           *texture);
 GTHREE_API
+GthreeTexture *   gthree_mesh_phong_material_get_specular_map     (GthreeMeshPhongMaterial *phong);
+GTHREE_API
+GTHREE_API
+void              gthree_mesh_phong_material_set_specular_map     (GthreeMeshPhongMaterial *phong,
+                                                                   GthreeTexture           *texture);
+GthreeTexture*    gthree_mesh_phong_material_get_normal_map       (GthreeMeshPhongMaterial *phong);
+GTHREE_API
+void              gthree_mesh_phong_material_set_normal_map       (GthreeMeshPhongMaterial *phong,
+                                                                   GthreeTexture           *texture);
+GTHREE_API
+GthreeNormalMapType gthree_mesh_phong_material_get_normal_map_type (GthreeMeshPhongMaterial *phong);
+GTHREE_API
+void               gthree_mesh_phong_material_set_normal_map_type (GthreeMeshPhongMaterial *phong,
+                                                                   GthreeNormalMapType      type);
+GTHREE_API
+const graphene_vec2_t *gthree_mesh_phong_material_get_normal_map_scale (GthreeMeshPhongMaterial *phong);
+GTHREE_API
+void              gthree_mesh_phong_material_set_normal_map_scale    (GthreeMeshPhongMaterial *phong,
+                                                                      graphene_vec2_t         *scale);
+GTHREE_API
 GthreeTexture *   gthree_mesh_phong_material_get_env_map          (GthreeMeshPhongMaterial *phong);
 GTHREE_API
 float             gthree_mesh_phong_material_get_refraction_ratio (GthreeMeshPhongMaterial *phong);
