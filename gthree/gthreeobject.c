@@ -953,17 +953,17 @@ gthree_object_add_child (GthreeObject              *object,
   GthreeObject *last_child;
   GObject *obj;
 
-  g_return_if_fail (GTHREE_IS_OBJECT (object));
-  g_return_if_fail (GTHREE_IS_OBJECT (child));
-  g_return_if_fail (object != child);
-  g_return_if_fail (child_priv->parent == NULL);
-
   if (child_priv->parent != NULL)
     {
       g_warning ("The object '%p' already has a parent, '%p'. You must "
                  "use gthree_object_remove_child() first.", child, child_priv->parent);
       return;
     }
+
+  g_return_if_fail (GTHREE_IS_OBJECT (object));
+  g_return_if_fail (GTHREE_IS_OBJECT (child));
+  g_return_if_fail (object != child);
+  g_return_if_fail (child_priv->parent == NULL);
 
   obj = G_OBJECT (object);
   g_object_freeze_notify (obj);
