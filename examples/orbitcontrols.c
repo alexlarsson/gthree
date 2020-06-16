@@ -799,4 +799,5 @@ void
 gthree_orbit_controls_set_screen_space_panning (GthreeOrbitControls    *orbit,
                                                 gboolean               screen_space_panning)
 {
+  orbit->screenSpacePanning = screen_space_panning;
 }
