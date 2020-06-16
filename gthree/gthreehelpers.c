@@ -98,6 +98,8 @@ gthree_plane_helper_finalize (GObject *obj)
 
   g_object_unref (helper->line_material);
   g_object_unref (helper->mesh_material);
+
+  G_OBJECT_CLASS (gthree_plane_helper_parent_class)->finalize (obj);
 }
 
 static gboolean
