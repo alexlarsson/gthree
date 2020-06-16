@@ -3,6 +3,15 @@
 
 #define EPS 0.000001
 
+enum
+{
+  CHANGED,
+
+  LAST_SIGNAL
+};
+
+static guint object_signals[LAST_SIGNAL] = { 0, };
+
 enum {
       STATE_NONE,
       STATE_ROTATE,
@@ -462,6 +471,15 @@ gthree_orbit_controls_class_init (GthreeOrbitControlsClass *klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
   gobject_class->finalize = gthree_orbit_controls_finalize;
+
+  object_signals[CHANGED] =
+    g_signal_new ("changed",
+                  G_TYPE_FROM_CLASS (gobject_class),
+                  G_SIGNAL_RUN_LAST,
+                  0,
+                  NULL, NULL,
+                  g_cclosure_marshal_VOID__VOID,
+                  G_TYPE_NONE, 0);
 }
 
 static void
@@ -576,10 +594,7 @@ gthree_orbit_controls_update (GthreeOrbitControls *orbit)
   spherical_set_from_vec3 (&spherical, &offset);
 
   if (orbit->autoRotate && orbit->state == STATE_NONE)
-    {
-      // TODO: For true auto, this needs a ticker..
-      gthree_orbit_controls_rotate_left (orbit, 2 * G_PI / 60 / 60 * orbit->autoRotateSpeed);
-    }
+    gthree_orbit_controls_rotate_left (orbit, 2 * G_PI / 60 / 60 * orbit->autoRotateSpeed);
 
   spherical.theta += orbit->sphericalDelta.theta;
   spherical.phi += orbit->sphericalDelta.phi;
@@ -630,11 +645,11 @@ gthree_orbit_controls_update (GthreeOrbitControls *orbit)
       distanceToSquared (&orbit->last_position, gthree_object_get_position (orbit->object)) > EPS ||
       8 * ( 1 - graphene_quaternion_dot (&orbit->last_quaternion, gthree_object_get_quaternion (orbit->object)) ) > EPS )
     {
-      //orbit->dispatchEvent( changeEvent );
-
       orbit->last_position = *gthree_object_get_position (orbit->object);
       orbit->last_quaternion = *gthree_object_get_quaternion (orbit->object);
       orbit->zoomChanged = FALSE;
+
+      g_signal_emit (G_OBJECT (orbit), object_signals[CHANGED], 0);
 
       return TRUE;
     }
