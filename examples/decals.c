@@ -8,6 +8,10 @@
 #include "orbitcontrols.h"
 
 static GthreeObject *head;
+static gboolean is_intersection;
+static graphene_vec3_t intersection_point;
+static graphene_vec3_t intersection_normal;
+static GthreeAttribute *line_pos;
 
 static GthreeObject *
 load_lee_perry_smith (void)
@@ -64,11 +68,9 @@ init_scene (void)
   gthree_object_set_position_xyz (GTHREE_OBJECT (directional_light2), -1, 0.75, -0.5);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (directional_light2));
 
-  pos = gthree_attribute_new ("position", GTHREE_ATTRIBUTE_TYPE_FLOAT, 2, 3, FALSE);
-  gthree_attribute_set_xyz (pos, 0,
-                            0, 0, 0);
-  gthree_attribute_set_xyz (pos, 0,
-                            40, 40, 40);
+  line_pos = pos = gthree_attribute_new ("position", GTHREE_ATTRIBUTE_TYPE_FLOAT, 2, 3, FALSE);
+  gthree_attribute_set_xyz (pos, 0, 0, 0, 0);
+  gthree_attribute_set_xyz (pos, 1, 10, 10, 10);
 
   geometry = gthree_geometry_new ();
   gthree_geometry_add_attribute (geometry, "position", pos);
@@ -106,6 +108,60 @@ resize_area (GthreeArea *area,
   gthree_perspective_camera_set_aspect (camera, (float)width / (float)(height));
 }
 
+static void
+motion_cb (GtkEventControllerMotion *controller,
+           gdouble                   x,
+           gdouble                   y,
+           gpointer                  user_data)
+{
+  GtkWidget *widget = GTK_WIDGET (user_data);
+  GthreeCamera *camera = gthree_area_get_camera (GTHREE_AREA (widget));
+  GthreeScene *scene = gthree_area_get_scene (GTHREE_AREA (widget));
+  g_autoptr(GthreeRaycaster) raycaster = gthree_raycaster_new ();
+  g_autoptr(GPtrArray) intersections = NULL;
+
+  x = (x / gtk_widget_get_allocated_width (widget)) * 2 - 1;
+  y = -(y / gtk_widget_get_allocated_height (widget)) * 2 + 1;
+
+  gthree_raycaster_set_from_camera  (raycaster, camera, x, y);
+
+  intersections = gthree_raycaster_intersect_object (raycaster, GTHREE_OBJECT (scene), TRUE, NULL);
+  if (intersections->len > 0)
+    {
+      GthreeRayIntersection *intersection = g_ptr_array_index (intersections, 0);
+      const graphene_matrix_t *world_matrix =  gthree_object_get_world_matrix (head);
+      graphene_vec3_t pos2;
+
+      is_intersection = TRUE;
+
+      graphene_point3d_to_vec3 (&intersection->point, &intersection_point);
+
+      graphene_triangle_get_normal (&intersection->face, &intersection_normal);
+
+      graphene_matrix_transform_vec3 (world_matrix, &intersection_normal, &pos2);
+      graphene_vec3_add (&pos2, &intersection_point, &pos2);
+
+      gthree_attribute_set_vec3 (line_pos, 0, &intersection_point);
+      gthree_attribute_set_vec3 (line_pos, 1, &pos2);
+      gthree_attribute_set_needs_update (line_pos);
+    }
+  else
+    {
+      is_intersection = FALSE;
+   }
+}
+
+static void
+released_cb (GtkEventController *controller,
+             gint                n_press,
+             gdouble             x,
+             gdouble             y,
+             gpointer            user_data)
+{
+  if (is_intersection)
+    g_print ("SPLAT!\n");
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -114,6 +170,8 @@ main (int argc, char *argv[])
   GthreePerspectiveCamera *camera;
   gboolean done = FALSE;
   g_autoptr(GthreeOrbitControls) orbit = NULL;
+  GtkEventController *click;
+  GtkEventController *motion;
 
   window = examples_init ("Decal splatter", &box, &done);
 
@@ -130,6 +188,14 @@ main (int argc, char *argv[])
 
   gthree_object_set_position_xyz (GTHREE_OBJECT (camera), 0, 0, 120);
   orbit = gthree_orbit_controls_new (GTHREE_OBJECT (camera), area);
+
+  click = click_controller_for (GTK_WIDGET (area));
+  g_signal_connect (click, "released", (GCallback)released_cb, NULL);
+
+  gthree_orbit_controls_add_other_gesture (orbit, GTK_GESTURE (click));
+
+  motion = motion_controller_for (GTK_WIDGET (area));
+  g_signal_connect (motion, "motion", (GCallback)motion_cb, area);
 
   gtk_widget_add_tick_callback (GTK_WIDGET (area), tick, area, NULL);
 

@@ -98,6 +98,8 @@ struct _GthreeOrbitControls {
   guint tick_id;
 
   graphene_vec2_t dragStart;
+
+  GList *other_gestures;
 };
 
 G_DEFINE_TYPE (GthreeOrbitControls, gthree_orbit_controls, G_TYPE_OBJECT)
@@ -326,6 +328,7 @@ drag_update_cb (GtkGestureDrag *gesture,
   double x, y;
   graphene_vec2_t dragEnd;
   graphene_vec2_t delta;
+  GList *l;
 
   if (!orbit->enabled)
     return;
@@ -333,6 +336,8 @@ drag_update_cb (GtkGestureDrag *gesture,
   if (gtk_gesture_get_sequence_state (GTK_GESTURE (gesture), NULL) == GTK_EVENT_SEQUENCE_NONE)
     {
       gtk_gesture_set_state (GTK_GESTURE (gesture), GTK_EVENT_SEQUENCE_CLAIMED);
+      for (l = orbit->other_gestures; l != NULL; l = l->next)
+        gtk_gesture_set_state (GTK_GESTURE (l->data), GTK_EVENT_SEQUENCE_DENIED);
     }
 
   if (!gtk_gesture_drag_get_offset (gesture, &x, &y))
@@ -800,4 +805,12 @@ gthree_orbit_controls_set_screen_space_panning (GthreeOrbitControls    *orbit,
                                                 gboolean               screen_space_panning)
 {
   orbit->screenSpacePanning = screen_space_panning;
+}
+
+/* This is sort of a hack, because gtk doesn't seem to cancel other gestures as it should */
+void
+gthree_orbit_controls_add_other_gesture (GthreeOrbitControls    *orbit,
+                                         GtkGesture *gesture)
+{
+  orbit->other_gestures = g_list_prepend (orbit->other_gestures, gesture);
 }

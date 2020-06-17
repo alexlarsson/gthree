@@ -45,3 +45,5 @@ void gthree_orbit_controls_set_enable_pan           (GthreeOrbitControls   *orbi
                                                      gboolean               enable);
 void gthree_orbit_controls_set_screen_space_panning (GthreeOrbitControls   *orbit,
                                                      gboolean               screen_space_panning);
+void gthree_orbit_controls_add_other_gesture        (GthreeOrbitControls   *orbit,
+                                                     GtkGesture            *gesture);
