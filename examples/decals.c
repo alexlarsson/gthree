@@ -7,11 +7,25 @@
 #include "utils.h"
 #include "orbitcontrols.h"
 
+/* TODO:
+ * Add UI
+ * Fix UV
+ */
+
+static gboolean params_rotate = TRUE;
+static float params_min_scale = 10;
+static float params_max_scale = 20;
+
 static GthreeObject *head;
+static GthreeMesh *mouse_helper;
 static gboolean is_intersection;
 static graphene_vec3_t intersection_point;
 static graphene_vec3_t intersection_normal;
 static GthreeAttribute *line_pos;
+static GList *decals = NULL;
+
+static GthreeTexture *decal_diffuse;
+static GthreeTexture *decal_normal;
 
 static GthreeObject *
 load_lee_perry_smith (void)
@@ -53,7 +67,12 @@ init_scene (void)
   g_autoptr(GthreeGeometry) geometry = NULL;
   g_autoptr(GthreeLineBasicMaterial) material = NULL;
   g_autoptr(GthreeLine) line = NULL;
+  g_autoptr(GthreeGeometry) box_geometry = NULL;
+  g_autoptr(GthreeMeshNormalMaterial) normal_material = NULL;
   graphene_vec3_t color;
+
+  decal_diffuse = examples_load_texture ("decal/decal-diffuse.png");
+  decal_normal = examples_load_texture ("decal/decal-normal.jpg");
 
   scene = gthree_scene_new ();
 
@@ -79,6 +98,12 @@ init_scene (void)
 
   line = gthree_line_new (geometry, GTHREE_MATERIAL (material));
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (line));
+
+  box_geometry = gthree_geometry_new_box (1, 1, 10, 1, 1, 1);
+  normal_material = gthree_mesh_normal_material_new ();
+  mouse_helper = gthree_mesh_new (box_geometry, GTHREE_MATERIAL (normal_material));
+  gthree_object_set_visible (GTHREE_OBJECT (mouse_helper), FALSE);
+  gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (mouse_helper));
 
   head = load_lee_perry_smith ();
   gthree_object_add_child (GTHREE_OBJECT (scene), head);
@@ -125,7 +150,12 @@ motion_cb (GtkEventControllerMotion *controller,
 
   gthree_raycaster_set_from_camera  (raycaster, camera, x, y);
 
+  /* Ensure mouse helper is not affecting the raycast (if it happens to be visible) */
+  gboolean old_visible = gthree_object_get_visible (GTHREE_OBJECT (mouse_helper));
+  gthree_object_set_visible (GTHREE_OBJECT (mouse_helper), FALSE);
+
   intersections = gthree_raycaster_intersect_object (raycaster, GTHREE_OBJECT (scene), TRUE, NULL);
+  gthree_object_set_visible (GTHREE_OBJECT (mouse_helper), old_visible);
   if (intersections->len > 0)
     {
       GthreeRayIntersection *intersection = g_ptr_array_index (intersections, 0);
@@ -141,6 +171,9 @@ motion_cb (GtkEventControllerMotion *controller,
       graphene_matrix_transform_vec3 (world_matrix, &intersection_normal, &pos2);
       graphene_vec3_add (&pos2, &intersection_point, &pos2);
 
+      gthree_object_set_position (GTHREE_OBJECT (mouse_helper), &pos2);
+      gthree_object_look_at (GTHREE_OBJECT (mouse_helper), &intersection_point);
+
       gthree_attribute_set_vec3 (line_pos, 0, &intersection_point);
       gthree_attribute_set_vec3 (line_pos, 1, &pos2);
       gthree_attribute_set_needs_update (line_pos);
@@ -152,14 +185,73 @@ motion_cb (GtkEventControllerMotion *controller,
 }
 
 static void
+shoot (GthreeScene *scene)
+{
+  graphene_vec3_t position;
+  graphene_vec3_t size;
+  graphene_euler_t orientation;
+
+  position = intersection_point;
+  orientation = *gthree_object_get_rotation (GTHREE_OBJECT (mouse_helper));
+
+  if (params_rotate)
+    graphene_euler_init (&orientation,
+                         graphene_euler_get_x (&orientation),
+                         graphene_euler_get_y (&orientation),
+                         g_random_double_range (0, 360));
+
+  float scale = g_random_double_range (params_min_scale, params_max_scale);
+  graphene_vec3_init (&size, scale, scale, scale);
+
+#if 0  // Eanble this to test UV mapping
+  g_autoptr(GthreeTexture) texture = examples_load_texture ("UV_Grid_Sm.jpg");
+  g_autoptr(GthreeMeshBasicMaterial) material = gthree_mesh_basic_material_new ();
+  gthree_mesh_basic_material_set_map (material, texture);
+#else
+  g_autoptr(GthreeMeshPhongMaterial) material = gthree_mesh_phong_material_new ();
+  graphene_vec3_t color;
+  gthree_mesh_phong_material_set_color (material,
+                                        graphene_vec3_init (&color,
+                                                            g_random_double_range (0, 1),
+                                                            g_random_double_range (0, 1),
+                                                            g_random_double_range (0, 1)));
+  gthree_mesh_phong_material_set_specular_color (material,
+                                                 graphene_vec3_init (&color, 0.267, 0.267, 0.267));
+  gthree_mesh_phong_material_set_map (material, decal_diffuse);
+  gthree_mesh_phong_material_set_normal_map (material, decal_normal);
+  gthree_material_set_is_transparent (GTHREE_MATERIAL (material), TRUE);
+  gthree_mesh_phong_material_set_shininess (material, 30);
+#endif
+
+  gthree_material_set_polygon_offset (GTHREE_MATERIAL (material), TRUE, -4, 0);
+
+  //TODO: !Depth write broken (issue #43)
+  //gthree_material_set_depth_test (GTHREE_MATERIAL (material), TRUE);
+  //gthree_material_set_depth_write (GTHREE_MATERIAL (material), FALSE);
+
+  g_autoptr(GthreeGeometry) decal_geometry = gthree_geometry_new_decal_from_mesh (GTHREE_MESH (head),
+                                                                                  &position,
+                                                                                  &orientation,
+                                                                                  &size);
+
+  g_autoptr(GthreeMesh) m = gthree_mesh_new (decal_geometry, GTHREE_MATERIAL (material));
+
+  decals = g_list_prepend (decals, m);
+  gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (m));
+}
+
+static void
 released_cb (GtkEventController *controller,
              gint                n_press,
              gdouble             x,
              gdouble             y,
              gpointer            user_data)
 {
+  GtkWidget *widget = GTK_WIDGET (user_data);
+  GthreeScene *scene = gthree_area_get_scene (GTHREE_AREA (widget));
+
   if (is_intersection)
-    g_print ("SPLAT!\n");
+    shoot (scene);
 }
 
 int
@@ -172,6 +264,30 @@ main (int argc, char *argv[])
   g_autoptr(GthreeOrbitControls) orbit = NULL;
   GtkEventController *click;
   GtkEventController *motion;
+
+
+  {
+    graphene_vec3_t up;
+    graphene_vec3_t center;
+    graphene_vec3_t eye;
+    graphene_matrix_t m;
+    graphene_quaternion_t q;
+    graphene_euler_t e;
+
+    graphene_vec3_init (&up, 0, 1, 0);
+
+    graphene_vec3_init (&center, 0, 0, 0);
+    graphene_vec3_init (&eye, 0, 0, 1);
+
+    graphene_matrix_init_look_at (&m, &eye, &center, &up);
+    graphene_quaternion_init_from_matrix (&q, &m);
+    graphene_euler_init_from_quaternion (&e, &q, GRAPHENE_EULER_ORDER_DEFAULT);
+    g_print ("euler: %f %f %f\n",
+             graphene_euler_get_x (&e),
+             graphene_euler_get_y (&e),
+             graphene_euler_get_z (&e));
+  }
+
 
   window = examples_init ("Decal splatter", &box, &done);
 
@@ -190,7 +306,7 @@ main (int argc, char *argv[])
   orbit = gthree_orbit_controls_new (GTHREE_OBJECT (camera), area);
 
   click = click_controller_for (GTK_WIDGET (area));
-  g_signal_connect (click, "released", (GCallback)released_cb, NULL);
+  g_signal_connect (click, "released", (GCallback)released_cb, area);
 
   gthree_orbit_controls_add_other_gesture (orbit, GTK_GESTURE (click));
 
