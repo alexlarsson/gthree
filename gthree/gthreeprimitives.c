@@ -602,3 +602,324 @@ gthree_geometry_new_torus (float radius,
 {
   return gthree_geometry_new_torus_full (radius, tube, 8, 6, 2 * G_PI);
 }
+
+
+typedef struct {
+  graphene_vec3_t position;
+  graphene_vec3_t normal;
+} DecalVertex;
+
+static void
+push_decal_vertex (GArray *decal_vertices,
+                   const graphene_matrix_t *matrix_world,
+                   const graphene_matrix_t *object_to_projector_matrix,
+                   DecalVertex v)
+{
+  graphene_vec4_t v4;
+
+  /* Transform to projection space */
+  graphene_vec4_init_from_vec3 (&v4, &v.position, 1.0);
+  graphene_matrix_transform_vec4 (object_to_projector_matrix, &v4, &v4);
+  graphene_vec4_get_xyz (&v4, &v.position);
+
+  graphene_matrix_transform_vec3 (matrix_world, &v.normal, &v.normal);
+
+  g_array_append_val (decal_vertices, v);
+}
+
+
+static GArray *
+get_decal_vertices_from_geometry (GthreeGeometry *geometry,
+                                  const graphene_matrix_t *matrix_world,
+                                  const graphene_matrix_t *projector_matrix)
+{
+  GArray *decal_vertices = g_array_new (FALSE, TRUE, sizeof (DecalVertex));
+  GthreeAttribute *position_attribute = gthree_geometry_get_position (geometry);
+  GthreeAttribute *normal_attribute = gthree_geometry_get_normal (geometry);
+  GthreeAttribute *index = gthree_geometry_get_index (geometry);
+  graphene_matrix_t projector_matrix_inverse;
+  graphene_matrix_t object_to_projector_matrix;
+  int i;
+
+  graphene_matrix_inverse (projector_matrix, &projector_matrix_inverse);
+
+  // transform the vertex to world space, then to projector space
+  graphene_matrix_multiply (matrix_world, &projector_matrix_inverse, &object_to_projector_matrix);
+
+  if (index != NULL)
+    {
+      // indexed geometry
+      int count = gthree_attribute_get_count (index);
+
+      for (i = 0; i < count; i++)
+        {
+          int idx = gthree_attribute_get_uint (index, i);
+          DecalVertex v = { 0 };
+
+          gthree_attribute_get_vec3 (position_attribute, idx, &v.position);
+          if (normal_attribute)
+            gthree_attribute_get_vec3 (normal_attribute, idx, &v.normal);
+
+          push_decal_vertex (decal_vertices, matrix_world, &object_to_projector_matrix, v);
+        }
+    }
+  else
+    {
+      // non-indexed geometry
+      int count = gthree_attribute_get_count (position_attribute);
+      int idx;
+
+      for (idx = 0; idx < count; idx++)
+        {
+          DecalVertex v = { 0 };
+
+          gthree_attribute_get_vec3 (position_attribute, idx, &v.position);
+          if (normal_attribute)
+            gthree_attribute_get_vec3 (normal_attribute, idx, &v.normal);
+
+          push_decal_vertex (decal_vertices, matrix_world, &object_to_projector_matrix, v);
+        }
+    }
+
+  return decal_vertices;
+}
+
+static DecalVertex
+clip (const DecalVertex *v0, const DecalVertex *v1, const graphene_vec3_t *plane, float s)
+{
+  DecalVertex v;
+
+  float d0 = graphene_vec3_dot (&v0->position, plane) - s;
+  float d1 = graphene_vec3_dot (&v1->position, plane) - s;
+
+  float s0 = d0 / ( d0 - d1 );
+
+  graphene_vec3_interpolate (&v0->position, &v1->position, s0, &v.position);
+  graphene_vec3_interpolate (&v0->normal, &v1->normal, s0, &v.normal);
+
+  return v;
+}
+
+static void
+clip_geometry (GArray *in,
+               GArray *out,
+               const graphene_vec3_t *size,
+               float plane_x,
+               float plane_y,
+               float plane_z)
+{
+  graphene_vec3_t plane;
+  int i;
+
+  graphene_vec3_init (&plane, plane_x, plane_y, plane_z);
+  g_array_set_size (out, 0);
+
+  float s = 0.5 * fabsf (graphene_vec3_dot (size, &plane));
+
+  for (i = 0; i < in->len; i += 3)
+    {
+      int total = 0;
+      DecalVertex nV1, nV2, nV3, nV4;
+
+      float d1 = graphene_vec3_dot (&g_array_index (in, DecalVertex, i + 0).position, &plane) - s;
+      float d2 = graphene_vec3_dot (&g_array_index (in, DecalVertex, i + 1).position, &plane) - s;
+      float d3 = graphene_vec3_dot (&g_array_index (in, DecalVertex, i + 2).position, &plane) - s;
+
+      gboolean v1Out = d1 > 0;
+      gboolean v2Out = d2 > 0;
+      gboolean v3Out = d3 > 0;
+
+      // calculate, how many vertices of the face lie outside of the clipping plane
+      total = ( v1Out ? 1 : 0 ) + ( v2Out ? 1 : 0 ) + ( v3Out ? 1 : 0 );
+      switch (total)
+        {
+        case 0:
+          // the entire face lies inside of the plane, no clipping needed
+
+          g_array_append_val (out, g_array_index (in, DecalVertex, i));
+          g_array_append_val (out, g_array_index (in, DecalVertex, i + 1));
+          g_array_append_val (out, g_array_index (in, DecalVertex, i + 2));
+          break;
+
+        case 1:
+          // one vertex lies outside of the plane, perform clipping
+
+          if (v1Out)
+            {
+              nV1 = g_array_index (in, DecalVertex, i + 1);
+              nV2 = g_array_index (in, DecalVertex, i + 2);
+              nV3 = clip (&g_array_index (in, DecalVertex, i), &nV1, &plane, s);
+              nV4 = clip (&g_array_index (in, DecalVertex, i), &nV2, &plane, s);
+            }
+
+          if (v2Out)
+            {
+              nV1 = g_array_index (in, DecalVertex, i);
+              nV2 = g_array_index (in, DecalVertex, i + 2);
+              nV3 = clip (&g_array_index (in, DecalVertex, i + 1), &nV1, &plane, s);
+              nV4 = clip (&g_array_index (in, DecalVertex, i + 1), &nV2, &plane, s);
+
+              g_array_append_val (out, nV3);
+              g_array_append_val (out, nV2);
+              g_array_append_val (out, nV1);
+
+              g_array_append_val (out, nV2);
+              g_array_append_val (out, nV3);
+              g_array_append_val (out, nV4);
+              break;
+            }
+
+          if (v3Out)
+            {
+              nV1 = g_array_index (in, DecalVertex, i);
+              nV2 = g_array_index (in, DecalVertex, i + 1);
+              nV3 = clip (&g_array_index (in, DecalVertex, i + 2), &nV1, &plane, s);
+              nV4 = clip (&g_array_index (in, DecalVertex, i + 2), &nV2, &plane, s);
+            }
+
+          g_array_append_val (out, nV1);
+          g_array_append_val (out, nV2);
+          g_array_append_val (out, nV3);
+
+          g_array_append_val (out, nV4);
+          g_array_append_val (out, nV3);
+          g_array_append_val (out, nV2);
+
+          break;
+
+        case 2:
+          // two vertices lies outside of the plane, perform clipping
+          if (!v1Out)
+            {
+              nV1 = g_array_index (in, DecalVertex, i);
+              nV2 = clip (&nV1, &g_array_index (in, DecalVertex, i + 1), &plane, s);
+              nV3 = clip (&nV1, &g_array_index (in, DecalVertex, i + 2), &plane, s);
+            }
+
+          if (!v2Out)
+            {
+              nV1 = g_array_index (in, DecalVertex, i + 1);
+              nV2 = clip (&nV1, &g_array_index (in, DecalVertex, i + 2), &plane, s);
+              nV3 = clip (&nV1, &g_array_index (in, DecalVertex, i), &plane, s);
+            }
+
+          if (!v3Out)
+            {
+              nV1 = g_array_index (in, DecalVertex, i + 2);
+              nV2 = clip (&nV1, &g_array_index (in, DecalVertex, i), &plane, s);
+              nV3 = clip (&nV1, &g_array_index (in, DecalVertex, i + 1), &plane, s);
+            }
+
+          g_array_append_val (out, nV1);
+          g_array_append_val (out, nV2);
+          g_array_append_val (out, nV3);
+          break;
+
+        case 3:
+          // the entire face lies outside of the plane, so let's discard the corresponding vertices
+          break;
+        }
+    }
+}
+
+/*
+ * You can use this geometry to create a decal mesh, that serves different kinds of purposes.
+ * e.g. adding unique details to models, performing dynamic visual environmental changes or covering seams.
+ *
+ * position — Position of the decal projector
+ * orientation — Orientation of the decal projector
+ * size — Size of the decal projector
+ *
+ * reference: http://blog.wolfire.com/2009/06/how-to-project-decals/
+ */
+GthreeGeometry *
+gthree_geometry_new_decal (GthreeGeometry *original_geometry,
+                           const graphene_matrix_t *matrix_world,
+                           const graphene_vec3_t *position,
+                           const graphene_euler_t *orientation,
+                           const graphene_vec3_t *size)
+{
+  GthreeGeometry *geometry;
+  g_autoptr(GArray) decal_vertices = NULL;
+  g_autoptr(GArray) decal_vertices2 = NULL;
+  graphene_matrix_t projector_matrix;
+  graphene_point3d_t p3d;
+  g_autoptr(GthreeAttribute) a_position = NULL;
+  g_autoptr(GthreeAttribute) a_normal = NULL;
+  g_autoptr(GthreeAttribute) a_uv = NULL;
+  int len;
+
+  graphene_matrix_init_identity (&projector_matrix);
+  graphene_matrix_rotate_euler (&projector_matrix, orientation);
+  graphene_matrix_translate (&projector_matrix,
+                             graphene_point3d_init_from_vec3 (&p3d, position));
+
+  // first, create an array of 'DecalVertex'
+  // three consecutive 'DecalVertex' represent a single face
+  //
+  // this data structure will be later used to perform the clipping
+  decal_vertices = get_decal_vertices_from_geometry (original_geometry, matrix_world, &projector_matrix);
+
+  // second, clip the geometry so that it doesn't extend out from the projector
+  // We swap between the two arrays to avoid reallocating
+  decal_vertices2 = g_array_new (FALSE, TRUE, sizeof (DecalVertex));
+
+  clip_geometry (decal_vertices, decal_vertices2, size,  1, 0, 0);
+  clip_geometry (decal_vertices2, decal_vertices, size, -1, 0, 0);
+  clip_geometry (decal_vertices, decal_vertices2, size, 0,  1, 0);
+  clip_geometry (decal_vertices2, decal_vertices, size, 0, -1, 0);
+  clip_geometry (decal_vertices, decal_vertices2, size, 0, 0,  1);
+  clip_geometry (decal_vertices2, decal_vertices, size, 0, 0, -1);
+
+  // third, generate final vertices, normals and uvs
+  geometry = gthree_geometry_new ();
+
+  len = decal_vertices->len;
+  a_position = gthree_attribute_new ("position", GTHREE_ATTRIBUTE_TYPE_FLOAT, len, 3, FALSE);
+  gthree_geometry_add_attribute (geometry, "position", a_position);
+
+  if (gthree_geometry_get_normal (original_geometry) != NULL)
+    {
+      a_normal = gthree_attribute_new ("normal", GTHREE_ATTRIBUTE_TYPE_FLOAT, len, 3, FALSE);
+      gthree_geometry_add_attribute (geometry, "normal", a_normal);
+    }
+
+  a_uv = gthree_attribute_new ("uv", GTHREE_ATTRIBUTE_TYPE_FLOAT, len, 2, FALSE);
+  gthree_geometry_add_attribute (geometry, "uv", a_uv);
+
+  for (int i = 0; i < decal_vertices->len; i++)
+    {
+      const DecalVertex *decalVertex = &g_array_index (decal_vertices, DecalVertex, i);
+      graphene_vec4_t v4;
+      graphene_vec3_t world;
+
+      // create texture coordinates (we are still in projector space)
+      gthree_attribute_set_xy (a_uv, i,
+                               0.5 + ( graphene_vec3_get_x (&decalVertex->position) / graphene_vec3_get_x (size)),
+                               0.5 + ( graphene_vec3_get_y (&decalVertex->position) / graphene_vec3_get_y (size)));
+
+
+      // transform the vertex back to world space
+      graphene_vec4_init_from_vec3 (&v4, &decalVertex->position, 1.0);
+      graphene_matrix_transform_vec4 (&projector_matrix, &v4, &v4);
+      graphene_vec4_get_xyz (&v4, &world);
+
+      // now create vertex and normal buffer data
+      gthree_attribute_set_vec3 (a_position, i, &world);
+      if (a_normal)
+        gthree_attribute_set_vec3 (a_normal, i, &decalVertex->normal);
+    }
+
+  return geometry;
+}
+
+GthreeGeometry *
+gthree_geometry_new_decal_from_mesh (GthreeMesh *mesh,
+                                     const graphene_vec3_t *position,
+                                     const graphene_euler_t *orientation,
+                                     const graphene_vec3_t *size)
+{
+  return gthree_geometry_new_decal (gthree_mesh_get_geometry (mesh),
+                                    gthree_object_get_world_matrix (GTHREE_OBJECT (mesh)),
+                                    position, orientation, size);
+}
