@@ -190,7 +190,7 @@ gthree_plane_helper_init (GthreePlaneHelper *helper)
   gthree_material_set_opacity (GTHREE_MATERIAL (helper->mesh_material), 0.2);
   gthree_material_set_is_transparent (GTHREE_MATERIAL (helper->mesh_material), TRUE);
 
-  gthree_material_set_depth_write  (GTHREE_MATERIAL (helper->mesh_material), TRUE); // TODO: Should be FALSE
+  gthree_material_set_depth_write  (GTHREE_MATERIAL (helper->mesh_material), FALSE);
 
   mesh = gthree_mesh_new (mesh_geometry, GTHREE_MATERIAL (helper->mesh_material));
   gthree_object_add_child (GTHREE_OBJECT (helper), GTHREE_OBJECT (mesh));
