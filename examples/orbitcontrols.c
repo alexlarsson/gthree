@@ -335,6 +335,9 @@ drag_update_cb (GtkGestureDrag *gesture,
 
   if (gtk_gesture_get_sequence_state (GTK_GESTURE (gesture), NULL) == GTK_EVENT_SEQUENCE_NONE)
     {
+      if (offset_x * offset_x + offset_y * offset_y < 8)
+        return;
+
       gtk_gesture_set_state (GTK_GESTURE (gesture), GTK_EVENT_SEQUENCE_CLAIMED);
       for (l = orbit->other_gestures; l != NULL; l = l->next)
         gtk_gesture_set_state (GTK_GESTURE (l->data), GTK_EVENT_SEQUENCE_DENIED);
