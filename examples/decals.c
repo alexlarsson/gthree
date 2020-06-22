@@ -7,11 +7,6 @@
 #include "utils.h"
 #include "orbitcontrols.h"
 
-/* TODO:
- * Add UI
- * Fix UV
- */
-
 static gboolean params_rotate = TRUE;
 static float params_min_scale = 10;
 static float params_max_scale = 20;
@@ -112,18 +107,6 @@ init_scene (void)
   return scene;
 }
 
-static gboolean
-tick (GtkWidget     *widget,
-      GdkFrameClock *frame_clock,
-      gpointer       user_data)
-{
-  // TODO: Do we need this?
-
-  gtk_widget_queue_draw (widget);
-
-  return G_SOURCE_CONTINUE;
-}
-
 static void
 resize_area (GthreeArea *area,
              gint width,
@@ -182,6 +165,8 @@ motion_cb (GtkEventControllerMotion *controller,
     {
       is_intersection = FALSE;
    }
+
+  gtk_widget_queue_draw (widget);
 }
 
 static void
@@ -206,11 +191,6 @@ shoot (GthreeScene *scene)
   float scale = g_random_double_range (params_min_scale, params_max_scale);
   graphene_vec3_init (&size, scale, scale, scale);
 
-#if 0  // Eanble this to test UV mapping
-  g_autoptr(GthreeTexture) texture = examples_load_texture ("UV_Grid_Sm.jpg");
-  g_autoptr(GthreeMeshBasicMaterial) material = gthree_mesh_basic_material_new ();
-  gthree_mesh_basic_material_set_map (material, texture);
-#else
   g_autoptr(GthreeMeshPhongMaterial) material = gthree_mesh_phong_material_new ();
   graphene_vec3_t color;
   gthree_mesh_phong_material_set_color (material,
@@ -224,13 +204,11 @@ shoot (GthreeScene *scene)
   gthree_mesh_phong_material_set_normal_map (material, decal_normal);
   gthree_material_set_is_transparent (GTHREE_MATERIAL (material), TRUE);
   gthree_mesh_phong_material_set_shininess (material, 30);
-#endif
 
   gthree_material_set_polygon_offset (GTHREE_MATERIAL (material), TRUE, -4, 0);
 
-  //TODO: !Depth write broken (issue #43)
-  //gthree_material_set_depth_test (GTHREE_MATERIAL (material), TRUE);
-  //gthree_material_set_depth_write (GTHREE_MATERIAL (material), FALSE);
+  gthree_material_set_depth_test (GTHREE_MATERIAL (material), TRUE);
+  gthree_material_set_depth_write (GTHREE_MATERIAL (material), FALSE);
 
   g_autoptr(GthreeGeometry) decal_geometry = gthree_geometry_new_decal_from_mesh (GTHREE_MESH (head),
                                                                                   &position,
@@ -255,42 +233,63 @@ released_cb (GtkEventController *controller,
 
   if (is_intersection)
     shoot (scene);
+
+  gtk_widget_queue_draw (widget);
+}
+
+static void
+rotate_toggled (GtkToggleButton *toggle_button,
+                GtkWidget *area)
+{
+  params_rotate = gtk_toggle_button_get_active (toggle_button);
+
+  gtk_widget_queue_draw (area);
+}
+
+static void
+min_changed  (GtkRange *range,
+              GtkWidget *area)
+{
+  params_min_scale = gtk_range_get_value (range);
+
+  gtk_widget_queue_draw (area);
+}
+
+static void
+max_changed  (GtkRange *range,
+              GtkWidget *area)
+{
+  params_min_scale = gtk_range_get_value (range);
+
+  gtk_widget_queue_draw (area);
+}
+
+static void
+clear (GtkButton *button,
+       GtkWidget *area)
+{
+  GthreeScene *scene = gthree_area_get_scene (GTHREE_AREA (area));
+  GList *l;
+
+  for (l = decals; l != NULL; l = l->next)
+    gthree_object_remove_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (l->data));
+
+  g_list_free (decals);
+  decals = NULL;
+
+  gtk_widget_queue_draw (area);
 }
 
 int
 main (int argc, char *argv[])
 {
-  GtkWidget *window, *box, *area;
+  GtkWidget *window, *box, *area, *hbox, *check, *scale, *label, *button;
   GthreeScene *scene;
   GthreePerspectiveCamera *camera;
   gboolean done = FALSE;
   g_autoptr(GthreeOrbitControls) orbit = NULL;
   GtkEventController *click;
   GtkEventController *motion;
-
-
-  {
-    graphene_vec3_t up;
-    graphene_vec3_t center;
-    graphene_vec3_t eye;
-    graphene_matrix_t m;
-    graphene_quaternion_t q;
-    graphene_euler_t e;
-
-    graphene_vec3_init (&up, 0, 1, 0);
-
-    graphene_vec3_init (&center, 0, 0, 0);
-    graphene_vec3_init (&eye, 0, 0, 1);
-
-    graphene_matrix_init_look_at (&m, &eye, &center, &up);
-    graphene_quaternion_init_from_matrix (&q, &m);
-    graphene_euler_init_from_quaternion (&e, &q, GRAPHENE_EULER_ORDER_DEFAULT);
-    g_print ("euler: %f %f %f\n",
-             graphene_euler_get_x (&e),
-             graphene_euler_get_y (&e),
-             graphene_euler_get_z (&e));
-  }
-
 
   window = examples_init ("Decal splatter", &box, &done);
 
@@ -316,7 +315,46 @@ main (int argc, char *argv[])
   motion = motion_controller_for (GTK_WIDGET (area));
   g_signal_connect (motion, "motion", (GCallback)motion_cb, area);
 
-  gtk_widget_add_tick_callback (GTK_WIDGET (area), tick, area, NULL);
+  check = gtk_check_button_new_with_label ("Rotate");
+  gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (check), TRUE);
+  gtk_box_append (GTK_BOX (box), check);
+  gtk_widget_show (check);
+  g_signal_connect (check, "toggled", G_CALLBACK (rotate_toggled), area);
+
+  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
+  gtk_widget_show (hbox);
+  gtk_box_append (GTK_BOX (box), hbox);
+
+  label = gtk_label_new ("Min scale: ");
+  gtk_widget_show (label);
+  gtk_box_append (GTK_BOX (hbox), label);
+
+  scale = gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL, 0, 30, 0.1);
+  gtk_range_set_value (GTK_RANGE (scale), params_min_scale);
+  gtk_widget_set_hexpand (scale, TRUE);
+  gtk_box_append (GTK_BOX (hbox), scale);
+  gtk_widget_show (scale);
+  g_signal_connect (scale, "value-changed", G_CALLBACK (min_changed), area);
+
+  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
+  gtk_widget_show (hbox);
+  gtk_box_append (GTK_BOX (box), hbox);
+
+  label = gtk_label_new ("Max scale: ");
+  gtk_widget_show (label);
+  gtk_box_append (GTK_BOX (hbox), label);
+
+  scale = gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL, 0, 30, 0.1);
+  gtk_range_set_value (GTK_RANGE (scale), params_max_scale);
+  gtk_widget_set_hexpand (scale, TRUE);
+  gtk_box_append (GTK_BOX (hbox), scale);
+  gtk_widget_show (scale);
+  g_signal_connect (scale, "value-changed", G_CALLBACK (max_changed), area);
+
+  button = gtk_button_new_with_label ("Clear");
+  gtk_widget_show (button);
+  gtk_box_append (GTK_BOX (box), button);
+  g_signal_connect (button, "clicked", G_CALLBACK (clear), area);
 
   gtk_widget_show (window);
 
