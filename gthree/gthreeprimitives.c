@@ -836,7 +836,7 @@ GthreeGeometry *
 gthree_geometry_new_decal (GthreeGeometry *original_geometry,
                            const graphene_matrix_t *matrix_world,
                            const graphene_vec3_t *position,
-                           const graphene_euler_t *orientation,
+                           const graphene_quaternion_t *orientation,
                            const graphene_vec3_t *size)
 {
   GthreeGeometry *geometry;
@@ -850,7 +850,7 @@ gthree_geometry_new_decal (GthreeGeometry *original_geometry,
   int len;
 
   graphene_matrix_init_identity (&projector_matrix);
-  graphene_matrix_rotate_euler (&projector_matrix, orientation);
+  graphene_matrix_rotate_quaternion (&projector_matrix, orientation);
   graphene_matrix_translate (&projector_matrix,
                              graphene_point3d_init_from_vec3 (&p3d, position));
 
@@ -916,7 +916,7 @@ gthree_geometry_new_decal (GthreeGeometry *original_geometry,
 GthreeGeometry *
 gthree_geometry_new_decal_from_mesh (GthreeMesh *mesh,
                                      const graphene_vec3_t *position,
-                                     const graphene_euler_t *orientation,
+                                     const graphene_quaternion_t *orientation,
                                      const graphene_vec3_t *size)
 {
   return gthree_geometry_new_decal (gthree_mesh_get_geometry (mesh),

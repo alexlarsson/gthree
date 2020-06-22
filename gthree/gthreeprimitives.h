@@ -61,12 +61,12 @@ GTHREE_API
 GthreeGeometry *gthree_geometry_new_decal (GthreeGeometry *original_geometry,
                                            const graphene_matrix_t *matrix_world,
                                            const graphene_vec3_t *position,
-                                           const graphene_euler_t *orientation,
+                                           const graphene_quaternion_t *orientation,
                                            const graphene_vec3_t *size);
 GTHREE_API
 GthreeGeometry *gthree_geometry_new_decal_from_mesh (GthreeMesh *mesh,
                                                      const graphene_vec3_t *position,
-                                                     const graphene_euler_t *orientation,
+                                                     const graphene_quaternion_t *orientation,
                                                      const graphene_vec3_t *size);
 
 G_END_DECLS

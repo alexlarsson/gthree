@@ -189,16 +189,19 @@ shoot (GthreeScene *scene)
 {
   graphene_vec3_t position;
   graphene_vec3_t size;
-  graphene_euler_t orientation;
+  graphene_quaternion_t quat;
 
   position = intersection_point;
-  orientation = *gthree_object_get_rotation (GTHREE_OBJECT (mouse_helper));
+  quat = *gthree_object_get_quaternion (GTHREE_OBJECT (mouse_helper));
 
   if (params_rotate)
-    graphene_euler_init (&orientation,
-                         graphene_euler_get_x (&orientation),
-                         graphene_euler_get_y (&orientation),
-                         g_random_double_range (0, 360));
+    {
+      graphene_quaternion_t r;
+      graphene_quaternion_init_from_angle_vec3 (&r,
+                                                g_random_double_range (0, 360),
+                                                graphene_vec3_z_axis ());
+      graphene_quaternion_multiply (&quat, &r, &quat);
+    }
 
   float scale = g_random_double_range (params_min_scale, params_max_scale);
   graphene_vec3_init (&size, scale, scale, scale);
@@ -231,7 +234,7 @@ shoot (GthreeScene *scene)
 
   g_autoptr(GthreeGeometry) decal_geometry = gthree_geometry_new_decal_from_mesh (GTHREE_MESH (head),
                                                                                   &position,
-                                                                                  &orientation,
+                                                                                  &quat,
                                                                                   &size);
 
   g_autoptr(GthreeMesh) m = gthree_mesh_new (decal_geometry, GTHREE_MATERIAL (material));
