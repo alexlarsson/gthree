@@ -189,6 +189,8 @@ static void clear (gboolean color, gboolean depth, gboolean stencil);
 static void set_clear_color (GthreeRenderer *renderer,
                              const graphene_vec3_t *color,
                              float alpha);
+static void set_depth_write (GthreeRenderer *renderer,
+                             gboolean depth_write);
 
 static void render_item (GthreeRenderer *renderer,
                          GthreeCamera *camera,
@@ -1136,6 +1138,9 @@ gthree_renderer_clear (GthreeRenderer *renderer,
   if (color)
     set_clear_color (renderer, &priv->clear_color, priv->clear_alpha);
 
+  if (depth)
+    set_depth_write (renderer, TRUE);
+
   clear (color, depth, stencil);
 
   gthree_renderer_pop_current (renderer);
@@ -1145,6 +1150,8 @@ void
 gthree_renderer_clear_depth (GthreeRenderer *renderer)
 {
   gthree_renderer_push_current (renderer);
+
+  set_depth_write (renderer, TRUE);
 
   clear (FALSE, TRUE, FALSE);
 
@@ -3058,6 +3065,8 @@ gthree_renderer_render_background (GthreeRenderer *renderer,
   if (priv->auto_clear || force_clear)
     {
       set_clear_color (renderer, clear_color, clear_alpha);
+      if (priv->auto_clear_depth)
+        set_depth_write (renderer, TRUE);
       clear (priv->auto_clear_color, priv->auto_clear_depth, priv->auto_clear_stencil);
     }
 
