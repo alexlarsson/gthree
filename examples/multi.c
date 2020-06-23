@@ -235,7 +235,7 @@ main (int argc, char *argv[])
   gthree_object_set_position_xyz (GTHREE_OBJECT (camera_x),
                                   1000, 0, 0);
   gthree_object_set_rotation_xyz (GTHREE_OBJECT (camera_x),
-                                  0, -90, 0);
+                                  0, 90, 0);
 
   area_x = gthree_area_new (scene, GTHREE_CAMERA (camera_x));
   g_signal_connect (area_x, "resize", G_CALLBACK (resize_area), camera_x);
