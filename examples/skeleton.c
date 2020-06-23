@@ -12,6 +12,7 @@ static GthreeAnimationAction *idle_action;
 static GthreeAnimationAction *walk_action;
 static GthreeAnimationAction *run_action;
 static GthreeLoader *loader = NULL;
+static GthreeSkeletonHelper *skeleton;
 
 static float setting_idle_weight = 0.0;
 static float setting_walk_weight = 1.0;
@@ -66,6 +67,15 @@ update_ui (void)
   in_update = FALSE;
 }
 
+static gboolean
+set_cast_shadow (GthreeObject                *object,
+                 gpointer                     user_data)
+{
+  if (GTHREE_IS_MESH (object))
+    gthree_object_set_cast_shadow (object, TRUE);
+  return TRUE;
+}
+
 static GthreeScene *
 init_scene (void)
 {
@@ -80,8 +90,6 @@ init_scene (void)
   GthreeLightShadow *shadow;
   GthreeCamera *shadow_camera;
   GthreeScene *loader_scene;
-  GthreeObject *loader_mesh_group;
-  GthreeObject *model = NULL;
 
   scene = gthree_scene_new ();
 
@@ -132,10 +140,8 @@ init_scene (void)
   loader = examples_load_gltl ("Soldier.glb");
 
   loader_scene = gthree_loader_get_scene (loader, 0);
-  loader_mesh_group = gthree_object_get_first_child (GTHREE_OBJECT (loader_scene));
-  model = gthree_object_get_first_child (GTHREE_OBJECT (loader_mesh_group));
+  gthree_object_traverse (GTHREE_OBJECT (loader_scene), set_cast_shadow, NULL);
 
-  gthree_object_set_cast_shadow (GTHREE_OBJECT (model), TRUE);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (loader_scene));
 
   mixer = gthree_animation_mixer_new (GTHREE_OBJECT (loader_scene));
@@ -145,10 +151,10 @@ init_scene (void)
 
   activate_all_actions ();
 
-  // TODO
-  //skeleton = new THREE.SkeletonHelper( model );
-  //skeleton.visible = false;
-  //scene.add( skeleton );
+  skeleton = gthree_skeleton_helper_new (GTHREE_OBJECT (loader_scene));
+  gthree_line_basic_material_set_line_width (GTHREE_LINE_BASIC_MATERIAL (gthree_line_get_material (GTHREE_LINE (skeleton))), 3);
+  gthree_object_set_visible (GTHREE_OBJECT (skeleton), FALSE);
+  gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (skeleton));
 
   return scene;
 }
@@ -168,7 +174,7 @@ show_skeleton_toggled (GtkToggleButton *toggle_button,
 {
   gboolean show_skeleton = gtk_toggle_button_get_active (toggle_button);
 
-  g_print ("show skeleton: %d\n", show_skeleton);
+  gthree_object_set_visible (GTHREE_OBJECT (skeleton), show_skeleton);
 
   gtk_widget_queue_draw (area);
 }
@@ -354,7 +360,7 @@ run_to_walk (GtkButton *button,
 int
 main (int argc, char *argv[])
 {
-  GtkWidget *window, *box, *area, *check, *hbox, *scale, *label, *button;
+  GtkWidget *window, *box, *area, *check, *hbox, *scale, *label, *button, *outer_hbox;
   GthreeScene *scene;
   GthreePerspectiveCamera *camera;
   gboolean done = FALSE;
@@ -377,8 +383,17 @@ main (int argc, char *argv[])
 
   gtk_widget_add_tick_callback (GTK_WIDGET (area), tick, area, NULL);
 
+  outer_hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
+  gtk_widget_show (outer_hbox);
+  gtk_box_append (GTK_BOX (box), outer_hbox);
+
+  box = gtk_box_new (GTK_ORIENTATION_VERTICAL, FALSE);
+  gtk_widget_show (box);
+  gtk_box_append (GTK_BOX (outer_hbox), box);
+
+
   check = gtk_check_button_new_with_label ("Show skeleton");
-  gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (check), TRUE);
+  gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (check), FALSE);
   gtk_box_append (GTK_BOX (box), check);
   gtk_widget_show (check);
   g_signal_connect (check, "toggled", G_CALLBACK (show_skeleton_toggled), area);
@@ -415,7 +430,26 @@ main (int argc, char *argv[])
   gtk_widget_show (hbox);
   gtk_box_append (GTK_BOX (box), hbox);
 
-  label = gtk_label_new ("Modify idle weight: ");
+  label = gtk_label_new ("Time scale: ");
+  gtk_widget_show (label);
+  gtk_box_append (GTK_BOX (hbox), label);
+
+  time_scale = scale = gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL, 0, 3, 0.01);
+  gtk_range_set_value (GTK_RANGE (scale), 1.0);
+  gtk_widget_set_hexpand (scale, TRUE);
+  gtk_box_append (GTK_BOX (hbox), scale);
+  gtk_widget_show (scale);
+  g_signal_connect (scale, "value-changed", G_CALLBACK (time_scale_changed), area);
+
+  box = gtk_box_new (GTK_ORIENTATION_VERTICAL, FALSE);
+  gtk_widget_show (box);
+  gtk_box_append (GTK_BOX (outer_hbox), box);
+
+  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
+  gtk_widget_show (hbox);
+  gtk_box_append (GTK_BOX (box), hbox);
+
+  label = gtk_label_new ("Idle weight: ");
   gtk_widget_show (label);
   gtk_box_append (GTK_BOX (hbox), label);
 
@@ -430,7 +464,7 @@ main (int argc, char *argv[])
   gtk_widget_show (hbox);
   gtk_box_append (GTK_BOX (box), hbox);
 
-  label = gtk_label_new ("Modify walk weight: ");
+  label = gtk_label_new ("Walk weight: ");
   gtk_widget_show (label);
   gtk_box_append (GTK_BOX (hbox), label);
 
@@ -445,7 +479,7 @@ main (int argc, char *argv[])
   gtk_widget_show (hbox);
   gtk_box_append (GTK_BOX (box), hbox);
 
-  label = gtk_label_new ("Modify run weight: ");
+  label = gtk_label_new ("Run weight: ");
   gtk_widget_show (label);
   gtk_box_append (GTK_BOX (hbox), label);
 
@@ -455,21 +489,6 @@ main (int argc, char *argv[])
   gtk_box_append (GTK_BOX (hbox), scale);
   gtk_widget_show (scale);
   g_signal_connect (scale, "value-changed", G_CALLBACK (run_weight_changed), area);
-
-  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
-  gtk_widget_show (hbox);
-  gtk_box_append (GTK_BOX (box), hbox);
-
-  label = gtk_label_new ("Time scale: ");
-  gtk_widget_show (label);
-  gtk_box_append (GTK_BOX (hbox), label);
-
-  time_scale = scale = gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL, 0, 3, 0.01);
-  gtk_range_set_value (GTK_RANGE (scale), 1.0);
-  gtk_widget_set_hexpand (scale, TRUE);
-  gtk_box_append (GTK_BOX (hbox), scale);
-  gtk_widget_show (scale);
-  g_signal_connect (scale, "value-changed", G_CALLBACK (time_scale_changed), area);
 
   gtk_widget_show (window);
 
