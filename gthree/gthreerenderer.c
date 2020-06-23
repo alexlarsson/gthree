@@ -1902,20 +1902,19 @@ getDepthMaterial (GthreeRenderer *renderer,
       gboolean useSkinning = FALSE;
       int variantIndex = 0;
 
-#ifdef TODO
-      if (material.morphTargets && geometry)
-        useMorphing = geometry.morphAttributes && geometry.morphAttributes.position && geometry.morphAttributes.position.length > 0;
-#endif
+      if (GTHREE_IS_MESH_MATERIAL (material) && gthree_mesh_material_get_morph_targets (GTHREE_MESH_MATERIAL (material)))
+        {
+          GPtrArray *morphPosition = gthree_geometry_get_morph_attributes (geometry, "position");
+          useMorphing = morphPosition != NULL && morphPosition->len > 0;
+        }
 
-#ifdef TODO
-      if (GTHREE_IS_SKINNED_MESH (object) && material.skinning === false ) {
-        console.warn( 'THREE.WebGLShadowMap: THREE.SkinnedMesh with material.skinning set to false:', object );
-      }
-#endif
+      if (GTHREE_IS_SKINNED_MESH (object) &&
+          GTHREE_IS_MESH_MATERIAL (material) && !gthree_mesh_material_get_skinning (GTHREE_MESH_MATERIAL (material)))
+          g_warning ("GThreeSkinnedMesh with material.skinning set to false: %p", object);
 
-#ifdef TODO
-      useSkinning = object.isSkinnedMesh && material.skinning;
-#endif
+      useSkinning =
+        GTHREE_IS_SKINNED_MESH (object) &&
+        GTHREE_IS_MESH_MATERIAL (material) && gthree_mesh_material_get_skinning (GTHREE_MESH_MATERIAL (material));
 
       if (useMorphing)
         variantIndex |= SHADER_MAP_MORPHING_FLAG;
