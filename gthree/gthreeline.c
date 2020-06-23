@@ -167,3 +167,18 @@ gthree_line_class_init (GthreeLineClass *klass)
 
   g_object_class_install_properties (gobject_class, N_PROPS, obj_props);
 }
+
+
+GthreeMaterial *
+gthree_line_get_material (GthreeLine *line)
+{
+  GthreeLinePrivate *priv = gthree_line_get_instance_private (line);
+  return priv->material;
+}
+
+GthreeGeometry *
+gthree_line_get_geometry (GthreeLine *line)
+{
+  GthreeLinePrivate *priv = gthree_line_get_instance_private (line);
+  return priv->geometry;
+}

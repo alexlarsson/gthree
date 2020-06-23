@@ -36,6 +36,9 @@ GTHREE_API
 GthreeLine *gthree_line_new (GthreeGeometry *geometry,
                              GthreeMaterial *material);
 
+GthreeMaterial *gthree_line_get_material (GthreeLine *line);
+GthreeGeometry *gthree_line_get_geometry (GthreeLine *line);
+
 G_END_DECLS
 
 #endif /* __GTHREE_LINE_H__ */
