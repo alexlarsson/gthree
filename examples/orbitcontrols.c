@@ -98,6 +98,10 @@ struct _GthreeOrbitControls {
   guint tick_id;
 
   graphene_vec2_t dragStart;
+  GtkEventController *drag;
+#ifdef USE_GTK4
+  GtkEventController *scroll;
+#endif
 
   GList *other_gestures;
 };
@@ -470,7 +474,15 @@ gthree_orbit_controls_finalize (GObject *obj)
       orbit->tick_id = 0;
     }
 
-  // TODO: Disconnect all signal handlers
+  g_signal_handlers_disconnect_by_func (orbit->drag, (GCallback)drag_begin_cb, orbit);
+  g_signal_handlers_disconnect_by_func (orbit->drag, (GCallback)drag_update_cb, orbit);
+  g_signal_handlers_disconnect_by_func (orbit->drag, (GCallback)drag_end_cb, orbit);
+
+#ifdef USE_GTK4
+  g_signal_handlers_disconnect_by_func (orbit->scroll, (GCallback)scroll_cb, orbit);
+#else
+  g_signal_handlers_disconnect_by_func (orbit->darea, (GCallback)scroll_event_cb, orbit);
+#endif
 
   g_object_unref (orbit->object);
   g_object_unref (orbit->darea);
@@ -552,7 +564,7 @@ gthree_orbit_controls_new (GthreeObject *object, GtkWidget *darea)
 
   orbit->position0 = *gthree_object_get_position (object);
 
-  drag = drag_controller_for (darea);
+  orbit->drag = drag = drag_controller_for (darea);
   gtk_gesture_single_set_button (GTK_GESTURE_SINGLE (drag), 0);
 
   g_signal_connect (drag, "drag-begin", (GCallback)drag_begin_cb, orbit);
@@ -560,7 +572,7 @@ gthree_orbit_controls_new (GthreeObject *object, GtkWidget *darea)
   g_signal_connect (drag, "drag-end", (GCallback)drag_end_cb, orbit);
 
 #ifdef USE_GTK4
-  scroll = scroll_controller_for (GTK_WIDGET (darea));
+  orbit->scroll = scroll = scroll_controller_for (GTK_WIDGET (darea));
   g_signal_connect (scroll, "scroll", (GCallback)scroll_cb, orbit);
 #else
   /* TODO: For whatever reason the scroll controller doesn't seem to work for gtk3 */
