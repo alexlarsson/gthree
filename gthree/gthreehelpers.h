@@ -41,6 +41,22 @@ void gthree_plane_helper_set_size (GthreePlaneHelper *helper,
 GTHREE_API
 float gthree_plane_helper_get_size (GthreePlaneHelper *helper);
 
+
+#define GTHREE_TYPE_SKELETON_HELPER      (gthree_skeleton_helper_get_type ())
+#define GTHREE_SKELETON_HELPER(inst)     (G_TYPE_CHECK_INSTANCE_CAST ((inst), GTHREE_TYPE_SKELETON_HELPER, GthreeSkeletonHelper))
+#define GTHREE_IS_SKELETON_HELPER(inst)  (G_TYPE_CHECK_INSTANCE_TYPE ((inst), GTHREE_TYPE_SKELETON_HELPER))
+
+typedef struct _GthreeSkeletonHelperClass GthreeSkeletonHelperClass;
+typedef struct _GthreeSkeletonHelper GthreeSkeletonHelper;
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreeSkeletonHelper, g_object_unref)
+
+GTHREE_API
+GType gthree_skeleton_helper_get_type (void) G_GNUC_CONST;
+
+GTHREE_API
+GthreeSkeletonHelper *gthree_skeleton_helper_new (GthreeObject *root);
+
 G_END_DECLS
 
 #endif /* __GTHREE_HELPERS_H__ */
