@@ -5,7 +5,6 @@
 #include "gthreeprivate.h"
 #include "gthreepropertymixerprivate.h"
 
-
 typedef struct {
   GthreeAnimationMixer *mixer;
   GthreeAnimationClip *clip;
@@ -670,10 +669,7 @@ _gthree_animation_action_update_time (GthreeAnimationAction *action,
               priv->enabled = FALSE;
             priv->time = time;
 
-            _gthree_animation_mixer_displatch_event (priv->mixer, "finished"
-                                                     // action: this,
-                                                     // direction: deltaTime < 0 ? - 1 : 1
-                                                     );
+            _gthree_animation_mixer_displatch_finished (priv->mixer, action, delta_time < 0 ? - 1 : 1);
           }
       }
     }
@@ -721,10 +717,7 @@ _gthree_animation_action_update_time (GthreeAnimationAction *action,
               time = delta_time > 0 ? duration : 0;
               priv->time = time;
 
-            _gthree_animation_mixer_displatch_event (priv->mixer, "finished"
-                                                     // action: this,
-                                                     // direction: deltaTime > 0 ? 1 : - 1
-                                                     );
+              _gthree_animation_mixer_displatch_finished (priv->mixer, action, delta_time > 0 ? 1 : - 1);
             }
           else
             {
@@ -742,10 +735,7 @@ _gthree_animation_action_update_time (GthreeAnimationAction *action,
 
               priv->loop_count = loop_count;
               priv->time = time;
-              _gthree_animation_mixer_displatch_event (priv->mixer, "loop"
-                                                       // action: this,
-                                                       // loopDelta: loopDelta
-                                                       );
+              _gthree_animation_mixer_displatch_loop (priv->mixer, action, (int) loop_delta);
             }
         }
       else

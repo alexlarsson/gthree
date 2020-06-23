@@ -289,9 +289,12 @@ gboolean           _gthree_animation_mixer_is_active_action              (Gthree
 void               _gthree_animation_mixer_take_back_control_interpolant (GthreeAnimationMixer  *mixer,
                                                                           GthreeInterpolant     *interpolant);
 GthreeInterpolant *_gthree_animation_mixer_lend_control_interpolant      (GthreeAnimationMixer  *mixer);
-void               _gthree_animation_mixer_displatch_event               (GthreeAnimationMixer  *mixer,
-                                                                          const char            *type,
-                                                                          ...);
+void               _gthree_animation_mixer_displatch_finished            (GthreeAnimationMixer  *mixer,
+                                                                          GthreeAnimationAction *action,
+                                                                          int                    direction);
+void               _gthree_animation_mixer_displatch_loop                (GthreeAnimationMixer  *mixer,
+                                                                          GthreeAnimationAction  *action,
+                                                                          int                     loop_delta);
 
 
 int _gthree_interpolant_get_cache_index (GthreeInterpolant *interpolant);

@@ -6,7 +6,17 @@
 #include "gthreepropertymixerprivate.h"
 #include "gthreelinearinterpolant.h"
 #include "gthreeprivate.h"
+#include "gthreemarshalers.h"
 
+enum
+{
+  LOOP,
+  FINISHED,
+
+  LAST_SIGNAL
+};
+
+static guint signals[LAST_SIGNAL] = { 0, };
 
 typedef struct {
   GPtrArray *known_actions; // Array< AnimationAction > - used as prototypes
@@ -99,7 +109,26 @@ gthree_animation_mixer_finalize (GObject *obj)
 static void
 gthree_animation_mixer_class_init (GthreeAnimationMixerClass *klass)
 {
-  G_OBJECT_CLASS (klass)->finalize = gthree_animation_mixer_finalize;
+  GObjectClass *obj_class = G_OBJECT_CLASS (klass);
+
+  obj_class->finalize = gthree_animation_mixer_finalize;
+
+  signals[FINISHED] =
+    g_signal_new ("finished",
+                  G_TYPE_FROM_CLASS (obj_class),
+                  G_SIGNAL_RUN_LAST,
+                  0, NULL, NULL,
+                  _gthree_marshal_VOID__POINTER_INT,
+                  G_TYPE_NONE, 2, GTHREE_TYPE_ANIMATION_ACTION, G_TYPE_INT);
+
+  signals[LOOP] =
+    g_signal_new ("loop",
+                  G_TYPE_FROM_CLASS (obj_class),
+                  G_SIGNAL_RUN_LAST,
+                  0, NULL, NULL,
+                  _gthree_marshal_VOID__POINTER_INT,
+                  G_TYPE_NONE, 2, GTHREE_TYPE_ANIMATION_ACTION, G_TYPE_INT);
+
 }
 
 GthreeAnimationMixer *
@@ -792,9 +821,17 @@ gthree_animation_mixer_get_root (GthreeAnimationMixer  *mixer)
 }
 
 void
-_gthree_animation_mixer_displatch_event (GthreeAnimationMixer  *mixer,
-                                         const char *type,
-                                         ...)
+_gthree_animation_mixer_displatch_finished (GthreeAnimationMixer  *mixer,
+                                            GthreeAnimationAction  *action,
+                                            int direction)
 {
-  //g_warning ("TODO - _gthree_animation_mixer_displatch_event");
+  g_signal_emit (mixer, signals[FINISHED], 0, action, direction);
+}
+
+void
+_gthree_animation_mixer_displatch_loop (GthreeAnimationMixer  *mixer,
+                                        GthreeAnimationAction  *action,
+                                        int loop_delta)
+{
+  g_signal_emit (mixer, signals[LOOP], 0, action, loop_delta);
 }
