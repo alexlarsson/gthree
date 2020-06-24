@@ -36,6 +36,7 @@ gthree_mesh_distance_material_init (GthreeMeshDistanceMaterial *distance)
   graphene_vec3_init (&priv->reference_point, 0, 0, 0);
   priv->nearDistance = 1;
   priv->farDistance = 1000;
+  gthree_material_set_fog (GTHREE_MATERIAL (distance), FALSE);
 }
 
 static void

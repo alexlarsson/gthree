@@ -23,6 +23,7 @@ typedef struct {
   float alpha_test;
   GthreeSide side;
   gboolean vertex_colors;
+  gboolean fog;
 
   GthreeShader *shader;
   guint32 valid_for_renderer_id;
@@ -45,6 +46,7 @@ enum {
   PROP_SIDE,
   PROP_ALPHA_TEST,
   PROP_CLIP_INTERSECTION,
+  PROP_FOG,
 
   N_PROPS
 };
@@ -93,6 +95,7 @@ gthree_material_init (GthreeMaterial *material)
   priv->depth_test = TRUE;
   priv->depth_write = TRUE;
   priv->vertex_colors = FALSE;
+  priv->fog = TRUE;
 
   priv->polygon_offset = FALSE;
   priv->polygon_offset_factor = 0;
@@ -137,6 +140,10 @@ gthree_material_set_property (GObject *obj,
       gthree_material_set_vertex_colors (material, g_value_get_boolean (value));
       break;
 
+    case PROP_FOG:
+      gthree_material_set_fog (material, g_value_get_boolean (value));
+      break;
+
     case PROP_TRANSPARENT:
       gthree_material_set_is_transparent (material, g_value_get_boolean (value));
       break;
@@ -175,6 +182,10 @@ gthree_material_get_property (GObject *obj,
 
     case PROP_VERTEX_COLORS:
       g_value_set_boolean (value, priv->vertex_colors);
+      break;
+
+    case PROP_FOG:
+      g_value_set_boolean (value, priv->fog);
       break;
 
     case PROP_TRANSPARENT:
@@ -300,6 +311,10 @@ gthree_material_class_init (GthreeMaterialClass *klass)
   obj_props[PROP_VERTEX_COLORS] =
     g_param_spec_boolean ("vertex-colors", "Vertex Colors", "Vertex Colors",
                           FALSE,
+                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_FOG] =
+    g_param_spec_boolean ("fog", "Affected by fog", "Affected by fog",
+                          TRUE,
                           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   obj_props[PROP_SIDE] =
     g_param_spec_enum ("side", "Side", "Side",
@@ -558,6 +573,28 @@ gthree_material_set_side (GthreeMaterial *material,
 
   priv->side = side;
 
+  gthree_material_set_needs_update (material);
+}
+
+gboolean
+gthree_material_get_fog (GthreeMaterial *material)
+{
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  return priv->fog;
+}
+
+void
+gthree_material_set_fog (GthreeMaterial *material,
+                         gboolean fog)
+{
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  fog = !!fog;
+  if (priv->fog == fog)
+    return;
+
+  priv->fog = fog;
   gthree_material_set_needs_update (material);
 }
 

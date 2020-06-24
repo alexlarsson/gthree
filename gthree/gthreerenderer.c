@@ -3085,6 +3085,7 @@ gthree_renderer_render_background (GthreeRenderer *renderer,
           gthree_material_set_depth_test (GTHREE_MATERIAL (shader_material), FALSE);
           gthree_material_set_depth_write (GTHREE_MATERIAL (shader_material), FALSE);
           gthree_material_set_side (GTHREE_MATERIAL (shader_material), GTHREE_SIDE_BACK);
+          gthree_material_set_fog (GTHREE_MATERIAL (shader_material), FALSE);
 
           geometry = gthree_geometry_new_box (10, 10, 10, 1, 1, 1);
 
@@ -3129,6 +3130,7 @@ gthree_renderer_render_background (GthreeRenderer *renderer,
           gthree_material_set_depth_test (GTHREE_MATERIAL (shader_material), FALSE);
           gthree_material_set_depth_write (GTHREE_MATERIAL (shader_material), FALSE);
           gthree_material_set_side (GTHREE_MATERIAL (shader_material), GTHREE_SIDE_FRONT);
+          gthree_material_set_fog (GTHREE_MATERIAL (shader_material), FALSE);
 
           geometry = NULL;
           geometry = gthree_geometry_new_plane (2, 2, 1, 1);

@@ -28,6 +28,8 @@ gthree_mesh_depth_material_init (GthreeMeshDepthMaterial *depth)
 {
   GthreeMeshDepthMaterialPrivate *priv = gthree_mesh_depth_material_get_instance_private (depth);
   priv->format = GTHREE_DEPTH_PACKING_FORMAT_BASIC;
+
+  gthree_material_set_fog (GTHREE_MATERIAL (depth), FALSE);
 }
 
 static void

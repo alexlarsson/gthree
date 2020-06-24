@@ -53,6 +53,7 @@ gthree_shader_material_init (GthreeShaderMaterial *shader)
   priv->vertex_colors = FALSE;
   priv->shading_type = GTHREE_SHADING_SMOOTH;
   priv->use_lights = FALSE;
+  gthree_material_set_fog (GTHREE_MATERIAL (shader), FALSE);
 }
 
 static void

@@ -119,6 +119,11 @@ GTHREE_API
 void              gthree_material_set_side                 (GthreeMaterial          *material,
                                                             GthreeSide               side);
 GTHREE_API
+gboolean          gthree_material_get_fog                  (GthreeMaterial          *material);
+GTHREE_API
+void              gthree_material_set_fog                  (GthreeMaterial          *material,
+                                                            gboolean                 fog);
+GTHREE_API
 void              gthree_material_set_vertex_colors        (GthreeMaterial          *material,
                                                             gboolean                 vertex_colors);
 GTHREE_API

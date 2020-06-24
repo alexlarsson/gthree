@@ -27,6 +27,7 @@ gthree_mesh_normal_material_init (GthreeMeshNormalMaterial *normal)
   GthreeMeshNormalMaterialPrivate *priv = gthree_mesh_normal_material_get_instance_private (normal);
 
   priv->shading_type = GTHREE_SHADING_FLAT;
+  gthree_material_set_fog (GTHREE_MATERIAL (normal), FALSE);
 }
 
 static void
