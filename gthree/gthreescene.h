@@ -55,6 +55,11 @@ GthreeTexture * gthree_scene_get_background_texture (GthreeScene   *scene);
 GTHREE_API
 void            gthree_scene_set_background_texture (GthreeScene   *scene,
                                                      GthreeTexture *texture);
+GTHREE_API
+GthreeFog *     gthree_scene_get_fog                (GthreeScene   *scene);
+GTHREE_API
+void            gthree_scene_set_fog                (GthreeScene   *scene,
+                                                     GthreeFog     *fog);
 
 G_END_DECLS
 

@@ -12,6 +12,7 @@ typedef struct {
   float bg_alpha;
   GthreeTexture *bg_texture;
   GthreeMaterial *override_material;
+  GthreeFog *fog;
 } GthreeScenePrivate;
 
 
@@ -128,6 +129,23 @@ gthree_scene_set_override_material (GthreeScene *scene,
     g_object_ref (material);
   g_clear_object (&priv->override_material);
   priv->override_material = material;
+}
+
+GthreeFog *
+gthree_scene_get_fog (GthreeScene *scene)
+{
+  GthreeScenePrivate *priv = gthree_scene_get_instance_private (scene);
+
+  return priv->fog;
+}
+
+void
+gthree_scene_set_fog (GthreeScene *scene,
+                      GthreeFog *fog)
+{
+  GthreeScenePrivate *priv = gthree_scene_get_instance_private (scene);
+
+  g_set_object (&priv->fog, fog);
 }
 
 static void
