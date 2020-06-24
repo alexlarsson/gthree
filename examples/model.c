@@ -16,6 +16,7 @@ static GtkWidget *morph_scale;
 
 static int current_env_map;
 static int current_model;
+static float aspect = 1.0;
 
 static GthreeOrbitControls *orbit;
 static gboolean auto_rotate;
@@ -138,7 +139,7 @@ add_camera (GthreeArea *area)
   graphene_vec3_t target;
 
   /* Generate default camera */
-  camera = gthree_perspective_camera_new (37, 1.5, scene_radius / 1000, scene_radius * 1000);
+  camera = gthree_perspective_camera_new (37, aspect, scene_radius / 1000, scene_radius * 1000);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
 
   gthree_object_set_position_xyz (GTHREE_OBJECT (camera),
@@ -193,7 +194,8 @@ resize_area (GthreeArea *area,
              gint width,
              gint height)
 {
-  gthree_perspective_camera_set_aspect (GTHREE_PERSPECTIVE_CAMERA (camera), (float)width / (float)(height));
+  aspect = (float)width / (float)(height);
+  gthree_perspective_camera_set_aspect (GTHREE_PERSPECTIVE_CAMERA (camera), aspect);
 }
 
 static void
@@ -437,8 +439,9 @@ main (int argc, char *argv[])
     }
   gtk_combo_box_set_active (GTK_COMBO_BOX (combo), current_model);
   models_combo = combo;
-  if (argc == 2)
-    add_custom_model (argv[1]);
+
+  for (i = 1; i < argc; i++)
+    add_custom_model (argv[i]);
 
   g_signal_connect (combo, "changed", G_CALLBACK (model_combo_changed), area);
 
