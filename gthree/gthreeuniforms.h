@@ -116,15 +116,15 @@ void            gthree_uniforms_set_int            (GthreeUniforms  *uniforms,
 GTHREE_API
 void            gthree_uniforms_set_vec4           (GthreeUniforms  *uniforms,
                                                     const char      *name,
-                                                    graphene_vec4_t *value);
+                                                    const graphene_vec4_t *value);
 GTHREE_API
 void            gthree_uniforms_set_vec3           (GthreeUniforms  *uniforms,
                                                     const char      *name,
-                                                    graphene_vec3_t *value);
+                                                    const graphene_vec3_t *value);
 GTHREE_API
 void            gthree_uniforms_set_vec2           (GthreeUniforms  *uniforms,
                                                     const char      *name,
-                                                    graphene_vec2_t *value);
+                                                    const graphene_vec2_t *value);
 GTHREE_API
 void            gthree_uniforms_set_texture        (GthreeUniforms  *uniforms,
                                                     const char      *name,
@@ -168,13 +168,13 @@ void        gthree_uniform_set_int          (GthreeUniform   *uniform,
                                              int              value);
 GTHREE_API
 void        gthree_uniform_set_vec2         (GthreeUniform   *uniform,
-                                             graphene_vec2_t *value);
+                                             const graphene_vec2_t *value);
 GTHREE_API
 void        gthree_uniform_set_vec3         (GthreeUniform   *uniform,
-                                             graphene_vec3_t *value);
+                                             const graphene_vec3_t *value);
 GTHREE_API
 void        gthree_uniform_set_vec4         (GthreeUniform   *uniform,
-                                             graphene_vec4_t *value);
+                                             const graphene_vec4_t *value);
 GTHREE_API
 void        gthree_uniform_set_texture      (GthreeUniform   *uniform,
                                              GthreeTexture   *value);

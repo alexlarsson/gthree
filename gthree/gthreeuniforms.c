@@ -212,7 +212,7 @@ gthree_uniforms_set_int (GthreeUniforms  *uniforms,
 void
 gthree_uniforms_set_vec4 (GthreeUniforms  *uniforms,
                           const char      *name,
-                          graphene_vec4_t *value)
+                          const graphene_vec4_t *value)
 {
   GthreeUniform *uni;
 
@@ -224,7 +224,7 @@ gthree_uniforms_set_vec4 (GthreeUniforms  *uniforms,
 void
 gthree_uniforms_set_vec3 (GthreeUniforms  *uniforms,
                           const char      *name,
-                          graphene_vec3_t *value)
+                          const graphene_vec3_t *value)
 {
   GthreeUniform *uni;
 
@@ -236,7 +236,7 @@ gthree_uniforms_set_vec3 (GthreeUniforms  *uniforms,
 void
 gthree_uniforms_set_vec2 (GthreeUniforms  *uniforms,
                           const char      *name,
-                          graphene_vec2_t *value)
+                          const graphene_vec2_t *value)
 {
   GthreeUniform *uni;
 
@@ -663,7 +663,7 @@ gthree_uniform_set_int (GthreeUniform *uniform,
 
 void
 gthree_uniform_set_vec4 (GthreeUniform *uniform,
-                         graphene_vec4_t *value)
+                         const graphene_vec4_t *value)
 {
   g_return_if_fail (uniform->type == GTHREE_UNIFORM_TYPE_VECTOR4);
   uniform->value.floats[0] = graphene_vec4_get_x (value);
@@ -674,7 +674,7 @@ gthree_uniform_set_vec4 (GthreeUniform *uniform,
 
 void
 gthree_uniform_set_vec3 (GthreeUniform *uniform,
-                         graphene_vec3_t *value)
+                         const graphene_vec3_t *value)
 {
   g_return_if_fail (uniform->type == GTHREE_UNIFORM_TYPE_VECTOR3);
   uniform->value.floats[0] = graphene_vec3_get_x (value);
@@ -684,7 +684,7 @@ gthree_uniform_set_vec3 (GthreeUniform *uniform,
 
 void
 gthree_uniform_set_vec2 (GthreeUniform *uniform,
-                         graphene_vec2_t *value)
+                         const graphene_vec2_t *value)
 {
   g_return_if_fail (uniform->type == GTHREE_UNIFORM_TYPE_VECTOR2);
   uniform->value.floats[0] = graphene_vec2_get_x (value);
