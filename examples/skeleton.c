@@ -90,14 +90,15 @@ init_scene (void)
   GthreeLightShadow *shadow;
   GthreeCamera *shadow_camera;
   GthreeScene *loader_scene;
+  g_autoptr(GthreeFog) fog = NULL;
 
   scene = gthree_scene_new ();
 
   gthree_scene_set_background_color (scene,
                                      graphene_vec3_init (&color, 0.63, 0.63, 0.63));
 
-  // TODO:
-  // scene.fog = new THREE.Fog( 0xa0a0a0, 10, 50 );
+  fog = gthree_fog_new_linear (graphene_vec3_init (&color, 0.63, 0.63, 0.63), 10, 50);
+  gthree_scene_set_fog (scene, fog);
 
   hemi_light = gthree_hemisphere_light_new (white (),
                                             graphene_vec3_init (&color, 0.25, 0.25, 0.25), 1);
