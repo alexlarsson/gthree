@@ -141,7 +141,7 @@ init_scene (void)
   texture = examples_load_texture ("crate.gif");
 
   material_simple = gthree_mesh_basic_material_new ();
-  gthree_mesh_basic_material_set_color (material_simple, cyan ());
+  gthree_mesh_basic_material_set_color (material_simple, grey ());
   gthree_material_set_vertex_colors (GTHREE_MATERIAL (material_simple), FALSE);
 
   material_vertex_color = gthree_mesh_basic_material_new ();
@@ -159,10 +159,12 @@ init_scene (void)
   scene = gthree_scene_new ();
 
   multi_materials = g_ptr_array_new_with_free_func (g_object_unref);
-  for (i = 0; i < 3; i++)
-    g_ptr_array_add (multi_materials, g_object_ref (material_simple));
-  for (i = 3; i < 6; i++)
-    g_ptr_array_add (multi_materials, g_object_ref (material_simple));
+  for (i = 0; i < 2; i++)
+    g_ptr_array_add (multi_materials, g_object_ref (material_vertex_color));
+  for (i = 2; i < 4; i++)
+    g_ptr_array_add (multi_materials, g_object_ref (material_wireframe));
+  for (i = 4; i < 6; i++)
+    g_ptr_array_add (multi_materials, g_object_ref (material_texture));
 
   pos.x = -60;
   pos.y = 40;
