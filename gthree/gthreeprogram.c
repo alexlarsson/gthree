@@ -478,6 +478,10 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
                               "#define MAX_BONES %d\n",
                               parameters->max_bones);
 
+      if (parameters->use_fog && parameters->fog)
+        g_string_append_printf (vertex, "#define USE_FOG\n");
+      if (parameters->use_fog && parameters->fog_exp)
+        g_string_append_printf (vertex, "#define FOG_EXP2\n");
 
       if (parameters->map)
         g_string_append (vertex, "#define USE_MAP\n");
@@ -616,6 +620,11 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
       g_string_append_printf (fragment, "#define GAMMA_FACTOR %s\n",
                               g_ascii_formatd (formatd_buffer, sizeof(formatd_buffer),
                                                "%f", gamma_factor_define));
+
+      if (parameters->use_fog && parameters->fog)
+        g_string_append_printf (fragment, "#define USE_FOG\n");
+      if (parameters->use_fog && parameters->fog_exp)
+        g_string_append_printf (fragment, "#define FOG_EXP2\n");
 
       if (parameters->map)
         g_string_append (fragment, "#define USE_MAP\n");

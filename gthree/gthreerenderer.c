@@ -23,6 +23,7 @@
 #include "gthreepoints.h"
 #include "gthreespotlight.h"
 #include "gthreepointlight.h"
+#include "gthreefog.h"
 
 #define MAX_MORPH_TARGETS 8
 #define MAX_MORPH_NORMALS 4
@@ -194,7 +195,7 @@ static void set_depth_write (GthreeRenderer *renderer,
 
 static void render_item (GthreeRenderer *renderer,
                          GthreeCamera *camera,
-                         gpointer fog,
+                         GthreeFog *fog,
                          GthreeMaterial *material,
                          GthreeRenderListItem *item);
 
@@ -1454,7 +1455,7 @@ material_apply_light_setup (GthreeUniforms *m_uniforms,
 static GthreeProgram *
 init_material (GthreeRenderer *renderer,
                GthreeMaterial *material,
-               gpointer fog,
+               GthreeFog *fog,
                GthreeObject *object)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
@@ -1504,6 +1505,10 @@ init_material (GthreeRenderer *renderer,
   parameters.shadow_map_enabled = priv->shadowmap_enabled && gthree_object_get_receive_shadow (object) && priv->shadows != NULL;
   parameters.shadow_map_type = priv->shadowmap_type;
 
+  parameters.fog = fog != NULL;
+  parameters.use_fog = gthree_material_get_fog (material);
+  parameters.fog_exp = fog != NULL && gthree_fog_get_style (fog) == GTHREE_FOG_STYLE_EXP2;
+
 #ifdef TODO
   parameters =
     {
@@ -1512,10 +1517,6 @@ init_material (GthreeRenderer *renderer,
     normalMap: !! material.normalMap,
     specularMap: !! material.specularMap,
     alphaMap: !! material.alphaMap,
-
-    fog: fog,
-    useFog: material.fog,
-    fogExp: fog instanceof THREE.FogExp2,
 
     logarithmicDepthBuffer: _logarithmicDepthBuffer,
 
@@ -1586,6 +1587,8 @@ init_material (GthreeRenderer *renderer,
       material_properties->num_clipping_planes = priv->num_clipping_planes;
       material_properties->num_intersection = priv->num_clipping_intersections;
     }
+
+  material_properties->fog = fog;
 
   material_apply_light_setup (m_uniforms, &priv->light_setup, FALSE);
 
@@ -2050,7 +2053,7 @@ shadow_map_render_object (GthreeRenderer *renderer,
               GthreeMaterial *depthMaterial = getDepthMaterial (renderer, object, geometry, material, is_point_light, _lightPositionWorld,
                                                                 gthree_camera_get_near (shadow_camera), gthree_camera_get_far (shadow_camera));
               GthreeRenderListItem item = { object, geometry, depthMaterial, NULL, 0.0 };
-              render_item (renderer, shadow_camera, FALSE, depthMaterial, &item);
+              render_item (renderer, shadow_camera, NULL, depthMaterial, &item);
             }
         }
     }
@@ -2311,10 +2314,39 @@ mark_uniforms_lights_needs_update (GthreeUniforms *uniforms, gboolean needs_upda
 
 }
 
+static void
+refresh_uniforms_fog (GthreeRenderer *renderer,
+                      GthreeUniforms *uniforms,
+                      GthreeFog *fog)
+{
+  GthreeUniform *uni;
+
+  uni = gthree_uniforms_lookup_from_string (uniforms, "fogColor");
+  if (uni != NULL)
+    gthree_uniform_set_vec3 (uni, gthree_fog_get_color (fog));
+
+  if (gthree_fog_get_style (fog) == GTHREE_FOG_STYLE_LINEAR)
+    {
+      uni = gthree_uniforms_lookup_from_string (uniforms, "fogNear");
+      if (uni != NULL)
+        gthree_uniform_set_float (uni, gthree_fog_get_near (fog));
+      uni = gthree_uniforms_lookup_from_string (uniforms, "fogFar");
+      if (uni != NULL)
+        gthree_uniform_set_float (uni, gthree_fog_get_far (fog));
+    }
+  else
+    {
+      uni = gthree_uniforms_lookup_from_string (uniforms, "fogDensity");
+      if (uni != NULL)
+        gthree_uniform_set_float (uni, gthree_fog_get_density (fog));
+    }
+}
+
+
 static GthreeProgram *
 set_program (GthreeRenderer *renderer,
              GthreeCamera *camera,
-             gpointer fog,
+             GthreeFog *fog,
              GthreeMaterial *material,
              GthreeObject *object)
 {
@@ -2346,6 +2378,7 @@ set_program (GthreeRenderer *renderer,
   priv->light_setup.hash.obj_receive_shadow = gthree_object_get_receive_shadow (object) && priv->shadowmap_enabled;
   if (!gthree_material_is_valid_for (material, priv->renderer_id) ||
       !gthree_light_setup_hash_equal (&material_properties->light_hash, &priv->light_setup.hash) ||
+      (gthree_material_get_fog (material) && material_properties->fog != fog) ||
       material_properties->num_clipping_planes != priv->num_clipping_planes ||
       material_properties->num_intersection != priv->num_clipping_intersections)
     {
@@ -2519,12 +2552,9 @@ set_program (GthreeRenderer *renderer,
 
       gthree_material_set_uniforms (material, m_uniforms, camera, renderer);
 
-#if TODO
       // refresh uniforms common to several materials
-      if ( fog && material.fog )
-        refreshUniformsFog( m_uniforms, fog );
-#endif
-
+      if (fog != NULL && gthree_material_get_fog (material))
+        refresh_uniforms_fog (renderer, m_uniforms, fog);
 
       // refresh single material specific uniforms
 
@@ -2800,7 +2830,7 @@ update_morphtargets (GthreeRenderer *renderer,
 static void
 render_item (GthreeRenderer *renderer,
              GthreeCamera *camera,
-             gpointer fog,
+             GthreeFog *fog,
              GthreeMaterial *material,
              GthreeRenderListItem *item)
 {
@@ -2952,7 +2982,7 @@ render_objects (GthreeRenderer *renderer,
                 GthreeScene    *scene,
                 GArray *render_list_indexes,
                 GthreeCamera *camera,
-                gpointer fog,
+                GthreeFog *fog,
                 gboolean use_blending,
                 GthreeMaterial *override_material)
 {
@@ -3178,7 +3208,7 @@ gthree_renderer_render (GthreeRenderer *renderer,
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
   GthreeMaterial *override_material;
-  gpointer fog;
+  GthreeFog *fog;
 
   gthree_renderer_push_current (renderer);
 
@@ -3189,8 +3219,6 @@ gthree_renderer_render (GthreeRenderer *renderer,
 
   g_list_free (priv->shadows);
   priv->shadows = NULL;
-
-  fog = NULL;
 
   priv->current_material = NULL;
   priv->current_camera = NULL;
@@ -3240,6 +3268,7 @@ gthree_renderer_render (GthreeRenderer *renderer,
 
   /* set matrices for regular objects (frustum culled) */
 
+  fog = gthree_scene_get_fog (scene);
   override_material = gthree_scene_get_override_material (scene);
   if (override_material)
     {

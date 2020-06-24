@@ -51,6 +51,7 @@ struct _GthreeLightSetup
 struct _GthreeMaterialProperties
 {
   GthreeProgram *program; /* Not owned, only use while valid for the owning renderer */
+  GthreeFog *fog; /* Not owned, only use while valid for the owning renderer */
   GthreeLightSetupHash light_hash;
   guint num_clipping_planes;
   guint num_intersection;
@@ -84,8 +85,8 @@ struct  _GthreeProgramParameters {
   guint combine : 1;
   guint vertex_colors : 1;
   guint vertex_tangents : 1;
-  guint fog : 1;
-  guint use_fog : 1;
+  guint fog : 1;        /* Fog is set on the scene */
+  guint use_fog : 1;    /* Material has fog enabled */
   guint fog_exp : 1;
   guint flat_shading : 1;
   guint size_attenuation : 1;
