@@ -8,6 +8,7 @@
 
 GthreeScene *scene;
 GthreeMesh *cube;
+GthreeMesh *sphere;
 GtkWidget *area_z, *area_y, *area_x;
 GthreePerspectiveCamera *camera_z, *camera_y, *camera_x;
 double rot = 0;
@@ -19,6 +20,7 @@ GthreeScene *
 init_scene (void)
 {
   GthreeMeshBasicMaterial *material;
+  GthreeMeshBasicMaterial *material2;
   GthreeGeometry *geometry;
   GthreeTexture *texture;
   graphene_point3d_t pos = { 0, 0, 0};
@@ -31,10 +33,18 @@ init_scene (void)
 
   scene = gthree_scene_new ();
 
-  geometry = gthree_geometry_new_box (100*2, 100*2, 100*2, 1, 1, 1);
+  geometry = gthree_geometry_new_box (100*4, 100*2, 100*2, 1, 1, 1);
   cube = gthree_mesh_new (geometry, GTHREE_MATERIAL (material));
-
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (cube));
+
+  geometry = gthree_geometry_new_sphere (100, 20, 20);
+  material2 = gthree_mesh_basic_material_new ();
+  gthree_material_set_vertex_colors (GTHREE_MATERIAL (material2), FALSE);
+  gthree_mesh_basic_material_set_color (material2, green ());
+
+  sphere = gthree_mesh_new (geometry, GTHREE_MATERIAL (material2));
+  gthree_object_add_child (GTHREE_OBJECT (cube), GTHREE_OBJECT (sphere));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (sphere), 0, 200, 0);
 
   gthree_object_set_position_point3d (GTHREE_OBJECT (cube), &pos);
 
@@ -192,12 +202,11 @@ main (int argc, char *argv[])
   gtk_grid_set_column_homogeneous (GTK_GRID (grid), TRUE);
   gtk_grid_set_column_spacing (GTK_GRID (grid), 6);
 
-
   camera_z = gthree_perspective_camera_new (45, 1, 1, 2000);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera_z));
 
   gthree_object_set_position_xyz (GTHREE_OBJECT (camera_z),
-                                  0, 0, 1000);
+                                  0, 0, 800);
 
   area_z = gthree_area_new (scene, GTHREE_CAMERA (camera_z));
   g_signal_connect (area_z, "resize", G_CALLBACK (resize_area), camera_z);
@@ -214,7 +223,7 @@ main (int argc, char *argv[])
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera_y));
 
   gthree_object_set_position_xyz (GTHREE_OBJECT (camera_y),
-                                  0, 1000, 0);
+                                  0, 800, 0);
   gthree_object_set_rotation_xyz (GTHREE_OBJECT (camera_y),
                                   -90, 0, 0);
 
@@ -233,7 +242,7 @@ main (int argc, char *argv[])
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera_x));
 
   gthree_object_set_position_xyz (GTHREE_OBJECT (camera_x),
-                                  1000, 0, 0);
+                                  800, 0, 0);
   gthree_object_set_rotation_xyz (GTHREE_OBJECT (camera_x),
                                   0, 90, 0);
 
