@@ -79,6 +79,7 @@ init_snow (GthreeScene *scene)
   graphene_vec3_init (&color, 0.5, 0.5, 1.0);
   gthree_points_material_set_color (material, &color);
   gthree_material_set_blend_mode (GTHREE_MATERIAL (material), GTHREE_BLEND_NORMAL, 0, 0, 0);
+  gthree_material_set_depth_write (GTHREE_MATERIAL (material), FALSE);
 
   flakes = gthree_points_new (geometry, GTHREE_MATERIAL (material));
 
