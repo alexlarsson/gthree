@@ -544,8 +544,12 @@ gthree_texture_realize (GthreeTexture *texture, GthreeRenderer *renderer)
 
       glGenTextures (1, &data->gl_texture);
 #ifdef DEBUG_LABELS
-      if (priv->name)
-        glObjectLabel (GL_TEXTURE, data->gl_texture, strlen (priv->name), priv->name);
+      {
+        GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+        if (priv->name)
+          glObjectLabel (GL_TEXTURE, data->gl_texture, strlen (priv->name), priv->name);
+      }
 #endif
     }
 }
