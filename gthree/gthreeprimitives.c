@@ -595,6 +595,68 @@ gthree_geometry_new_torus (float radius,
   return gthree_geometry_new_torus_full (radius, tube, 8, 6, 2 * G_PI);
 }
 
+GthreeGeometry *
+gthree_geometry_new_circle_full (float    radius,
+                                 int      segments,
+                                 float    thetaStart,
+                                 float    thetaLength)
+{
+  GthreeGeometry *geometry;
+  int s, i;
+  GArray *positions, *normals, *uvs, *index;
+
+  positions = g_array_new (FALSE, FALSE, sizeof (float));
+  normals = g_array_new (FALSE, FALSE, sizeof (float));
+  uvs = g_array_new (FALSE, FALSE, sizeof (float));
+  index = g_array_new (FALSE, FALSE, sizeof (guint16));
+
+  geometry = g_object_new (gthree_geometry_get_type (), NULL);
+
+  segments = MAX(segments, 3);
+
+  // center point
+
+  push3 (positions, 0, 0, 0);
+  push3 (normals, 0, 0, 1);
+  push2 (uvs,  0.5, 0.5);
+
+  for ( s = 0, i = 3; s <= segments; s ++, i += 3 )
+    {
+      float segment = thetaStart + (float)s / segments * thetaLength;
+      float vx = radius * cosf (segment);
+      float vy = radius * sinf (segment);
+
+      // vertex
+      push3 (positions, vx, vy, 0);
+
+      // normal
+      push3 (normals, 0, 0, 1);
+
+      // uvs
+      push2 (uvs,
+             (vx / radius + 1) / 2,
+             (vy / radius + 1 ) / 2);
+    }
+
+  // indices
+  for (i = 1; i <= segments; i ++)
+    push3i (index, i, i + 1, 0);
+
+  add_indexv (geometry, index);
+  add_positionv (geometry, positions);
+  add_normalv (geometry, normals);
+  add_uvv (geometry, uvs);
+
+  return geometry;
+};
+
+GthreeGeometry *
+gthree_geometry_new_circle (float    radius,
+                            int      segments)
+{
+  return gthree_geometry_new_circle_full (radius, segments, 0, 2 * G_PI);
+}
+
 
 typedef struct {
   graphene_vec3_t position;

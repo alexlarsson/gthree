@@ -56,6 +56,14 @@ GthreeGeometry *gthree_geometry_new_plane          (float width,
                                                     int   width_segments,
                                                     int   height_segments);
 
+GTHREE_API
+GthreeGeometry *gthree_geometry_new_circle_full (float    radius,
+                                                 int      segments,
+                                                 float    thetaStart,
+                                                 float    thetaLength);
+GTHREE_API
+GthreeGeometry *gthree_geometry_new_circle (float    radius,
+                                            int      segments);
 
 GTHREE_API
 GthreeGeometry *gthree_geometry_new_decal (GthreeGeometry *original_geometry,

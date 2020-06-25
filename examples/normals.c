@@ -32,6 +32,9 @@ primitive (int num)
     case 4:
       geo = gthree_geometry_new_plane (40, 40, 1, 1);
       break;
+    case 5:
+      geo = gthree_geometry_new_circle (40, 20);
+      break;
     default:
       g_assert_not_reached ();
     }
@@ -107,7 +110,7 @@ init_scene (void)
   ambient_light = gthree_ambient_light_new (white ());
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));
 
-  for (i = 0; i < 5; i++)
+  for (i = 0; i < 6; i++)
     {
       GthreeObject * obj = primitive (i);
 
