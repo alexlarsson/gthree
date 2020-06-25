@@ -7,9 +7,10 @@
 #include "utils.h"
 
 static GList *objects;
+static GthreeTexture *texture;
 
 static GthreeObject *
-green_object (int num)
+primitive (int num)
 {
   GthreeGeometry *geo;
   GthreeMaterial *material;
@@ -28,13 +29,15 @@ green_object (int num)
     case 3:
       geo = gthree_geometry_new_cylinder_full (15, 30, 50, 15, 20, FALSE, 0, 2 * G_PI);
       break;
+    case 4:
+      geo = gthree_geometry_new_plane (40, 40, 1, 1);
+      break;
     default:
       g_assert_not_reached ();
     }
 
   material = GTHREE_MATERIAL (gthree_mesh_lambert_material_new ());
-  gthree_mesh_lambert_material_set_color (GTHREE_MESH_LAMBERT_MATERIAL (material), green ());
-  gthree_mesh_lambert_material_set_emissive_color (GTHREE_MESH_LAMBERT_MATERIAL (material), green ());
+  gthree_mesh_lambert_material_set_map (GTHREE_MESH_LAMBERT_MATERIAL (material), texture);
   gthree_material_set_side (GTHREE_MATERIAL (material), GTHREE_SIDE_DOUBLE);
 
   return GTHREE_OBJECT (gthree_mesh_new (geo, material));
@@ -95,21 +98,27 @@ init_scene (void)
   GthreeScene *scene;
   GthreeAmbientLight *ambient_light;
   int i;
+  float y = 50;
 
   scene = gthree_scene_new ();
+
+  texture = examples_load_texture ("UV_Grid_Sm.jpg");
 
   ambient_light = gthree_ambient_light_new (white ());
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));
 
-  for (i = 0; i < 4; i++)
+  for (i = 0; i < 5; i++)
     {
-      GthreeObject * obj = green_object (i);
+      GthreeObject * obj = primitive (i);
 
       objects = g_list_prepend (objects, obj);
 
+      if (i > 0 && (i % 4) == 0)
+        y -= 100;
+
       gthree_object_add_child (GTHREE_OBJECT (scene), obj);
-      gthree_object_set_position_xyz (obj, i * 70 - 100, 0, 0);
-      gthree_object_add_child (obj, face_normals (GTHREE_MESH (obj), 10, red (), 1));
+      gthree_object_set_position_xyz (obj, (i % 4) * 70 - 100, y, 0);
+      gthree_object_add_child (obj, face_normals (GTHREE_MESH (obj), 10, white (), 1));
     }
 
   return scene;
