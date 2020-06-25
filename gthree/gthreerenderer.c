@@ -3210,6 +3210,9 @@ gthree_renderer_render (GthreeRenderer *renderer,
   GthreeMaterial *override_material;
   GthreeFog *fog;
 
+  /* The GtkGLArea code can change the GL_DEPTH_TEST state, so read current state back here */
+  priv->old_depth_test = glIsEnabled (GL_DEPTH_TEST) == GL_TRUE;
+
   gthree_renderer_push_current (renderer);
 
   push_debug_group ("gthree render to %p", priv->current_render_target);
