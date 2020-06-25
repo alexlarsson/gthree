@@ -33,10 +33,110 @@ push3v (GArray *array, float *fs)
 }
 
 static void
+push_vec3 (GArray *array, const graphene_vec3_t *v)
+{
+  push3 (array,
+         graphene_vec3_get_x (v),
+         graphene_vec3_get_y (v),
+         graphene_vec3_get_z (v));
+}
+
+static void
 push2 (GArray *array, float f1, float f2)
 {
   g_array_append_val (array, f1);
   g_array_append_val (array, f2);
+}
+
+static GthreeAttribute *
+add_vec3 (GthreeGeometry *geometry, const char *name, int vertex_count)
+{
+  g_autoptr(GthreeAttribute) a = gthree_attribute_new (name, GTHREE_ATTRIBUTE_TYPE_FLOAT, vertex_count, 3, FALSE);
+  gthree_geometry_add_attribute (geometry, name, a);
+  return a; /* Ref owned by geometry */
+}
+
+static GthreeAttribute *
+add_vec2 (GthreeGeometry *geometry, const char *name, int vertex_count)
+{
+  g_autoptr(GthreeAttribute) a = gthree_attribute_new (name, GTHREE_ATTRIBUTE_TYPE_FLOAT, vertex_count, 2, FALSE);
+  gthree_geometry_add_attribute (geometry, name, a);
+  return a; /* Ref owned by geometry */
+}
+
+static GthreeAttribute *
+add_position (GthreeGeometry *geometry, int vertex_count)
+{
+  return add_vec3 (geometry, "position", vertex_count);
+}
+
+static GthreeAttribute *
+add_normal (GthreeGeometry *geometry, int vertex_count)
+{
+  return add_vec3 (geometry, "normal", vertex_count);
+}
+
+static GthreeAttribute *
+add_uv (GthreeGeometry *geometry, int vertex_count)
+{
+  return add_vec2 (geometry, "uv", vertex_count);
+}
+
+static GthreeAttribute *
+add_index (GthreeGeometry *geometry, int index_count)
+{
+  g_autoptr(GthreeAttribute) a = gthree_attribute_new ("index", GTHREE_ATTRIBUTE_TYPE_UINT16, index_count, 1, FALSE);
+  gthree_geometry_set_index (geometry, a);
+  return a; /* Ref owned by geometry */
+}
+
+/* Takes ownership of index */
+static GthreeAttribute *
+add_indexv (GthreeGeometry *geometry, GArray *index)
+{
+  g_autoptr(GthreeAttribute) a = gthree_attribute_new_from_uint16 ("index", (guint16 *)index->data, index->len, 1);
+  gthree_geometry_set_index (geometry, a);
+  g_array_free (index, TRUE);
+
+  return a;
+}
+
+/* Takes ownership of vects */
+static GthreeAttribute *
+add_vec3v (GthreeGeometry *geometry, const char *name, GArray *vects)
+{
+  g_autoptr(GthreeAttribute) a = gthree_attribute_new_from_float (name, (float *)vects->data, vects->len / 3, 3);
+  gthree_geometry_add_attribute (geometry, name, a);
+  g_array_free (vects, TRUE);
+  return a; /* Ref owned by geometry */
+}
+
+/* Takes ownership of vects */
+static GthreeAttribute *
+add_vec2v (GthreeGeometry *geometry, const char *name, GArray *vects)
+{
+  g_autoptr(GthreeAttribute) a = gthree_attribute_new_from_float (name, (float *)vects->data, vects->len / 2, 2);
+  gthree_geometry_add_attribute (geometry, name, a);
+  g_array_free (vects, TRUE);
+  return a; /* Ref owned by geometry */
+}
+
+static GthreeAttribute *
+add_positionv (GthreeGeometry *geometry, GArray *position)
+{
+  return add_vec3v (geometry, "position", position);
+}
+
+static GthreeAttribute *
+add_normalv (GthreeGeometry *geometry, GArray *normal)
+{
+  return add_vec3v (geometry, "normal", normal);
+}
+
+static GthreeAttribute *
+add_uvv (GthreeGeometry *geometry, GArray *uv)
+{
+  return add_vec2v (geometry, "uv", uv);
 }
 
 static void
@@ -122,43 +222,26 @@ gthree_geometry_new_box (float width, float height, float depth,
   float width_half = width / 2;
   float height_half = height / 2;
   float depth_half = depth / 2;
-  GArray *vertices, *normals, *uvs, *index;
-  GthreeAttribute *a_position, *a_normal, *a_uv, *a_index;
+  GArray *positions, *normals, *uvs, *index;
 
-  vertices = g_array_new (FALSE, FALSE, sizeof (float));
+  positions = g_array_new (FALSE, FALSE, sizeof (float));
   normals = g_array_new (FALSE, FALSE, sizeof (float));
   uvs = g_array_new (FALSE, FALSE, sizeof (float));
   index = g_array_new (FALSE, FALSE, sizeof (guint16));
 
   geometry = gthree_geometry_new ();
 
-  build_plane (geometry, vertices, normals, uvs, index, AXIS_Z, AXIS_Y, -1, -1, depth, height, width_half, 0, widthSegments, heightSegments, depthSegments); // px
-  build_plane (geometry, vertices, normals, uvs, index, AXIS_Z, AXIS_Y,  1, -1, depth, height, - width_half, 1, widthSegments, heightSegments, depthSegments); // nx
-  build_plane (geometry, vertices, normals, uvs, index, AXIS_X, AXIS_Z,  1,  1, width, depth, height_half, 2, widthSegments, heightSegments, depthSegments ); // py
-  build_plane (geometry, vertices, normals, uvs, index, AXIS_X, AXIS_Z,  1, -1, width, depth, - height_half, 3, widthSegments, heightSegments, depthSegments ); // ny
-  build_plane (geometry, vertices, normals, uvs, index, AXIS_X, AXIS_Y,  1, -1, width, height, depth_half, 4, widthSegments, heightSegments, depthSegments ); // pz
-  build_plane (geometry, vertices, normals, uvs, index, AXIS_X, AXIS_Y, -1, -1, width, height, - depth_half, 5, widthSegments, heightSegments, depthSegments ); // nz
+  build_plane (geometry, positions, normals, uvs, index, AXIS_Z, AXIS_Y, -1, -1, depth, height, width_half, 0, widthSegments, heightSegments, depthSegments); // px
+  build_plane (geometry, positions, normals, uvs, index, AXIS_Z, AXIS_Y,  1, -1, depth, height, - width_half, 1, widthSegments, heightSegments, depthSegments); // nx
+  build_plane (geometry, positions, normals, uvs, index, AXIS_X, AXIS_Z,  1,  1, width, depth, height_half, 2, widthSegments, heightSegments, depthSegments ); // py
+  build_plane (geometry, positions, normals, uvs, index, AXIS_X, AXIS_Z,  1, -1, width, depth, - height_half, 3, widthSegments, heightSegments, depthSegments ); // ny
+  build_plane (geometry, positions, normals, uvs, index, AXIS_X, AXIS_Y,  1, -1, width, height, depth_half, 4, widthSegments, heightSegments, depthSegments ); // pz
+  build_plane (geometry, positions, normals, uvs, index, AXIS_X, AXIS_Y, -1, -1, width, height, - depth_half, 5, widthSegments, heightSegments, depthSegments ); // nz
 
-  a_index = gthree_attribute_new_from_uint16 ("index", (guint16 *)index->data, index->len, 1);
-  gthree_geometry_set_index (geometry, a_index);
-  g_object_unref (a_index);
-
-  a_position = gthree_attribute_new_from_float ("position", (float *)vertices->data, vertices->len / 3, 3);
-  gthree_geometry_add_attribute (geometry, "position", a_position);
-  g_object_unref (a_position);
-
-  a_normal = gthree_attribute_new_from_float ("normal", (float *)normals->data, normals->len / 3, 3);
-  gthree_geometry_add_attribute (geometry, "normal", a_normal);
-  g_object_unref (a_normal);
-
-  a_uv = gthree_attribute_new_from_float ("uv", (float *)uvs->data, uvs->len / 2, 2);
-  gthree_geometry_add_attribute (geometry, "uv", a_uv);
-  g_object_unref (a_uv);
-
-  g_array_free (vertices, TRUE);
-  g_array_free (normals, TRUE);
-  g_array_free (uvs, TRUE);
-  g_array_free (index, TRUE);
+  add_indexv (geometry, index);
+  add_positionv (geometry, positions);
+  add_normalv (geometry, normals);
+  add_uvv (geometry, uvs);
 
   return geometry;
 }
@@ -168,38 +251,21 @@ gthree_geometry_new_plane (float width, float height,
                            int widthSegments, int heightSegments)
 {
   GthreeGeometry *geometry;
-  GArray *vertices, *normals, *uvs, *index;
-  GthreeAttribute *a_position, *a_normal, *a_uv, *a_index;
+  GArray *positions, *normals, *uvs, *index;
 
-  vertices = g_array_new (FALSE, FALSE, sizeof (float));
+  positions = g_array_new (FALSE, FALSE, sizeof (float));
   normals = g_array_new (FALSE, FALSE, sizeof (float));
   uvs = g_array_new (FALSE, FALSE, sizeof (float));
   index = g_array_new (FALSE, FALSE, sizeof (guint16));
 
   geometry = gthree_geometry_new ();
 
-  build_plane (geometry, vertices, normals, uvs, index, AXIS_X, AXIS_Y,  1, -1, width, height, 0, 0, widthSegments, heightSegments, 1); // pz
+  build_plane (geometry, positions, normals, uvs, index, AXIS_X, AXIS_Y,  1, -1, width, height, 0, 0, widthSegments, heightSegments, 1); // pz
 
-  a_index = gthree_attribute_new_from_uint16 ("index", (guint16 *)index->data, index->len, 1);
-  gthree_geometry_set_index (geometry, a_index);
-  g_object_unref (a_index);
-
-  a_position = gthree_attribute_new_from_float ("position", (float *)vertices->data, vertices->len / 3, 3);
-  gthree_geometry_add_attribute (geometry, "position", a_position);
-  g_object_unref (a_position);
-
-  a_normal = gthree_attribute_new_from_float ("normal", (float *)normals->data, normals->len / 3, 3);
-  gthree_geometry_add_attribute (geometry, "normal", a_normal);
-  g_object_unref (a_normal);
-
-  a_uv = gthree_attribute_new_from_float ("uv", (float *)uvs->data, uvs->len / 2, 2);
-  gthree_geometry_add_attribute (geometry, "uv", a_uv);
-  g_object_unref (a_uv);
-
-  g_array_free (vertices, TRUE);
-  g_array_free (normals, TRUE);
-  g_array_free (uvs, TRUE);
-  g_array_free (index, TRUE);
+  add_indexv (geometry, index);
+  add_positionv (geometry, positions);
+  add_normalv (geometry, normals);
+  add_uvv (geometry, uvs);
 
   return geometry;
 }
@@ -211,16 +277,12 @@ gthree_geometry_new_sphere_full (float radius,
                                  float thetaStart, float thetaLength)
 {
   GthreeGeometry *geometry;
-  int x, y, vertex_count, vertices_w, vertices_h, index_count;
-  int *vertices;
-  float *position;
-  float *normal;
-  float *uvs;
-  guint16 *index;
+  int x, y, vertex_count, vertices_w, vertices_h;
+  g_autofree int *vertices = NULL;
   graphene_sphere_t bound;
   graphene_point3d_t center;
-  GthreeAttribute *a_position, *a_normal, *a_uv, *a_index;
   float thetaEnd;
+  GArray *positions, *normals, *uvs, *index;
 
   geometry = gthree_geometry_new ();
 
@@ -232,10 +294,11 @@ gthree_geometry_new_sphere_full (float radius,
   vertices_w = widthSegments + 1;
   vertices_h = heightSegments + 1;
   vertices = g_new (int, vertices_w * vertices_h);
-  position = g_new (float, 3 * vertices_w * vertices_h);
-  normal = g_new (float, 3 * vertices_w * vertices_h);
-  uvs = g_new (float, 2 * vertices_w * vertices_h);
-  index = g_new (guint16, 2 * 3 *widthSegments * heightSegments);
+
+  positions = g_array_new (FALSE, FALSE, sizeof (float));
+  normals = g_array_new (FALSE, FALSE, sizeof (float));
+  uvs = g_array_new (FALSE, FALSE, sizeof (float));
+  index = g_array_new (FALSE, FALSE, sizeof (guint16));
 
   vertex_count = 0;
   for (y = 0; y <= heightSegments; y++)
@@ -263,25 +326,19 @@ gthree_geometry_new_sphere_full (float radius,
           vy = radius * cos (thetaStart + v * thetaLength);
           vz = radius * sin (phiStart + u * phiLength) * sin (thetaStart + v * thetaLength);
 
-          position[vertex_count * 3 + 0] = vx;
-          position[vertex_count * 3 + 1] = vy;
-          position[vertex_count * 3 + 2] = vz;
+          push3 (positions, vx, vy, vz);
 
           graphene_vec3_init (&normalv, vx, vy, vz);
           graphene_vec3_normalize (&normalv, &normalv);
 
-          normal[vertex_count * 3 + 0] = graphene_vec3_get_x (&normalv);
-          normal[vertex_count * 3 + 1] = graphene_vec3_get_y (&normalv);
-          normal[vertex_count * 3 + 2] = graphene_vec3_get_z (&normalv);
+          push_vec3 (normals, &normalv);
 
-          uvs[vertex_count * 2 + 0] = u + u_offset;
-          uvs[vertex_count * 2 + 1] = 1 - v;
+          push2 (uvs, u + u_offset, 1 - v);
 
           vertices[x + y * vertices_w] = vertex_count++;
         }
     }
 
-  index_count = 0;
   for (y = 0; y < heightSegments; y++)
     {
       for (x = 0; x < widthSegments; x++)
@@ -292,41 +349,16 @@ gthree_geometry_new_sphere_full (float radius,
           int d = vertices[(y + 1) * vertices_w + (x + 1)];
 
           if (y != 0 || thetaStart > 0)
-            {
-              index[index_count++] = a;
-              index[index_count++] = b;
-              index[index_count++] = d;
-            }
+            push3i (index, a, b, d);
           if (y != heightSegments - 1  || thetaEnd < G_PI)
-            {
-              index[index_count++] = b;
-              index[index_count++] = c;
-              index[index_count++] = d;
-            }
+            push3i (index, b, c, d);
         }
     }
 
-  a_index = gthree_attribute_new_from_uint16 ("index", (guint16 *)index, index_count, 1);
-  gthree_geometry_set_index (geometry, a_index);
-  g_object_unref (a_index);
-
-  a_position = gthree_attribute_new_from_float ("position", (float *)position, vertices_w * vertices_h, 3);
-  gthree_geometry_add_attribute (geometry, "position", a_position);
-  g_object_unref (a_position);
-
-  a_normal = gthree_attribute_new_from_float ("normal", (float *)normal, vertices_w * vertices_h, 3);
-  gthree_geometry_add_attribute (geometry, "normal",a_normal);
-  g_object_unref (a_normal);
-
-  a_uv = gthree_attribute_new_from_float ("uv", (float *)uvs, vertices_w * vertices_h, 2);
-  gthree_geometry_add_attribute (geometry, "uv", a_uv);
-  g_object_unref (a_uv);
-
-  g_free (vertices);
-  g_free (position);
-  g_free (normal);
-  g_free (uvs);
-  g_free (index);
+  add_indexv (geometry, index);
+  add_positionv (geometry, positions);
+  add_normalv (geometry, normals);
+  add_uvv (geometry, uvs);
 
   graphene_sphere_init (&bound, graphene_point3d_init (&center, 0, 0, 0), radius);
   gthree_geometry_set_bounding_sphere  (geometry, &bound);
@@ -383,17 +415,10 @@ gthree_geometry_new_cylinder_full (float    radiusTop,
   if (has_bottom)
     index_count += radialSegments * 3;
 
-  a_position = gthree_attribute_new ("position", GTHREE_ATTRIBUTE_TYPE_FLOAT, vertex_count, 3, FALSE);
-  gthree_geometry_add_attribute (geometry, "position", a_position);
-
-  a_normal = gthree_attribute_new ("normal", GTHREE_ATTRIBUTE_TYPE_FLOAT, vertex_count, 3, FALSE);
-  gthree_geometry_add_attribute (geometry, "normal", a_normal);
-
-  a_uv = gthree_attribute_new ("uv", GTHREE_ATTRIBUTE_TYPE_FLOAT, vertex_count, 2, FALSE);
-  gthree_geometry_add_attribute (geometry, "uv", a_uv);
-
-  a_index = gthree_attribute_new ("index", GTHREE_ATTRIBUTE_TYPE_UINT16, index_count, 1, FALSE);
-  gthree_geometry_set_index (geometry, a_index);
+  a_position = add_position (geometry, vertex_count);
+  a_normal = add_normal (geometry, vertex_count);
+  a_uv = add_uv (geometry, vertex_count);
+  a_index = add_index (geometry, index_count);
 
   normals = g_newa (graphene_vec3_t, radialSegments + 1);
   tanTheta = (radiusBottom - radiusTop) / height;
@@ -490,11 +515,6 @@ gthree_geometry_new_cylinder_full (float    radiusTop,
   g_assert (vertex_index == vertex_count);
   g_assert (index_index == index_count);
 
-  g_object_unref (a_position);
-  g_object_unref (a_normal);
-  g_object_unref (a_uv);
-  g_object_unref (a_index);
-
   return geometry;
 };
 
@@ -525,17 +545,10 @@ gthree_geometry_new_torus_full (float radius,
   index_count = tubularSegments * radialSegments * 3 * 2;
   index_index = 0;
 
-  a_position = gthree_attribute_new ("position", GTHREE_ATTRIBUTE_TYPE_FLOAT, vertex_count, 3, FALSE);
-  gthree_geometry_add_attribute (geometry, "position", a_position);
-
-  a_normal = gthree_attribute_new ("normal", GTHREE_ATTRIBUTE_TYPE_FLOAT, vertex_count, 3, FALSE);
-  gthree_geometry_add_attribute (geometry, "normal", a_normal);
-
-  a_uv = gthree_attribute_new ("uv", GTHREE_ATTRIBUTE_TYPE_FLOAT, vertex_count, 2, FALSE);
-  gthree_geometry_add_attribute (geometry, "uv", a_uv);
-
-  a_index = gthree_attribute_new ("index", GTHREE_ATTRIBUTE_TYPE_UINT16, index_count, 1, FALSE);
-  gthree_geometry_set_index (geometry, a_index);
+  a_position = add_position (geometry, vertex_count);
+  a_normal = add_normal (geometry, vertex_count);
+  a_uv = add_uv (geometry, vertex_count);
+  a_index = add_index (geometry, index_count);
 
   for (j = 0; j <= radialSegments; j++)
     {
@@ -587,11 +600,6 @@ gthree_geometry_new_torus_full (float radius,
 
   g_assert (vertex_index == vertex_count);
   g_assert (index_index == index_count);
-
-  g_object_unref (a_position);
-  g_object_unref (a_normal);
-  g_object_unref (a_uv);
-  g_object_unref (a_index);
 
   return geometry;
 };
