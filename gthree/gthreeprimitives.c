@@ -333,6 +333,81 @@ gthree_geometry_new_sphere (float radius,
                                           0, 2 * G_PI, 0, G_PI);
 }
 
+static void
+generate_cylinder_cap (gboolean        top,
+                       GthreeGeometry *geometry,
+                       float           height,
+                       float           radius,
+                       int             radialSegments,
+                       float           thetaStart,
+                       float           thetaLength,
+                       GArray         *positions,
+                       GArray         *normals,
+                       GArray         *uvs,
+                       GArray         *index)
+{
+  int center_index_start, center_index_end, x;
+  int group_start;
+  float sign = top ? 1 : -1;
+  float half_height = top ? 0.5 * height : -0.5 * height;
+
+  // save the index of the first center vertex
+  center_index_start = positions->len / 3;
+
+  // first we generate the center vertex data of the cap.
+  // because the geometry needs one set of uvs per face,
+  // we must generate a center vertex per face/segment
+
+  for (x = 1; x <= radialSegments; x++)
+    {
+      push3 (positions, 0, half_height, 0);
+      push3 (normals, 0, sign, 0);
+      push2 (uvs, 0.5, 0.5);
+  }
+
+  center_index_end = positions->len / 3;
+
+  // now we generate the surrounding vertices, normals and uvs
+  group_start = index->len;
+
+  for (x = 0; x <= radialSegments; x++)
+    {
+      float u = (float)x / radialSegments;
+      float theta = u * thetaLength + thetaStart;
+
+      float cosTheta = cosf (theta);
+      float sinTheta = sinf (theta);
+
+      // vertex
+      push3 (positions,
+             radius * sinTheta,
+             half_height,
+             radius * cosTheta);
+
+      // normal
+      push3 (normals, 0, sign, 0);
+
+      // uv
+      push2 (uvs,
+             (cosTheta * 0.5) + 0.5,
+             (sinTheta * 0.5 * sign) + 0.5);
+    }
+
+  for (x = 0; x < radialSegments; x++)
+    {
+      int c = center_index_start + x;
+      int i = center_index_end + x;
+
+      if (top)
+        push3i (index, i, i +1, c);
+      else
+        push3i (index, i + 1, i, c);
+    }
+
+  gthree_geometry_add_group (geometry, group_start, index->len - group_start, top ? 1 : 2);
+}
+
+
 GthreeGeometry *
 gthree_geometry_new_cylinder_full (float    radiusTop,
                                    float    radiusBottom,
@@ -345,11 +420,11 @@ gthree_geometry_new_cylinder_full (float    radiusTop,
 {
   GthreeGeometry *geometry;
   int x, y;
-  int center;
   float tanTheta;
   gboolean has_top, has_bottom;
   graphene_vec3_t *the_normals;
   GArray *positions, *normals, *uvs, *index;
+  int group_start;
 
   positions = g_array_new (FALSE, FALSE, sizeof (float));
   normals = g_array_new (FALSE, FALSE, sizeof (float));
@@ -398,6 +473,8 @@ gthree_geometry_new_cylinder_full (float    radiusTop,
         }
     }
 
+  group_start = index->len;
+
   for (y = 0; y < heightSegments; y++)
     {
       for (x = 0; x < radialSegments; x++)
@@ -412,32 +489,23 @@ gthree_geometry_new_cylinder_full (float    radiusTop,
         }
     }
 
+  gthree_geometry_add_group (geometry, group_start, index->len - group_start, 0);
+
   if (has_top)
-    {
-      center = positions->len / 3;
-
-      push3 (positions, 0, 0.5 * height, 0);
-      push3 (normals, 0, 1, 0);
-      push2 (uvs, 1, 1);
-
-      for (x = 0; x < radialSegments; x++)
-        push3i (index, center, x, x + 1);
-    }
+    generate_cylinder_cap (TRUE,
+                           geometry,
+                           height, radiusTop,
+                           radialSegments,
+                           thetaStart, thetaLength,
+                           positions, normals, uvs, index);
 
   if (has_bottom)
-    {
-      center = positions->len / 3;
-
-      push3 (positions, 0, -0.5 * height, 0);
-      push3 (normals, 0, -1, 0);
-      push2 (uvs, 0, 0);
-
-      for (x = 0; x < radialSegments; x++)
-        push3i (index,
-                center,
-                (heightSegments) * (radialSegments + 1) + x + 1,
-                (heightSegments) * (radialSegments + 1) + x);
-    }
+    generate_cylinder_cap (FALSE,
+                           geometry,
+                           height, radiusBottom,
+                           radialSegments,
+                           thetaStart, thetaLength,
+                           positions, normals, uvs, index);
 
   add_indexv (geometry, index);
   add_positionv (geometry, positions);
