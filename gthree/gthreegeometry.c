@@ -557,9 +557,9 @@ gthree_geometry_normalize_normals (GthreeGeometry *geometry)
       graphene_point3d_to_vec3 (gthree_attribute_peek_point3d_at (normal, i), &n);
       graphene_vec3_normalize (&n, &n);
       r = gthree_attribute_peek_point3d_at (normal, i);
-      r->x += graphene_vec3_get_x (&n);
-      r->y += graphene_vec3_get_y (&n);
-      r->z += graphene_vec3_get_z (&n);
+      r->x = graphene_vec3_get_x (&n);
+      r->y = graphene_vec3_get_y (&n);
+      r->z = graphene_vec3_get_z (&n);
     }
 }
 
