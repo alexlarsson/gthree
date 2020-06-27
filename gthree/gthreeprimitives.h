@@ -66,6 +66,20 @@ GthreeGeometry *gthree_geometry_new_circle (float    radius,
                                             int      segments);
 
 GTHREE_API
+GthreeGeometry *gthree_geometry_new_dodecahedron (float radius,
+                                                  int detail);
+GTHREE_API
+GthreeGeometry *gthree_geometry_new_icosahedron (float radius,
+                                                 int detail);
+GTHREE_API
+GthreeGeometry *gthree_geometry_new_tetrahedron (float radius,
+                                                 int detail);
+GTHREE_API
+GthreeGeometry *gthree_geometry_new_octahedron (float radius,
+                                                int detail);
+
+
+GTHREE_API
 GthreeGeometry *gthree_geometry_new_decal (GthreeGeometry *original_geometry,
                                            const graphene_matrix_t *matrix_world,
                                            const graphene_vec3_t *position,

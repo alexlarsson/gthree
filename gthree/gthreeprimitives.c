@@ -54,7 +54,7 @@ add_indexv (GthreeGeometry *geometry, GArray *index)
 {
   g_autoptr(GthreeAttribute) a = gthree_attribute_new_from_uint16 ("index", (guint16 *)index->data, index->len, 1);
   gthree_geometry_set_index (geometry, a);
-  g_array_free (index, TRUE);
+  g_array_unref (index);
 
   return a;
 }
@@ -65,7 +65,7 @@ add_vec3v (GthreeGeometry *geometry, const char *name, GArray *vects)
 {
   g_autoptr(GthreeAttribute) a = gthree_attribute_new_from_float (name, (float *)vects->data, vects->len / 3, 3);
   gthree_geometry_add_attribute (geometry, name, a);
-  g_array_free (vects, TRUE);
+  g_array_unref (vects);
   return a; /* Ref owned by geometry */
 }
 
@@ -75,7 +75,7 @@ add_vec2v (GthreeGeometry *geometry, const char *name, GArray *vects)
 {
   g_autoptr(GthreeAttribute) a = gthree_attribute_new_from_float (name, (float *)vects->data, vects->len / 2, 2);
   gthree_geometry_add_attribute (geometry, name, a);
-  g_array_free (vects, TRUE);
+  g_array_unref (vects);
   return a; /* Ref owned by geometry */
 }
 
@@ -655,6 +655,422 @@ gthree_geometry_new_circle (float    radius,
                             int      segments)
 {
   return gthree_geometry_new_circle_full (radius, segments, 0, 2 * G_PI);
+}
+
+
+static void
+polyhedron_getVertexByIndex (float *vertices,
+                             int n_vertices,
+                             int index,
+                             graphene_vec3_t *vertex)
+{
+  int stride = index * 3;
+
+  graphene_vec3_init (vertex,
+                      vertices[stride + 0],
+                      vertices[stride + 1],
+                      vertices[stride + 2]);
+}
+
+static void
+polyhedron_subdivideFace (GArray *positions,
+                          const graphene_vec3_t *a,
+                          const graphene_vec3_t *b,
+                          const graphene_vec3_t *c,
+                          int detail)
+{
+  int cols = 1 << detail;
+  int size = cols + 1;
+  // we use this multidimensional array as a data structure for creating the subdivision
+  g_autofree graphene_vec3_t *v = g_new0 (graphene_vec3_t, size * size);
+  int i, j;
+
+  // construct all of the vertices for this subdivision
+  for (i = 0; i <= cols; i++)
+    {
+      int rows = cols - i;
+
+      graphene_vec3_t aj, bj;
+
+      graphene_vec3_interpolate (a, c, (float)i / cols, &aj);
+      graphene_vec3_interpolate (b, c, (float)i / cols, &bj);
+
+      for (j = 0; j <= rows; j++)
+        {
+          graphene_vec3_t r;
+
+          if (j == 0 && i == cols)
+            r = aj;
+          else
+            graphene_vec3_interpolate (&aj, &bj, (float)j / rows, &r);
+          v[i*size + j] = r;
+        }
+    }
+
+  // construct all of the faces
+  for (i = 0; i < cols; i++)
+    {
+      for (j = 0; j < 2 * (cols - i) - 1; j++)
+        {
+          int k = j / 2;
+
+          if (j % 2 == 0)
+            {
+              push_vec3 (positions, &v[i * size + k + 1 ]);
+              push_vec3 (positions, &v[(i + 1) * size + k]);
+              push_vec3 (positions, &v[i * size + k]);
+            }
+          else
+            {
+              push_vec3 (positions, &v[i * size + k + 1]);
+              push_vec3 (positions, &v[(i + 1) * size + k + 1]);
+              push_vec3 (positions, &v[(i + 1) * size + k]);
+            }
+        }
+    }
+}
+
+static void
+polyhedron_subdivide (float *vertices,
+                      int n_vertices,
+                      int *indices,
+                      int n_indices,
+                      GArray *positions,
+                      int detail)
+{
+  graphene_vec3_t a, b, c;
+
+  // iterate over all faces and apply a subdivison with the given detail value
+  for (int i = 0; i < n_indices; i += 3)
+    {
+      // get the vertices of the face
+      polyhedron_getVertexByIndex(vertices, n_vertices, indices[ i + 0 ], &a);
+      polyhedron_getVertexByIndex(vertices, n_vertices, indices[ i + 1 ], &b);
+      polyhedron_getVertexByIndex(vertices, n_vertices, indices[ i + 2 ], &c);
+
+      // perform subdivision
+      polyhedron_subdivideFace (positions, &a, &b, &c, detail);
+    }
+}
+
+static void
+polyhedron_appplyRadius (GArray *points,
+                         float radius)
+{
+  graphene_vec3_t v;
+  int i;
+
+  for (i = 0; i < points->len; i += 3)
+    {
+      graphene_vec3_init (&v,
+                          g_array_index (points, float, i+0),
+                          g_array_index (points, float, i+1),
+                          g_array_index (points, float, i+2));
+
+      graphene_vec3_normalize (&v, &v);
+      graphene_vec3_scale (&v, radius, &v);
+
+      g_array_index (points, float, i+0) = graphene_vec3_get_x (&v);
+      g_array_index (points, float, i+1) = graphene_vec3_get_y (&v);
+      g_array_index (points, float, i+2) = graphene_vec3_get_z (&v);
+    }
+}
+
+// Angle around the Y axis, counter-clockwise when looking from above.
+static float
+azimuth (const graphene_vec3_t *v)
+{
+  return atan2f (graphene_vec3_get_z (v), - graphene_vec3_get_x (v));
+}
+
+// Angle above the XZ plane.
+static float
+inclination (const graphene_vec3_t *v)
+{
+  return atan2f (-graphene_vec3_get_y (v),
+                 sqrtf (graphene_vec3_get_x (v) * graphene_vec3_get_x (v) + graphene_vec3_get_z (v) * graphene_vec3_get_z (v)));
+}
+
+static void
+polyhedron_correctUV (GArray *uvs,
+                      graphene_vec2_t *uv,
+                      int stride,
+                      const graphene_vec3_t *vector,
+                      float azimuth)
+{
+  if ((azimuth < 0) &&
+      (graphene_vec2_get_x (uv) == 1))
+    g_array_index (uvs, float, stride) = graphene_vec2_get_x (uv) - 1;
+
+  if (graphene_vec3_get_x (vector) == 0 &&
+      graphene_vec3_get_z (vector) == 0)
+    g_array_index (uvs, float, stride) = azimuth / 2.0 / G_PI + 0.5;
+}
+
+static void
+polyhedron_correctUVs (GArray *points,
+                       GArray *uvs)
+{
+  graphene_vec3_t a, b, c, centroid;
+  graphene_vec2_t uvA, uvB, uvC;
+  int i, j;
+
+  for (i = 0, j = 0; i < points->len; i += 9, j += 6)
+    {
+      graphene_vec3_init (&a,
+                          g_array_index (points, float, i + 0),
+                          g_array_index (points, float, i + 1),
+                          g_array_index (points, float, i + 2));
+      graphene_vec3_init (&b,
+                          g_array_index (points, float, i + 3),
+                          g_array_index (points, float, i + 4),
+                          g_array_index (points, float, i + 5));
+      graphene_vec3_init (&c,
+                          g_array_index (points, float, i + 6),
+                          g_array_index (points, float, i + 7),
+                          g_array_index (points, float, i + 8));
+
+      graphene_vec2_init (&uvA,
+                          g_array_index (uvs, float, j + 0),
+                          g_array_index (uvs, float, j + 1));
+      graphene_vec2_init (&uvB,
+                          g_array_index (uvs, float, j + 2),
+                          g_array_index (uvs, float, j + 3));
+      graphene_vec2_init (&uvC,
+                          g_array_index (uvs, float, j + 4),
+                          g_array_index (uvs, float, j + 5));
+
+      graphene_vec3_add (&a, &b, &centroid);
+      graphene_vec3_add (&centroid, &c, &centroid);
+      graphene_vec3_scale (&centroid, 1 / 3.0f, &centroid);
+
+      float azi = azimuth (&centroid);
+
+      polyhedron_correctUV (uvs, &uvA, j + 0, &a, azi);
+      polyhedron_correctUV (uvs, &uvB, j + 2, &b, azi);
+      polyhedron_correctUV (uvs, &uvC, j + 4, &c, azi);
+    }
+
+}
+
+static void
+polyhedron_correctSeam (GArray *uvs)
+{
+  int i;
+
+  // handle case when face straddles the seam, see #3269
+  for (i = 0; i < uvs->len; i += 6)
+    {
+      // uv data of a single face
+
+      float x0 = g_array_index (uvs, float, i + 0);
+      float x1 = g_array_index (uvs, float, i + 2);
+      float x2 = g_array_index (uvs, float, i + 4);
+
+      float max = fmaxf (fmaxf (x0, x1), x2);
+      float min = fminf (fminf (x0, x1), x2);
+
+      // 0.9 is somewhat arbitrary
+      if (max > 0.9 && min < 0.1)
+        {
+          if (x0 < 0.2)
+            g_array_index (uvs, float, i + 0) += 1;
+          if (x1 < 0.2)
+            g_array_index (uvs, float, i + 2) += 1;
+          if (x2 < 0.2)
+            g_array_index (uvs, float, i + 4) += 1;
+        }
+  }
+}
+
+static void
+polyhedron_generateUVs (GArray *points,
+                        GArray *uvs)
+{
+  graphene_vec3_t vec;
+
+  for (int i = 0; i < points->len; i+=3)
+    {
+      graphene_vec3_init (&vec,
+                          g_array_index (points, float, i+0),
+                          g_array_index (points, float, i+1),
+                          g_array_index (points, float, i+2));
+
+      float u = azimuth (&vec) / 2.0 / G_PI + 0.5;
+      float v = inclination (&vec) / G_PI + 0.5;
+      push2 (uvs, u, 1 - v);
+    }
+
+  polyhedron_correctUVs(points, uvs);
+  polyhedron_correctSeam (uvs);
+}
+
+static GthreeGeometry *
+gthree_geometry_new_polyhedron (float *vertices,
+                                int n_vertices,
+                                int *indices,
+                                int n_indices,
+                                float radius,
+                                int detail)
+{
+  GthreeGeometry *geometry;
+  GArray *positions, *uvs;
+
+  positions = g_array_new (FALSE, FALSE, sizeof (float));
+  uvs = g_array_new (FALSE, FALSE, sizeof (float));
+
+  geometry = g_object_new (gthree_geometry_get_type (), NULL);
+
+  // default buffer data
+
+  // the subdivision creates the vertex buffer data
+  polyhedron_subdivide (vertices, n_vertices,
+                        indices, n_indices,
+                        positions,
+                        detail);
+
+  // all vertices should lie on a conceptual sphere with a given radius
+  polyhedron_appplyRadius (positions, radius);
+
+  // finally, create the uv data
+  polyhedron_generateUVs (positions, uvs);
+
+  g_array_ref (positions); // Sometimes reuse for normals
+  add_positionv (geometry, positions);
+  add_uvv (geometry, uvs);
+
+  if (detail == 0)
+    {
+      gthree_geometry_compute_vertex_normals (geometry);
+      g_array_unref (positions); // Don't reuse
+    }
+  else
+    {
+      add_normalv (geometry, positions);
+      gthree_geometry_normalize_normals (geometry);
+    }
+
+  return geometry;
+};
+
+GthreeGeometry *
+gthree_geometry_new_dodecahedron (float radius,
+                                  int detail)
+{
+  float t = (1.0f + sqrtf (5.0f)) / 2.0f;
+  float r = 1.0f / t;
+
+  float vertices[] =
+    {
+     // (±1, ±1, ±1)
+     -1, -1, -1,     -1, -1, 1,
+     -1,  1, -1,     -1,  1, 1,
+      1, -1, -1,      1, -1, 1,
+      1,  1, -1,      1,  1, 1,
+
+     // (0, ±1/φ, ±φ)
+     0, -r, -t,   0, -r, t,
+     0, r, -t,     0, r, t,
+
+     // (±1/φ, ±φ, 0)
+     - r, - t, 0,   -r, t, 0,
+     r, - t, 0,      r, t, 0,
+
+     // (±φ, 0, ±1/φ)
+     -t, 0, -r,   t, 0, -r,
+     -t, 0, r,    t, 0, r
+    };
+
+  int indices[] =
+    {
+     3, 11, 7,    3, 7, 15,     3, 15, 13,
+     7, 19, 17,   7, 17, 6,     7, 6, 15,
+     17, 4, 8,    17, 8, 10,    17, 10, 6,
+     8, 0, 16,    8, 16, 2,     8, 2, 10,
+     0, 12, 1,    0, 1, 18,     0, 18, 16,
+     6, 10, 2,    6, 2, 13,     6, 13, 15,
+     2, 16, 18,   2, 18, 3,     2, 3, 13,
+     18, 1, 9,    18, 9, 11,    18, 11, 3,
+     4, 14, 12,   4, 12, 0,     4, 0, 8,
+     11, 9, 5,    11, 5, 19,    11, 19, 7,
+     19, 5, 14,   19, 14, 4,    19, 4, 17,
+     1, 12, 14,   1, 14, 5,     1, 5, 9
+    };
+
+  return gthree_geometry_new_polyhedron (vertices, G_N_ELEMENTS (vertices),
+                                         indices, G_N_ELEMENTS (indices),
+                                         radius,
+                                         detail);
+}
+
+GthreeGeometry *
+gthree_geometry_new_icosahedron (float radius,
+                                 int detail)
+{
+  float t = ( 1.0f + sqrtf ( 5.0f ) ) / 2.0f;
+
+  float vertices[] =
+    {
+     - 1, t, 0,      1, t, 0,        - 1, - t, 0,    1, - t, 0,
+     0, - 1, t,     0, 1, t,        0, - 1, - t,    0, 1, - t,
+     t, 0, - 1,     t, 0, 1,        - t, 0, - 1,    - t, 0, 1
+    };
+
+  int indices[] =
+    {
+     0, 11, 5,      0, 5, 1,        0, 1, 7,        0, 7, 10,       0, 10, 11,
+     1, 5, 9,       5, 11, 4,       11, 10, 2,      10, 7, 6,       7, 1, 8,
+     3, 9, 4,       3, 4, 2,        3, 2, 6,        3, 6, 8,        3, 8, 9,
+     4, 9, 5,       2, 4, 11,       6, 2, 10,       8, 6, 7,        9, 8, 1
+    };
+
+  return gthree_geometry_new_polyhedron (vertices, G_N_ELEMENTS (vertices),
+                                         indices, G_N_ELEMENTS (indices),
+                                         radius,
+                                         detail);
+}
+
+GthreeGeometry *
+gthree_geometry_new_octahedron (float radius,
+                                int detail)
+{
+  float vertices[] =
+    {
+     1, 0, 0,        - 1, 0, 0,      0, 1, 0,
+     0, - 1, 0,      0, 0, 1,        0, 0, - 1
+    };
+
+  int indices[] =
+    {
+     0, 2, 4,	0, 4, 3,	0, 3, 5,
+     0, 5, 2,	1, 2, 5,	1, 5, 3,
+     1, 3, 4,	1, 4, 2
+    };
+
+  return gthree_geometry_new_polyhedron (vertices, G_N_ELEMENTS (vertices),
+                                         indices, G_N_ELEMENTS (indices),
+                                         radius,
+                                         detail);
+}
+
+GthreeGeometry *
+gthree_geometry_new_tetrahedron (float radius,
+                                int detail)
+{
+  float vertices[] =
+    {
+     1, 1, 1,        - 1, - 1, 1,    - 1, 1, - 1,    1, - 1, - 1
+    };
+
+  int indices[] =
+    {
+     2, 1, 0,   0, 3, 2,        1, 3, 0,        2, 3, 1
+    };
+
+  return gthree_geometry_new_polyhedron (vertices, G_N_ELEMENTS (vertices),
+                                         indices, G_N_ELEMENTS (indices),
+                                         radius,
+                                         detail);
 }
 
 
