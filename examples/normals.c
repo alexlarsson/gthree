@@ -35,6 +35,18 @@ primitive (int num)
     case 5:
       geo = gthree_geometry_new_circle (40, 20);
       break;
+    case 6:
+      geo = gthree_geometry_new_dodecahedron (25, 0);
+      break;
+    case 7:
+      geo = gthree_geometry_new_icosahedron (25, 0);
+      break;
+    case 8:
+      geo = gthree_geometry_new_tetrahedron (25, 0);
+      break;
+    case 9:
+      geo = gthree_geometry_new_octahedron (25, 0);
+      break;
     default:
       g_assert_not_reached ();
     }
@@ -101,23 +113,25 @@ init_scene (void)
   GthreeScene *scene;
   GthreeAmbientLight *ambient_light;
   int i;
-  float y = 50;
+  float y = 80;
 
   scene = gthree_scene_new ();
 
   texture = examples_load_texture ("UV_Grid_Sm.jpg");
+  gthree_texture_set_wrap_s (texture, GTHREE_WRAPPING_REPEAT);
+  gthree_texture_set_wrap_t (texture, GTHREE_WRAPPING_REPEAT);
 
   ambient_light = gthree_ambient_light_new (white ());
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));
 
-  for (i = 0; i < 6; i++)
+  for (i = 0; i <= 9; i++)
     {
       GthreeObject * obj = primitive (i);
 
       objects = g_list_prepend (objects, obj);
 
       if (i > 0 && (i % 4) == 0)
-        y -= 100;
+        y -= 80;
 
       gthree_object_add_child (GTHREE_OBJECT (scene), obj);
       gthree_object_set_position_xyz (obj, (i % 4) * 70 - 100, y, 0);
@@ -175,7 +189,7 @@ main (int argc, char *argv[])
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
 
   gthree_object_set_position_xyz (GTHREE_OBJECT (camera),
-                                  0, 0, 400);
+                                  0, 0, 500);
 
   area = gthree_area_new (scene, GTHREE_CAMERA (camera));
   g_signal_connect (area, "resize", G_CALLBACK (resize_area), camera);
