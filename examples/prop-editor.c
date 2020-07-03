@@ -266,6 +266,12 @@ texture_modified (GtkComboBox *combo, ObjectProperty *p)
           g_autoptr(GdkPixbuf) pixbuf = examples_load_pixbuf (id);
           texture = gthree_texture_new (pixbuf);
         }
+
+      if (g_str_has_prefix (id, "gradient/"))
+        {
+          gthree_texture_set_mag_filter (texture, GTHREE_FILTER_NEAREST);
+          gthree_texture_set_min_filter (texture, GTHREE_FILTER_NEAREST);
+        }
     }
 
   g_value_init (&val, p->spec->value_type);
@@ -405,10 +411,16 @@ property_editor (GObject     *object,
       prop_edit = gtk_combo_box_text_new ();
       gtk_combo_box_text_append (GTK_COMBO_BOX_TEXT (prop_edit), "", "None");
       gtk_combo_box_text_append (GTK_COMBO_BOX_TEXT (prop_edit), "crate.gif", "Crate");
+      gtk_combo_box_text_append (GTK_COMBO_BOX_TEXT (prop_edit), "UV_Grid_Sm.jpg", "UV Grid");
       gtk_combo_box_text_append (GTK_COMBO_BOX_TEXT (prop_edit), "disturb.jpg", "Disturb");
+      gtk_combo_box_text_append (GTK_COMBO_BOX_TEXT (prop_edit), "sprite1.png", "Sprite");
+      gtk_combo_box_text_append (GTK_COMBO_BOX_TEXT (prop_edit), "decal/decal-diffuse.png", "Decal");
+      gtk_combo_box_text_append (GTK_COMBO_BOX_TEXT (prop_edit), "decal/decal-normal.jpg", "Decal normal");
       gtk_combo_box_text_append (GTK_COMBO_BOX_TEXT (prop_edit), "brick_bump.jpg", "Brick bump");
       gtk_combo_box_text_append (GTK_COMBO_BOX_TEXT (prop_edit), "brick_diffuse.jpg", "Brick diffuse");
       gtk_combo_box_text_append (GTK_COMBO_BOX_TEXT (prop_edit), "brick_roughness.jpg", "Brick roughness");
+      gtk_combo_box_text_append (GTK_COMBO_BOX_TEXT (prop_edit), "gradient/fiveTone.jpg", "Gradient five tone");
+      gtk_combo_box_text_append (GTK_COMBO_BOX_TEXT (prop_edit), "gradient/threeTone.jpg", "Gradient three tone");
       gtk_combo_box_text_append (GTK_COMBO_BOX_TEXT (prop_edit), "cube/SwedishRoyalCastle", "CastleCube");
 
       gtk_combo_box_set_active (GTK_COMBO_BOX (prop_edit), 0);

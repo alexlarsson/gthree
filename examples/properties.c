@@ -8,7 +8,7 @@
 #include "prop-editor.h"
 
 #define N_OBJECT_TYPES 4
-#define N_MATERIALS 4
+#define N_MATERIALS 5
 
 GthreeObject *objects[N_OBJECT_TYPES];
 GthreeMaterial *materials[N_MATERIALS];
@@ -56,6 +56,9 @@ sample_material (int num)
       break;
     case 3:
       return GTHREE_MATERIAL (gthree_mesh_basic_material_new ());
+      break;
+    case 4:
+      return GTHREE_MATERIAL (gthree_mesh_toon_material_new ());
       break;
     default:
       g_assert_not_reached ();
