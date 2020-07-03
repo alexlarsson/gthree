@@ -55,6 +55,8 @@
     <file>shader_chunks/lights_physical_fragment.glsl</file>
     <file>shader_chunks/lights_physical_pars_fragment.glsl</file>
     <file>shader_chunks/lights_specglos_fragment.glsl</file>
+    <file>shader_chunks/lights_toon_fragment.glsl</file>
+    <file>shader_chunks/lights_toon_pars_fragment.glsl</file>
     <file>shader_chunks/logdepthbuf_fragment.glsl</file>
     <file>shader_chunks/logdepthbuf_pars_fragment.glsl</file>
     <file>shader_chunks/logdepthbuf_pars_vertex.glsl</file>
@@ -119,6 +121,8 @@
     <file>shader_lib/meshphysical_frag.glsl</file>
     <file>shader_lib/meshphysical_vert.glsl</file>
     <file>shader_lib/meshspecglos_frag.glsl</file>
+    <file>shader_lib/meshtoon_frag.glsl</file>
+    <file>shader_lib/meshtoon_vert.glsl</file>
     <file>shader_lib/normal_frag.glsl</file>
     <file>shader_lib/normal_vert.glsl</file>
     <file>shader_lib/points_frag.glsl</file>

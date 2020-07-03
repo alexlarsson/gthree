@@ -497,11 +497,16 @@ static GthreeUniformsDefinition lambert_uniforms[] = {
   {"emissive", GTHREE_UNIFORM_TYPE_VECTOR3, &black },
 };
 
-static const char *phong_uniform_libs[] = { "common", "specularmap", "envmap", "aomap", "lightmap", "emissivemap", "bumpmap", "normalmap", "displacementmap", "gradientmap", "fog", "lights", NULL };
+static const char *phong_uniform_libs[] = { "common", "specularmap", "envmap", "aomap", "lightmap", "emissivemap", "bumpmap", "normalmap", "displacementmap", "fog", "lights", NULL };
 static GthreeUniformsDefinition phong_uniforms[] = {
   {"emissive", GTHREE_UNIFORM_TYPE_VECTOR3, &black },
   {"specular", GTHREE_UNIFORM_TYPE_VECTOR3, &dark_grey },
   {"shininess", GTHREE_UNIFORM_TYPE_FLOAT, &f30 },
+};
+
+static const char *toon_uniform_libs[] = { "common", "envmap", "aomap", "lightmap", "emissivemap", "bumpmap", "normalmap", "displacementmap", "gradientmap", "fog", "lights", NULL };
+static GthreeUniformsDefinition toon_uniforms[] = {
+  {"emissive", GTHREE_UNIFORM_TYPE_VECTOR3, &black }
 };
 
 static const char *standard_uniform_libs[] = { "common", "envmap", "aomap", "lightmap", "emissivemap", "bumpmap", "normalmap", "displacementmap", "roughnessmap", "metalnessmap", "fog", "lights", NULL };
@@ -599,7 +604,7 @@ static const char *convolution_defines[] = {
   NULL
 };
 
-static GthreeShader *basic, *lambert, *phong, *standard, *specglos, *matcap, *points, *dashed, *depth, *normal, *sprite, *background;
+static GthreeShader *basic, *lambert, *phong, *toon, *standard, *specglos, *matcap, *points, *dashed, *depth, *normal, *sprite, *background;
 static GthreeShader *cube, *equirect, *distanceRGBA, *shadow, *physical, *copy, *convolution;
 
 static void
@@ -627,6 +632,12 @@ gthree_shader_init_libs ()
                                               NULL,
                                               "meshphong_vert", "meshphong_frag");
   gthree_shader_set_name (phong, "phong");
+
+  toon = gthree_shader_new_from_definitions (toon_uniform_libs,
+                                             toon_uniforms, G_N_ELEMENTS (toon_uniforms),
+                                             NULL,
+                                             "meshtoon_vert", "meshtoon_frag");
+  gthree_shader_set_name (toon, "toon");
 
   standard = gthree_shader_new_from_definitions (standard_uniform_libs,
                                                  standard_uniforms, G_N_ELEMENTS (standard_uniforms),
@@ -740,6 +751,9 @@ gthree_get_shader_from_library (const char *name)
 
   if (strcmp (name, "phong") == 0)
     return phong;
+
+  if (strcmp (name, "toon") == 0)
+    return toon;
 
   if (strcmp (name, "standard") == 0)
     return standard;

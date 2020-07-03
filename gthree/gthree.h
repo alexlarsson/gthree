@@ -35,6 +35,7 @@
 #include <gthree/gthreehemispherelight.h>
 #include <gthree/gthreemeshlambertmaterial.h>
 #include <gthree/gthreemeshphongmaterial.h>
+#include <gthree/gthreemeshtoonmaterial.h>
 #include <gthree/gthreemeshstandardmaterial.h>
 #include <gthree/gthreemeshspecglosmaterial.h>
 #include <gthree/gthreemeshnormalmaterial.h>
