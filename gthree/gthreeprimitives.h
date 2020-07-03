@@ -91,6 +91,15 @@ GthreeGeometry *gthree_geometry_new_decal_from_mesh (GthreeMesh *mesh,
                                                      const graphene_quaternion_t *orientation,
                                                      const graphene_vec3_t *size);
 
+
+GTHREE_API
+GthreeGeometry *gthree_geometry_new_torus_knot (float radius,
+                                                float tube_radius,
+                                                int tube_segments,
+                                                int radial_segments,
+                                                int p,
+                                                int q);
+
 G_END_DECLS
 
 #endif /* __GTHREE_PRIMITIVES_H__ */

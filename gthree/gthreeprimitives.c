@@ -1073,6 +1073,122 @@ gthree_geometry_new_tetrahedron (float radius,
                                          detail);
 }
 
+graphene_vec3_t *
+knot_calculatePositionOnCurve(float u, int p, int q, float radius, graphene_vec3_t *position)
+{
+  float cu = cosf (u);
+  float su = sinf (u);
+  float quOverP = (float)q / p * u;
+  float cs = cosf (quOverP);
+
+  return graphene_vec3_init (position,
+                             radius * ( 2 + cs ) * 0.5 * cu,
+                             radius * ( 2 + cs ) * su * 0.5,
+                             radius * sinf ( quOverP ) * 0.5);
+}
+
+GthreeGeometry *
+gthree_geometry_new_torus_knot (float radius,
+                                float tube_radius,
+                                int tube_segments,
+                                int radial_segments,
+                                int p,
+                                int q)
+{
+  GthreeGeometry *geometry;
+  GArray *positions, *normals, *uvs, *index;
+  int i, j;
+  graphene_vec3_t P1, P2, B, T, N, vertex, normal, cxN, cyB;
+
+  geometry = g_object_new (gthree_geometry_get_type (), NULL);
+
+  positions = g_array_new (FALSE, FALSE, sizeof (float));
+  normals = g_array_new (FALSE, FALSE, sizeof (float));
+  uvs = g_array_new (FALSE, FALSE, sizeof (float));
+  index = g_array_new (FALSE, FALSE, sizeof (guint16));
+
+  // generate vertices, normals and uvs
+  for (i = 0; i <= tube_segments; ++ i)
+    {
+      // the radian "u" is used to calculate the position on the torus curve of the current tubular segement
+      float u = (float)i / tube_segments * p * G_PI * 2.0f;
+
+      // now we calculate two points. P1 is our current position on the curve, P2 is a little farther ahead.
+      // these points are used to create a special "coordinate space", which is necessary to calculate the correct vertex positions
+
+      knot_calculatePositionOnCurve (u, p, q, radius, &P1);
+      knot_calculatePositionOnCurve (u + 0.01, p, q, radius, &P2);
+
+      // calculate orthonormal basis
+
+      graphene_vec3_subtract (&P2, &P1, &T);
+      graphene_vec3_add (&P2, &P1, &N);
+      graphene_vec3_cross (&T, &N, &B);
+      graphene_vec3_cross (&B, &T, &N);
+
+      // normalize B, N. T can be ignored, we don't use it
+      graphene_vec3_normalize (&B, &B);
+      graphene_vec3_normalize (&N, &N);
+
+      for (j = 0; j <= radial_segments; ++j)
+        {
+          // now calculate the vertices. they are nothing more than an extrusion of the torus curve.
+          // because we extrude a shape in the xy-plane, there is no need to calculate a z-value.
+
+          float v = (float)j / radial_segments * G_PI * 2.0f;
+          float cx = - tube_radius * cosf (v);
+          float cy = tube_radius * sinf (v);
+
+          // now calculate the final vertex position.
+          // first we orient the extrusion with our basis vectos, then we add it to the current position on the curve
+
+          graphene_vec3_scale (&N, cx, &cxN);
+          graphene_vec3_scale (&B, cy, &cyB);
+
+          graphene_vec3_add (&P1, &cxN, &vertex);
+          graphene_vec3_add (&vertex, &cyB, &vertex);
+
+          push_vec3 (positions, &vertex);
+
+          // normal (P1 is always the center/origin of the extrusion, thus we can use it to calculate the normal)
+
+          graphene_vec3_subtract (&vertex, &P1, &normal);
+          graphene_vec3_normalize (&normal, &normal);
+          push_vec3 (normals, &normal);
+
+          // uv
+
+          push2 (uvs,
+                 (float)i / tube_segments,
+                 (float)j / radial_segments);
+        }
+    }
+
+  // generate indices
+  for (j = 1; j <= tube_segments; j++)
+    {
+      for (i = 1; i <= radial_segments; i++)
+        {
+          // indices
+          int a = ( radial_segments + 1 ) * ( j - 1 ) + ( i - 1 );
+          int b = ( radial_segments + 1 ) * j + ( i - 1 );
+          int c = ( radial_segments + 1 ) * j + i;
+          int d = ( radial_segments + 1 ) * ( j - 1 ) + i;
+
+          // faces
+          push3i (index, a, b, d);
+          push3i (index, b, c, d);
+        }
+    }
+
+  add_indexv (geometry, index);
+  add_positionv (geometry, positions);
+  add_normalv (geometry, normals);
+  add_uvv (geometry, uvs);
+
+  return geometry;
+}
+
 
 typedef struct {
   graphene_vec3_t position;
