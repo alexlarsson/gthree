@@ -47,8 +47,11 @@ primitive (int num)
     case 9:
       geo = gthree_geometry_new_octahedron (25, 0);
       break;
+    case 10:
+      geo = gthree_geometry_new_torus_knot (15, 5, 64, 8, 2, 3);
+      break;
     default:
-      g_assert_not_reached ();
+      return NULL;
     }
 
   material = GTHREE_MATERIAL (gthree_mesh_lambert_material_new ());
@@ -124,9 +127,11 @@ init_scene (void)
   ambient_light = gthree_ambient_light_new (white ());
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));
 
-  for (i = 0; i <= 9; i++)
+  for (i = 0; TRUE; i++)
     {
       GthreeObject * obj = primitive (i);
+      if (obj == NULL)
+        break;
 
       objects = g_list_prepend (objects, obj);
 
