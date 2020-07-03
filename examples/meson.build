@@ -22,6 +22,7 @@ examples = [
   'clipping',
   'decals',
   'skeleton',
+  'toon',
 ]
 
 install_subdir('textures',
