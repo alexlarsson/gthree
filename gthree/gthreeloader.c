@@ -25,7 +25,6 @@
  * Try grouping primitives into geometry groups if possible
  * Handle sparse accessors
  * Handle line materials
- * handle data: uris
  */
 
 typedef struct {
@@ -105,6 +104,127 @@ typedef struct {
   int skeleton;
   GArray *joints;
 } Skin;
+
+GBytes *
+data_url_parse (const char  *url,
+                char       **out_mimetype,
+                GError     **error)
+{
+  g_autofree char *mimetype = NULL;
+  const char *parameters_start;
+  const char *data_start;
+  gboolean base64 = FALSE;
+  gpointer bdata;
+  gsize bsize;
+
+  /* url must be an URI as defined in RFC 2397
+   * data:[<mediatype>][;base64],<data>
+   */
+  if (g_ascii_strncasecmp ("data:", url, 5) != 0)
+    {
+      g_set_error (error, GTHREE_LOADER_ERROR, GTHREE_LOADER_ERROR_FAIL,
+                   "Not a data: URL");
+      return NULL;
+    }
+
+  url += 5;
+
+  parameters_start = strchr (url, ';');
+  data_start = strchr (url, ',');
+  if (data_start == NULL)
+    {
+      g_set_error (error, GTHREE_LOADER_ERROR, GTHREE_LOADER_ERROR_FAIL,
+                   "Malformed data: URL");
+      return NULL;
+    }
+
+  if (parameters_start > data_start)
+    parameters_start = NULL;
+
+  if (data_start != url && parameters_start != url)
+    {
+      mimetype = g_strndup (url,
+                            (parameters_start ? parameters_start : data_start) - url);
+    }
+  else
+    {
+      mimetype = NULL;
+    }
+
+  if (parameters_start != NULL)
+    {
+      char *parameters_str;
+      char **parameters;
+      guint i;
+
+      parameters_str = g_strndup (parameters_start + 1, data_start - parameters_start - 1);
+      parameters = g_strsplit (parameters_str, ";", -1);
+
+      for (i = 0; parameters[i] != NULL; i++)
+        {
+          if (g_ascii_strcasecmp ("base64", parameters[i]) == 0)
+            {
+              base64 = TRUE;
+            }
+        }
+    g_free (parameters_str);
+    g_strfreev (parameters);
+  }
+
+  /* Skip comma */
+  data_start += 1;
+  if (base64)
+    {
+      bdata = g_base64_decode (data_start, &bsize);
+    }
+  else
+    {
+      /* URI encoded, i.e. "percent" encoding */
+      /* XXX: This doesn't allow nul bytes */
+      bdata = g_uri_unescape_string (data_start, NULL);
+      if (bdata == NULL)
+        {
+          g_set_error (error, GTHREE_LOADER_ERROR, GTHREE_LOADER_ERROR_FAIL,
+                       "Could not unescape string");
+          g_free (mimetype);
+          return NULL;
+        }
+      bsize = strlen (bdata);
+    }
+
+  if (out_mimetype)
+    *out_mimetype = g_steal_pointer (&mimetype);
+
+  return g_bytes_new_take (bdata, bsize);
+}
+
+static GBytes *
+load_uri (const char *uri, gint64 byte_length, GFile *base_path, GError **error)
+{
+  if (g_ascii_strncasecmp ("data:", uri, 5) == 0)
+    {
+      return data_url_parse (uri, NULL, error);
+    }
+  else
+    {
+      g_autoptr(GFile) file = NULL;
+      g_autoptr(GBytes) file_bytes = NULL;
+
+      if (base_path)
+        file = g_file_resolve_relative_path (base_path, uri);
+      else
+        file = g_file_new_for_commandline_arg (uri);
+
+      file_bytes = g_file_load_bytes (file, NULL, NULL, error);
+      if (file_bytes == NULL)
+        return NULL;
+
+      if (byte_length > 0)
+        return g_bytes_new_from_bytes (file_bytes, 0, byte_length);
+      else
+        return g_bytes_ref (file_bytes);
+    }
+}
 
 typedef struct {
   GthreeMaterial *orig_material;
@@ -614,22 +734,9 @@ parse_buffers (GthreeLoader *loader, JsonObject *root, GBytes *bin_chunk, GFile 
         }
       else
         {
-          g_autoptr(GFile) file = NULL;
-          g_autoptr(GBytes) file_bytes = NULL;
-
-          if (base_path)
-            file = g_file_resolve_relative_path (base_path, uri);
-          else
-            file = g_file_new_for_commandline_arg (uri);
-
-          file_bytes = g_file_load_bytes (file, NULL, NULL, error);
-          if (file_bytes == NULL)
+          bytes = load_uri (uri, byte_length, base_path, error);
+          if (bytes == NULL)
             return FALSE;
-
-          if (byte_length > 0)
-            bytes = g_bytes_new_from_bytes (file_bytes, 0, byte_length);
-          else
-            bytes = g_bytes_ref (file_bytes);
         }
 
       g_ptr_array_add (priv->buffers, g_steal_pointer (&bytes));
@@ -924,12 +1031,8 @@ parse_images (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError *
           const char *uri;
 
           uri = json_object_get_string_member (image_j, "uri");
-          if (base_path)
-            file = g_file_resolve_relative_path (base_path, uri);
-          else
-            file = g_file_new_for_commandline_arg (uri);
 
-          bytes = g_file_load_bytes (file, NULL, NULL, error);
+          bytes = load_uri (uri, -1, base_path, error);
           if (bytes == NULL)
             return FALSE;
         }
