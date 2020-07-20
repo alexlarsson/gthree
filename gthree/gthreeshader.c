@@ -2,6 +2,7 @@
 #include <epoxy/gl.h>
 
 #include "gthreeshader.h"
+#include "gthree-resources.h"
 #include "gthreeprogram.h"
 #include "gthreeprivate.h"
 
@@ -615,6 +616,10 @@ gthree_shader_init_libs ()
   if (initialized)
     return;
 
+  initialized = TRUE;
+
+  gthree_register_resource ();
+
   basic = gthree_shader_new_from_definitions (basic_uniform_libs,
                                               NULL, 0,
                                               NULL,
@@ -734,8 +739,6 @@ gthree_shader_init_libs ()
                                                     convolution_defines,
                                                     "convolution_vert", "convolution_frag");
   gthree_shader_set_name (convolution, "convolution");
-
-  initialized = TRUE;
 }
 
 GthreeShader *

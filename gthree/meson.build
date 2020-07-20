@@ -189,6 +189,7 @@ gthree_resources = gnome.compile_resources('gthree-resources',
                                                meson.current_build_dir(),
                                                meson.current_source_dir(),
                                            ],
+                                           extra_args: '--manual-register',
                                            c_name: 'gthree')
 
 
