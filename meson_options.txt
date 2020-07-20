@@ -15,3 +15,7 @@ option('gtk_doc',
        description: 'Whether to build the API reference',
        type: 'boolean',
        value: false)
+option('shared_lib',
+       description: 'Whether to build a shared library',
+       type: 'boolean',
+       value: true)

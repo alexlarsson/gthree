@@ -202,7 +202,13 @@ gthree_inc = include_directories('.')
 gthree_deps = [glib_dep, gobject_dep, graphene_dep, gdkpixbuf_dep, cairo_dep, json_glib_dep]
 gthree_private_deps = [epoxy_dep, libm]
 
-libgthree = shared_library('gthree-1',
+if get_option('shared_lib')
+  libtype = 'shared_library'
+else
+  libtype = 'static_library'
+endif
+
+libgthree = build_target('gthree-1',
                            sources: gthree_sources + gthree_marshalers + gthree_typebuiltins + gthree_resources,
                            soversion: gthree_soversion,
                            version: gthree_libversion,
@@ -210,7 +216,8 @@ libgthree = shared_library('gthree-1',
                            dependencies: gthree_deps + gthree_private_deps,
                            include_directories: [ root_inc, gthree_inc ],
                            c_args: common_cflags + gthree_cflags,
-                           link_args: common_ldflags)
+                           link_args: common_ldflags,
+                           target_type: libtype)
 gthree_dep_sources = [gthree_typebuiltins_h]
 
 if not meson.is_cross_build() and get_option('introspection')
@@ -246,7 +253,7 @@ if get_option('gtk3')
 
   gthree_gtk3_deps = [libgthree_dep, gtk3_dep]
 
-  libgthree_gtk3 = shared_library('gthree-gtk3-1',
+  libgthree_gtk3 = build_target('gthree-gtk3-1',
                                   sources: gthree_gtk3_sources,
                                   soversion: gthree_soversion,
                                   version: gthree_libversion,
@@ -254,10 +261,12 @@ if get_option('gtk3')
                                   dependencies: gthree_gtk3_deps,
                                   include_directories: [ root_inc, gthree_inc ],
                                   c_args: common_cflags + gthree_cflags,
-                                  link_args: common_ldflags)
+                                  link_args: common_ldflags,
+                                  target_type: libtype)
   gthree_gtk3_dep_sources = []
 
-  if not meson.is_cross_build() and get_option('introspection')
+  # This failed to build for some reason with static libs, ignore for now
+  if not meson.is_cross_build() and get_option('shared_lib') and get_option('introspection')
     libgthree_gtk3_gir = gnome.generate_gir(libgthree_gtk3,
                                             sources: gthree_gtk3_sources + gthree_gtk3_headers,
                                             namespace: 'GthreeGtk3',
@@ -292,7 +301,7 @@ if get_option('gtk4')
 
   gthree_gtk4_deps = [libgthree_dep, gtk4_dep]
 
-  libgthree_gtk4 = shared_library('gthree-gtk4-1',
+  libgthree_gtk4 = build_target('gthree-gtk4-1',
                                   sources: gthree_gtk4_sources,
                                   soversion: gthree_soversion,
                                   version: gthree_libversion,
@@ -300,10 +309,12 @@ if get_option('gtk4')
                                   dependencies: gthree_gtk4_deps,
                                   include_directories: [ root_inc, gthree_inc ],
                                   c_args: common_cflags + gthree_cflags,
-                                  link_args: common_ldflags)
+                                  link_args: common_ldflags,
+                                  target_type: libtype)
   gthree_gtk4_dep_sources = []
 
-  if not meson.is_cross_build() and get_option('introspection')
+  # This failed to build for some reason with static libs, ignore for now
+  if not meson.is_cross_build()and get_option('shared_lib') and get_option('introspection')
     libgthree_gtk4_gir = gnome.generate_gir(libgthree_gtk4,
                                             sources: gthree_gtk4_sources + gthree_gtk4_headers,
                                             namespace: 'GthreeGtk4',
