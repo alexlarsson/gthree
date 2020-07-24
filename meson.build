@@ -1,5 +1,5 @@
 project('gthree', 'c',
-        version: '0.2.0',
+        version: '0.9.0',
         default_options: [
           'buildtype=debugoptimized',
           'warning_level=1',
