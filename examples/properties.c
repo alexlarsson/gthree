@@ -198,22 +198,16 @@ update_property_pane (void)
 {
   GtkWidget *hbox, *panel;
 
+  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 8);
+
 #ifdef USE_GTK4
-  GtkWidget *child = NULL;
-  while ((child = gtk_widget_get_first_child (property_pane)) != NULL)
-    gtk_widget_unparent (child);
+  gtk_scrolled_window_set_child (GTK_SCROLLED_WINDOW(property_pane), hbox);
 #else
   GList *children = gtk_container_get_children (GTK_CONTAINER (property_pane));
   GList *l;
 
   for (l = children; l != NULL; l = l->next)
     gtk_widget_destroy (l->data);
-#endif
-
-  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 8);
-#ifdef USE_GTK4
-  gtk_scrolled_window_set_child (GTK_SCROLLED_WINDOW(property_pane), hbox);
-#else
   gtk_container_add (GTK_CONTAINER (property_pane), hbox);
 #endif
 
@@ -293,7 +287,11 @@ main (int argc, char *argv[])
   gtk_widget_show (combo);
   gtk_box_append (GTK_BOX (box), combo);
 
+#ifdef USE_GTK4
+  sw = gtk_scrolled_window_new ();
+#else
   sw = gtk_scrolled_window_new (NULL, NULL);
+#endif
   gtk_scrolled_window_set_min_content_height (GTK_SCROLLED_WINDOW (sw), 300);
   gtk_box_append (GTK_BOX (box), sw);
   gtk_widget_show (sw);
