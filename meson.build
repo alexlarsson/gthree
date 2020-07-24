@@ -28,7 +28,7 @@ libm = cc.find_library('m', required: false)
 
 glib_dep       = dependency('glib-2.0', version: '>= 2.43.2')
 gobject_dep    = dependency('gobject-2.0', version: '>= 2.43.2')
-graphene_dep   = dependency('graphene-gobject-1.0', version: '>= 1.10.0',
+graphene_dep   = dependency('graphene-gobject-1.0', version: '>= 1.10.2',
                             fallback: ['graphene', 'graphene_dep'])
 gdkpixbuf_dep  = dependency('gdk-pixbuf-2.0')
 cairo_dep      = dependency('cairo-gobject')
