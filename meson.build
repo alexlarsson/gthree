@@ -117,8 +117,9 @@ configure_file(output: 'config.h', configuration: gthree_conf)
 root_inc = include_directories('.')
 
 subdir('gthree')
-subdir('examples')
-
+if get_option('examples')
+  subdir('examples')
+endif
 if get_option('gtk_doc')
   subdir('docs')
 endif
