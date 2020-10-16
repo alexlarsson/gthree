@@ -145,6 +145,7 @@ GTHREE_API
 void                gthree_renderer_render                    (GthreeRenderer     *renderer,
                                                                GthreeScene        *scene,
                                                                GthreeCamera       *camera);
+GTHREE_API
 void                gthree_renderer_unrealize                 (GthreeRenderer     *renderer);
 
 

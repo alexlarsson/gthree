@@ -125,6 +125,7 @@ const graphene_box_t    *gthree_geometry_get_bounding_box           (GthreeGeome
 GTHREE_API
 void                     gthree_geometry_set_bounding_box           (GthreeGeometry          *geometry,
                                                                      const graphene_box_t    *box);
+GTHREE_API
 void                     gthree_geometry_compute_vertex_normals     (GthreeGeometry          *geometry);
 GTHREE_API
 void                     gthree_geometry_normalize_normals          (GthreeGeometry          *geometry);
