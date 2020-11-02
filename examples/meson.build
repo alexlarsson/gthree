@@ -46,11 +46,19 @@ libexample_sources = [
   'orbitcontrols.c',
 ] + example_resources
 
+example_c_args = []
+
+if cc.get_argument_syntax() == 'msvc'
+  example_c_args += '-D_USE_MATH_DEFINES'
+endif
+
 if get_option('gtk3')
+  example_gtk3_c_args = example_c_args + [ '-DUSE_GTK3' ]
+
   libexample_gtk3 = static_library(
     'libexample-gtk3',
     libexample_sources,
-    c_args: [ '-DUSE_GTK3' ],
+    c_args: example_gtk3_c_args,
     dependencies: [
       libgthree_gtk3_dep, libm ],
     install: false,
@@ -66,7 +74,7 @@ if get_option('gtk3')
     executable(
       '@0@-gtk3'.format(example),
       '@0@.c'.format(example),
-      c_args: [ '-DUSE_GTK3' ],
+      c_args: example_gtk3_c_args,
       dependencies: [
         libexample_gk3_dep ],
       install: false)
@@ -74,10 +82,12 @@ if get_option('gtk3')
 endif
 
 if get_option('gtk4')
+  example_gtk4_c_args = example_c_args + [ '-DUSE_GTK4' ]
+
   libexample_gtk4 = static_library(
     'libexample-gtk4',
     libexample_sources,
-    c_args: [ '-DUSE_GTK4' ],
+    c_args: example_gtk4_c_args,
     dependencies: [
       libgthree_gtk4_dep, libm ],
     install: false,
@@ -93,7 +103,7 @@ if get_option('gtk4')
     executable(
       '@0@-gtk4'.format(example),
       '@0@.c'.format(example),
-      c_args: [ '-DUSE_GTK4' ],
+      c_args: example_gtk4_c_args,
       dependencies: [
         libexample_gk4_dep],
       install: false)
