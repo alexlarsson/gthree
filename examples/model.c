@@ -279,9 +279,13 @@ animations_combo_changed (GtkComboBox *combo)
 }
 
 static void
-fade_animations_toggled (GtkToggleButton *toggle_button)
+fade_animations_toggled (GtkWidget *toggle_button)
 {
-  fade_animations = gtk_toggle_button_get_active (toggle_button);
+#ifdef USE_GTK4
+  fade_animations = gtk_check_button_get_active (GTK_CHECK_BUTTON (toggle_button));
+#else
+  fade_animations = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (toggle_button));
+#endif
 }
 
 static void
@@ -299,9 +303,13 @@ env_map_combo_changed (GtkComboBox *combo)
 }
 
 static void
-auto_rotate_toggled (GtkToggleButton *toggle_button)
+auto_rotate_toggled (GtkWidget *toggle_button)
 {
-  auto_rotate = gtk_toggle_button_get_active (toggle_button);
+#ifdef USE_GTK4
+  auto_rotate = gtk_check_button_get_active (GTK_CHECK_BUTTON (toggle_button));
+#else
+  auto_rotate = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (toggle_button));
+#endif
   gthree_orbit_controls_set_auto_rotate (orbit, auto_rotate);
 }
 
@@ -463,6 +471,11 @@ main (int argc, char *argv[])
   gtk_widget_show (combo);
 
   check = gtk_check_button_new_with_label ("Auto rotate");
+#ifdef USE_GTK4
+  gtk_check_button_set_active (GTK_CHECK_BUTTON (check), FALSE);
+#else
+  gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (check), FALSE);
+#endif
   gtk_box_append (GTK_BOX (hbox), check);
   gtk_widget_show (check);
   g_signal_connect (check, "toggled", G_CALLBACK (auto_rotate_toggled), NULL);
@@ -477,6 +490,11 @@ main (int argc, char *argv[])
   gtk_widget_show (combo);
 
   check = gtk_check_button_new_with_label ("Fade animations");
+#ifdef USE_GTK4
+  gtk_check_button_set_active (GTK_CHECK_BUTTON (check), FALSE);
+#else
+  gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (check), FALSE);
+#endif
   gtk_box_append (GTK_BOX (hbox), check);
   gtk_widget_show (check);
   g_signal_connect (check, "toggled", G_CALLBACK (fade_animations_toggled), NULL);

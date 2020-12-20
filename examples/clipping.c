@@ -97,11 +97,17 @@ realize_area (GthreeArea *area)
 }
 
 static void
-clip_intersection_toggled (GtkToggleButton *toggle_button,
+clip_intersection_toggled (GtkWidget *toggle_button,
                            GtkWidget *area)
 {
-  gboolean clip_intersection = gtk_toggle_button_get_active (toggle_button);
+  gboolean clip_intersection;
   GthreeObject *child;
+
+#ifdef USE_GTK4
+  clip_intersection = gtk_check_button_get_active (GTK_CHECK_BUTTON (toggle_button));
+#else
+  clip_intersection = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (toggle_button));
+#endif
 
   for (child = gthree_object_get_first_child (GTHREE_OBJECT (group));
        child != NULL;
@@ -115,10 +121,16 @@ clip_intersection_toggled (GtkToggleButton *toggle_button,
 }
 
 static void
-show_helpers_toggled (GtkToggleButton *toggle_button,
+show_helpers_toggled (GtkWidget *toggle_button,
                       GtkWidget *area)
 {
-  gboolean visible = gtk_toggle_button_get_active (toggle_button);
+  gboolean visible;
+
+#ifdef USE_GTK4
+  visible = gtk_check_button_get_active (GTK_CHECK_BUTTON (toggle_button));
+#else
+  visible = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (toggle_button));
+#endif
 
   gthree_object_set_visible (GTHREE_OBJECT (helpers), visible);
 
@@ -191,13 +203,21 @@ main (int argc, char *argv[])
   gtk_box_append (GTK_BOX (box), hbox);
 
   check = gtk_check_button_new_with_label ("Clip intersection");
+#ifdef USE_GTK4
+  gtk_check_button_set_active (GTK_CHECK_BUTTON (check), TRUE);
+#else
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (check), TRUE);
+#endif
   gtk_box_append (GTK_BOX (hbox), check);
   gtk_widget_show (check);
   g_signal_connect (check, "toggled", G_CALLBACK (clip_intersection_toggled), area);
 
   check = gtk_check_button_new_with_label ("Show helpers");
+#ifdef USE_GTK4
+  gtk_check_button_set_active (GTK_CHECK_BUTTON (check), TRUE);
+#else
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (check), TRUE);
+#endif
   gtk_box_append (GTK_BOX (hbox), check);
   gtk_widget_show (check);
   g_signal_connect (check, "toggled", G_CALLBACK (show_helpers_toggled), area);
