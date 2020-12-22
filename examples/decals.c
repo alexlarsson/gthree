@@ -238,10 +238,14 @@ released_cb (GtkEventController *controller,
 }
 
 static void
-rotate_toggled (GtkToggleButton *toggle_button,
+rotate_toggled (GtkWidget *toggle_button,
                 GtkWidget *area)
 {
-  params_rotate = gtk_toggle_button_get_active (toggle_button);
+#ifdef USE_GTK4
+  params_rotate = gtk_check_button_get_active (GTK_CHECK_BUTTON (toggle_button));
+#else
+  params_rotate = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (toggle_button));
+#endif
 
   gtk_widget_queue_draw (area);
 }
@@ -316,7 +320,11 @@ main (int argc, char *argv[])
   g_signal_connect (motion, "motion", (GCallback)motion_cb, area);
 
   check = gtk_check_button_new_with_label ("Rotate");
+#ifdef USE_GTK4
+  gtk_check_button_set_active (GTK_CHECK_BUTTON (check), TRUE);
+#else
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (check), TRUE);
+#endif
   gtk_box_append (GTK_BOX (box), check);
   gtk_widget_show (check);
   g_signal_connect (check, "toggled", G_CALLBACK (rotate_toggled), area);

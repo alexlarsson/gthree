@@ -173,7 +173,13 @@ static void
 show_skeleton_toggled (GtkToggleButton *toggle_button,
                        GtkWidget *area)
 {
-  gboolean show_skeleton = gtk_toggle_button_get_active (toggle_button);
+  gboolean show_skeleton;
+
+#ifdef USE_GTK4
+  show_skeleton = gtk_check_button_get_active (GTK_CHECK_BUTTON (toggle_button));
+#else
+  show_skeleton = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (toggle_button));
+#endif
 
   gthree_object_set_visible (GTHREE_OBJECT (skeleton), show_skeleton);
 
@@ -394,7 +400,11 @@ main (int argc, char *argv[])
 
 
   check = gtk_check_button_new_with_label ("Show skeleton");
+#ifdef USE_GTK4
+  gtk_check_button_set_active (GTK_CHECK_BUTTON (check), FALSE);
+#else
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (check), FALSE);
+#endif
   gtk_box_append (GTK_BOX (box), check);
   gtk_widget_show (check);
   g_signal_connect (check, "toggled", G_CALLBACK (show_skeleton_toggled), area);

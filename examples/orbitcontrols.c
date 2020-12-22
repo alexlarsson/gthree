@@ -132,13 +132,13 @@ drag_begin_cb (GtkGestureDrag *gesture,
     return;
 
   device = gtk_gesture_get_device (GTK_GESTURE (gesture));
-  gdk_device_get_state (device,
 #ifdef USE_GTK4
-                        gtk_native_get_surface (gtk_widget_get_native (orbit->darea)),
+  mask = gdk_device_get_modifier_state (device);
 #else
+  gdk_device_get_state (device,
                         gtk_widget_get_window (orbit->darea),
-#endif
                         NULL, &mask);
+#endif
 
   button = gtk_gesture_single_get_current_button (GTK_GESTURE_SINGLE (gesture));
 
