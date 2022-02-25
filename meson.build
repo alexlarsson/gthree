@@ -34,7 +34,7 @@ gdkpixbuf_dep  = dependency('gdk-pixbuf-2.0')
 cairo_dep      = dependency('cairo-gobject')
 gtk3_dep       = dependency('gtk+-3.0', version: '>= 3.22',
                             required: get_option('gtk3'))
-gtk4_dep       = dependency('gtk4', version: '>= 3.96',
+gtk4_dep       = dependency('gtk4', version: '>= 4.0',
                             required: get_option('gtk4'),
                             fallback: ['gtk', 'libgtk_dep'],
                             default_options: ['media=none', 'print-backends=none',
