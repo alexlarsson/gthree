@@ -5,7 +5,7 @@ option('gtk3',
 option('gtk4',
        description: 'Whether to build GTK 4 widget library',
        type: 'boolean',
-       value: false)
+       value: true)
 
 option('introspection',
        description: 'Whether to build introspection files',
