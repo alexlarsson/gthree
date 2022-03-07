@@ -12,6 +12,8 @@ if not meson.is_cross_build() and get_option('introspection')
   endif
 endif
 
+metadatadir = meson.current_source_dir() / 'metadata'
+
 gthree_sources = [
     'gthreeattribute.c',
     'gthreeambientlight.c',
@@ -222,7 +224,7 @@ gthree_dep_sources = [gthree_typebuiltins_h]
 
 if not meson.is_cross_build() and get_option('introspection')
    libgthree_gir = gnome.generate_gir(libgthree,
-                                      sources: gthree_sources + gthree_headers + gthree_marshalers,
+                                      sources: gthree_sources + gthree_headers + gthree_marshalers + [gthree_typebuiltins_h],
                                       namespace: 'Gthree',
                                       nsversion: gthree_api_version,
                                       identifier_prefix: 'Gthree',
@@ -230,9 +232,18 @@ if not meson.is_cross_build() and get_option('introspection')
                                       export_packages: 'gthree',
                                       includes: [ 'GObject-2.0', 'Graphene-1.0', 'GdkPixbuf-2.0', 'cairo-1.0' ],
                                       install: true,
-                                      extra_args: extra_gir_args)
+                                      extra_args: extra_gir_args,
+                		      header: 'gthree/gthree.h')
    gthree_dep_sources += libgthree_gir
    libgthree_gir_dep = declare_dependency(sources: libgthree_gir)
+
+   if get_option('vapi')
+     libgthree_vapi = gnome.generate_vapi('gthree-' + gthree_api_version,
+                                          sources: libgthree_gir[0],
+                                          packages: [ 'gio-2.0', 'cairo-gobject', 'graphene-1.0', 'gdk-pixbuf-2.0' ],
+                                          install: true,
+                                          metadata_dirs: metadatadir,)
+   endif
 endif
 
 libgthree_dep = declare_dependency(sources: gthree_dep_sources,
@@ -277,9 +288,20 @@ if get_option('gtk3')
                                             includes: [ libgthree_gir[0], 'Gtk-3.0' ],
                                             install: true,
                                             dependencies: libgthree_gir_dep,
-                                            extra_args: extra_gir_args)
+                                            extra_args: extra_gir_args,
+                           		    header: 'gthree/gthreearea.h')
      gthree_gtk3_dep_sources += libgthree_gtk3_gir
      libgthree_gtk3_gir_dep = declare_dependency(sources: libgthree_gtk3_gir)
+
+    if get_option('vapi')
+      libgthree_gtk3_vapi = gnome.generate_vapi('gthree-gtk3-' + gthree_api_version,
+                                           sources: libgthree_gtk3_gir[0],
+                                           packages: [ 'gtk+-3.0', libgthree_vapi ],
+                                           install: true,
+                                           metadata_dirs: [ meson.current_source_dir() ],
+                                           vapi_dirs: meson.current_build_dir(),
+                                           metadata_dirs: metadatadir,)
+    endif
   endif
 
   libgthree_gtk3_dep = declare_dependency(sources: gthree_gtk3_dep_sources,
@@ -314,7 +336,7 @@ if get_option('gtk4')
   gthree_gtk4_dep_sources = []
 
   # This failed to build for some reason with static libs, ignore for now
-  if not meson.is_cross_build()and get_option('shared_lib') and get_option('introspection')
+  if not meson.is_cross_build() and get_option('shared_lib') and get_option('introspection')
     libgthree_gtk4_gir = gnome.generate_gir(libgthree_gtk4,
                                             sources: gthree_gtk4_sources + gthree_gtk4_headers,
                                             namespace: 'GthreeGtk4',
@@ -322,12 +344,23 @@ if get_option('gtk4')
                                             identifier_prefix: 'Gthree',
                                             symbol_prefix: 'gthree',
                                             export_packages: 'gthree',
-                                            includes: [ libgthree_gir[0], 'Gtk-3.0' ],
+                                            includes: [ libgthree_gir[0], 'Gtk-4.0' ],
                                             install: true,
                                             dependencies: libgthree_gir_dep,
-                                            extra_args: extra_gir_args)
+                                            extra_args: extra_gir_args,
+                           		    header: 'gthree/gthreearea.h')
      gthree_gtk4_dep_sources += libgthree_gtk4_gir
      libgthree_gtk4_gir_dep = declare_dependency(sources: libgthree_gtk4_gir)
+
+     if get_option('vapi')
+       libgthree_gtk4_vapi = gnome.generate_vapi('gthree-gtk4-' + gthree_api_version,
+                                            sources: libgthree_gtk4_gir[0],
+                                            packages: [ 'gtk4', libgthree_vapi ],
+                                            install: true,
+                                            metadata_dirs: [ meson.current_source_dir() ],
+                                            vapi_dirs: meson.current_build_dir(),
+                                            metadata_dirs: metadatadir,)
+     endif
   endif
 
   libgthree_gtk4_dep = declare_dependency(sources: gthree_gtk4_dep_sources,
