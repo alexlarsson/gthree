@@ -23,4 +23,8 @@ option('shared_lib',
 option('examples',
        description : 'Whether to build example programs',
        type: 'boolean',
+       value: true)#
+option('vapi',
+       description: 'Wether to generate Vala API',
+       type: 'boolean',
        value: true)
