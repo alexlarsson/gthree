@@ -12,6 +12,7 @@
 #include <gthree/gthreelightshadow.h>
 #include <gthree/gthreedirectionallightshadow.h>
 #include <gthree/gthreespotlightshadow.h>
+#include <gthree/gthreerendertarget.h>
 #include <json-glib/json-glib.h>
 
 //#define DEBUG_LABELS
@@ -179,6 +180,8 @@ void     gthree_texture_set_parameters (guint texture_type,
 
 guint gthree_render_target_get_gl_framebuffer (GthreeRenderTarget *target,
                                                GthreeRenderer *renderer);
+guint gthree_render_target_get_gl_multisample_framebuffer (GthreeRenderTarget *target,
+                                                           GthreeRenderer *renderer);
 void gthree_render_target_realize (GthreeRenderTarget *target,
                                    GthreeRenderer *renderer);
 const graphene_rect_t * gthree_render_target_get_viewport (GthreeRenderTarget *target);
@@ -323,6 +326,12 @@ typedef enum {
 void gthree_renderer_lazy_delete (GthreeRenderer *renderer,
                                   GthreeResourceKind kind,
                                   guint             id);
+
+void gthree_render_target_set_is_multisample (GthreeRenderTarget *render_target, gboolean is_multisample, guint samples);
+void gthree_render_target_set_is_cube (GthreeRenderTarget *render_target, gboolean is_cube);
+gboolean gthree_render_target_get_is_multisample (GthreeRenderTarget *render_target);
+gboolean gthree_render_target_get_is_cube (GthreeRenderTarget *render_target);
+void gthree_render_target_update_multisample (GthreeRenderTarget *render_target, GthreeRenderer *renderer);
 
 GthreeGeometry *gthree_sprite_get_geometry (GthreeSprite *sprite);
 

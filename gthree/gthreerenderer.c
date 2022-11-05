@@ -996,14 +996,6 @@ gthree_renderer_get_render_target (GthreeRenderer *renderer)
   return priv->current_render_target;
 }
 
-
-static void
-update_multisample_render_target (GthreeRenderer *renderer,
-                                  GthreeRenderTarget *render_target)
-{
-  // TODO
-}
-
 void
 gthree_renderer_set_render_target (GthreeRenderer *renderer,
                                    GthreeRenderTarget *render_target,
@@ -1038,12 +1030,13 @@ gthree_renderer_set_render_target (GthreeRenderer *renderer,
           framebuffer = __webglFramebuffer[ activeCubeFace || 0 ];
           isCube = true;
         }
-      else if ( renderTarget.isWebGLMultisampleRenderTarget )
+#endif
+      if ( gthree_render_target_get_is_multisample (render_target) ) // else if
         {
-          framebuffer = properties.get( renderTarget ).__webglMultisampledFramebuffer;
+          framebuffer = gthree_render_target_get_gl_multisample_framebuffer (render_target, renderer);
+          // framebuffer = properties.get( renderTarget ).__webglMultisampledFramebuffer;
         }
       else
-#endif
         {
           framebuffer = gthree_render_target_get_gl_framebuffer (render_target, renderer);
         }
@@ -2163,7 +2156,7 @@ render_shadow_map (GthreeRenderer *renderer,
 
       if (shadow_map == NULL)
         {
-          shadow_map = gthree_render_target_new (shadow_map_width, shadow_map_height);
+          shadow_map = gthree_render_target_new (shadow_map_width, shadow_map_height, 0);
 
           GthreeTexture *texture = gthree_render_target_get_texture (shadow_map);
           gthree_texture_set_mag_filter (texture, GTHREE_FILTER_NEAREST);
@@ -3309,7 +3302,7 @@ gthree_renderer_render (GthreeRenderer *renderer,
       // Generate mipmap if we're using any kind of mipmap filtering
       gthree_render_target_update_mipmap (priv->current_render_target, renderer);
       // resolve multisample renderbuffers to a single-sample texture if necessary
-      update_multisample_render_target (renderer, priv->current_render_target);
+      gthree_render_target_update_multisample (priv->current_render_target, renderer);
     }
 
   pop_debug_group ();

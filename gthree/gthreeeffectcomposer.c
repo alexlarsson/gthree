@@ -233,7 +233,8 @@ gthree_effect_composer_reset (GthreeEffectComposer *composer,
       priv->pixel_ratio = gthree_renderer_get_pixel_ratio (renderer);
 
       priv->render_target1 = gthree_render_target_new (priv->width * priv->pixel_ratio,
-                                                       priv->height * priv->pixel_ratio);
+                                                       priv->height * priv->pixel_ratio,
+                                                       0);
       gthree_render_target_set_stencil_buffer (priv->render_target1, FALSE);
     }
   else
