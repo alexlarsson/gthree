@@ -298,7 +298,6 @@ if get_option('gtk3')
                                            sources: libgthree_gtk3_gir[0],
                                            packages: [ 'gtk+-3.0', libgthree_vapi ],
                                            install: true,
-                                           metadata_dirs: [ meson.current_source_dir() ],
                                            vapi_dirs: meson.current_build_dir(),
                                            metadata_dirs: metadatadir,)
     endif
@@ -357,7 +356,6 @@ if get_option('gtk4')
                                             sources: libgthree_gtk4_gir[0],
                                             packages: [ 'gtk4', libgthree_vapi ],
                                             install: true,
-                                            metadata_dirs: [ meson.current_source_dir() ],
                                             vapi_dirs: meson.current_build_dir(),
                                             metadata_dirs: metadatadir,)
      endif
