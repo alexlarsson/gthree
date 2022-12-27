@@ -639,10 +639,10 @@ gthree_bloom_pass_new (float strength, float sigma, int resolution)
 
   // render targets
 
-  pass->render_target_x = gthree_render_target_new (resolution, resolution);
+  pass->render_target_x = gthree_render_target_new (resolution, resolution, 0);
   gthree_texture_set_name (gthree_render_target_get_texture (pass->render_target_x), "BloomPass.x");
 
-  pass->render_target_y = gthree_render_target_new (resolution, resolution);
+  pass->render_target_y = gthree_render_target_new (resolution, resolution, 0);
   gthree_texture_set_name (gthree_render_target_get_texture (pass->render_target_y), "BloomPass.y");
 
   // copy material

@@ -40,7 +40,8 @@ GType gthree_render_target_get_type (void) G_GNUC_CONST;
 
 GTHREE_API
 GthreeRenderTarget *gthree_render_target_new (int width,
-                                              int height);
+                                              int height,
+                                              guint samples);
 GTHREE_API
 GthreeRenderTarget *gthree_render_target_clone (GthreeRenderTarget *target);
 
