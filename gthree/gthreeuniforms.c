@@ -928,6 +928,8 @@ static GthreeUniformsDefinition specularmap_lib[] = {
 static GthreeUniforms *envmap;
 static GthreeUniformsDefinition envmap_lib[] = {
   {"envMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
+  {"envMapIntensity", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
+  {"envMapRotation", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
   {"flipEnvMap", GTHREE_UNIFORM_TYPE_FLOAT, &fm1 },
   {"reflectivity", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
   {"refractionRatio", GTHREE_UNIFORM_TYPE_FLOAT, &fp98 },
