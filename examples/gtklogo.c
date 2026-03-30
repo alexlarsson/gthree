@@ -190,6 +190,7 @@ init_scene (void)
   gthree_scene_set_background_color (scene, grey ());
 
   ambient_light = gthree_ambient_light_new (white ());
+  gthree_light_set_intensity (GTHREE_LIGHT (ambient_light), G_PI);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));
 
   logo = gtk_logo ();

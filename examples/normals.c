@@ -125,6 +125,7 @@ init_scene (void)
   gthree_texture_set_wrap_t (texture, GTHREE_WRAPPING_REPEAT);
 
   ambient_light = gthree_ambient_light_new (white ());
+  gthree_light_set_intensity (GTHREE_LIGHT (ambient_light), G_PI);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));
 
   for (i = 0; TRUE; i++)

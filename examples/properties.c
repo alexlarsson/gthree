@@ -106,19 +106,20 @@ init_scene (void)
   scene = gthree_scene_new ();
 
   ambient_light = gthree_ambient_light_new (red ());
+  gthree_light_set_intensity (GTHREE_LIGHT (ambient_light), G_PI);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));
 
   geometry_light = gthree_geometry_new_sphere (4, 8, 8);
   material_light = gthree_mesh_basic_material_new ();
   gthree_mesh_basic_material_set_color (material_light, green ());
 
-  point_light = gthree_point_light_new (green (), 1, 0);
+  point_light = gthree_point_light_new (green (), 1 * G_PI, 0);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (point_light));
 
   particle_light = gthree_mesh_new (geometry_light, GTHREE_MATERIAL (material_light));
   gthree_object_add_child (GTHREE_OBJECT (point_light), GTHREE_OBJECT (particle_light));
 
-  directional_light = gthree_directional_light_new (blue (), 1.2);
+  directional_light = gthree_directional_light_new (blue (), 1.2 * G_PI);
   gthree_object_set_position_xyz (GTHREE_OBJECT (directional_light),
                                   1, 1, -1);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (directional_light));

@@ -28,7 +28,7 @@ gthree_ambient_light_real_setup (GthreeLight *light,
   float intensity = gthree_light_get_intensity (light);
 
   graphene_vec3_scale (gthree_light_get_color (light),
-                       intensity * G_PI, &color);
+                       intensity, &color);
   gthree_color_srgb_to_linear (&color, &color);
 
   graphene_vec3_add (&setup->ambient, &color, &setup->ambient);

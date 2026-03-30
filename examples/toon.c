@@ -42,11 +42,11 @@ init_scene (void)
   mesh = gthree_mesh_new (geometry, GTHREE_MATERIAL (material));
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (mesh));
 
-  light = gthree_directional_light_new (graphene_vec3_init (&color, 0.8, 0.8, 1.0), 1);
+  light = gthree_directional_light_new (graphene_vec3_init (&color, 0.8, 0.8, 1.0), 1 * G_PI);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (light));
 
   ambient = gthree_ambient_light_new (white ());
-  gthree_light_set_intensity (GTHREE_LIGHT (ambient), 0.3);
+  gthree_light_set_intensity (GTHREE_LIGHT (ambient), 0.3 * G_PI);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient));
 }
 

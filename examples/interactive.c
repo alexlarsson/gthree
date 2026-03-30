@@ -108,12 +108,13 @@ init_scene (void)
       gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (mesh));
     }
 
-  directional_light = gthree_directional_light_new (white (), 1.0);
+  directional_light = gthree_directional_light_new (white (), 1.0 * G_PI);
   graphene_vec3_init (&pos, 1, 1, 1);
   gthree_object_set_position (GTHREE_OBJECT (directional_light), &pos);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (directional_light));
 
   ambient_light = gthree_ambient_light_new (dark_grey ());
+  gthree_light_set_intensity (GTHREE_LIGHT (ambient_light), G_PI);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));
 
   return scene;
