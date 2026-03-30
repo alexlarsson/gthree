@@ -160,9 +160,17 @@ string_replace_i (GString *string,
 static void
 replace_light_nums (GString *str, GthreeProgramParameters *parameters)
 {
+  /* Order matters: longer patterns must be replaced before shorter
+     ones that are prefixes (e.g. NUM_SPOT_LIGHT_COORDS before NUM_SPOT_LIGHTS) */
+  string_replace_i (str, "NUM_DIR_LIGHT_SHADOWS", 0);
   string_replace_i (str, "NUM_DIR_LIGHTS", parameters->num_dir_lights);
+  string_replace_i (str, "NUM_SPOT_LIGHT_SHADOWS_WITH_MAPS", 0);
+  string_replace_i (str, "NUM_SPOT_LIGHT_SHADOWS", 0);
+  string_replace_i (str, "NUM_SPOT_LIGHT_MAPS", 0);
+  string_replace_i (str, "NUM_SPOT_LIGHT_COORDS", 0);
   string_replace_i (str, "NUM_SPOT_LIGHTS", parameters->num_spot_lights);
   string_replace_i (str, "NUM_RECT_AREA_LIGHTS", parameters->num_rect_area_lights);
+  string_replace_i (str, "NUM_POINT_LIGHT_SHADOWS", 0);
   string_replace_i (str, "NUM_POINT_LIGHTS", parameters->num_point_lights);
   string_replace_i (str, "NUM_HEMI_LIGHTS", parameters->num_hemi_lights);
 }
@@ -289,7 +297,7 @@ get_texel_encoding_function (GString *shader,
                              const char *function_name)
 {
   g_string_append_printf (shader,
-                          "vec4 %s( vec4 value ) { return linearToSrgb( value ); }\n",
+                          "vec4 %s( vec4 value ) { return sRGBTransferOETF( value ); }\n",
                           function_name);
 }
 
@@ -481,6 +489,56 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
         g_string_append (vertex, "#define USE_ALPHAMAP\n");
       if (parameters->alpha_hash)
         g_string_append (vertex, "#define USE_ALPHAHASH\n");
+
+      /* UV channel mapping — all maps currently use channel 0 (uv) */
+      if (parameters->map)
+        g_string_append (vertex, "#define MAP_UV uv\n");
+      if (parameters->alpha_map)
+        g_string_append (vertex, "#define ALPHAMAP_UV uv\n");
+      if (parameters->light_map)
+        g_string_append (vertex, "#define LIGHTMAP_UV uv\n");
+      if (parameters->ao_map)
+        g_string_append (vertex, "#define AOMAP_UV uv\n");
+      if (parameters->emissive_map)
+        g_string_append (vertex, "#define EMISSIVEMAP_UV uv\n");
+      if (parameters->bump_map)
+        g_string_append (vertex, "#define BUMPMAP_UV uv\n");
+      if (parameters->normal_map)
+        g_string_append (vertex, "#define NORMALMAP_UV uv\n");
+      if (parameters->displacement_map)
+        g_string_append (vertex, "#define DISPLACEMENTMAP_UV uv\n");
+      if (parameters->metalness_map)
+        g_string_append (vertex, "#define METALNESSMAP_UV uv\n");
+      if (parameters->roughness_map)
+        g_string_append (vertex, "#define ROUGHNESSMAP_UV uv\n");
+      if (parameters->specular_map)
+        g_string_append (vertex, "#define SPECULARMAP_UV uv\n");
+      if (parameters->specular_color_map)
+        g_string_append (vertex, "#define SPECULAR_COLORMAP_UV uv\n");
+      if (parameters->specular_intensity_map)
+        g_string_append (vertex, "#define SPECULAR_INTENSITYMAP_UV uv\n");
+      if (parameters->anisotropy_map)
+        g_string_append (vertex, "#define ANISOTROPYMAP_UV uv\n");
+      if (parameters->clearcoat_map)
+        g_string_append (vertex, "#define CLEARCOATMAP_UV uv\n");
+      if (parameters->clearcoat_normal_map)
+        g_string_append (vertex, "#define CLEARCOAT_NORMALMAP_UV uv\n");
+      if (parameters->clearcoat_roughness_map)
+        g_string_append (vertex, "#define CLEARCOAT_ROUGHNESSMAP_UV uv\n");
+      if (parameters->iridescence_map)
+        g_string_append (vertex, "#define IRIDESCENCEMAP_UV uv\n");
+      if (parameters->iridescence_thickness_map)
+        g_string_append (vertex, "#define IRIDESCENCE_THICKNESSMAP_UV uv\n");
+      if (parameters->sheen_color_map)
+        g_string_append (vertex, "#define SHEEN_COLORMAP_UV uv\n");
+      if (parameters->sheen_roughness_map)
+        g_string_append (vertex, "#define SHEEN_ROUGHNESSMAP_UV uv\n");
+      if (parameters->transmission_map)
+        g_string_append (vertex, "#define TRANSMISSIONMAP_UV uv\n");
+      if (parameters->thickness_map)
+        g_string_append (vertex, "#define THICKNESSMAP_UV uv\n");
+      if (parameters->gradient_map)
+        g_string_append (vertex, "#define GRADIENTMAP_UV uv\n");
 
       if (parameters->anisotropy)
         g_string_append (vertex, "#define USE_ANISOTROPY\n");
