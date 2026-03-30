@@ -1125,6 +1125,9 @@ static GthreeUniformsDefinition sprite_lib[] = {
   {"center", GTHREE_UNIFORM_TYPE_VECTOR2, &halfv2 },
   {"rotation", GTHREE_UNIFORM_TYPE_FLOAT, &f0 },
   {"map", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
+  {"mapTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
+  {"alphaMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
+  {"alphaMapTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
   {"uvTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
 };
 
