@@ -91,6 +91,13 @@ const graphene_vec3_t *orange (void)
   return graphene_vec3_init (&v, 1, 0.67, 0);
 }
 
+static const char *
+examples_get_data_dir (void)
+{
+  const char *dir = g_getenv ("GTHREE_EXAMPLES_DIR");
+  return dir ? dir : DATADIR "/gthree-examples";
+}
+
 GdkPixbuf *
 examples_load_pixbuf (const char *file)
 {
@@ -103,7 +110,7 @@ examples_load_pixbuf (const char *file)
   if (pixbuf == NULL)
     {
       g_free (full);
-      full = g_build_filename (DATADIR "/gthree-examples/textures/", file, NULL);
+      full = g_build_filename (examples_get_data_dir (), "textures", file, NULL);
       pixbuf = gdk_pixbuf_new_from_file (full, NULL);
     }
 
@@ -153,7 +160,7 @@ examples_load_geometry (const char *name)
       char *data;
       gsize size;
       g_free (file);
-      file = g_build_filename (DATADIR "/gthree-examples/models/", name, NULL);
+      file = g_build_filename (examples_get_data_dir (), "models", name, NULL);
       if (g_file_get_contents (file, &data, &size, &error))
         bytes = g_bytes_new_take (data, size);
     }
@@ -185,7 +192,7 @@ examples_load_gltl (const char *name)
       char *data;
       gsize size;
       g_free (file);
-      file = g_build_filename (DATADIR "/gthree-examples/models/", name, NULL);
+      file = g_build_filename (examples_get_data_dir (), "models", name, NULL);
       if (g_file_get_contents (file, &data, &size, &error))
         bytes = g_bytes_new_take (data, size);
     }
