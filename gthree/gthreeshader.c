@@ -485,9 +485,17 @@ static float f30 = 30;
 static float fm1 = -1.0;
 static float f1000 = 1000;
 static float fp5 = 0.5;
+static float f1p3 = 1.3;
+static float f1p5 = 1.5;
+static float f100 = 100;
+static float f400 = 400;
+static float finf = INFINITY;
 static float dark_grey[3] = { 0.06666666666666667, 0.06666666666666667, 0.06666666666666667 };
 static float black[3] = { 0, 0, 0 };
 static float zerov3[3] = { 0, 0, 0 };
+static float zerov2[2] = { 0, 0 };
+static float white[3] = { 1, 1, 1 };
+static float onev2[2] = { 1, 1 };
 static float one_matrix3[9] = { 1, 0, 0,
                                 0, 1, 0,
                                 0, 0, 1};
@@ -574,8 +582,54 @@ static GthreeUniformsDefinition shadow_uniforms[] = {
 
 static const char *physical_uniform_libs[] = { "common", "envmap", "aomap", "lightmap", "emissivemap", "bumpmap", "normalmap", "displacementmap", "roughnessmap", "metalnessmap", "fog", "lights", NULL };
 static GthreeUniformsDefinition physical_uniforms[] = {
-  {"clearCoat", GTHREE_UNIFORM_TYPE_FLOAT, &f0 },
-  {"clearCoatRoughness", GTHREE_UNIFORM_TYPE_FLOAT, &f0 },
+  {"ior", GTHREE_UNIFORM_TYPE_FLOAT, &f1p5 },
+  {"specularIntensity", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
+  {"specularColor", GTHREE_UNIFORM_TYPE_VECTOR3, &white },
+  {"specularColorMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
+  {"specularColorMapTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
+  {"specularIntensityMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
+  {"specularIntensityMapTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
+  {"clearcoat", GTHREE_UNIFORM_TYPE_FLOAT, &f0 },
+  {"clearcoatRoughness", GTHREE_UNIFORM_TYPE_FLOAT, &f0 },
+  {"clearcoatMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
+  {"clearcoatMapTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
+  {"clearcoatRoughnessMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
+  {"clearcoatRoughnessMapTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
+  {"clearcoatNormalMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
+  {"clearcoatNormalMapTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
+  {"clearcoatNormalScale", GTHREE_UNIFORM_TYPE_VECTOR2, &onev2 },
+  {"iridescence", GTHREE_UNIFORM_TYPE_FLOAT, &f0 },
+  {"iridescenceIOR", GTHREE_UNIFORM_TYPE_FLOAT, &f1p3 },
+  {"iridescenceThicknessMinimum", GTHREE_UNIFORM_TYPE_FLOAT, &f100 },
+  {"iridescenceThicknessMaximum", GTHREE_UNIFORM_TYPE_FLOAT, &f400 },
+  {"iridescenceMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
+  {"iridescenceMapTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
+  {"iridescenceThicknessMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
+  {"iridescenceThicknessMapTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
+  {"sheenColor", GTHREE_UNIFORM_TYPE_VECTOR3, &black },
+  {"sheenColorMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
+  {"sheenColorMapTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
+  {"sheenRoughness", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
+  {"sheenRoughnessMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
+  {"sheenRoughnessMapTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
+  {"transmission", GTHREE_UNIFORM_TYPE_FLOAT, &f0 },
+  {"transmissionMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
+  {"transmissionMapTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
+  {"transmissionSamplerMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
+  {"transmissionSamplerSize", GTHREE_UNIFORM_TYPE_VECTOR2, &zerov2 },
+  {"thickness", GTHREE_UNIFORM_TYPE_FLOAT, &f0 },
+  {"thicknessMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
+  {"thicknessMapTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
+  {"attenuationDistance", GTHREE_UNIFORM_TYPE_FLOAT, &finf },
+  {"attenuationColor", GTHREE_UNIFORM_TYPE_VECTOR3, &white },
+  {"anisotropyVector", GTHREE_UNIFORM_TYPE_VECTOR2, &zerov2 },
+  {"anisotropyMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
+  {"anisotropyMapTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
+  {"dispersion", GTHREE_UNIFORM_TYPE_FLOAT, &f0 },
+};
+static const char *physical_defines[] = {
+  "PHYSICAL", "",
+  NULL
 };
 
 static const char *copy_uniform_libs[] = { NULL };
@@ -710,7 +764,7 @@ gthree_shader_init_libs ()
 
   physical = gthree_shader_new_from_definitions (physical_uniform_libs,
                                                  physical_uniforms, G_N_ELEMENTS (physical_uniforms),
-                                                 NULL,
+                                                 physical_defines,
                                                  "meshphysical_vert", "meshphysical_frag");
   gthree_shader_set_name (physical, "physical");
 
