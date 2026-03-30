@@ -337,7 +337,6 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
   GthreeProgramPrivate *priv;
   GPtrArray *defines;
   const char *vertex_shader, *fragment_shader;
-  char *index0AttributeName;
   const char *shadow_map_type_define;
   const char *env_map_type_define;
   const char *env_map_mode_define;
@@ -364,16 +363,6 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
   defines = gthree_shader_get_defines (shader);
   vertex_shader = gthree_shader_get_vertex_shader_text (shader);
   fragment_shader = gthree_shader_get_fragment_shader_text (shader);
-
-  index0AttributeName = NULL;
-  //index0AttributeName = material.index0AttributeName;
-
-#if TODO
-  if ( index0AttributeName == NULL && parameters.morphTargets === true ) {
-    // programs with morphTargets displace position out of attribute 0
-    index0AttributeName = "position";
-  }
-#endif
 
   shadow_map_type_define = "SHADOWMAP_TYPE_BASIC";
   if (parameters->shadow_map_type == GTHREE_SHADOW_MAP_TYPE_PCF)
@@ -409,24 +398,6 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
           env_map_mode_define = "ENVMAP_MODE_REFRACTION";
         }
     }
-
-#if TODO
-  if ( parameters.envMap ) {
-		switch ( material.combine ) {
-			case MultiplyOperation:
-				envMapBlendingDefine = 'ENVMAP_BLENDING_MULTIPLY';
-				break;
-			case MixOperation:
-				envMapBlendingDefine = 'ENVMAP_BLENDING_MIX';
-				break;
-			case AddOperation:
-				envMapBlendingDefine = 'ENVMAP_BLENDING_ADD';
-				break;
-		}
-	}
-#endif
-
-  // console.log( "building new program " );
 
   gl_program = glCreateProgram ();
 
@@ -943,15 +914,6 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
       glObjectLabel (GL_PROGRAM, gl_program, strlen (shader_name), shader_name);
     }
 #endif
-
-  if (index0AttributeName != NULL) {
-
-    // Force a particular attribute to index 0.
-    // because potentially expensive emulation is done by browser if attribute 0 is disabled.
-    // And, color, for example is often automatically bound to index 0 so disabling it
-
-    glBindAttribLocation (gl_program, 0, index0AttributeName);
-  }
 
   glLinkProgram (gl_program);
 

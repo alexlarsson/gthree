@@ -66,7 +66,6 @@ typedef struct {
   graphene_vec3_t clear_color;
   float clear_alpha;
   gboolean sort_objects;
-  float gamma_factor;
   GthreeToneMapping tone_mapping;
   float tone_mapping_exposure;
   gboolean physically_correct_lights;
@@ -313,7 +312,6 @@ gthree_renderer_init (GthreeRenderer *renderer)
   priv->width = 1;
   priv->height = 1;
   priv->pixel_ratio = 1;
-  priv->gamma_factor = 2.2; // Differs from three.js default 2.0
   priv->tone_mapping = GTHREE_TONE_MAPPING_NONE;
   priv->tone_mapping_exposure = 1.0;
   priv->physically_correct_lights = FALSE;
@@ -829,22 +827,6 @@ gthree_renderer_get_clear_alpha  (GthreeRenderer     *renderer)
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
 
   return priv->clear_alpha;
-}
-
-void
-gthree_renderer_set_gamma_factor (GthreeRenderer *renderer,
-                                   float           factor)
-{
-  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
-
-  priv->gamma_factor = factor;
-}
-
-float
-gthree_renderer_get_gamma_factor (GthreeRenderer *renderer)
-{
-  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
-  return priv->gamma_factor;
 }
 
 void
@@ -1559,21 +1541,6 @@ init_material (GthreeRenderer *renderer,
   parameters.fog = fog != NULL;
   parameters.use_fog = gthree_material_get_fog (material);
   parameters.fog_exp = fog != NULL && gthree_fog_get_style (fog) == GTHREE_FOG_STYLE_EXP2;
-
-#ifdef TODO
-  parameters =
-    {
-    lightMap: !! material.lightMap,
-    bumpMap: !! material.bumpMap,
-    normalMap: !! material.normalMap,
-    specularMap: !! material.specularMap,
-    alphaMap: !! material.alphaMap,
-
-    logarithmicDepthBuffer: _logarithmicDepthBuffer,
-
-    useVertexTexture: _supportsBoneTextures && object && object.skeleton && object.skeleton.useVertexTexture,
-    };
-#endif
 
   program = gthree_program_cache_get (priv->program_cache, shader, &parameters, renderer);
   /* This is owned by the cache, so it will live as long as the renderer (as it owns the cache and it never frees) */

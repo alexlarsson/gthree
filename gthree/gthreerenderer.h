@@ -82,11 +82,6 @@ void                gthree_renderer_set_clear_alpha           (GthreeRenderer   
 GTHREE_API
 float               gthree_renderer_get_clear_alpha           (GthreeRenderer     *renderer);
 GTHREE_API
-void                gthree_renderer_set_gamma_factor          (GthreeRenderer     *renderer,
-                                                               float               factor);
-GTHREE_API
-float               gthree_renderer_get_gamma_factor          (GthreeRenderer     *renderer);
-GTHREE_API
 void                gthree_renderer_set_tone_mapping          (GthreeRenderer     *renderer,
                                                                GthreeToneMapping   tone_mapping);
 GTHREE_API

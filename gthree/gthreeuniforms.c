@@ -1000,11 +1000,6 @@ static GthreeUniformsDefinition roughnessmap_lib[] = {
   {"roughnessMapTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
 };
 
-static GthreeUniforms *glossinessmap;
-static GthreeUniformsDefinition glossinessmap_lib[] = {
-  {"glossinessMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
-};
-
 static GthreeUniforms *metalnessmap;
 static GthreeUniformsDefinition metalnessmap_lib[] = {
   {"metalnessMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
@@ -1169,7 +1164,6 @@ gthree_uniforms_init_libs ()
   normalmap = gthree_uniforms_new_from_definitions (normalmap_lib, G_N_ELEMENTS (normalmap_lib));
   displacementmap = gthree_uniforms_new_from_definitions (displacementmap_lib, G_N_ELEMENTS (displacementmap_lib));
   roughnessmap = gthree_uniforms_new_from_definitions (roughnessmap_lib, G_N_ELEMENTS (roughnessmap_lib));
-  glossinessmap = gthree_uniforms_new_from_definitions (glossinessmap_lib, G_N_ELEMENTS (glossinessmap_lib));
   metalnessmap = gthree_uniforms_new_from_definitions (metalnessmap_lib, G_N_ELEMENTS (metalnessmap_lib));
   gradientmap = gthree_uniforms_new_from_definitions (gradientmap_lib, G_N_ELEMENTS (gradientmap_lib));
   fog = gthree_uniforms_new_from_definitions (fog_lib, G_N_ELEMENTS (fog_lib));
@@ -1214,9 +1208,6 @@ gthree_get_uniforms_from_library (const char *name)
 
   if (strcmp (name, "roughnessmap") == 0)
     return roughnessmap;
-
-  if (strcmp (name, "glossinessmap") == 0)
-    return glossinessmap;
 
   if (strcmp (name, "metalnessmap") == 0)
     return metalnessmap;
