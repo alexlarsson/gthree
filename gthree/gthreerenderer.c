@@ -25,8 +25,6 @@
 #include "gthreepointlight.h"
 #include "gthreefog.h"
 
-#define MAX_MORPH_TARGETS 8
-#define MAX_MORPH_NORMALS 4
 
 static graphene_vec3_t cube_directions[6];
 static graphene_vec3_t cube_ups[6];
@@ -66,7 +64,8 @@ typedef struct {
   graphene_vec3_t clear_color;
   float clear_alpha;
   gboolean sort_objects;
-  float gamma_factor;
+  GthreeToneMapping tone_mapping;
+  float tone_mapping_exposure;
   gboolean physically_correct_lights;
   gboolean shadowmap_enabled;
   gboolean shadowmap_auto_update;
@@ -131,8 +130,6 @@ typedef struct {
   guint8 new_attributes[8];
   guint8 enabled_attributes[8];
 
-  float morph_influences[8];
-
   int max_textures;
   int max_vertex_textures;
   int max_texture_size;
@@ -171,6 +168,7 @@ static GQuark q_normalMatrix;
 static GQuark q_projectionMatrix;
 static GQuark q_cameraPosition;
 static GQuark q_clippingPlanes;
+static GQuark q_toneMappingExposure;
 static GQuark q_ambientLightColor;
 static GQuark q_directionalLights;
 static GQuark q_hemisphereLights;
@@ -310,7 +308,8 @@ gthree_renderer_init (GthreeRenderer *renderer)
   priv->width = 1;
   priv->height = 1;
   priv->pixel_ratio = 1;
-  priv->gamma_factor = 2.2; // Differs from three.js default 2.0
+  priv->tone_mapping = GTHREE_TONE_MAPPING_NONE;
+  priv->tone_mapping_exposure = 1.0;
   priv->physically_correct_lights = FALSE;
   priv->shadowmap_type = GTHREE_SHADOW_MAP_TYPE_PCF;
   priv->shadowmap_enabled = FALSE;
@@ -326,12 +325,15 @@ gthree_renderer_init (GthreeRenderer *renderer)
   priv->light_setup.directional = g_ptr_array_new ();
   priv->light_setup.directional_shadow_map = g_ptr_array_new ();
   priv->light_setup.directional_shadow_map_matrix = g_array_new (FALSE, FALSE, sizeof (graphene_matrix_t));
+  priv->light_setup.directional_light_shadows = g_ptr_array_new_with_free_func (g_object_unref);
   priv->light_setup.point = g_ptr_array_new ();
   priv->light_setup.point_shadow_map = g_ptr_array_new ();
   priv->light_setup.point_shadow_map_matrix = g_array_new (FALSE, FALSE, sizeof (graphene_matrix_t));
+  priv->light_setup.point_light_shadows = g_ptr_array_new_with_free_func (g_object_unref);
   priv->light_setup.spot = g_ptr_array_new ();
   priv->light_setup.spot_shadow_map = g_ptr_array_new ();
   priv->light_setup.spot_shadow_map_matrix = g_array_new (FALSE, FALSE, sizeof (graphene_matrix_t));
+  priv->light_setup.spot_light_shadows = g_ptr_array_new_with_free_func (g_object_unref);
   priv->light_setup.shadow = g_ptr_array_new ();
   priv->light_setup.hemi = g_ptr_array_new ();
 
@@ -413,12 +415,15 @@ gthree_renderer_finalize (GObject *obj)
   g_ptr_array_free (priv->light_setup.directional, TRUE);
   g_ptr_array_free (priv->light_setup.directional_shadow_map, TRUE);
   g_array_free (priv->light_setup.directional_shadow_map_matrix, TRUE);
+  g_ptr_array_free (priv->light_setup.directional_light_shadows, TRUE);
   g_ptr_array_free (priv->light_setup.point, TRUE);
   g_ptr_array_free (priv->light_setup.point_shadow_map, TRUE);
   g_array_free (priv->light_setup.point_shadow_map_matrix, TRUE);
+  g_ptr_array_free (priv->light_setup.point_light_shadows, TRUE);
   g_ptr_array_free (priv->light_setup.spot, TRUE);
   g_ptr_array_free (priv->light_setup.spot_shadow_map, TRUE);
   g_array_free (priv->light_setup.spot_shadow_map_matrix, TRUE);
+  g_ptr_array_free (priv->light_setup.spot_light_shadows, TRUE);
   g_ptr_array_free (priv->light_setup.shadow, TRUE);
   g_ptr_array_free (priv->light_setup.hemi, TRUE);
 
@@ -457,6 +462,7 @@ gthree_renderer_class_init (GthreeRendererClass *klass)
   INIT_QUARK(projectionMatrix);
   INIT_QUARK(cameraPosition);
   INIT_QUARK(clippingPlanes);
+  INIT_QUARK(toneMappingExposure);
   INIT_QUARK(ambientLightColor);
   INIT_QUARK(directionalLights);
   INIT_QUARK(hemisphereLights);
@@ -820,19 +826,33 @@ gthree_renderer_get_clear_alpha  (GthreeRenderer     *renderer)
 }
 
 void
-gthree_renderer_set_gamma_factor (GthreeRenderer *renderer,
-                                   float           factor)
+gthree_renderer_set_tone_mapping (GthreeRenderer  *renderer,
+                                  GthreeToneMapping tone_mapping)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  priv->tone_mapping = tone_mapping;
+}
 
-  priv->gamma_factor = factor;
+GthreeToneMapping
+gthree_renderer_get_tone_mapping (GthreeRenderer *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  return priv->tone_mapping;
+}
+
+void
+gthree_renderer_set_tone_mapping_exposure (GthreeRenderer *renderer,
+                                           float           exposure)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  priv->tone_mapping_exposure = exposure;
 }
 
 float
-gthree_renderer_get_gamma_factor (GthreeRenderer *renderer)
+gthree_renderer_get_tone_mapping_exposure (GthreeRenderer *renderer)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
-  return priv->gamma_factor;
+  return priv->tone_mapping_exposure;
 }
 
 gboolean
@@ -1446,12 +1466,16 @@ material_apply_light_setup (GthreeUniforms *m_uniforms,
 
   gthree_uniforms_set_texture_array (m_uniforms, "directionalShadowMap", light_setup->directional_shadow_map);
   gthree_uniforms_set_matrix4_array (m_uniforms, "directionalShadowMatrix", light_setup->directional_shadow_map_matrix);
+  gthree_uniforms_set_uarray (m_uniforms, "directionalLightShadows", light_setup->directional_light_shadows, update_only);
 
   gthree_uniforms_set_texture_array (m_uniforms, "spotShadowMap", light_setup->spot_shadow_map);
   gthree_uniforms_set_matrix4_array (m_uniforms, "spotShadowMatrix", light_setup->spot_shadow_map_matrix);
+  gthree_uniforms_set_matrix4_array (m_uniforms, "spotLightMatrix", light_setup->spot_shadow_map_matrix);
+  gthree_uniforms_set_uarray (m_uniforms, "spotLightShadows", light_setup->spot_light_shadows, update_only);
 
   gthree_uniforms_set_texture_array (m_uniforms, "pointShadowMap", light_setup->point_shadow_map);
   gthree_uniforms_set_matrix4_array (m_uniforms, "pointShadowMatrix", light_setup->point_shadow_map_matrix);
+  gthree_uniforms_set_uarray (m_uniforms, "pointLightShadows", light_setup->point_light_shadows, update_only);
 }
 
 static GthreeProgram *
@@ -1476,8 +1500,7 @@ init_material (GthreeRenderer *renderer,
 
   parameters.precision = GTHREE_PRECISION_HIGH;
   parameters.supports_vertex_textures = priv->supports_vertex_textures;
-  // TODO: Get encoding from currentRenderTarget if set
-  parameters.output_encoding = GTHREE_ENCODING_FORMAT_GAMMA;
+  parameters.output_color_space = 1; /* sRGB */
   parameters.physically_correct_lights = priv->physically_correct_lights;
 
   gthree_material_set_params (material, &parameters);
@@ -1485,6 +1508,9 @@ init_material (GthreeRenderer *renderer,
   parameters.num_point_lights = priv->light_setup.point->len;
   parameters.num_spot_lights = priv->light_setup.spot->len;
   parameters.num_hemi_lights = priv->light_setup.hemi->len;
+  parameters.num_dir_light_shadows = priv->light_setup.directional_light_shadows->len;
+  parameters.num_point_light_shadows = priv->light_setup.point_light_shadows->len;
+  parameters.num_spot_light_shadows = priv->light_setup.spot_light_shadows->len;
 
   max_bones = 0;
   if (GTHREE_IS_SKINNED_MESH (object))
@@ -1501,30 +1527,40 @@ init_material (GthreeRenderer *renderer,
   parameters.morph_targets = GTHREE_IS_MESH_MATERIAL (material) && gthree_mesh_material_get_morph_targets (GTHREE_MESH_MATERIAL (material));
   parameters.morph_normals = GTHREE_IS_MESH_MATERIAL (material) && gthree_mesh_material_get_morph_normals (GTHREE_MESH_MATERIAL (material));
 
+  if (parameters.morph_targets)
+    {
+      GthreeGeometry *geom = NULL;
+      if (GTHREE_IS_MESH (object))
+        geom = gthree_mesh_get_geometry (GTHREE_MESH (object));
+
+      if (geom)
+        {
+          GPtrArray *morph_pos = gthree_geometry_get_morph_attributes (geom, "position");
+          if (morph_pos && morph_pos->len > 0)
+            {
+              GPtrArray *morph_norm = gthree_geometry_get_morph_attributes (geom, "normal");
+              GPtrArray *morph_col = gthree_geometry_get_morph_attributes (geom, "color");
+              int s = 1;
+              if (morph_norm && morph_norm->len > 0)
+                s = 2;
+              if (morph_col && morph_col->len > 0)
+                s = 3;
+              parameters.morph_targets_count = morph_pos->len;
+              parameters.morph_texture_stride = s;
+            }
+        }
+    }
+
   parameters.num_clipping_planes = priv->num_clipping_planes;
   parameters.num_clip_intersection = priv->num_clipping_intersections;
 
   parameters.shadow_map_enabled = priv->shadowmap_enabled && gthree_object_get_receive_shadow (object) && priv->shadows != NULL;
   parameters.shadow_map_type = priv->shadowmap_type;
+  parameters.tone_mapping = priv->tone_mapping;
 
   parameters.fog = fog != NULL;
   parameters.use_fog = gthree_material_get_fog (material);
   parameters.fog_exp = fog != NULL && gthree_fog_get_style (fog) == GTHREE_FOG_STYLE_EXP2;
-
-#ifdef TODO
-  parameters =
-    {
-    lightMap: !! material.lightMap,
-    bumpMap: !! material.bumpMap,
-    normalMap: !! material.normalMap,
-    specularMap: !! material.specularMap,
-    alphaMap: !! material.alphaMap,
-
-    logarithmicDepthBuffer: _logarithmicDepthBuffer,
-
-    useVertexTexture: _supportsBoneTextures && object && object.skeleton && object.skeleton.useVertexTexture,
-    };
-#endif
 
   program = gthree_program_cache_get (priv->program_cache, shader, &parameters, renderer);
   /* This is owned by the cache, so it will live as long as the renderer (as it owns the cache and it never frees) */
@@ -1533,41 +1569,6 @@ init_material (GthreeRenderer *renderer,
 
   // TODO: thee.js uses the lightstate current_hash and other stuff to avoid some stuff here?
   // I think it caches the material uniforms we calculate here and avoid reloading if switching to a new program?
-
-  if (GTHREE_IS_MESH_MATERIAL (material) &&
-      gthree_mesh_material_get_morph_targets (GTHREE_MESH_MATERIAL (material)))
-    {
-      GHashTable *program_attributes = gthree_program_get_attribute_locations (program);
-      int num_supported = 0;
-
-      for (int i = 0; i < MAX_MORPH_TARGETS; i++ )
-        {
-          g_autofree char *attr = g_strdup_printf ("morphTarget%d", i);
-
-          if (g_hash_table_lookup (program_attributes, attr) != NULL)
-            num_supported++;
-        }
-      gthree_mesh_material_set_num_supported_morph_targets (GTHREE_MESH_MATERIAL (material),
-                                                            num_supported);
-    }
-
-  if (GTHREE_IS_MESH_MATERIAL (material) &&
-      gthree_mesh_material_get_morph_normals (GTHREE_MESH_MATERIAL (material)))
-    {
-      GHashTable *program_attributes = gthree_program_get_attribute_locations (program);
-      int num_supported = 0;
-
-      for (int i = 0; i < MAX_MORPH_NORMALS; i++ )
-        {
-          g_autofree char *attr = g_strdup_printf ("morphNormal%d", i);
-
-          if (g_hash_table_lookup (program_attributes, attr) != NULL)
-            num_supported++;
-        }
-
-      gthree_mesh_material_set_num_supported_morph_normals (GTHREE_MESH_MATERIAL (material),
-                                                            num_supported);
-    }
 
   m_uniforms = gthree_shader_get_uniforms (shader);
 
@@ -1636,19 +1637,29 @@ setup_lights (GthreeRenderer *renderer, GthreeCamera *camera)
   g_ptr_array_set_size (setup->directional, 0);
   g_ptr_array_set_size (setup->directional_shadow_map, 0);
   g_array_set_size (setup->directional_shadow_map_matrix, 0);
+  g_ptr_array_set_size (setup->directional_light_shadows, 0);
   g_ptr_array_set_size (setup->point, 0);
   g_ptr_array_set_size (setup->point_shadow_map, 0);
   g_array_set_size (setup->point_shadow_map_matrix, 0);
+  g_ptr_array_set_size (setup->point_light_shadows, 0);
   g_ptr_array_set_size (setup->spot, 0);
   g_ptr_array_set_size (setup->spot_shadow_map, 0);
   g_array_set_size (setup->spot_shadow_map_matrix, 0);
+  g_ptr_array_set_size (setup->spot_light_shadows, 0);
   g_ptr_array_set_size (setup->hemi, 0);
 
   for (l = priv->lights; l != NULL; l = l->next)
     {
       GthreeLight *light = l->data;
+      if (gthree_object_get_cast_shadow (GTHREE_OBJECT (light)))
+        gthree_light_setup (light, camera, setup);
+    }
 
-      gthree_light_setup (light, camera, setup);
+  for (l = priv->lights; l != NULL; l = l->next)
+    {
+      GthreeLight *light = l->data;
+      if (!gthree_object_get_cast_shadow (GTHREE_OBJECT (light)))
+        gthree_light_setup (light, camera, setup);
     }
 
   setup->hash.num_directional = setup->directional->len;
@@ -1656,6 +1667,9 @@ setup_lights (GthreeRenderer *renderer, GthreeCamera *camera)
   setup->hash.num_spot = setup->spot->len;
   setup->hash.num_hemi = setup->hemi->len;
   setup->hash.num_shadow = setup->shadow->len;
+  setup->hash.num_dir_shadows = setup->directional_light_shadows->len;
+  setup->hash.num_spot_shadows = setup->spot_light_shadows->len;
+  setup->hash.num_point_shadows = setup->point_light_shadows->len;
 }
 
 static void *
@@ -2453,6 +2467,13 @@ set_program (GthreeRenderer *renderer,
             }
         }
 
+      if (priv->tone_mapping != GTHREE_TONE_MAPPING_NONE)
+        {
+          gint tone_mapping_exposure_location = gthree_program_lookup_uniform_location (program, q_toneMappingExposure);
+          if (tone_mapping_exposure_location >= 0)
+            glUniform1f (tone_mapping_exposure_location, priv->tone_mapping_exposure);
+        }
+
       if (gthree_material_needs_view_matrix (material))
         {
           gint view_matrix_location = gthree_program_lookup_uniform_location (program, q_viewMatrix);
@@ -2592,6 +2613,12 @@ set_program (GthreeRenderer *renderer,
         gthree_uniform_load (uni, renderer);
     }
 
+  {
+    gint loc = gthree_program_lookup_uniform_location (program,
+                                                        g_quark_from_static_string ("receiveShadow"));
+    if (loc >= 0)
+      glUniform1i (loc, gthree_object_get_receive_shadow (object));
+  }
 
   gthree_object_set_direct_uniforms (object, program, renderer);
 
@@ -2705,26 +2732,6 @@ setup_vertex_attributes (GthreeRenderer *renderer,
 //	var influencesList = {};
 //	var morphInfluences = new Float32Array( 8 );
 
-typedef struct {
-  int index;
-  float value;
-} InfluenceInfo;
-
-static int
-influence_info_cmp (InfluenceInfo *a, InfluenceInfo *b)
-{
-  float aa = fabs (a->value);
-  float bb = fabs (b->value);
-
-  if (aa == bb)
-    return 0;
-
-  if (bb > aa)
-    return -1;
-
-  return 1;
-}
-
 static void
 update_morphtargets (GthreeRenderer *renderer,
                      GthreeMesh *mesh,
@@ -2732,101 +2739,54 @@ update_morphtargets (GthreeRenderer *renderer,
                      GthreeMeshMaterial *material,
                      GthreeProgram *program)
 {
-  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
   GArray *object_influences = gthree_mesh_get_morph_targets (mesh);
-  int length = object_influences->len;
-  GArray *influences;
-  int i;
-  GPtrArray *morphTargets = NULL;
-  GPtrArray *morphNormals = NULL;
+  int morph_target_count;
+  float base_influence;
+  gint loc;
 
+  gthree_geometry_ensure_morph_texture (geometry);
 
-  if (geometry->influences == NULL)
+  guint morph_tex = gthree_geometry_get_morph_texture (geometry);
+  if (morph_tex == 0)
+    return;
+
+  morph_target_count = gthree_geometry_get_morph_target_count (geometry);
+
+  float *influences_array = g_new0 (float, morph_target_count);
+  base_influence = 1.0f;
+
+  for (int i = 0; i < morph_target_count && i < (int)object_influences->len; i++)
     {
-      geometry->influences = g_array_new (FALSE, FALSE, sizeof (InfluenceInfo));
-      for (i = 0; i < length; i++)
-        {
-          InfluenceInfo info = {i, 0};
-          g_array_append_val (geometry->influences, info);
-        }
+      float v = g_array_index (object_influences, float, i);
+      influences_array[i] = v;
+      base_influence -= v;
     }
-  influences = geometry->influences;
+  if (base_influence < 0.0f)
+    base_influence = 0.0f;
 
-  if (gthree_mesh_material_get_morph_targets (material))
-    morphTargets = gthree_geometry_get_morph_attributes (geometry, "position");
+  guint tex_unit = gthree_renderer_allocate_texture_unit (renderer);
+  glActiveTexture (GL_TEXTURE0 + tex_unit);
+  glBindTexture (GL_TEXTURE_2D_ARRAY, morph_tex);
 
-  if (gthree_mesh_material_get_morph_normals (material))
-    morphNormals = gthree_geometry_get_morph_attributes (geometry, "normal");
+  loc = gthree_program_lookup_uniform_location_from_string (program, "morphTargetsTexture");
+  if (loc >= 0)
+    glUniform1i (loc, tex_unit);
 
-  // Remove current morphAttributes
-  for (i = 0; i < length; i++)
-    {
-      InfluenceInfo *info = &g_array_index (influences, InfluenceInfo, i);
-      if (info->value != 0)
-        {
-          if (morphTargets)
-            {
-              g_autofree char *name = g_strdup_printf ("morphTarget%d", i);
-              gthree_geometry_remove_attribute (geometry, name);
-            }
+  loc = gthree_program_lookup_uniform_location_from_string (program, "morphTargetsTextureSize");
+  if (loc >= 0)
+    glUniform2i (loc,
+                 gthree_geometry_get_morph_texture_width (geometry),
+                 gthree_geometry_get_morph_texture_height (geometry));
 
-          if (morphNormals)
-            {
-              g_autofree char *name = g_strdup_printf ("morphNormal%d", i);
-              gthree_geometry_remove_attribute (geometry, name);
-            }
-        }
-    }
+  loc = gthree_program_lookup_uniform_location_from_string (program, "morphTargetBaseInfluence");
+  if (loc >= 0)
+    glUniform1f (loc, base_influence);
 
-  // Collect influences
-  for (i = 0; i < length; i++)
-    {
-      InfluenceInfo *info = &g_array_index (influences, InfluenceInfo, i);
-      info->index = i;
-      info->value = g_array_index (object_influences, float, i);
-    }
+  loc = gthree_program_lookup_uniform_location_from_string (program, "morphTargetInfluences[0]");
+  if (loc >= 0)
+    glUniform1fv (loc, morph_target_count, influences_array);
 
-  g_array_sort (influences, (GCompareFunc)influence_info_cmp);
-
-  // Add morphAttributes
-  for (i = 0; i < 8; i++)
-    {
-      if (i < length)
-        {
-          InfluenceInfo *info = &g_array_index (influences, InfluenceInfo, i);
-
-          if (info->value != 0)
-            {
-              if (morphTargets)
-                {
-                  g_autofree char *name = g_strdup_printf ("morphTarget%d", i);
-                  GthreeAttribute *attribute = g_ptr_array_index (morphTargets, info->index);
-                  gthree_geometry_add_attribute (geometry, name, attribute);
-                }
-
-              if (morphNormals)
-                {
-                  g_autofree char *name = g_strdup_printf ("morphNormal%d", i);
-                  GthreeAttribute *attribute = g_ptr_array_index (morphTargets, info->index);
-                  gthree_geometry_add_attribute (geometry, name, attribute);
-                }
-
-              priv->morph_influences[i] = info->value;
-              continue;
-            }
-
-        }
-
-      priv->morph_influences[i] = 0;
-    }
-
-  gint morph_target_influences_location =
-    gthree_program_lookup_uniform_location_from_string (program, "morphTargetInfluences[0]");
-
-  if (morph_target_influences_location >= 0)
-    glUniform1fv (morph_target_influences_location, 8, priv->morph_influences);
-  else
-    g_warning ("No morphTargetInfluences uniform");
+  g_free (influences_array);
 }
 
 static void

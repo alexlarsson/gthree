@@ -3,7 +3,7 @@
 #include "gthreeloader.h"
 #include "gthreeattribute.h"
 #include "gthreemeshstandardmaterial.h"
-#include "gthreemeshspecglosmaterial.h"
+#include "gthreemeshphysicalmaterial.h"
 #include "gthreeperspectivecamera.h"
 #include "gthreeorthographiccamera.h"
 #include "gthreemeshbasicmaterial.h"
@@ -1162,36 +1162,31 @@ parse_materials (GthreeLoader *loader, JsonObject *root, GError **error)
         {
           JsonObject *specglos = json_object_get_object_member (extensions, "KHR_materials_pbrSpecularGlossiness");
           double glossiness_factor = 1.0;
-          graphene_vec3_t specular_factor;
 
-          graphene_vec3_init (&specular_factor, 1.0, 1.0, 1.0);
-
-          material = GTHREE_MESH_MATERIAL (gthree_mesh_specglos_material_new ());
+          material = GTHREE_MESH_MATERIAL (gthree_mesh_standard_material_new ());
 
           if (json_object_has_member (specglos, "diffuseFactor"))
             parse_color (json_object_get_array_member (specglos, "diffuseFactor"), &color, &color_alpha);
-          gthree_mesh_specglos_material_set_color (GTHREE_MESH_SPECGLOS_MATERIAL (material), &color);
+          gthree_mesh_standard_material_set_color (GTHREE_MESH_STANDARD_MATERIAL (material), &color);
           gthree_material_set_opacity (GTHREE_MATERIAL (material), color_alpha);
 
-          if (json_object_has_member (specglos, "specularFactor"))
-            parse_color (json_object_get_array_member (specglos, "specularFactor"), &specular_factor, NULL);
-          gthree_mesh_specglos_material_set_specular_factor (GTHREE_MESH_SPECGLOS_MATERIAL (material), &specular_factor);
+          gthree_mesh_standard_material_set_metalness (GTHREE_MESH_STANDARD_MATERIAL (material), 0.0);
 
           if (json_object_has_member (specglos, "glossinessFactor"))
             glossiness_factor = json_object_get_double_member (specglos, "glossinessFactor");
-          gthree_mesh_specglos_material_set_glossiness (GTHREE_MESH_SPECGLOS_MATERIAL (material), glossiness_factor);
+          gthree_mesh_standard_material_set_roughness (GTHREE_MESH_STANDARD_MATERIAL (material), 1.0 - glossiness_factor);
 
           if (json_object_has_member (specglos, "diffuseTexture"))
             {
               g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, json_object_get_object_member (specglos, "diffuseTexture"));
-              gthree_mesh_specglos_material_set_map (GTHREE_MESH_SPECGLOS_MATERIAL (material), texture);
+              gthree_texture_set_encoding (texture, GTHREE_ENCODING_FORMAT_SRGB);
+              gthree_mesh_standard_material_set_map (GTHREE_MESH_STANDARD_MATERIAL (material), texture);
             }
 
           if (json_object_has_member (specglos, "specularGlossinessTexture"))
             {
               g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, json_object_get_object_member (specglos, "specularGlossinessTexture"));
-              gthree_mesh_specglos_material_set_specular_map (GTHREE_MESH_SPECGLOS_MATERIAL (material), texture);
-              gthree_mesh_specglos_material_set_glossiness_map (GTHREE_MESH_SPECGLOS_MATERIAL (material), texture);
+              gthree_mesh_standard_material_set_roughness_map (GTHREE_MESH_STANDARD_MATERIAL (material), texture);
             }
 
         }
@@ -1199,8 +1194,21 @@ parse_materials (GthreeLoader *loader, JsonObject *root, GError **error)
         {
           JsonObject *pbr = json_object_get_object_member (material_j, "pbrMetallicRoughness");
           double metallic_factor = 1.0, roughness_factor = 1.0;
+          gboolean need_physical = extensions && (
+            json_object_has_member (extensions, "KHR_materials_clearcoat") ||
+            json_object_has_member (extensions, "KHR_materials_sheen") ||
+            json_object_has_member (extensions, "KHR_materials_transmission") ||
+            json_object_has_member (extensions, "KHR_materials_volume") ||
+            json_object_has_member (extensions, "KHR_materials_ior") ||
+            json_object_has_member (extensions, "KHR_materials_iridescence") ||
+            json_object_has_member (extensions, "KHR_materials_anisotropy") ||
+            json_object_has_member (extensions, "KHR_materials_specular") ||
+            json_object_has_member (extensions, "KHR_materials_dispersion"));
 
-          material = GTHREE_MESH_MATERIAL (gthree_mesh_standard_material_new ());
+          if (need_physical)
+            material = GTHREE_MESH_MATERIAL (gthree_mesh_physical_material_new ());
+          else
+            material = GTHREE_MESH_MATERIAL (gthree_mesh_standard_material_new ());
 
           if (json_object_has_member (pbr, "baseColorFactor"))
             parse_color (json_object_get_array_member (pbr, "baseColorFactor"), &color, &color_alpha);
@@ -1219,6 +1227,7 @@ parse_materials (GthreeLoader *loader, JsonObject *root, GError **error)
           if (json_object_has_member (pbr, "baseColorTexture"))
             {
               g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, json_object_get_object_member (pbr, "baseColorTexture"));
+              gthree_texture_set_encoding (texture, GTHREE_ENCODING_FORMAT_SRGB);
               gthree_mesh_standard_material_set_map (GTHREE_MESH_STANDARD_MATERIAL (material), texture);
             }
 
@@ -1227,6 +1236,167 @@ parse_materials (GthreeLoader *loader, JsonObject *root, GError **error)
               g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, json_object_get_object_member (pbr, "metallicRoughnessTexture"));
               gthree_mesh_standard_material_set_roughness_map (GTHREE_MESH_STANDARD_MATERIAL (material), texture);
               gthree_mesh_standard_material_set_metalness_map (GTHREE_MESH_STANDARD_MATERIAL (material), texture);
+            }
+
+          if (need_physical)
+            {
+              GthreeMeshPhysicalMaterial *phys = GTHREE_MESH_PHYSICAL_MATERIAL (material);
+
+              if (extensions && json_object_has_member (extensions, "KHR_materials_ior"))
+                {
+                  JsonObject *ext = json_object_get_object_member (extensions, "KHR_materials_ior");
+                  if (json_object_has_member (ext, "ior"))
+                    gthree_mesh_physical_material_set_ior (phys, json_object_get_double_member (ext, "ior"));
+                }
+
+              if (extensions && json_object_has_member (extensions, "KHR_materials_clearcoat"))
+                {
+                  JsonObject *ext = json_object_get_object_member (extensions, "KHR_materials_clearcoat");
+                  if (json_object_has_member (ext, "clearcoatFactor"))
+                    gthree_mesh_physical_material_set_clearcoat (phys, json_object_get_double_member (ext, "clearcoatFactor"));
+                  if (json_object_has_member (ext, "clearcoatRoughnessFactor"))
+                    gthree_mesh_physical_material_set_clearcoat_roughness (phys, json_object_get_double_member (ext, "clearcoatRoughnessFactor"));
+                  if (json_object_has_member (ext, "clearcoatTexture"))
+                    {
+                      g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, json_object_get_object_member (ext, "clearcoatTexture"));
+                      gthree_mesh_physical_material_set_clearcoat_map (phys, texture);
+                    }
+                  if (json_object_has_member (ext, "clearcoatRoughnessTexture"))
+                    {
+                      g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, json_object_get_object_member (ext, "clearcoatRoughnessTexture"));
+                      gthree_mesh_physical_material_set_clearcoat_roughness_map (phys, texture);
+                    }
+                  if (json_object_has_member (ext, "clearcoatNormalTexture"))
+                    {
+                      g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, json_object_get_object_member (ext, "clearcoatNormalTexture"));
+                      gthree_mesh_physical_material_set_clearcoat_normal_map (phys, texture);
+                    }
+                }
+
+              if (extensions && json_object_has_member (extensions, "KHR_materials_sheen"))
+                {
+                  JsonObject *ext = json_object_get_object_member (extensions, "KHR_materials_sheen");
+                  graphene_vec3_t sheen_color;
+                  graphene_vec3_init (&sheen_color, 0, 0, 0);
+
+                  gthree_mesh_physical_material_set_sheen (phys, 1.0);
+                  if (json_object_has_member (ext, "sheenColorFactor"))
+                    parse_color (json_object_get_array_member (ext, "sheenColorFactor"), &sheen_color, NULL);
+                  gthree_mesh_physical_material_set_sheen_color (phys, &sheen_color);
+                  if (json_object_has_member (ext, "sheenRoughnessFactor"))
+                    gthree_mesh_physical_material_set_sheen_roughness (phys, json_object_get_double_member (ext, "sheenRoughnessFactor"));
+                  if (json_object_has_member (ext, "sheenColorTexture"))
+                    {
+                      g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, json_object_get_object_member (ext, "sheenColorTexture"));
+                      gthree_texture_set_encoding (texture, GTHREE_ENCODING_FORMAT_SRGB);
+                      gthree_mesh_physical_material_set_sheen_color_map (phys, texture);
+                    }
+                  if (json_object_has_member (ext, "sheenRoughnessTexture"))
+                    {
+                      g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, json_object_get_object_member (ext, "sheenRoughnessTexture"));
+                      gthree_mesh_physical_material_set_sheen_roughness_map (phys, texture);
+                    }
+                }
+
+              if (extensions && json_object_has_member (extensions, "KHR_materials_transmission"))
+                {
+                  JsonObject *ext = json_object_get_object_member (extensions, "KHR_materials_transmission");
+                  if (json_object_has_member (ext, "transmissionFactor"))
+                    gthree_mesh_physical_material_set_transmission (phys, json_object_get_double_member (ext, "transmissionFactor"));
+                  if (json_object_has_member (ext, "transmissionTexture"))
+                    {
+                      g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, json_object_get_object_member (ext, "transmissionTexture"));
+                      gthree_mesh_physical_material_set_transmission_map (phys, texture);
+                    }
+                }
+
+              if (extensions && json_object_has_member (extensions, "KHR_materials_volume"))
+                {
+                  JsonObject *ext = json_object_get_object_member (extensions, "KHR_materials_volume");
+                  if (json_object_has_member (ext, "thicknessFactor"))
+                    gthree_mesh_physical_material_set_thickness (phys, json_object_get_double_member (ext, "thicknessFactor"));
+                  if (json_object_has_member (ext, "attenuationDistance"))
+                    gthree_mesh_physical_material_set_attenuation_distance (phys, json_object_get_double_member (ext, "attenuationDistance"));
+                  if (json_object_has_member (ext, "attenuationColor"))
+                    {
+                      graphene_vec3_t att_color;
+                      parse_color (json_object_get_array_member (ext, "attenuationColor"), &att_color, NULL);
+                      gthree_mesh_physical_material_set_attenuation_color (phys, &att_color);
+                    }
+                  if (json_object_has_member (ext, "thicknessTexture"))
+                    {
+                      g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, json_object_get_object_member (ext, "thicknessTexture"));
+                      gthree_mesh_physical_material_set_thickness_map (phys, texture);
+                    }
+                }
+
+              if (extensions && json_object_has_member (extensions, "KHR_materials_iridescence"))
+                {
+                  JsonObject *ext = json_object_get_object_member (extensions, "KHR_materials_iridescence");
+                  if (json_object_has_member (ext, "iridescenceFactor"))
+                    gthree_mesh_physical_material_set_iridescence (phys, json_object_get_double_member (ext, "iridescenceFactor"));
+                  if (json_object_has_member (ext, "iridescenceIor"))
+                    gthree_mesh_physical_material_set_iridescence_ior (phys, json_object_get_double_member (ext, "iridescenceIor"));
+                  if (json_object_has_member (ext, "iridescenceThicknessMinimum"))
+                    gthree_mesh_physical_material_set_iridescence_thickness_min (phys, json_object_get_double_member (ext, "iridescenceThicknessMinimum"));
+                  if (json_object_has_member (ext, "iridescenceThicknessMaximum"))
+                    gthree_mesh_physical_material_set_iridescence_thickness_max (phys, json_object_get_double_member (ext, "iridescenceThicknessMaximum"));
+                  if (json_object_has_member (ext, "iridescenceTexture"))
+                    {
+                      g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, json_object_get_object_member (ext, "iridescenceTexture"));
+                      gthree_mesh_physical_material_set_iridescence_map (phys, texture);
+                    }
+                  if (json_object_has_member (ext, "iridescenceThicknessTexture"))
+                    {
+                      g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, json_object_get_object_member (ext, "iridescenceThicknessTexture"));
+                      gthree_mesh_physical_material_set_iridescence_thickness_map (phys, texture);
+                    }
+                }
+
+              if (extensions && json_object_has_member (extensions, "KHR_materials_anisotropy"))
+                {
+                  JsonObject *ext = json_object_get_object_member (extensions, "KHR_materials_anisotropy");
+                  if (json_object_has_member (ext, "anisotropyStrength"))
+                    gthree_mesh_physical_material_set_anisotropy (phys, json_object_get_double_member (ext, "anisotropyStrength"));
+                  if (json_object_has_member (ext, "anisotropyRotation"))
+                    gthree_mesh_physical_material_set_anisotropy_rotation (phys, json_object_get_double_member (ext, "anisotropyRotation"));
+                  if (json_object_has_member (ext, "anisotropyTexture"))
+                    {
+                      g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, json_object_get_object_member (ext, "anisotropyTexture"));
+                      gthree_mesh_physical_material_set_anisotropy_map (phys, texture);
+                    }
+                }
+
+              if (extensions && json_object_has_member (extensions, "KHR_materials_specular"))
+                {
+                  JsonObject *ext = json_object_get_object_member (extensions, "KHR_materials_specular");
+                  if (json_object_has_member (ext, "specularFactor"))
+                    gthree_mesh_physical_material_set_specular_intensity (phys, json_object_get_double_member (ext, "specularFactor"));
+                  if (json_object_has_member (ext, "specularColorFactor"))
+                    {
+                      graphene_vec3_t spec_color;
+                      parse_color (json_object_get_array_member (ext, "specularColorFactor"), &spec_color, NULL);
+                      gthree_mesh_physical_material_set_specular_color (phys, &spec_color);
+                    }
+                  if (json_object_has_member (ext, "specularTexture"))
+                    {
+                      g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, json_object_get_object_member (ext, "specularTexture"));
+                      gthree_mesh_physical_material_set_specular_intensity_map (phys, texture);
+                    }
+                  if (json_object_has_member (ext, "specularColorTexture"))
+                    {
+                      g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, json_object_get_object_member (ext, "specularColorTexture"));
+                      gthree_texture_set_encoding (texture, GTHREE_ENCODING_FORMAT_SRGB);
+                      gthree_mesh_physical_material_set_specular_color_map (phys, texture);
+                    }
+                }
+
+              if (extensions && json_object_has_member (extensions, "KHR_materials_dispersion"))
+                {
+                  JsonObject *ext = json_object_get_object_member (extensions, "KHR_materials_dispersion");
+                  if (json_object_has_member (ext, "dispersion"))
+                    gthree_mesh_physical_material_set_dispersion (phys, json_object_get_double_member (ext, "dispersion"));
+                }
             }
         }
       else
@@ -1279,6 +1449,7 @@ parse_materials (GthreeLoader *loader, JsonObject *root, GError **error)
           JsonObject *texture_j = json_object_get_object_member (material_j, "emissiveTexture");
           g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, texture_j);
 
+          gthree_texture_set_encoding (texture, GTHREE_ENCODING_FORMAT_SRGB);
           g_object_set (material, "emissive-map", texture, NULL);
         }
 

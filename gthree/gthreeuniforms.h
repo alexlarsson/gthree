@@ -173,6 +173,9 @@ GTHREE_API
 void        gthree_uniform_set_vec3         (GthreeUniform   *uniform,
                                              const graphene_vec3_t *value);
 GTHREE_API
+void        gthree_uniform_set_color_srgb   (GthreeUniform   *uniform,
+                                             const graphene_vec3_t *value);
+GTHREE_API
 void        gthree_uniform_set_vec4         (GthreeUniform   *uniform,
                                              const graphene_vec4_t *value);
 GTHREE_API

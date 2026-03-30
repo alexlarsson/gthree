@@ -82,10 +82,15 @@ void                gthree_renderer_set_clear_alpha           (GthreeRenderer   
 GTHREE_API
 float               gthree_renderer_get_clear_alpha           (GthreeRenderer     *renderer);
 GTHREE_API
-void                gthree_renderer_set_gamma_factor          (GthreeRenderer     *renderer,
-                                                               float               factor);
+void                gthree_renderer_set_tone_mapping          (GthreeRenderer     *renderer,
+                                                               GthreeToneMapping   tone_mapping);
 GTHREE_API
-float               gthree_renderer_get_gamma_factor          (GthreeRenderer     *renderer);
+GthreeToneMapping   gthree_renderer_get_tone_mapping          (GthreeRenderer     *renderer);
+GTHREE_API
+void                gthree_renderer_set_tone_mapping_exposure (GthreeRenderer     *renderer,
+                                                               float               exposure);
+GTHREE_API
+float               gthree_renderer_get_tone_mapping_exposure (GthreeRenderer     *renderer);
 GTHREE_API
 gboolean            gthree_renderer_get_shadow_map_enabled    (GthreeRenderer     *renderer);
 GTHREE_API

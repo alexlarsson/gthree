@@ -33,6 +33,8 @@ load_lee_perry_smith (void)
   g_autoptr(GthreeTexture) map = examples_load_texture ("../models/LeePerrySmith/Map-COL.jpg");
   g_autoptr(GthreeTexture) specular_map = examples_load_texture ("../models/LeePerrySmith/Map-SPEC.jpg");
   g_autoptr(GthreeTexture) normal_map = examples_load_texture ("../models/LeePerrySmith/Infinite-Level_02_Tangent_SmoothUV.jpg");
+  gthree_texture_set_encoding (specular_map, GTHREE_ENCODING_FORMAT_LINEAR);
+  gthree_texture_set_encoding (normal_map, GTHREE_ENCODING_FORMAT_LINEAR);
 
   g_object_ref (mesh);
   gthree_object_remove_child (GTHREE_OBJECT (mesh_group), mesh);
@@ -68,6 +70,7 @@ init_scene (void)
 
   decal_diffuse = examples_load_texture ("decal/decal-diffuse.png");
   decal_normal = examples_load_texture ("decal/decal-normal.jpg");
+  gthree_texture_set_encoding (decal_normal, GTHREE_ENCODING_FORMAT_LINEAR);
 
   scene = gthree_scene_new ();
 

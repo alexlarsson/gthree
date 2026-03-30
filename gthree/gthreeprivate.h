@@ -24,6 +24,9 @@ typedef struct {
   guint8 num_spot;
   guint8 num_shadow;
   guint8 num_hemi;
+  guint8 num_dir_shadows;
+  guint8 num_spot_shadows;
+  guint8 num_point_shadows;
   guint8 obj_receive_shadow;
 } GthreeLightSetupHash;
 
@@ -35,12 +38,15 @@ struct _GthreeLightSetup
   GPtrArray *directional;
   GPtrArray *directional_shadow_map;
   GArray *directional_shadow_map_matrix;
+  GPtrArray *directional_light_shadows;
   GPtrArray *point;
   GPtrArray *point_shadow_map;
   GArray *point_shadow_map_matrix;
+  GPtrArray *point_light_shadows;
   GPtrArray *spot;
   GPtrArray *spot_shadow_map;
   GArray *spot_shadow_map_matrix;
+  GPtrArray *spot_light_shadows;
   GPtrArray *shadow;
   GPtrArray *hemi;
 
@@ -60,33 +66,37 @@ struct _GthreeMaterialProperties
 struct  _GthreeProgramParameters {
   guint precision : 2; /* GthreePrecision */
   guint supports_vertex_textures : 1;
-  guint16 output_encoding : 3;
+  guint output_color_space : 3;
   guint map : 1;
-  guint map_encoding : 3;
   guint matcap : 1;
-  guint matcap_encoding : 3;
   guint env_map : 1;
   guint env_map_mode : 3;
-  guint env_map_encoding : 3;
   guint light_map : 1;
   guint ao_map : 1;
   guint emissive_map : 1;
-  guint emissive_map_encoding : 3;
   guint bump_map : 1;
   guint normal_map : 1;
-  guint object_space_normal_map : 1;
+  guint normal_map_object_space : 1;
+  guint normal_map_tangent_space : 1;
   guint displacement_map : 1;
   guint specular_map : 1;
+  guint specular_color_map : 1;
+  guint specular_intensity_map : 1;
   guint roughness_map : 1;
-  guint glossiness_map : 1;
   guint metalness_map : 1;
   guint gradient_map : 1;
   guint alpha_map : 1;
+  guint alpha_hash : 1;
   guint combine : 1;
   guint vertex_colors : 1;
+  guint vertex_alphas : 1;
   guint vertex_tangents : 1;
-  guint fog : 1;        /* Fog is set on the scene */
-  guint use_fog : 1;    /* Material has fog enabled */
+  guint vertex_uv1s : 1;
+  guint vertex_uv2s : 1;
+  guint vertex_uv3s : 1;
+  guint points_uvs : 1;
+  guint fog : 1;
+  guint use_fog : 1;
   guint fog_exp : 1;
   guint flat_shading : 1;
   guint size_attenuation : 1;
@@ -95,19 +105,39 @@ struct  _GthreeProgramParameters {
   guint use_vertex_texture : 1;
   guint morph_targets : 1;
   guint morph_normals : 1;
+  guint morph_colors : 1;
   guint premultiplied_alpha : 1;
   guint shadow_map_enabled : 1;
   guint shadow_map_type : 2;
-  guint tone_mapping : 1;
+  guint tone_mapping : 3;
   guint physically_correct_lights : 1;
   guint double_sided : 1;
   guint flip_sided : 1;
   guint depth_packing : 2;
   guint dithering : 1;
+  guint alpha_to_coverage : 1;
+  guint opaque : 1;
+
+  /* Advanced PBR material features */
+  guint anisotropy : 1;
+  guint anisotropy_map : 1;
+  guint clearcoat : 1;
+  guint clearcoat_map : 1;
+  guint clearcoat_roughness_map : 1;
+  guint clearcoat_normal_map : 1;
+  guint dispersion : 1;
+  guint iridescence : 1;
+  guint iridescence_map : 1;
+  guint iridescence_thickness_map : 1;
+  guint sheen : 1;
+  guint sheen_color_map : 1;
+  guint sheen_roughness_map : 1;
+  guint transmission : 1;
+  guint transmission_map : 1;
+  guint thickness_map : 1;
 
   guint8 alpha_test;
   guint16 max_bones;
-  guint16 max_morph_targets;
 
   guint16 num_dir_lights;
   guint16 num_point_lights;
@@ -115,8 +145,15 @@ struct  _GthreeProgramParameters {
   guint16 num_hemi_lights;
   guint16 num_rect_area_lights;
 
+  guint16 num_dir_light_shadows;
+  guint16 num_point_light_shadows;
+  guint16 num_spot_light_shadows;
+
   guint16 num_clipping_planes;
   guint16 num_clip_intersection;
+
+  guint16 morph_targets_count;
+  guint8 morph_texture_stride;
 };
 
 
@@ -174,8 +211,7 @@ void     gthree_texture_bind             (GthreeTexture *texture,
                                           int            slot,
                                           int            target);
 void     gthree_texture_set_parameters (guint texture_type,
-                                        GthreeTexture *texture,
-                                        gboolean is_image_power_of_two);
+                                        GthreeTexture *texture);
 
 guint gthree_render_target_get_gl_framebuffer (GthreeRenderTarget *target,
                                                GthreeRenderer *renderer);
@@ -183,6 +219,13 @@ void gthree_render_target_realize (GthreeRenderTarget *target,
                                    GthreeRenderer *renderer);
 const graphene_rect_t * gthree_render_target_get_viewport (GthreeRenderTarget *target);
 
+
+void gthree_geometry_ensure_morph_texture (GthreeGeometry *geometry);
+guint gthree_geometry_get_morph_texture (GthreeGeometry *geometry);
+int gthree_geometry_get_morph_texture_width (GthreeGeometry *geometry);
+int gthree_geometry_get_morph_texture_height (GthreeGeometry *geometry);
+int gthree_geometry_get_morph_target_count (GthreeGeometry *geometry);
+int gthree_geometry_get_morph_texture_stride (GthreeGeometry *geometry);
 
 GthreeGeometry *gthree_geometry_parse_json (JsonObject *object);
 void gthree_geometry_update           (GthreeGeometry   *geometry,
@@ -325,5 +368,20 @@ void gthree_renderer_lazy_delete (GthreeRenderer *renderer,
                                   guint             id);
 
 GthreeGeometry *gthree_sprite_get_geometry (GthreeSprite *sprite);
+
+static inline float
+gthree_srgb_eotf (float c)
+{
+  return c <= 0.04045f ? c / 12.92f : powf ((c + 0.055f) / 1.055f, 2.4f);
+}
+
+static inline void
+gthree_color_srgb_to_linear (const graphene_vec3_t *srgb, graphene_vec3_t *linear)
+{
+  graphene_vec3_init (linear,
+                      gthree_srgb_eotf (graphene_vec3_get_x (srgb)),
+                      gthree_srgb_eotf (graphene_vec3_get_y (srgb)),
+                      gthree_srgb_eotf (graphene_vec3_get_z (srgb)));
+}
 
 #endif /* __GTHREE_PRIVATE_H__ */

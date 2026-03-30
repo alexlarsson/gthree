@@ -60,7 +60,7 @@ gthree_render_target_init (GthreeRenderTarget *target)
   gthree_texture_set_mag_filter (priv->texture, GTHREE_FILTER_LINEAR);
   gthree_texture_set_min_filter (priv->texture, GTHREE_FILTER_LINEAR);
 
-  gthree_texture_set_encoding (priv->texture, GTHREE_ENCODING_FORMAT_SRGB);
+  gthree_texture_set_encoding (priv->texture, GTHREE_ENCODING_FORMAT_LINEAR);
   gthree_texture_set_format (priv->texture, GTHREE_TEXTURE_FORMAT_RGBA);
   gthree_texture_set_data_type (priv->texture, GTHREE_DATA_TYPE_UNSIGNED_BYTE);
   gthree_texture_set_anisotropy (priv->texture, 1);
@@ -355,19 +355,6 @@ setup_depth_renderbuffer (GthreeRenderTarget *render_target, GthreeRenderTargetR
   glBindFramebuffer (GL_FRAMEBUFFER, 0);
 }
 
-static gboolean
-is_power_of_two (guint value)
-{
-  return value != 0 && (value & (value - 1)) == 0;
-}
-
-gboolean
-gthree_render_target_is_power_of_two (GthreeRenderTarget *target)
-{
-  GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
-  return is_power_of_two (priv->width) && is_power_of_two (priv->height);
-}
-
 guint
 gthree_render_target_get_gl_framebuffer (GthreeRenderTarget *target,
                                          GthreeRenderer *renderer)
@@ -384,13 +371,12 @@ gthree_render_target_get_viewport (GthreeRenderTarget *target)
 }
 
 static gboolean
-texture_needs_generate_mipmaps (GthreeTexture *texture, gboolean is_power_of_two)
+texture_needs_generate_mipmaps (GthreeTexture *texture)
 {
   GthreeFilter min_filter = gthree_texture_get_min_filter (texture);
 
   return
     gthree_texture_get_generate_mipmaps (texture) &&
-    is_power_of_two &&
     min_filter != GTHREE_FILTER_NEAREST &&
     min_filter != GTHREE_FILTER_LINEAR;
 }
@@ -409,9 +395,7 @@ gthree_render_target_update_mipmap (GthreeRenderTarget *target,
                                     GthreeRenderer *renderer)
 {
   GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
-  gboolean supports_mips = gthree_render_target_is_power_of_two (target);
-
-  if (texture_needs_generate_mipmaps (priv->texture, supports_mips))
+  if (texture_needs_generate_mipmaps (priv->texture))
     {
       guint target = GL_TEXTURE_2D;
 #ifdef TOOD
@@ -430,7 +414,7 @@ gthree_render_target_realize (GthreeRenderTarget *target,
 {
   GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
   GthreeRenderTargetRealizeData *data = gthree_resource_get_data_for (GTHREE_RESOURCE (target), renderer);
-  gboolean is_cube = FALSE, is_multisample = FALSE, supports_mips = FALSE;
+  gboolean is_cube = FALSE, is_multisample = FALSE;
   GthreeTexture *texture;
 
   if (data->gl_framebuffer)
@@ -452,8 +436,6 @@ gthree_render_target_realize (GthreeRenderTarget *target,
   is_cube = ( renderTarget.isWebGLRenderTargetCube === true );
   is_multisample = ( renderTarget.isWebGLMultisampleRenderTarget === true );
 #endif
-  supports_mips = gthree_render_target_is_power_of_two (target);
-
   // Setup framebuffer
   if (is_cube)
     {
@@ -516,13 +498,13 @@ gthree_render_target_realize (GthreeRenderTarget *target,
   else
     {
       gthree_texture_bind (texture, renderer, -1, GL_TEXTURE_2D);
-      gthree_texture_set_parameters (GL_TEXTURE_2D, texture, supports_mips);
+      gthree_texture_set_parameters (GL_TEXTURE_2D, texture);
       gthree_texture_setup_framebuffer (texture, renderer,
                                         priv->width,
                                         priv->height,
                                         data->gl_framebuffer,
                                         GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D);
-      if (texture_needs_generate_mipmaps (texture, supports_mips))
+      if (texture_needs_generate_mipmaps (texture))
         generate_mipmap (GL_TEXTURE_2D, texture, priv->width, priv->height);
       glBindTexture (GL_TEXTURE_2D, 0);
     }

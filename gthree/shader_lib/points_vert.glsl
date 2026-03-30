@@ -8,9 +8,24 @@ uniform float scale;
 #include <logdepthbuf_pars_vertex>
 #include <clipping_planes_pars_vertex>
 
+#ifdef USE_POINTS_UV
+
+	varying vec2 vUv;
+	uniform mat3 uvTransform;
+
+#endif
+
 void main() {
 
+	#ifdef USE_POINTS_UV
+
+		vUv = ( uvTransform * vec3( uv, 1 ) ).xy;
+
+	#endif
+
 	#include <color_vertex>
+	#include <morphinstance_vertex>
+	#include <morphcolor_vertex>
 	#include <begin_vertex>
 	#include <morphtarget_vertex>
 	#include <project_vertex>
@@ -19,7 +34,7 @@ void main() {
 
 	#ifdef USE_SIZEATTENUATION
 
-		bool isPerspective = ( projectionMatrix[ 2 ][ 3 ] == - 1.0 );
+		bool isPerspective = isPerspectiveMatrix( projectionMatrix );
 
 		if ( isPerspective ) gl_PointSize *= ( scale / - mvPosition.z );
 

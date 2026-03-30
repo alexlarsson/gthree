@@ -7,7 +7,9 @@
 typedef struct {
   GthreeCamera *camera;
   float bias;
+  float normal_bias;
   float radius;
+  float intensity;
 
   int map_width;
   int map_height;
@@ -25,7 +27,9 @@ gthree_light_shadow_init (GthreeLightShadow *light_shadow)
   GthreeLightShadowPrivate *priv = gthree_light_shadow_get_instance_private (light_shadow);
 
   priv->bias = 0;
+  priv->normal_bias = 0;
   priv->radius = 1;
+  priv->intensity = 1;
 
   priv->map_width = 512;
   priv->map_height = 512;
@@ -167,4 +171,38 @@ gthree_light_shadow_set_radius (GthreeLightShadow *shadow,
   GthreeLightShadowPrivate *priv = gthree_light_shadow_get_instance_private (shadow);
 
   priv->radius = radius;
+}
+
+float
+gthree_light_shadow_get_normal_bias (GthreeLightShadow *shadow)
+{
+  GthreeLightShadowPrivate *priv = gthree_light_shadow_get_instance_private (shadow);
+
+  return priv->normal_bias;
+}
+
+void
+gthree_light_shadow_set_normal_bias (GthreeLightShadow *shadow,
+                                     float normal_bias)
+{
+  GthreeLightShadowPrivate *priv = gthree_light_shadow_get_instance_private (shadow);
+
+  priv->normal_bias = normal_bias;
+}
+
+float
+gthree_light_shadow_get_intensity (GthreeLightShadow *shadow)
+{
+  GthreeLightShadowPrivate *priv = gthree_light_shadow_get_instance_private (shadow);
+
+  return priv->intensity;
+}
+
+void
+gthree_light_shadow_set_intensity (GthreeLightShadow *shadow,
+                                   float intensity)
+{
+  GthreeLightShadowPrivate *priv = gthree_light_shadow_get_instance_private (shadow);
+
+  priv->intensity = intensity;
 }

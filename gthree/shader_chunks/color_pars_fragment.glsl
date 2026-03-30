@@ -1,5 +1,5 @@
-#ifdef USE_COLOR
+#if defined( USE_COLOR ) || defined( USE_COLOR_ALPHA )
 
-	varying vec3 vColor;
+	varying vec4 vColor;
 
 #endif

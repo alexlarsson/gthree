@@ -57,12 +57,6 @@ gthree_cube_texture_init (GthreeCubeTexture *cube)
 {
 }
 
-static gboolean
-is_power_of_two (guint value)
-{
-  return value != 0 && (value & (value - 1)) == 0;
-}
-
 static void
 gthree_cube_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer, int slot)
 {
@@ -80,7 +74,6 @@ gthree_cube_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer,
       guint width, height;
       gboolean is_compressed = FALSE; //texture instanceof THREE.CompressedTexture;
       guint gl_format, gl_type;
-      gboolean is_image_power_of_two = is_power_of_two (width) && is_power_of_two (height);
 
       for (i = 0; i < 6; i++)
         {
@@ -97,18 +90,22 @@ gthree_cube_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer,
 
       width = gdk_pixbuf_get_width (cube_pixbufs[0]);
       height = gdk_pixbuf_get_height (cube_pixbufs[0]);
-      is_image_power_of_two = is_power_of_two (width) && is_power_of_two (height);
-
       gl_format = gdk_pixbuf_get_has_alpha (cube_pixbufs[0]) ? GL_RGBA : GL_RGB;
       gl_type = GL_UNSIGNED_BYTE;
 
-      gthree_texture_set_parameters (GL_TEXTURE_CUBE_MAP, texture, is_image_power_of_two);
+      guint gl_internal_format;
+      if (gthree_texture_get_encoding (texture) == GTHREE_ENCODING_FORMAT_SRGB)
+        gl_internal_format = gdk_pixbuf_get_has_alpha (cube_pixbufs[0]) ? GL_SRGB8_ALPHA8 : GL_SRGB8;
+      else
+        gl_internal_format = gdk_pixbuf_get_has_alpha (cube_pixbufs[0]) ? GL_RGBA8 : GL_RGB8;
+
+      gthree_texture_set_parameters (GL_TEXTURE_CUBE_MAP, texture);
 
       for (i = 0; i < 6; i++)
         {
           if (!is_compressed)
             {
-              glTexImage2D (GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, gl_format, width, height, 0, gl_format, gl_type,
+              glTexImage2D (GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, gl_internal_format, width, height, 0, gl_format, gl_type,
                             gdk_pixbuf_get_pixels (cube_pixbufs[i]));
             }
 #ifdef TODO
@@ -131,7 +128,7 @@ gthree_cube_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer,
 #endif
         }
 
-      if (gthree_texture_get_generate_mipmaps (texture) && is_image_power_of_two)
+      if (gthree_texture_get_generate_mipmaps (texture))
         {
           glGenerateMipmap (GL_TEXTURE_CUBE_MAP);
           gthree_texture_set_max_mip_level (texture, log2 (MAX (width, height)));

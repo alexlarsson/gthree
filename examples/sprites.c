@@ -41,8 +41,11 @@ init_scene (GtkWidget *window)
   g_autoptr(GdkPixbuf) sprite2_pixbuf = examples_load_pixbuf ("sprite2.png");
 
   sprite0_texture = gthree_texture_new (sprite0_pixbuf);
+  gthree_texture_set_encoding (sprite0_texture, GTHREE_ENCODING_FORMAT_SRGB);
   sprite1_texture = gthree_texture_new (sprite1_pixbuf);
+  gthree_texture_set_encoding (sprite1_texture, GTHREE_ENCODING_FORMAT_SRGB);
   sprite2_texture = gthree_texture_new (sprite2_pixbuf);
+  gthree_texture_set_encoding (sprite2_texture, GTHREE_ENCODING_FORMAT_SRGB);
 
   scene = gthree_scene_new ();
 

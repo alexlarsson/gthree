@@ -53,6 +53,16 @@ float gthree_light_shadow_get_radius (GthreeLightShadow *shadow);
 GTHREE_API
 void gthree_light_shadow_set_radius (GthreeLightShadow *shadow,
                                      float radiuso);
+GTHREE_API
+float gthree_light_shadow_get_normal_bias (GthreeLightShadow *shadow);
+GTHREE_API
+void gthree_light_shadow_set_normal_bias (GthreeLightShadow *shadow,
+                                          float normal_bias);
+GTHREE_API
+float gthree_light_shadow_get_intensity (GthreeLightShadow *shadow);
+GTHREE_API
+void gthree_light_shadow_set_intensity (GthreeLightShadow *shadow,
+                                        float intensity);
 
 
 G_END_DECLS

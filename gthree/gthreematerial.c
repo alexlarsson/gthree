@@ -24,6 +24,7 @@ typedef struct {
   GthreeSide side;
   gboolean vertex_colors;
   gboolean fog;
+  gboolean alpha_hash;
 
   GthreeShader *shader;
   guint32 valid_for_renderer_id;
@@ -47,6 +48,7 @@ enum {
   PROP_ALPHA_TEST,
   PROP_CLIP_INTERSECTION,
   PROP_FOG,
+  PROP_ALPHA_HASH,
 
   N_PROPS
 };
@@ -156,6 +158,10 @@ gthree_material_set_property (GObject *obj,
       gthree_material_set_clip_intersection (material, g_value_get_boolean (value));
       break;
 
+    case PROP_ALPHA_HASH:
+      gthree_material_set_alpha_hash (material, g_value_get_boolean (value));
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
     }
@@ -200,6 +206,10 @@ gthree_material_get_property (GObject *obj,
       g_value_set_boolean (value, priv->clip_intersection);
       break;
 
+    case PROP_ALPHA_HASH:
+      g_value_set_boolean (value, priv->alpha_hash);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
     }
@@ -225,6 +235,7 @@ gthree_material_real_set_params (GthreeMaterial *material,
   params->double_sided = priv->side == GTHREE_SIDE_DOUBLE;
   params->flip_sided = priv->side == GTHREE_SIDE_BACK;
   params->alpha_test = MIN(MAX(0, roundf(priv->alpha_test * 255.0)), 255);
+  params->alpha_hash = priv->alpha_hash;
   params->vertex_colors = priv->vertex_colors;
 }
 
@@ -327,6 +338,10 @@ gthree_material_class_init (GthreeMaterialClass *klass)
                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   obj_props[PROP_CLIP_INTERSECTION] =
     g_param_spec_boolean ("clip-intersection", "Clip Intersection", "Clip Intersection",
+                          FALSE,
+                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_ALPHA_HASH] =
+    g_param_spec_boolean ("alpha-hash", "Alpha Hash", "Alpha Hash",
                           FALSE,
                           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
@@ -720,5 +735,26 @@ gthree_material_set_clip_intersection  (GthreeMaterial          *material,
   GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
 
   priv->clip_intersection = clip_intersection;
+  gthree_material_set_needs_update (material);
+}
+
+gboolean
+gthree_material_get_alpha_hash (GthreeMaterial *material)
+{
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+  return priv->alpha_hash;
+}
+
+void
+gthree_material_set_alpha_hash (GthreeMaterial *material,
+                                gboolean        alpha_hash)
+{
+  GthreeMaterialPrivate *priv = gthree_material_get_instance_private (material);
+
+  alpha_hash = !!alpha_hash;
+  if (priv->alpha_hash == alpha_hash)
+    return;
+
+  priv->alpha_hash = alpha_hash;
   gthree_material_set_needs_update (material);
 }

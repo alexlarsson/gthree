@@ -100,7 +100,7 @@ gthree_texture_init (GthreeTexture *texture)
   priv->mag_filter = GTHREE_FILTER_LINEAR;
   priv->min_filter = GTHREE_FILTER_LINEAR_MIPMAP_LINEAR;
   priv->mapping = GTHREE_MAPPING_UV;
-  priv->encoding = GTHREE_ENCODING_FORMAT_SRGB; // Differs from three.js default LINEAR
+  priv->encoding = GTHREE_ENCODING_FORMAT_LINEAR;
 
   priv->format = GTHREE_TEXTURE_FORMAT_RGBA;
   priv->type = GTHREE_DATA_TYPE_UNSIGNED_BYTE;
@@ -469,40 +469,15 @@ filter_to_gl (GthreeFilter filter)
     }
 }
 
-static guint
-filter_fallback (GthreeFilter filter)
-{
-  switch (filter)
-    {
-    case GTHREE_FILTER_NEAREST:
-    case GTHREE_FILTER_NEAREST_MIPMAP_NEAREST:
-    case GTHREE_FILTER_NEAREST_MIPMAP_LINEAR:
-      return GL_NEAREST;
-
-    default:
-      return GL_LINEAR;
-    }
-}
-
 void
-gthree_texture_set_parameters (guint texture_type, GthreeTexture *texture, gboolean is_image_power_of_two)
+gthree_texture_set_parameters (guint texture_type, GthreeTexture *texture)
 {
   GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
 
-  if (is_image_power_of_two)
-    {
-      glTexParameteri (texture_type, GL_TEXTURE_WRAP_S, wrap_to_gl (priv->wrap_s));
-      glTexParameteri (texture_type, GL_TEXTURE_WRAP_T, wrap_to_gl (priv->wrap_t));
-      glTexParameteri (texture_type, GL_TEXTURE_MAG_FILTER, filter_to_gl (priv->mag_filter));
-      glTexParameteri (texture_type, GL_TEXTURE_MIN_FILTER, filter_to_gl (priv->min_filter ) );
-    }
-  else
-    {
-      glTexParameteri( texture_type, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
-      glTexParameteri( texture_type, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-      glTexParameteri( texture_type, GL_TEXTURE_MAG_FILTER, filter_fallback (priv->mag_filter));
-      glTexParameteri( texture_type, GL_TEXTURE_MIN_FILTER, filter_fallback (priv->min_filter));
-    }
+  glTexParameteri (texture_type, GL_TEXTURE_WRAP_S, wrap_to_gl (priv->wrap_s));
+  glTexParameteri (texture_type, GL_TEXTURE_WRAP_T, wrap_to_gl (priv->wrap_t));
+  glTexParameteri (texture_type, GL_TEXTURE_MAG_FILTER, filter_to_gl (priv->mag_filter));
+  glTexParameteri (texture_type, GL_TEXTURE_MIN_FILTER, filter_to_gl (priv->min_filter));
 
 #if TODO
   if ( _glExtensionTextureFilterAnisotropic && texture.type !== THREE.FloatType ) {
@@ -512,12 +487,6 @@ gthree_texture_set_parameters (guint texture_type, GthreeTexture *texture, gbool
     }
   }
 #endif
-}
-
-static gboolean
-is_power_of_two (guint value)
-{
-  return value != 0 && (value & (value - 1)) == 0;
 }
 
 static void
@@ -632,6 +601,26 @@ gthree_texture_get_internal_gl_format (guint gl_format,
   return internal_format;
 }
 
+static guint
+get_internal_gl_format_for_texture (GthreeTexture *texture)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+  guint gl_format = gthree_texture_format_to_gl (priv->format);
+  guint gl_type = gthree_texture_data_type_to_gl (priv->type);
+  guint internal_format = gthree_texture_get_internal_gl_format (gl_format, gl_type);
+
+  if (priv->encoding == GTHREE_ENCODING_FORMAT_SRGB &&
+      gl_type == GL_UNSIGNED_BYTE)
+    {
+      if (gl_format == GL_RGBA)
+        internal_format = GL_SRGB8_ALPHA8;
+      else if (gl_format == GL_RGB)
+        internal_format = GL_SRGB8;
+    }
+
+  return internal_format;
+}
+
 void
 gthree_texture_setup_framebuffer (GthreeTexture *texture,
                                   GthreeRenderer *renderer,
@@ -670,7 +659,6 @@ gthree_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer, int 
       guint width;
       guint height;
       guint gl_format, gl_type;
-      gboolean is_image_power_of_two;
 
       if (priv->pixbuf)
         {
@@ -682,7 +670,6 @@ gthree_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer, int 
           width = cairo_image_surface_get_width (priv->surface);
           height = cairo_image_surface_get_height (priv->surface);
         }
-      is_image_power_of_two = is_power_of_two (width) && is_power_of_two (height);
 
       //glPixelStorei( GL_UNPACK_FLIP_Y_WEBGL, texture.flipY );
       //glPixelStorei( GL_UNPACK_PREMULTIPLY_ALPHA_WEBGL, texture.premultiplyAlpha );
@@ -691,8 +678,9 @@ gthree_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer, int 
 
       gl_format = gthree_texture_format_to_gl (priv->format);
       gl_type = gthree_texture_data_type_to_gl (priv->type);
+      guint gl_internal_format = get_internal_gl_format_for_texture (texture);
 
-      gthree_texture_set_parameters (GL_TEXTURE_2D, texture, is_image_power_of_two);
+      gthree_texture_set_parameters (GL_TEXTURE_2D, texture);
 
       //var mipmap, mipmaps = texture.mipmaps;
 
@@ -759,7 +747,7 @@ gthree_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer, int 
                   else
                     pixbuf = g_object_ref (priv->pixbuf);
 
-                  glTexImage2D (GL_TEXTURE_2D, 0, gl_format, width, height, 0, gl_format, gl_type,
+                  glTexImage2D (GL_TEXTURE_2D, 0, gl_internal_format, width, height, 0, gl_format, gl_type,
                                 gdk_pixbuf_get_pixels (pixbuf));
                   g_object_unref (pixbuf);
                 }
@@ -771,14 +759,14 @@ gthree_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer, int 
                       // TODO: Support flip
                     }
 
-                  glTexImage2D (GL_TEXTURE_2D, 0, gl_format, width, height, 0,
+                  glTexImage2D (GL_TEXTURE_2D, 0, gl_internal_format, width, height, 0,
                                 GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
                                 cairo_image_surface_get_data (priv->surface));
                 }
             }
         }
 
-      if (priv->generate_mipmaps && is_image_power_of_two)
+      if (priv->generate_mipmaps)
         {
           glGenerateMipmap (GL_TEXTURE_2D);
           gthree_texture_set_max_mip_level (texture, log2 (MAX (width, height)));
