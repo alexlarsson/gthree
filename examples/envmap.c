@@ -21,8 +21,10 @@ init_scene (void)
   examples_load_cube_pixbufs ("cube/SwedishRoyalCastle", pixbufs);
 
   reflectionCube = gthree_cube_texture_new_from_array (pixbufs);
+  gthree_texture_set_encoding (GTHREE_TEXTURE (reflectionCube), GTHREE_ENCODING_FORMAT_SRGB);
 
   refractionCube = gthree_cube_texture_new_from_array (pixbufs);
+  gthree_texture_set_encoding (GTHREE_TEXTURE (refractionCube), GTHREE_ENCODING_FORMAT_SRGB);
   gthree_texture_set_mapping (GTHREE_TEXTURE (refractionCube), GTHREE_MAPPING_CUBE_REFRACTION);
 
   material = gthree_mesh_lambert_material_new ();

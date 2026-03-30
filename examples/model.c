@@ -415,6 +415,7 @@ main (int argc, char *argv[])
 
       examples_load_cube_pixbufs (cubes[i].path, pixbufs);
       cube_texture = gthree_cube_texture_new_from_array (pixbufs);
+      gthree_texture_set_encoding (GTHREE_TEXTURE (cube_texture), GTHREE_ENCODING_FORMAT_SRGB);
       for (j = 0; j < 6; j++)
         g_object_unref (pixbufs[j]);
 
