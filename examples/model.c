@@ -96,23 +96,25 @@ box_get_bounding_sphere (const graphene_box_t *box,
 static void
 load_scene (void)
 {
-  GError *error = NULL;
-  g_autoptr(GFile) file = NULL;
-  g_autoptr(GFile) parent = NULL;
-  g_autoptr(GBytes) bytes = NULL;
-  const char *path;
+  const char *path = g_ptr_array_index (model_paths, current_model);
 
-  path = g_ptr_array_index (model_paths, current_model);
+  if (g_str_has_prefix (path, "/") || g_str_has_prefix (path, "file://"))
+    {
+      GError *error = NULL;
+      g_autoptr(GFile) file = g_file_new_for_commandline_arg (path);
+      g_autoptr(GFile) parent = g_file_get_parent (file);
+      g_autoptr(GBytes) bytes = g_file_load_bytes (file, NULL, NULL, &error);
+      if (bytes == NULL)
+        g_error ("Failed to load %s: %s\n", path, error->message);
 
-  file = g_file_new_for_commandline_arg (path);
-  parent = g_file_get_parent (file);
-  bytes = g_file_load_bytes (file, NULL, NULL, &error);
-  if (bytes == NULL)
-    g_error ("Failed to load %s: %s\n", path, error->message);
-
-  loader = gthree_loader_parse_gltf (bytes, parent, &error);
-  if (loader == NULL)
-    g_error ("Failed to %s: %s\n", path, error->message);
+      loader = gthree_loader_parse_gltf (bytes, parent, &error);
+      if (loader == NULL)
+        g_error ("Failed to parse %s: %s\n", path, error->message);
+    }
+  else
+    {
+      loader = examples_load_gltl (path);
+    }
 
   scene = g_object_ref (gthree_loader_get_scene (loader, 0));
 }
@@ -400,9 +402,9 @@ main (int argc, char *argv[])
     char *path;
     char *name;
   } models[] = {
-    { DATADIR "/gthree-examples/models/WaterBottle.glb", "WaterBottle" },
-    { DATADIR "/gthree-examples/models/Soldier.glb", "Soldier" },
-    { DATADIR "/gthree-examples/models/RobotExpressive.glb", "Robot" },
+    { "WaterBottle.glb", "WaterBottle" },
+    { "Soldier.glb", "Soldier" },
+    { "RobotExpressive.glb", "Robot" },
   };
 
   env_maps = g_ptr_array_new_with_free_func (g_object_unref);
