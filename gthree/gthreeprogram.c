@@ -200,8 +200,10 @@ unroll_replace_cb (const GMatchInfo *info,
     {
       g_autoptr(GString) s = g_string_new (snippet);
       g_autofree char *i_s = g_strdup_printf ("[ %d ]", i);
+      g_autofree char *index_s = g_strdup_printf ("%d", i);
 
       string_replace (s, "[ i ]", i_s);
+      string_replace (s, "UNROLLED_LOOP_INDEX", index_s);
       g_string_append (res, s->str);
     }
 
@@ -211,7 +213,9 @@ unroll_replace_cb (const GMatchInfo *info,
 static char *
 unroll_loops (GString *str)
 {
-  g_autoptr(GRegex) regex = g_regex_new ("#pragma unroll_loop[\\s]+?for \\( int i \\= (\\d+)\\; i < (\\d+)\\; i \\+\\+ \\) \\{([\\s\\S]+?)(?=\\})\\}", 0, 0, NULL);
+  g_autoptr(GRegex) regex = g_regex_new (
+    "#pragma unroll_loop_start\\s+for\\s*\\(\\s*int\\s+i\\s*=\\s*(\\d+)\\s*;\\s*i\\s*<\\s*(\\d+)\\s*;\\s*i\\s*\\+\\+\\s*\\)\\s*\\{([\\s\\S]+?)\\}\\s+#pragma unroll_loop_end",
+    0, 0, NULL);
 
   return g_regex_replace_eval (regex, str->str, str->len, 0, 0, unroll_replace_cb, NULL, NULL);
 }
