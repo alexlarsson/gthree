@@ -2613,6 +2613,12 @@ set_program (GthreeRenderer *renderer,
         gthree_uniform_load (uni, renderer);
     }
 
+  {
+    gint loc = gthree_program_lookup_uniform_location (program,
+                                                        g_quark_from_static_string ("receiveShadow"));
+    if (loc >= 0)
+      glUniform1i (loc, gthree_object_get_receive_shadow (object));
+  }
 
   gthree_object_set_direct_uniforms (object, program, renderer);
 
