@@ -119,6 +119,7 @@ gthree_spot_light_real_setup (GthreeLight *light,
   graphene_matrix_t shadow_matrix;
 
   graphene_vec3_scale (gthree_light_get_color (light), intensity, &color);
+  gthree_color_srgb_to_linear (&color, &color);
   gthree_uniforms_set_vec3 (priv->uniforms, "color", &color);
 
   graphene_matrix_get_row (gthree_object_get_world_matrix (GTHREE_OBJECT (light)), 3, &light_pos);

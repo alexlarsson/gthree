@@ -2324,7 +2324,7 @@ refresh_uniforms_fog (GthreeRenderer *renderer,
 
   uni = gthree_uniforms_lookup_from_string (uniforms, "fogColor");
   if (uni != NULL)
-    gthree_uniform_set_vec3 (uni, gthree_fog_get_color (fog));
+    gthree_uniform_set_color_srgb (uni, gthree_fog_get_color (fog));
 
   if (gthree_fog_get_style (fog) == GTHREE_FOG_STYLE_LINEAR)
     {

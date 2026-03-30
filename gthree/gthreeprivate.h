@@ -350,4 +350,19 @@ void gthree_renderer_lazy_delete (GthreeRenderer *renderer,
 
 GthreeGeometry *gthree_sprite_get_geometry (GthreeSprite *sprite);
 
+static inline float
+gthree_srgb_eotf (float c)
+{
+  return c <= 0.04045f ? c / 12.92f : powf ((c + 0.055f) / 1.055f, 2.4f);
+}
+
+static inline void
+gthree_color_srgb_to_linear (const graphene_vec3_t *srgb, graphene_vec3_t *linear)
+{
+  graphene_vec3_init (linear,
+                      gthree_srgb_eotf (graphene_vec3_get_x (srgb)),
+                      gthree_srgb_eotf (graphene_vec3_get_y (srgb)),
+                      gthree_srgb_eotf (graphene_vec3_get_z (srgb)));
+}
+
 #endif /* __GTHREE_PRIVATE_H__ */
