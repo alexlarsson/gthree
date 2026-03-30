@@ -30,7 +30,7 @@ init_scene (void)
 
   scene = gthree_scene_new ();
 
-  light = gthree_hemisphere_light_new (white (), dark_grey (), 1.5 * G_PI);
+  light = gthree_hemisphere_light_new (white (), dark_grey (), 1.5);
   gthree_object_set_position_xyz (GTHREE_OBJECT (light),
                                   -1.5, 1, 1.25);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (light));

@@ -530,6 +530,10 @@ void RE_Direct_Physical( const in IncidentLight directLight, const in vec3 geome
 
 	vec3 irradiance = dotNL * directLight.color;
 
+	#ifndef PHYSICALLY_CORRECT_LIGHTS
+		irradiance *= PI;
+	#endif
+
 	#ifdef USE_CLEARCOAT
 
 		float dotNLcc = saturate( dot( geometryClearcoatNormal, directLight.direction ) );

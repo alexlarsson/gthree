@@ -101,11 +101,11 @@ init_scene (void)
   gthree_scene_set_fog (scene, fog);
 
   hemi_light = gthree_hemisphere_light_new (white (),
-                                            graphene_vec3_init (&color, 0.25, 0.25, 0.25), 1 * G_PI);
+                                            graphene_vec3_init (&color, 0.25, 0.25, 0.25), 1);
   gthree_object_set_position_xyz (GTHREE_OBJECT (hemi_light), 0, 20, 0);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (hemi_light));
 
-  dir_light = gthree_directional_light_new (white (), 1 * G_PI);
+  dir_light = gthree_directional_light_new (white (), 1);
   gthree_object_set_position_xyz (GTHREE_OBJECT (dir_light), -3, 10, -10);
   gthree_object_set_cast_shadow (GTHREE_OBJECT (dir_light), TRUE);
 

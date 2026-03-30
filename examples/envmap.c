@@ -56,10 +56,9 @@ init_scene (void)
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (obj3));
 
   ambient_light = gthree_ambient_light_new (white ());
-  gthree_light_set_intensity (GTHREE_LIGHT (ambient_light), G_PI);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));
 
-  point_light = gthree_point_light_new (white (), 1 * G_PI, 0);
+  point_light = gthree_point_light_new (white (), 1, 0);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (point_light));
 
   gthree_object_set_position_xyz (GTHREE_OBJECT (point_light),

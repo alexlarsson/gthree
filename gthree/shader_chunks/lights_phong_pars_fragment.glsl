@@ -14,6 +14,10 @@ void RE_Direct_BlinnPhong( const in IncidentLight directLight, const in vec3 geo
 	float dotNL = saturate( dot( geometryNormal, directLight.direction ) );
 	vec3 irradiance = dotNL * directLight.color;
 
+	#ifndef PHYSICALLY_CORRECT_LIGHTS
+		irradiance *= PI;
+	#endif
+
 	reflectedLight.directDiffuse += irradiance * BRDF_Lambert( material.diffuseColor );
 
 	reflectedLight.directSpecular += irradiance * BRDF_BlinnPhong( directLight.direction, geometryViewDir, geometryNormal, material.specularColor, material.specularShininess ) * material.specularStrength;

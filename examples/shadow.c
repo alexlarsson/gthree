@@ -68,12 +68,11 @@ init_scene (void)
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (floor));
 
   ambient_light = gthree_ambient_light_new (dark_grey ());
-  gthree_light_set_intensity (GTHREE_LIGHT (ambient_light), G_PI);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));
 
   /* Directional light */
 
-  directional_light = gthree_directional_light_new (green (), 0.3 * G_PI);
+  directional_light = gthree_directional_light_new (green (), 0.3);
   gthree_object_set_cast_shadow (GTHREE_OBJECT (directional_light), TRUE);
   gthree_object_set_position_xyz (GTHREE_OBJECT (directional_light),
                                   0, 200, 200);
@@ -95,7 +94,7 @@ init_scene (void)
 
   /* Spot light */
 
-  spot_light = gthree_spot_light_new (blue (), 1.5 * G_PI, 5000, G_PI/4, 0.2);
+  spot_light = gthree_spot_light_new (blue (), 1.5, 5000, G_PI/4, 0.2);
   gthree_object_set_cast_shadow (GTHREE_OBJECT (spot_light), TRUE);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (spot_light));
 
@@ -106,7 +105,7 @@ init_scene (void)
 
   /* Point light */
 
-  point_light = gthree_point_light_new (red (), 0.5 * G_PI, 0);
+  point_light = gthree_point_light_new (red (), 0.5, 0);
   gthree_object_set_cast_shadow (GTHREE_OBJECT (point_light), TRUE);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (point_light));
 
