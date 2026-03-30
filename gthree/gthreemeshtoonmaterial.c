@@ -141,8 +141,11 @@ gthree_mesh_toon_material_real_set_params (GthreeMaterial *material,
 
   params->bump_map = priv->bump_map != NULL;
   params->normal_map = priv->normal_map != NULL;
-  params->normal_map_object_space = priv->normal_map_type == GTHREE_NORMAL_MAP_TYPE_OBJECT_SPACE;
-  params->normal_map_tangent_space = priv->normal_map_type == GTHREE_NORMAL_MAP_TYPE_TANGENT_SPACE;
+  if (params->normal_map)
+    {
+      params->normal_map_object_space = priv->normal_map_type == GTHREE_NORMAL_MAP_TYPE_OBJECT_SPACE;
+      params->normal_map_tangent_space = priv->normal_map_type == GTHREE_NORMAL_MAP_TYPE_TANGENT_SPACE;
+    }
   params->displacement_map = priv->displacement_map != NULL;
   params->alpha_map = priv->alpha_map != NULL;
 

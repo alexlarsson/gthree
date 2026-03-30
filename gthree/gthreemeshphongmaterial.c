@@ -124,8 +124,11 @@ gthree_mesh_phong_material_real_set_params (GthreeMaterial *material,
 
   params->specular_map = priv->specular_map != NULL;
   params->normal_map = priv->normal_map != NULL;
-  params->normal_map_object_space = priv->normal_map_type == GTHREE_NORMAL_MAP_TYPE_OBJECT_SPACE;
-  params->normal_map_tangent_space = priv->normal_map_type == GTHREE_NORMAL_MAP_TYPE_TANGENT_SPACE;
+  if (params->normal_map)
+    {
+      params->normal_map_object_space = priv->normal_map_type == GTHREE_NORMAL_MAP_TYPE_OBJECT_SPACE;
+      params->normal_map_tangent_space = priv->normal_map_type == GTHREE_NORMAL_MAP_TYPE_TANGENT_SPACE;
+    }
 
   params->flat_shading = priv->flat_shading;
 
