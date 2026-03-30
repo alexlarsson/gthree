@@ -518,14 +518,6 @@ static GthreeUniformsDefinition standard_uniforms[] = {
   {"envMapIntensity", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
 };
 
-static const char *specglos_uniform_libs[] = { "common", "envmap", "aomap", "lightmap", "emissivemap", "bumpmap", "normalmap", "displacementmap", "specularmap", "glossinessmap", "fog", "lights", NULL };
-static GthreeUniformsDefinition specglos_uniforms[] = {
-  {"emissive", GTHREE_UNIFORM_TYPE_VECTOR3, &black },
-  {"glossiness", GTHREE_UNIFORM_TYPE_FLOAT, &fp5 },
-  {"specular", GTHREE_UNIFORM_TYPE_VECTOR3, &dark_grey },
-  {"envMapIntensity", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
-};
-
 static const char *matcap_uniform_libs[] = { "common", "bumpmap", "normalmap", "displacementmap", "fog", NULL };
 static GthreeUniformsDefinition matcap_uniforms[] = {
   {"emissive", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
@@ -605,8 +597,8 @@ static const char *convolution_defines[] = {
   NULL
 };
 
-static GthreeShader *basic, *lambert, *phong, *toon, *standard, *specglos, *matcap, *points, *dashed, *depth, *normal, *sprite, *background;
-static GthreeShader *cube, *equirect, *distanceRGBA, *shadow, *physical, *copy, *convolution;
+static GthreeShader *basic, *lambert, *phong, *toon, *standard, *matcap, *points, *dashed, *depth, *normal, *sprite, *background;
+static GthreeShader *cube, *equirect, *distance, *shadow, *physical, *copy, *convolution;
 
 static void
 gthree_shader_init_libs ()
@@ -650,12 +642,6 @@ gthree_shader_init_libs ()
                                                  "meshphysical_vert", "meshphysical_frag");
   gthree_shader_set_name (standard, "standard");
 
-  specglos = gthree_shader_new_from_definitions (specglos_uniform_libs,
-                                                 specglos_uniforms, G_N_ELEMENTS (specglos_uniforms),
-                                                 NULL,
-                                                 "meshphysical_vert", "meshspecglos_frag");
-  gthree_shader_set_name (specglos, "specglos");
-
   matcap = gthree_shader_new_from_definitions (matcap_uniform_libs,
                                                matcap_uniforms, G_N_ELEMENTS (matcap_uniforms),
                                                NULL,
@@ -683,7 +669,7 @@ gthree_shader_init_libs ()
   normal = gthree_shader_new_from_definitions (normal_uniform_libs,
                                                normal_uniforms, G_N_ELEMENTS (normal_uniforms),
                                                NULL,
-                                               "normal_vert", "normal_frag");
+                                               "meshnormal_vert", "meshnormal_frag");
   gthree_shader_set_name (normal, "normal");
 
   sprite = gthree_shader_new_from_definitions (sprite_uniform_libs,
@@ -710,11 +696,11 @@ gthree_shader_init_libs ()
                                                  "equirect_vert", "equirect_frag");
   gthree_shader_set_name (equirect, "equirect");
 
-  distanceRGBA = gthree_shader_new_from_definitions (distanceRGBA_uniform_libs,
-                                                     distanceRGBA_uniforms, G_N_ELEMENTS (distanceRGBA_uniforms),
-                                                     NULL,
-                                                     "distanceRGBA_vert", "distanceRGBA_frag");
-  gthree_shader_set_name (distanceRGBA, "distanceRGBA");
+  distance = gthree_shader_new_from_definitions (distanceRGBA_uniform_libs,
+                                                   distanceRGBA_uniforms, G_N_ELEMENTS (distanceRGBA_uniforms),
+                                                   NULL,
+                                                   "distance_vert", "distance_frag");
+  gthree_shader_set_name (distance, "distance");
 
   shadow = gthree_shader_new_from_definitions (shadow_uniform_libs,
                                                shadow_uniforms, G_N_ELEMENTS (shadow_uniforms),
@@ -761,9 +747,6 @@ gthree_get_shader_from_library (const char *name)
   if (strcmp (name, "standard") == 0)
     return standard;
 
-  if (strcmp (name, "specglos") == 0)
-    return specglos;
-
   if (strcmp (name, "matcap") == 0)
     return matcap;
 
@@ -791,8 +774,8 @@ gthree_get_shader_from_library (const char *name)
   if (strcmp (name, "equirect") == 0)
     return equirect;
 
-  if (strcmp (name, "distanceRGBA") == 0)
-    return distanceRGBA;
+  if (strcmp (name, "distanceRGBA") == 0 || strcmp (name, "distance") == 0)
+    return distance;
 
   if (strcmp (name, "shadow") == 0)
     return shadow;

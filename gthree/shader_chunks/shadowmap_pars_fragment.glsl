@@ -1,243 +1,374 @@
+#if NUM_SPOT_LIGHT_COORDS > 0
+
+	varying vec4 vSpotLightCoord[ NUM_SPOT_LIGHT_COORDS ];
+
+#endif
+
+#if NUM_SPOT_LIGHT_MAPS > 0
+
+	uniform sampler2D spotLightMap[ NUM_SPOT_LIGHT_MAPS ];
+
+#endif
+
 #ifdef USE_SHADOWMAP
 
-	#if NUM_DIR_LIGHTS > 0
-
-		uniform sampler2D directionalShadowMap[ NUM_DIR_LIGHTS ];
-		varying vec4 vDirectionalShadowCoord[ NUM_DIR_LIGHTS ];
-
-	#endif
-
-	#if NUM_SPOT_LIGHTS > 0
-
-		uniform sampler2D spotShadowMap[ NUM_SPOT_LIGHTS ];
-		varying vec4 vSpotShadowCoord[ NUM_SPOT_LIGHTS ];
-
-	#endif
-
-	#if NUM_POINT_LIGHTS > 0
-
-		uniform sampler2D pointShadowMap[ NUM_POINT_LIGHTS ];
-		varying vec4 vPointShadowCoord[ NUM_POINT_LIGHTS ];
-
-	#endif
-
-	/*
-	#if NUM_RECT_AREA_LIGHTS > 0
-
-		// TODO (abelnation): create uniforms for area light shadows
-
-	#endif
-	*/
-
-	float texture2DCompare( sampler2D depths, vec2 uv, float compare ) {
-
-		return step( compare, unpackRGBAToDepth( texture2D( depths, uv ) ) );
-
-	}
-
-	float texture2DShadowLerp( sampler2D depths, vec2 size, vec2 uv, float compare ) {
-
-		const vec2 offset = vec2( 0.0, 1.0 );
-
-		vec2 texelSize = vec2( 1.0 ) / size;
-		vec2 centroidUV = floor( uv * size + 0.5 ) / size;
-
-		float lb = texture2DCompare( depths, centroidUV + texelSize * offset.xx, compare );
-		float lt = texture2DCompare( depths, centroidUV + texelSize * offset.xy, compare );
-		float rb = texture2DCompare( depths, centroidUV + texelSize * offset.yx, compare );
-		float rt = texture2DCompare( depths, centroidUV + texelSize * offset.yy, compare );
-
-		vec2 f = fract( uv * size + 0.5 );
-
-		float a = mix( lb, lt, f.y );
-		float b = mix( rb, rt, f.y );
-		float c = mix( a, b, f.x );
-
-		return c;
-
-	}
-
-	float getShadow( sampler2D shadowMap, vec2 shadowMapSize, float shadowBias, float shadowRadius, vec4 shadowCoord ) {
-
-		float shadow = 1.0;
-
-		shadowCoord.xyz /= shadowCoord.w;
-		shadowCoord.z += shadowBias;
-
-		// if ( something && something ) breaks ATI OpenGL shader compiler
-		// if ( all( something, something ) ) using this instead
-
-		bvec4 inFrustumVec = bvec4 ( shadowCoord.x >= 0.0, shadowCoord.x <= 1.0, shadowCoord.y >= 0.0, shadowCoord.y <= 1.0 );
-		bool inFrustum = all( inFrustumVec );
-
-		bvec2 frustumTestVec = bvec2( inFrustum, shadowCoord.z <= 1.0 );
-
-		bool frustumTest = all( frustumTestVec );
-
-		if ( frustumTest ) {
+	#if NUM_DIR_LIGHT_SHADOWS > 0
 
 		#if defined( SHADOWMAP_TYPE_PCF )
 
-			vec2 texelSize = vec2( 1.0 ) / shadowMapSize;
+			uniform sampler2DShadow directionalShadowMap[ NUM_DIR_LIGHT_SHADOWS ];
 
-			float dx0 = - texelSize.x * shadowRadius;
-			float dy0 = - texelSize.y * shadowRadius;
-			float dx1 = + texelSize.x * shadowRadius;
-			float dy1 = + texelSize.y * shadowRadius;
+		#else
 
-			shadow = (
-				texture2DCompare( shadowMap, shadowCoord.xy + vec2( dx0, dy0 ), shadowCoord.z ) +
-				texture2DCompare( shadowMap, shadowCoord.xy + vec2( 0.0, dy0 ), shadowCoord.z ) +
-				texture2DCompare( shadowMap, shadowCoord.xy + vec2( dx1, dy0 ), shadowCoord.z ) +
-				texture2DCompare( shadowMap, shadowCoord.xy + vec2( dx0, 0.0 ), shadowCoord.z ) +
-				texture2DCompare( shadowMap, shadowCoord.xy, shadowCoord.z ) +
-				texture2DCompare( shadowMap, shadowCoord.xy + vec2( dx1, 0.0 ), shadowCoord.z ) +
-				texture2DCompare( shadowMap, shadowCoord.xy + vec2( dx0, dy1 ), shadowCoord.z ) +
-				texture2DCompare( shadowMap, shadowCoord.xy + vec2( 0.0, dy1 ), shadowCoord.z ) +
-				texture2DCompare( shadowMap, shadowCoord.xy + vec2( dx1, dy1 ), shadowCoord.z )
-			) * ( 1.0 / 9.0 );
-
-		#elif defined( SHADOWMAP_TYPE_PCF_SOFT )
-
-			vec2 texelSize = vec2( 1.0 ) / shadowMapSize;
-
-			float dx0 = - texelSize.x * shadowRadius;
-			float dy0 = - texelSize.y * shadowRadius;
-			float dx1 = + texelSize.x * shadowRadius;
-			float dy1 = + texelSize.y * shadowRadius;
-
-			shadow = (
-				texture2DShadowLerp( shadowMap, shadowMapSize, shadowCoord.xy + vec2( dx0, dy0 ), shadowCoord.z ) +
-				texture2DShadowLerp( shadowMap, shadowMapSize, shadowCoord.xy + vec2( 0.0, dy0 ), shadowCoord.z ) +
-				texture2DShadowLerp( shadowMap, shadowMapSize, shadowCoord.xy + vec2( dx1, dy0 ), shadowCoord.z ) +
-				texture2DShadowLerp( shadowMap, shadowMapSize, shadowCoord.xy + vec2( dx0, 0.0 ), shadowCoord.z ) +
-				texture2DShadowLerp( shadowMap, shadowMapSize, shadowCoord.xy, shadowCoord.z ) +
-				texture2DShadowLerp( shadowMap, shadowMapSize, shadowCoord.xy + vec2( dx1, 0.0 ), shadowCoord.z ) +
-				texture2DShadowLerp( shadowMap, shadowMapSize, shadowCoord.xy + vec2( dx0, dy1 ), shadowCoord.z ) +
-				texture2DShadowLerp( shadowMap, shadowMapSize, shadowCoord.xy + vec2( 0.0, dy1 ), shadowCoord.z ) +
-				texture2DShadowLerp( shadowMap, shadowMapSize, shadowCoord.xy + vec2( dx1, dy1 ), shadowCoord.z )
-			) * ( 1.0 / 9.0 );
-
-		#else // no percentage-closer filtering:
-
-			shadow = texture2DCompare( shadowMap, shadowCoord.xy, shadowCoord.z );
+			uniform sampler2D directionalShadowMap[ NUM_DIR_LIGHT_SHADOWS ];
 
 		#endif
 
+		varying vec4 vDirectionalShadowCoord[ NUM_DIR_LIGHT_SHADOWS ];
+
+		struct DirectionalLightShadow {
+			float shadowIntensity;
+			float shadowBias;
+			float shadowNormalBias;
+			float shadowRadius;
+			vec2 shadowMapSize;
+		};
+
+		uniform DirectionalLightShadow directionalLightShadows[ NUM_DIR_LIGHT_SHADOWS ];
+
+	#endif
+
+	#if NUM_SPOT_LIGHT_SHADOWS > 0
+
+		#if defined( SHADOWMAP_TYPE_PCF )
+
+			uniform sampler2DShadow spotShadowMap[ NUM_SPOT_LIGHT_SHADOWS ];
+
+		#else
+
+			uniform sampler2D spotShadowMap[ NUM_SPOT_LIGHT_SHADOWS ];
+
+		#endif
+
+		struct SpotLightShadow {
+			float shadowIntensity;
+			float shadowBias;
+			float shadowNormalBias;
+			float shadowRadius;
+			vec2 shadowMapSize;
+		};
+
+		uniform SpotLightShadow spotLightShadows[ NUM_SPOT_LIGHT_SHADOWS ];
+
+	#endif
+
+	#if NUM_POINT_LIGHT_SHADOWS > 0
+
+		#if defined( SHADOWMAP_TYPE_PCF )
+
+			uniform samplerCubeShadow pointShadowMap[ NUM_POINT_LIGHT_SHADOWS ];
+
+		#elif defined( SHADOWMAP_TYPE_BASIC )
+
+			uniform samplerCube pointShadowMap[ NUM_POINT_LIGHT_SHADOWS ];
+
+		#endif
+
+		varying vec4 vPointShadowCoord[ NUM_POINT_LIGHT_SHADOWS ];
+
+		struct PointLightShadow {
+			float shadowIntensity;
+			float shadowBias;
+			float shadowNormalBias;
+			float shadowRadius;
+			vec2 shadowMapSize;
+			float shadowCameraNear;
+			float shadowCameraFar;
+		};
+
+		uniform PointLightShadow pointLightShadows[ NUM_POINT_LIGHT_SHADOWS ];
+
+	#endif
+
+	#if defined( SHADOWMAP_TYPE_PCF )
+
+		// Interleaved Gradient Noise for randomizing sampling patterns
+		float interleavedGradientNoise( vec2 position ) {
+
+			return fract( 52.9829189 * fract( dot( position, vec2( 0.06711056, 0.00583715 ) ) ) );
+
 		}
 
-		return shadow;
+		// Vogel disk sampling for uniform circular distribution
+		vec2 vogelDiskSample( int sampleIndex, int samplesCount, float phi ) {
 
-	}
-
-	// cubeToUV() maps a 3D direction vector suitable for cube texture mapping to a 2D
-	// vector suitable for 2D texture mapping. This code uses the following layout for the
-	// 2D texture:
-	//
-	// xzXZ
-	//  y Y
-	//
-	// Y - Positive y direction
-	// y - Negative y direction
-	// X - Positive x direction
-	// x - Negative x direction
-	// Z - Positive z direction
-	// z - Negative z direction
-	//
-	// Source and test bed:
-	// https://gist.github.com/tschw/da10c43c467ce8afd0c4
-
-	vec2 cubeToUV( vec3 v, float texelSizeY ) {
-
-		// Number of texels to avoid at the edge of each square
-
-		vec3 absV = abs( v );
-
-		// Intersect unit cube
-
-		float scaleToCube = 1.0 / max( absV.x, max( absV.y, absV.z ) );
-		absV *= scaleToCube;
-
-		// Apply scale to avoid seams
-
-		// two texels less per square (one texel will do for NEAREST)
-		v *= scaleToCube * ( 1.0 - 2.0 * texelSizeY );
-
-		// Unwrap
-
-		// space: -1 ... 1 range for each square
-		//
-		// #X##		dim    := ( 4 , 2 )
-		//  # #		center := ( 1 , 1 )
-
-		vec2 planar = v.xy;
-
-		float almostATexel = 1.5 * texelSizeY;
-		float almostOne = 1.0 - almostATexel;
-
-		if ( absV.z >= almostOne ) {
-
-			if ( v.z > 0.0 )
-				planar.x = 4.0 - v.x;
-
-		} else if ( absV.x >= almostOne ) {
-
-			float signX = sign( v.x );
-			planar.x = v.z * signX + 2.0 * signX;
-
-		} else if ( absV.y >= almostOne ) {
-
-			float signY = sign( v.y );
-			planar.x = v.x + 2.0 * signY + 2.0;
-			planar.y = v.z * signY - 2.0;
+			const float goldenAngle = 2.399963229728653;
+			float r = sqrt( ( float( sampleIndex ) + 0.5 ) / float( samplesCount ) );
+			float theta = float( sampleIndex ) * goldenAngle + phi;
+			return vec2( cos( theta ), sin( theta ) ) * r;
 
 		}
 
-		// Transform to UV space
+	#endif
 
-		// scale := 0.5 / dim
-		// translate := ( center + 0.5 ) / dim
-		return vec2( 0.125, 0.25 ) * planar + vec2( 0.375, 0.75 );
+	#if defined( SHADOWMAP_TYPE_PCF )
 
-	}
+		float getShadow( sampler2DShadow shadowMap, vec2 shadowMapSize, float shadowIntensity, float shadowBias, float shadowRadius, vec4 shadowCoord ) {
 
-	float getPointShadow( sampler2D shadowMap, vec2 shadowMapSize, float shadowBias, float shadowRadius, vec4 shadowCoord, float shadowCameraNear, float shadowCameraFar ) {
+			float shadow = 1.0;
 
-		vec2 texelSize = vec2( 1.0 ) / ( shadowMapSize * vec2( 4.0, 2.0 ) );
+			shadowCoord.xyz /= shadowCoord.w;
+			shadowCoord.z += shadowBias;
+
+			bool inFrustum = shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0 && shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0;
+			bool frustumTest = inFrustum && shadowCoord.z <= 1.0;
+
+			if ( frustumTest ) {
+
+				// Hardware PCF with LinearFilter gives us 4-tap filtering per sample
+				// 5 samples using Vogel disk + IGN = effectively 20 filtered taps with better distribution
+				vec2 texelSize = vec2( 1.0 ) / shadowMapSize;
+				float radius = shadowRadius * texelSize.x;
+
+				// Use IGN to rotate sampling pattern per pixel
+				float phi = interleavedGradientNoise( gl_FragCoord.xy ) * PI2;
+
+				shadow = (
+					texture( shadowMap, vec3( shadowCoord.xy + vogelDiskSample( 0, 5, phi ) * radius, shadowCoord.z ) ) +
+					texture( shadowMap, vec3( shadowCoord.xy + vogelDiskSample( 1, 5, phi ) * radius, shadowCoord.z ) ) +
+					texture( shadowMap, vec3( shadowCoord.xy + vogelDiskSample( 2, 5, phi ) * radius, shadowCoord.z ) ) +
+					texture( shadowMap, vec3( shadowCoord.xy + vogelDiskSample( 3, 5, phi ) * radius, shadowCoord.z ) ) +
+					texture( shadowMap, vec3( shadowCoord.xy + vogelDiskSample( 4, 5, phi ) * radius, shadowCoord.z ) )
+				) * 0.2;
+
+			}
+
+			return mix( 1.0, shadow, shadowIntensity );
+
+		}
+
+	#elif defined( SHADOWMAP_TYPE_VSM )
+
+		float getShadow( sampler2D shadowMap, vec2 shadowMapSize, float shadowIntensity, float shadowBias, float shadowRadius, vec4 shadowCoord ) {
+
+			float shadow = 1.0;
+
+			shadowCoord.xyz /= shadowCoord.w;
+
+			#ifdef USE_REVERSED_DEPTH_BUFFER
+
+				shadowCoord.z -= shadowBias;
+
+			#else
+
+				shadowCoord.z += shadowBias;
+
+			#endif
+
+			bool inFrustum = shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0 && shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0;
+			bool frustumTest = inFrustum && shadowCoord.z <= 1.0;
+
+			if ( frustumTest ) {
+
+				vec2 distribution = texture2D( shadowMap, shadowCoord.xy ).rg;
+
+				float mean = distribution.x;
+				float variance = distribution.y * distribution.y;
+
+				#ifdef USE_REVERSED_DEPTH_BUFFER
+
+					float hard_shadow = step( mean, shadowCoord.z );
+
+				#else
+
+					float hard_shadow = step( shadowCoord.z, mean );
+
+				#endif
+				
+				// Early return if fully lit
+				if ( hard_shadow == 1.0 ) {
+
+					shadow = 1.0;
+
+				} else {
+
+					// Variance must be non-zero to avoid division by zero
+					variance = max( variance, 0.0000001 );
+
+					// Distance from mean
+					float d = shadowCoord.z - mean;
+
+					// Chebyshev's inequality for upper bound on probability
+					float p_max = variance / ( variance + d * d );
+
+					// Reduce light bleeding by remapping [amount, 1] to [0, 1]
+					p_max = clamp( ( p_max - 0.3 ) / 0.65, 0.0, 1.0 );
+
+					shadow = max( hard_shadow, p_max );
+
+				}
+
+			}
+
+			return mix( 1.0, shadow, shadowIntensity );
+
+		}
+
+	#else // SHADOWMAP_TYPE_BASIC
+
+		float getShadow( sampler2D shadowMap, vec2 shadowMapSize, float shadowIntensity, float shadowBias, float shadowRadius, vec4 shadowCoord ) {
+
+			float shadow = 1.0;
+
+			shadowCoord.xyz /= shadowCoord.w;
+
+			#ifdef USE_REVERSED_DEPTH_BUFFER
+
+				shadowCoord.z -= shadowBias;
+
+			#else
+
+				shadowCoord.z += shadowBias;
+
+			#endif
+
+			bool inFrustum = shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0 && shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0;
+			bool frustumTest = inFrustum && shadowCoord.z <= 1.0;
+
+			if ( frustumTest ) {
+
+				float depth = texture2D( shadowMap, shadowCoord.xy ).r;
+
+				#ifdef USE_REVERSED_DEPTH_BUFFER
+
+					shadow = step( depth, shadowCoord.z );
+
+				#else
+
+					shadow = step( shadowCoord.z, depth );
+
+				#endif
+
+			}
+
+			return mix( 1.0, shadow, shadowIntensity );
+
+		}
+
+	#endif
+
+	#if NUM_POINT_LIGHT_SHADOWS > 0
+
+	#if defined( SHADOWMAP_TYPE_PCF )
+
+	float getPointShadow( samplerCubeShadow shadowMap, vec2 shadowMapSize, float shadowIntensity, float shadowBias, float shadowRadius, vec4 shadowCoord, float shadowCameraNear, float shadowCameraFar ) {
+
+		float shadow = 1.0;
 
 		// for point lights, the uniform @vShadowCoord is re-purposed to hold
 		// the vector from the light to the world-space position of the fragment.
 		vec3 lightToPosition = shadowCoord.xyz;
 
-		// dp = normalized distance from light to fragment position
-		float dp = ( length( lightToPosition ) - shadowCameraNear ) / ( shadowCameraFar - shadowCameraNear ); // need to clamp?
-		dp += shadowBias;
-
-		// bd3D = base direction 3D
+		// Direction from light to fragment
 		vec3 bd3D = normalize( lightToPosition );
 
-		#if defined( SHADOWMAP_TYPE_PCF ) || defined( SHADOWMAP_TYPE_PCF_SOFT )
+		// For cube shadow maps, depth is stored as distance along each face's view axis, not radial distance
+		// The view-space depth is the maximum component of the direction vector (which face is sampled)
+		vec3 absVec = abs( lightToPosition );
+		float viewSpaceZ = max( max( absVec.x, absVec.y ), absVec.z );
 
-			vec2 offset = vec2( - 1, 1 ) * shadowRadius * texelSize.y;
+		if ( viewSpaceZ - shadowCameraFar <= 0.0 && viewSpaceZ - shadowCameraNear >= 0.0 ) {
 
-			return (
-				texture2DCompare( shadowMap, cubeToUV( bd3D + offset.xyy, texelSize.y ), dp ) +
-				texture2DCompare( shadowMap, cubeToUV( bd3D + offset.yyy, texelSize.y ), dp ) +
-				texture2DCompare( shadowMap, cubeToUV( bd3D + offset.xyx, texelSize.y ), dp ) +
-				texture2DCompare( shadowMap, cubeToUV( bd3D + offset.yyx, texelSize.y ), dp ) +
-				texture2DCompare( shadowMap, cubeToUV( bd3D, texelSize.y ), dp ) +
-				texture2DCompare( shadowMap, cubeToUV( bd3D + offset.xxy, texelSize.y ), dp ) +
-				texture2DCompare( shadowMap, cubeToUV( bd3D + offset.yxy, texelSize.y ), dp ) +
-				texture2DCompare( shadowMap, cubeToUV( bd3D + offset.xxx, texelSize.y ), dp ) +
-				texture2DCompare( shadowMap, cubeToUV( bd3D + offset.yxx, texelSize.y ), dp )
-			) * ( 1.0 / 9.0 );
+			// viewZ to perspective depth
 
-		#else // no percentage-closer filtering
+			#ifdef USE_REVERSED_DEPTH_BUFFER
 
-			return texture2DCompare( shadowMap, cubeToUV( bd3D, texelSize.y ), dp );
+				float dp = ( shadowCameraNear * ( shadowCameraFar - viewSpaceZ ) ) / ( viewSpaceZ * ( shadowCameraFar - shadowCameraNear ) );
+				dp -= shadowBias;
 
-		#endif
+			#else
+
+				float dp = ( shadowCameraFar * ( viewSpaceZ - shadowCameraNear ) ) / ( viewSpaceZ * ( shadowCameraFar - shadowCameraNear ) );
+				dp += shadowBias;
+
+			#endif
+
+			// Hardware PCF with LinearFilter gives us 4-tap filtering per sample
+			// Use Vogel disk + IGN sampling for better quality
+			float texelSize = shadowRadius / shadowMapSize.x;
+
+			// Build a tangent-space coordinate system for applying offsets
+			vec3 absDir = abs( bd3D );
+			vec3 tangent = absDir.x > absDir.z ? vec3( 0.0, 1.0, 0.0 ) : vec3( 1.0, 0.0, 0.0 );
+			tangent = normalize( cross( bd3D, tangent ) );
+			vec3 bitangent = cross( bd3D, tangent );
+
+			// Use IGN to rotate sampling pattern per pixel
+			float phi = interleavedGradientNoise( gl_FragCoord.xy ) * PI2;
+
+			vec2 sample0 = vogelDiskSample( 0, 5, phi );
+			vec2 sample1 = vogelDiskSample( 1, 5, phi );
+			vec2 sample2 = vogelDiskSample( 2, 5, phi );
+			vec2 sample3 = vogelDiskSample( 3, 5, phi );
+			vec2 sample4 = vogelDiskSample( 4, 5, phi );
+
+			shadow = (
+				texture( shadowMap, vec4( bd3D + ( tangent * sample0.x + bitangent * sample0.y ) * texelSize, dp ) ) +
+				texture( shadowMap, vec4( bd3D + ( tangent * sample1.x + bitangent * sample1.y ) * texelSize, dp ) ) +
+				texture( shadowMap, vec4( bd3D + ( tangent * sample2.x + bitangent * sample2.y ) * texelSize, dp ) ) +
+				texture( shadowMap, vec4( bd3D + ( tangent * sample3.x + bitangent * sample3.y ) * texelSize, dp ) ) +
+				texture( shadowMap, vec4( bd3D + ( tangent * sample4.x + bitangent * sample4.y ) * texelSize, dp ) )
+			) * 0.2;
+
+		}
+
+		return mix( 1.0, shadow, shadowIntensity );
 
 	}
+
+	#elif defined( SHADOWMAP_TYPE_BASIC )
+
+	float getPointShadow( samplerCube shadowMap, vec2 shadowMapSize, float shadowIntensity, float shadowBias, float shadowRadius, vec4 shadowCoord, float shadowCameraNear, float shadowCameraFar ) {
+
+		float shadow = 1.0;
+
+		// for point lights, the uniform @vShadowCoord is re-purposed to hold
+		// the vector from the light to the world-space position of the fragment.
+		vec3 lightToPosition = shadowCoord.xyz;
+
+		// For cube shadow maps, depth is stored as distance along each face's view axis, not radial distance
+		// The view-space depth is the maximum component of the direction vector (which face is sampled)
+		vec3 absVec = abs( lightToPosition );
+		float viewSpaceZ = max( max( absVec.x, absVec.y ), absVec.z );
+
+		if ( viewSpaceZ - shadowCameraFar <= 0.0 && viewSpaceZ - shadowCameraNear >= 0.0 ) {
+
+			// viewZ to perspective depth
+
+			float dp = ( shadowCameraFar * ( viewSpaceZ - shadowCameraNear ) ) / ( viewSpaceZ * ( shadowCameraFar - shadowCameraNear ) );
+			dp += shadowBias;
+
+			// Direction from light to fragment
+			vec3 bd3D = normalize( lightToPosition );
+
+			float depth = textureCube( shadowMap, bd3D ).r;
+
+			#ifdef USE_REVERSED_DEPTH_BUFFER
+
+				depth = 1.0 - depth;
+
+			#endif
+
+			shadow = step( dp, depth );
+
+		}
+
+		return mix( 1.0, shadow, shadowIntensity );
+
+	}
+
+	#endif
+
+	#endif
 
 #endif

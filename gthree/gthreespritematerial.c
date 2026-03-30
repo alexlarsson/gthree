@@ -117,8 +117,6 @@ gthree_sprite_material_real_set_params (GthreeMaterial *material,
   GTHREE_MATERIAL_CLASS (gthree_sprite_material_parent_class)->set_params (material, params);
 
   params->map = priv->map != NULL;
-  if (params->map)
-    params->map_encoding = gthree_texture_get_encoding (priv->map);
 
   params->size_attenuation = priv->size_attenuation;
 }

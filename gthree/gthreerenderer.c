@@ -1476,8 +1476,7 @@ init_material (GthreeRenderer *renderer,
 
   parameters.precision = GTHREE_PRECISION_HIGH;
   parameters.supports_vertex_textures = priv->supports_vertex_textures;
-  // TODO: Get encoding from currentRenderTarget if set
-  parameters.output_encoding = GTHREE_ENCODING_FORMAT_GAMMA;
+  parameters.output_color_space = 1; /* sRGB */
   parameters.physically_correct_lights = priv->physically_correct_lights;
 
   gthree_material_set_params (material, &parameters);

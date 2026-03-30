@@ -1,13 +1,6 @@
-#ifdef USE_LOGDEPTHBUF
+#ifdef USE_LOGARITHMIC_DEPTH_BUFFER
 
-	#ifdef USE_LOGDEPTHBUF_EXT
-
-		varying float vFragDepth;
-
-	#else
-
-		uniform float logDepthBufFC;
-
-	#endif
+	varying float vFragDepth;
+	varying float vIsPerspective;
 
 #endif

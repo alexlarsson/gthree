@@ -1,4 +1,4 @@
-#if defined( DITHERING )
+#ifdef DITHERING
 
 	gl_FragColor.rgb = dithering( gl_FragColor.rgb );
 

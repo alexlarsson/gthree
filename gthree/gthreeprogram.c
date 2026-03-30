@@ -285,66 +285,22 @@ parse_text_with_includes (const char *text)
 }
 
 static void
-get_encoding_components (GthreeEncodingFormat encoding,
-                         const char **type,
-                         const char **args)
-{
-  switch ( encoding ) {
-  case GTHREE_ENCODING_FORMAT_LINEAR:
-    *type = "Linear";
-    *args = "( value )";
-    break;
-  case GTHREE_ENCODING_FORMAT_SRGB:
-    *type = "sRGB";
-    *args = "( value )";
-    break;
-  case GTHREE_ENCODING_FORMAT_RGBE:
-    *type = "RGBE";
-    *args = "( value )";
-    break;
-  case GTHREE_ENCODING_FORMAT_RGBM7:
-    *type = "RGBM";
-    *args = "( value, 7.0 )";
-    break;
-  case GTHREE_ENCODING_FORMAT_RGBM16:
-    *type = "RGBM";
-    *args = "( value, 16.0 )";
-    break;
-  case GTHREE_ENCODING_FORMAT_RGBD:
-    *type = "RGBD";
-    *args = "( value, 256.0 )";
-    break;
-  case GTHREE_ENCODING_FORMAT_GAMMA:
-    *type = "Gamma";
-    *args = "( value, float( GAMMA_FACTOR ) )";
-    break;
-  default:
-    g_assert_not_reached ();
-  }
-}
-
-static void
-get_texel_decoding_function (GString *shader,
-                             const char *function_name,
-                             GthreeEncodingFormat encoding)
-{
-  const char *type, *args;
-  get_encoding_components (encoding, &type, &args);
-  g_string_append_printf (shader,
-                          "vec4 %s( vec4 value ) { return %sToLinear%s; }\n",
-                          function_name, type, args);
-}
-
-static void
 get_texel_encoding_function (GString *shader,
-                             const char *function_name,
-                             GthreeEncodingFormat encoding)
+                             const char *function_name)
 {
-  const char *type, *args;
-  get_encoding_components (encoding, &type, &args);
   g_string_append_printf (shader,
-                          "vec4 %s( vec4 value ) { return LinearTo%s%s; }\n",
-                          function_name, type, args);
+                          "vec4 %s( vec4 value ) { return linearToSrgb( value ); }\n",
+                          function_name);
+}
+
+static void
+get_luminance_function (GString *shader)
+{
+  g_string_append (shader,
+                   "float luminance( const in vec3 rgb ) {\n"
+                   "  const vec3 weights = vec3( 0.2126, 0.7152, 0.0722 );\n"
+                   "  return dot( weights, rgb );\n"
+                   "}\n");
 }
 
 GthreeProgram *
@@ -359,7 +315,6 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
   const char *env_map_type_define;
   const char *env_map_mode_define;
   const char *env_map_blending_define;
-  float gamma_factor_define;
   GLuint gl_program;
   GString *vertex, *fragment;
   g_autofree char *vertex_unrolled = NULL;
@@ -444,8 +399,6 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
 	}
 #endif
 
-  gamma_factor_define = gthree_renderer_get_gamma_factor (renderer);
-
   // console.log( "building new program " );
 
   gl_program = glCreateProgram ();
@@ -485,18 +438,10 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
       if (parameters->supports_vertex_textures)
         g_string_append (vertex, "#define VERTEX_TEXTURES\n");
 
-      g_string_append_printf (vertex, "#define GAMMA_FACTOR %s\n",
-                              g_ascii_formatd (formatd_buffer, sizeof(formatd_buffer),
-                                               "%f", gamma_factor_define));
-
-      g_string_append_printf (vertex,
-                              "#define MAX_BONES %d\n",
-                              parameters->max_bones);
-
       if (parameters->use_fog && parameters->fog)
-        g_string_append_printf (vertex, "#define USE_FOG\n");
+        g_string_append (vertex, "#define USE_FOG\n");
       if (parameters->use_fog && parameters->fog_exp)
-        g_string_append_printf (vertex, "#define FOG_EXP2\n");
+        g_string_append (vertex, "#define FOG_EXP2\n");
 
       if (parameters->map)
         g_string_append (vertex, "#define USE_MAP\n");
@@ -516,25 +461,64 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
         g_string_append (vertex, "#define USE_BUMPMAP\n");
       if (parameters->normal_map)
         g_string_append (vertex, "#define USE_NORMALMAP\n");
-      if (parameters->normal_map && parameters->object_space_normal_map)
-        g_string_append (vertex, "#define OBJECTSPACE_NORMALMAP\n");
+      if (parameters->normal_map_object_space)
+        g_string_append (vertex, "#define USE_NORMALMAP_OBJECTSPACE\n");
+      if (parameters->normal_map_tangent_space)
+        g_string_append (vertex, "#define USE_NORMALMAP_TANGENTSPACE\n");
       if (parameters->displacement_map && parameters->supports_vertex_textures)
         g_string_append (vertex, "#define USE_DISPLACEMENTMAP\n");
       if (parameters->specular_map)
         g_string_append (vertex, "#define USE_SPECULARMAP\n");
+      if (parameters->specular_color_map)
+        g_string_append (vertex, "#define USE_SPECULAR_COLORMAP\n");
+      if (parameters->specular_intensity_map)
+        g_string_append (vertex, "#define USE_SPECULAR_INTENSITYMAP\n");
       if (parameters->roughness_map)
         g_string_append (vertex, "#define USE_ROUGHNESSMAP\n");
-      if (parameters->glossiness_map)
-        g_string_append (vertex, "#define USE_GLOSSINESSMAP\n");
       if (parameters->metalness_map)
         g_string_append (vertex, "#define USE_METALNESSMAP\n");
       if (parameters->alpha_map)
         g_string_append (vertex, "#define USE_ALPHAMAP\n");
+      if (parameters->alpha_hash)
+        g_string_append (vertex, "#define USE_ALPHAHASH\n");
+
+      if (parameters->anisotropy)
+        g_string_append (vertex, "#define USE_ANISOTROPY\n");
+      if (parameters->anisotropy_map)
+        g_string_append (vertex, "#define USE_ANISOTROPYMAP\n");
+      if (parameters->clearcoat_map)
+        g_string_append (vertex, "#define USE_CLEARCOATMAP\n");
+      if (parameters->clearcoat_roughness_map)
+        g_string_append (vertex, "#define USE_CLEARCOAT_ROUGHNESSMAP\n");
+      if (parameters->clearcoat_normal_map)
+        g_string_append (vertex, "#define USE_CLEARCOAT_NORMALMAP\n");
+      if (parameters->iridescence_map)
+        g_string_append (vertex, "#define USE_IRIDESCENCEMAP\n");
+      if (parameters->iridescence_thickness_map)
+        g_string_append (vertex, "#define USE_IRIDESCENCE_THICKNESSMAP\n");
+      if (parameters->sheen_color_map)
+        g_string_append (vertex, "#define USE_SHEEN_COLORMAP\n");
+      if (parameters->sheen_roughness_map)
+        g_string_append (vertex, "#define USE_SHEEN_ROUGHNESSMAP\n");
+      if (parameters->transmission_map)
+        g_string_append (vertex, "#define USE_TRANSMISSIONMAP\n");
+      if (parameters->thickness_map)
+        g_string_append (vertex, "#define USE_THICKNESSMAP\n");
 
       if (parameters->vertex_tangents)
         g_string_append (vertex, "#define USE_TANGENT\n");
       if (parameters->vertex_colors)
         g_string_append (vertex, "#define USE_COLOR\n");
+      if (parameters->vertex_alphas)
+        g_string_append (vertex, "#define USE_COLOR_ALPHA\n");
+      if (parameters->vertex_uv1s)
+        g_string_append (vertex, "#define USE_UV1\n");
+      if (parameters->vertex_uv2s)
+        g_string_append (vertex, "#define USE_UV2\n");
+      if (parameters->vertex_uv3s)
+        g_string_append (vertex, "#define USE_UV3\n");
+      if (parameters->points_uvs)
+        g_string_append (vertex, "#define USE_POINTS_UV\n");
 
       if (parameters->flat_shading)
         g_string_append (vertex, "#define FLAT_SHADED\n");
@@ -548,6 +532,8 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
         g_string_append (vertex, "#define USE_MORPHTARGETS\n");
       if (parameters->morph_normals && !parameters->flat_shading)
         g_string_append (vertex, "#define USE_MORPHNORMALS\n");
+      if (parameters->morph_colors)
+        g_string_append (vertex, "#define USE_MORPHCOLORS\n");
 
       if (parameters->double_sided)
         g_string_append (vertex, "#define DOUBLE_SIDED\n");
@@ -569,49 +555,57 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
           g_string_append (vertex, "#define USE_LOGDEPTHBUF_EXT\n");
         }
 
-        g_string_append (vertex,
-                         "uniform mat4 modelMatrix;\n"
-                         "uniform mat4 modelViewMatrix;\n"
-                         "uniform mat4 projectionMatrix;\n"
-                         "uniform mat4 viewMatrix;\n"
-                         "uniform mat3 normalMatrix;\n"
-                         "uniform vec3 cameraPosition;\n"
+      g_string_append (vertex,
+                       "uniform mat4 modelMatrix;\n"
+                       "uniform mat4 modelViewMatrix;\n"
+                       "uniform mat4 projectionMatrix;\n"
+                       "uniform mat4 viewMatrix;\n"
+                       "uniform mat3 normalMatrix;\n"
+                       "uniform vec3 cameraPosition;\n"
+                       "uniform bool isOrthographic;\n"
 
-                         "attribute vec3 position;\n"
-                         "attribute vec3 normal;\n"
-                         "attribute vec2 uv;\n"
+                       "#ifdef USE_INSTANCING\n"
+                       "	attribute mat4 instanceMatrix;\n"
+                       "#endif\n"
 
-                         "#ifdef USE_TANGENT\n"
-                         "	attribute vec4 tangent;\n"
-                         "#endif\n"
+                       "#ifdef USE_INSTANCING_COLOR\n"
+                       "	attribute vec3 instanceColor;\n"
+                       "#endif\n"
 
-                         "#ifdef USE_COLOR\n"
-                         "	attribute vec3 color;\n"
-                         "#endif\n"
+                       "#ifdef USE_INSTANCING_MORPH\n"
+                       "	uniform sampler2D morphTexture;\n"
+                       "#endif\n"
 
-                         "#ifdef USE_MORPHTARGETS\n"
-                         "	attribute vec3 morphTarget0;\n"
-                         "	attribute vec3 morphTarget1;\n"
-                         "	attribute vec3 morphTarget2;\n"
-                         "	attribute vec3 morphTarget3;\n"
+                       "attribute vec3 position;\n"
+                       "attribute vec3 normal;\n"
+                       "attribute vec2 uv;\n"
 
-                         "	#ifdef USE_MORPHNORMALS\n"
-                         "		attribute vec3 morphNormal0;\n"
-                         "		attribute vec3 morphNormal1;\n"
-                         "		attribute vec3 morphNormal2;\n"
-                         "		attribute vec3 morphNormal3;\n"
-                         "	#else\n"
-                         "		attribute vec3 morphTarget4;\n"
-                         "		attribute vec3 morphTarget5;\n"
-                         "		attribute vec3 morphTarget6;\n"
-                         "		attribute vec3 morphTarget7;\n"
-                         "	#endif\n"
-                         "#endif\n"
+                       "#ifdef USE_UV1\n"
+                       "	attribute vec2 uv1;\n"
+                       "#endif\n"
 
-                         "#ifdef USE_SKINNING\n"
-                         "	attribute vec4 skinIndex;\n"
-                         "	attribute vec4 skinWeight;\n"
-                         "#endif\n");
+                       "#ifdef USE_UV2\n"
+                       "	attribute vec2 uv2;\n"
+                       "#endif\n"
+
+                       "#ifdef USE_UV3\n"
+                       "	attribute vec2 uv3;\n"
+                       "#endif\n"
+
+                       "#ifdef USE_TANGENT\n"
+                       "	attribute vec4 tangent;\n"
+                       "#endif\n"
+
+                       "#ifdef USE_COLOR_ALPHA\n"
+                       "	attribute vec4 color;\n"
+                       "#elif defined( USE_COLOR )\n"
+                       "	attribute vec3 color;\n"
+                       "#endif\n"
+
+                       "#ifdef USE_SKINNING\n"
+                       "	attribute vec4 skinIndex;\n"
+                       "	attribute vec4 skinWeight;\n"
+                       "#endif\n");
 
       /* fragment shader prefix */
 
@@ -652,14 +646,10 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
                                                    "%.3f", parameters->alpha_test / 255.0));
         }
 
-      g_string_append_printf (fragment, "#define GAMMA_FACTOR %s\n",
-                              g_ascii_formatd (formatd_buffer, sizeof(formatd_buffer),
-                                               "%f", gamma_factor_define));
-
       if (parameters->use_fog && parameters->fog)
-        g_string_append_printf (fragment, "#define USE_FOG\n");
+        g_string_append (fragment, "#define USE_FOG\n");
       if (parameters->use_fog && parameters->fog_exp)
-        g_string_append_printf (fragment, "#define FOG_EXP2\n");
+        g_string_append (fragment, "#define FOG_EXP2\n");
 
       if (parameters->map)
         g_string_append (fragment, "#define USE_MAP\n");
@@ -684,23 +674,37 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
         g_string_append (fragment, "#define USE_BUMPMAP\n");
       if (parameters->normal_map)
         g_string_append (fragment, "#define USE_NORMALMAP\n");
-      if (parameters->normal_map && parameters->object_space_normal_map)
-        g_string_append (fragment, "#define OBJECTSPACE_NORMALMAP\n");
+      if (parameters->normal_map_object_space)
+        g_string_append (fragment, "#define USE_NORMALMAP_OBJECTSPACE\n");
+      if (parameters->normal_map_tangent_space)
+        g_string_append (fragment, "#define USE_NORMALMAP_TANGENTSPACE\n");
       if (parameters->specular_map)
         g_string_append (fragment, "#define USE_SPECULARMAP\n");
+      if (parameters->specular_color_map)
+        g_string_append (fragment, "#define USE_SPECULAR_COLORMAP\n");
+      if (parameters->specular_intensity_map)
+        g_string_append (fragment, "#define USE_SPECULAR_INTENSITYMAP\n");
       if (parameters->roughness_map)
         g_string_append (fragment, "#define USE_ROUGHNESSMAP\n");
-      if (parameters->glossiness_map)
-        g_string_append (fragment, "#define USE_GLOSSINESSMAP\n");
       if (parameters->metalness_map)
         g_string_append (fragment, "#define USE_METALNESSMAP\n");
       if (parameters->alpha_map)
         g_string_append (fragment, "#define USE_ALPHAMAP\n");
+      if (parameters->alpha_hash)
+        g_string_append (fragment, "#define USE_ALPHAHASH\n");
 
       if (parameters->vertex_tangents)
         g_string_append (fragment, "#define USE_TANGENT\n");
       if (parameters->vertex_colors)
         g_string_append (fragment, "#define USE_COLOR\n");
+      if (parameters->vertex_alphas)
+        g_string_append (fragment, "#define USE_COLOR_ALPHA\n");
+      if (parameters->vertex_uv1s)
+        g_string_append (fragment, "#define USE_UV1\n");
+      if (parameters->vertex_uv2s)
+        g_string_append (fragment, "#define USE_UV2\n");
+      if (parameters->vertex_uv3s)
+        g_string_append (fragment, "#define USE_UV3\n");
 
       if (parameters->gradient_map)
         g_string_append (fragment, "#define USE_GRADIENTMAP\n");
@@ -733,26 +737,59 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
       if (parameters->env_map)
         g_string_append (fragment, "#define TEXTURE_LOD_EXT\n");
 
-        g_string_append (fragment,
-                         "uniform mat4 viewMatrix;\n"
-                         "uniform vec3 cameraPosition;\n");
-#if TODO
-      // ( parameters.toneMapping !== NoToneMapping ) ? '#define TONE_MAPPING' : '',
-      // ( parameters.toneMapping !== NoToneMapping ) ? ShaderChunk[ 'tonemapping_pars_fragment' ] : '', // this code is required here because it is used by the toneMapping() function defined below
-      // ( parameters.toneMapping !== NoToneMapping ) ? getToneMappingFunction( 'toneMapping', parameters.toneMapping ) : '',
-#endif
+      if (parameters->anisotropy)
+        g_string_append (fragment, "#define USE_ANISOTROPY\n");
+      if (parameters->clearcoat)
+        g_string_append (fragment, "#define USE_CLEARCOAT\n");
+      if (parameters->clearcoat_map)
+        g_string_append (fragment, "#define USE_CLEARCOATMAP\n");
+      if (parameters->clearcoat_roughness_map)
+        g_string_append (fragment, "#define USE_CLEARCOAT_ROUGHNESSMAP\n");
+      if (parameters->clearcoat_normal_map)
+        g_string_append (fragment, "#define USE_CLEARCOAT_NORMALMAP\n");
+      if (parameters->dispersion)
+        g_string_append (fragment, "#define USE_DISPERSION\n");
+      if (parameters->iridescence)
+        g_string_append (fragment, "#define USE_IRIDESCENCE\n");
+      if (parameters->iridescence_map)
+        g_string_append (fragment, "#define USE_IRIDESCENCEMAP\n");
+      if (parameters->iridescence_thickness_map)
+        g_string_append (fragment, "#define USE_IRIDESCENCE_THICKNESSMAP\n");
+      if (parameters->sheen)
+        g_string_append (fragment, "#define USE_SHEEN\n");
+      if (parameters->sheen_color_map)
+        g_string_append (fragment, "#define USE_SHEEN_COLORMAP\n");
+      if (parameters->sheen_roughness_map)
+        g_string_append (fragment, "#define USE_SHEEN_ROUGHNESSMAP\n");
+      if (parameters->transmission)
+        g_string_append (fragment, "#define USE_TRANSMISSION\n");
+      if (parameters->transmission_map)
+        g_string_append (fragment, "#define USE_TRANSMISSIONMAP\n");
+      if (parameters->thickness_map)
+        g_string_append (fragment, "#define USE_THICKNESSMAP\n");
+
+      if (parameters->alpha_to_coverage)
+        g_string_append (fragment, "#define ALPHA_TO_COVERAGE\n");
+      if (parameters->opaque)
+        g_string_append (fragment, "#define OPAQUE\n");
+
+      g_string_append (fragment,
+                       "uniform mat4 viewMatrix;\n"
+                       "uniform vec3 cameraPosition;\n"
+                       "uniform bool isOrthographic;\n");
+
+      if (parameters->tone_mapping != 0)
+        {
+          g_string_append (fragment, "#define TONE_MAPPING\n");
+          g_string_append (fragment, "#include <tonemapping_pars_fragment>\n");
+        }
 
       if (parameters->dithering)
         g_string_append (fragment, "#define DITHERING\n");
 
-      // this code is required here because it is used by the  various encoding/decoding function defined below
-      g_string_append (fragment, "#include <encodings_pars_fragment>\n");
-
-      get_texel_decoding_function (fragment, "mapTexelToLinear", parameters->map_encoding);
-      get_texel_decoding_function (fragment, "mapcapTexelToLinear", parameters->matcap_encoding);
-      get_texel_decoding_function (fragment, "envMapTexelToLinear", parameters->env_map_encoding);
-      get_texel_decoding_function (fragment, "emissiveMapTexelToLinear", parameters->emissive_map_encoding);
-      get_texel_encoding_function (fragment, "linearToOutputTexel", parameters->output_encoding);
+      g_string_append (fragment, "#include <colorspace_pars_fragment>\n");
+      get_texel_encoding_function (fragment, "linearToOutputTexel");
+      get_luminance_function (fragment);
 
       if (parameters->depth_packing > 0)
         {

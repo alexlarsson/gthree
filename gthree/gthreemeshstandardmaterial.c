@@ -154,26 +154,20 @@ gthree_mesh_standard_material_real_set_params (GthreeMaterial *material,
   GthreeMeshStandardMaterialPrivate *priv = gthree_mesh_standard_material_get_instance_private (standard);
 
   params->map = priv->map != NULL;
-  if (params->map)
-    params->map_encoding = gthree_texture_get_encoding (priv->map);
 
   params->env_map = priv->env_map != NULL;
   if (params->env_map)
-    {
-      params->env_map_encoding = gthree_texture_get_encoding (priv->env_map);
-      params->env_map_mode = gthree_texture_get_mapping (priv->env_map);
-    }
+    params->env_map_mode = gthree_texture_get_mapping (priv->env_map);
 
   params->light_map = priv->light_map != NULL;
   params->ao_map = priv->ao_map != NULL;
 
   params->emissive_map = priv->emissive_map != NULL;
-  if (params->emissive_map)
-    params->emissive_map_encoding = gthree_texture_get_encoding (priv->emissive_map);
 
   params->bump_map = priv->bump_map != NULL;
   params->normal_map = priv->normal_map != NULL;
-  params->object_space_normal_map = priv->normal_map_type == GTHREE_NORMAL_MAP_TYPE_OBJECT_SPACE;
+  params->normal_map_object_space = priv->normal_map_type == GTHREE_NORMAL_MAP_TYPE_OBJECT_SPACE;
+  params->normal_map_tangent_space = priv->normal_map_type == GTHREE_NORMAL_MAP_TYPE_TANGENT_SPACE;
   params->displacement_map = priv->displacement_map != NULL;
   params->roughness_map = priv->roughness_map != NULL;
   params->metalness_map = priv->metalness_map != NULL;
