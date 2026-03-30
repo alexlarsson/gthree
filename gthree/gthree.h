@@ -38,7 +38,6 @@
 #include <gthree/gthreemeshtoonmaterial.h>
 #include <gthree/gthreemeshstandardmaterial.h>
 #include <gthree/gthreemeshphysicalmaterial.h>
-#include <gthree/gthreemeshspecglosmaterial.h>
 #include <gthree/gthreemeshnormalmaterial.h>
 #include <gthree/gthreemeshdepthmaterial.h>
 #include <gthree/gthreemeshdistancematerial.h>

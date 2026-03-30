@@ -19,7 +19,6 @@ typedef struct _GthreeMeshPhongMaterial GthreeMeshPhongMaterial;
 typedef struct _GthreeMeshToonMaterial GthreeMeshToonMaterial;
 typedef struct _GthreeMeshStandardMaterial GthreeMeshStandardMaterial;
 typedef struct _GthreeMeshPhysicalMaterial GthreeMeshPhysicalMaterial;
-typedef struct _GthreeMeshSpecglosMaterial GthreeMeshSpecglosMaterial;
 typedef struct _GthreeMeshNormalMaterial GthreeMeshNormalMaterial;
 typedef struct _GthreeMeshDepthMaterial GthreeMeshDepthMaterial;
 typedef struct _GthreeMeshDistanceMaterial GthreeMeshDistanceMaterial;

@@ -166,6 +166,11 @@ gboolean          gthree_material_get_clip_intersection    (GthreeMaterial      
 GTHREE_API
 void              gthree_material_set_clip_intersection    (GthreeMaterial          *material,
                                                             gboolean                 clip_intersection);
+GTHREE_API
+gboolean          gthree_material_get_alpha_hash           (GthreeMaterial          *material);
+GTHREE_API
+void              gthree_material_set_alpha_hash           (GthreeMaterial          *material,
+                                                            gboolean                 alpha_hash);
 
 G_END_DECLS
 
