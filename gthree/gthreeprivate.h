@@ -137,7 +137,6 @@ struct  _GthreeProgramParameters {
   guint thickness_map : 1;
 
   guint8 alpha_test;
-  guint16 max_bones;
 
   float cubeuv_texel_width;
   float cubeuv_texel_height;
@@ -247,6 +246,8 @@ void gthree_light_set_shadow (GthreeLight   *light,
 
 void gthree_skeleton_update  (GthreeSkeleton *skeleton);
 float *gthree_skeleton_get_bone_matrices (GthreeSkeleton *skeleton);
+guint gthree_skeleton_get_bone_texture (GthreeSkeleton *skeleton);
+int gthree_skeleton_get_bone_texture_size (GthreeSkeleton *skeleton);
 
 void gthree_light_setup  (GthreeLight   *light,
                           GthreeCamera  *camera,

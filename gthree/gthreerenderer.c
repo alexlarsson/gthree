@@ -178,7 +178,6 @@ static GQuark q_pointLights;
 static GQuark q_spotLights;
 static GQuark q_bindMatrix;
 static GQuark q_bindMatrixInverse;
-static GQuark q_boneMatrices;
 
 static GArray *free_resource_ids;
 static guint32 next_unused_resource_id = 0;
@@ -475,7 +474,6 @@ gthree_renderer_class_init (GthreeRendererClass *klass)
   INIT_QUARK(spotLights);
   INIT_QUARK(bindMatrix);
   INIT_QUARK(bindMatrixInverse);
-  INIT_QUARK(boneMatrices);
 
   graphene_vec3_init (&cube_directions[0],  1,  0,  0);
   graphene_vec3_init (&cube_directions[1], -1,  0,  0);
@@ -1494,7 +1492,6 @@ init_material (GthreeRenderer *renderer,
   GthreeShader *shader;
   GthreeProgramParameters parameters = {0};
   GthreeUniforms *m_uniforms;
-  int max_bones;
   GthreeMaterialProperties *material_properties = gthree_material_get_properties (material);
 
   shader = gthree_material_get_shader (material);
@@ -1535,17 +1532,8 @@ init_material (GthreeRenderer *renderer,
   parameters.num_point_light_shadows = priv->light_setup.point_light_shadows->len;
   parameters.num_spot_light_shadows = priv->light_setup.spot_light_shadows->len;
 
-  max_bones = 0;
-  if (GTHREE_IS_SKINNED_MESH (object))
-    {
-      GthreeSkeleton *skeleton = gthree_skinned_mesh_get_skeleton (GTHREE_SKINNED_MESH (object));
-      if (skeleton)
-        max_bones = gthree_skeleton_get_n_bones (skeleton);
-      // TODO: Limit max bones to GPU specs
-    }
-
-  parameters.max_bones = max_bones;
   parameters.skinning = GTHREE_IS_MESH_MATERIAL (material) && gthree_mesh_material_get_skinning (GTHREE_MESH_MATERIAL (material));
+  parameters.use_vertex_texture = parameters.skinning;
 
   parameters.morph_targets = GTHREE_IS_MESH_MATERIAL (material) && gthree_mesh_material_get_morph_targets (GTHREE_MESH_MATERIAL (material));
   parameters.morph_normals = GTHREE_IS_MESH_MATERIAL (material) && gthree_mesh_material_get_morph_normals (GTHREE_MESH_MATERIAL (material));
@@ -2592,34 +2580,21 @@ set_program (GthreeRenderer *renderer,
           skeleton = gthree_skinned_mesh_get_skeleton (GTHREE_SKINNED_MESH (object));
         }
 
-#ifdef TODO
-      if ( _supportsBoneTextures && object.skeleton && object.skeleton.useVertexTexture )
-        {
-          if ( uniform_locations.boneTexture !== null )
-            {
-              var textureUnit = getTextureUnit();
-              glUniform1i( uniform_locations.boneTexture, textureUnit );
-              _this.setTexture( object.skeleton.boneTexture, textureUnit );
-            }
-
-          if ( uniform_locations.boneTextureWidth !== null )
-            glUniform1i( uniform_locations.boneTextureWidth, object.skeleton.boneTextureWidth );
-
-          if ( uniform_locations.boneTextureHeight !== null )
-            glUniform1i( uniform_locations.boneTextureHeight, object.skeleton.boneTextureHeight );
-
-        }
-      else
-#endif
-
-        if (skeleton)
+      if (skeleton)
           {
-            /* Unclear why we need [0] here rather than boneMatrices? Do we ever need [1]?? */
-            gint bone_matrices_location = gthree_program_lookup_uniform_location (program,
-                                                                                  g_quark_from_static_string ("boneMatrices[0]"));
-            float *bone_matrices = gthree_skeleton_get_bone_matrices (skeleton);
-            if (bone_matrices_location >= 0)
-              glUniformMatrix4fv (bone_matrices_location, gthree_skeleton_get_n_bones (skeleton), FALSE, bone_matrices);
+            guint bone_tex = gthree_skeleton_get_bone_texture (skeleton);
+            if (bone_tex != 0)
+              {
+                gint bone_texture_location = gthree_program_lookup_uniform_location (program,
+                                                                                      g_quark_from_static_string ("boneTexture"));
+                if (bone_texture_location >= 0)
+                  {
+                    guint unit = gthree_renderer_allocate_texture_unit (renderer);
+                    glActiveTexture (GL_TEXTURE0 + unit);
+                    glBindTexture (GL_TEXTURE_2D, bone_tex);
+                    glUniform1i (bone_texture_location, unit);
+                  }
+              }
           }
     }
 
