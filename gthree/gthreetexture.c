@@ -632,6 +632,26 @@ gthree_texture_get_internal_gl_format (guint gl_format,
   return internal_format;
 }
 
+static guint
+get_internal_gl_format_for_texture (GthreeTexture *texture)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+  guint gl_format = gthree_texture_format_to_gl (priv->format);
+  guint gl_type = gthree_texture_data_type_to_gl (priv->type);
+  guint internal_format = gthree_texture_get_internal_gl_format (gl_format, gl_type);
+
+  if (priv->encoding == GTHREE_ENCODING_FORMAT_SRGB &&
+      gl_type == GL_UNSIGNED_BYTE)
+    {
+      if (gl_format == GL_RGBA)
+        internal_format = GL_SRGB8_ALPHA8;
+      else if (gl_format == GL_RGB)
+        internal_format = GL_SRGB8;
+    }
+
+  return internal_format;
+}
+
 void
 gthree_texture_setup_framebuffer (GthreeTexture *texture,
                                   GthreeRenderer *renderer,
@@ -691,6 +711,7 @@ gthree_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer, int 
 
       gl_format = gthree_texture_format_to_gl (priv->format);
       gl_type = gthree_texture_data_type_to_gl (priv->type);
+      guint gl_internal_format = get_internal_gl_format_for_texture (texture);
 
       gthree_texture_set_parameters (GL_TEXTURE_2D, texture, is_image_power_of_two);
 
@@ -759,7 +780,7 @@ gthree_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer, int 
                   else
                     pixbuf = g_object_ref (priv->pixbuf);
 
-                  glTexImage2D (GL_TEXTURE_2D, 0, gl_format, width, height, 0, gl_format, gl_type,
+                  glTexImage2D (GL_TEXTURE_2D, 0, gl_internal_format, width, height, 0, gl_format, gl_type,
                                 gdk_pixbuf_get_pixels (pixbuf));
                   g_object_unref (pixbuf);
                 }
@@ -771,7 +792,7 @@ gthree_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer, int 
                       // TODO: Support flip
                     }
 
-                  glTexImage2D (GL_TEXTURE_2D, 0, gl_format, width, height, 0,
+                  glTexImage2D (GL_TEXTURE_2D, 0, gl_internal_format, width, height, 0,
                                 GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
                                 cairo_image_surface_get_data (priv->surface));
                 }
