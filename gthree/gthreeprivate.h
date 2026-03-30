@@ -24,6 +24,9 @@ typedef struct {
   guint8 num_spot;
   guint8 num_shadow;
   guint8 num_hemi;
+  guint8 num_dir_shadows;
+  guint8 num_spot_shadows;
+  guint8 num_point_shadows;
   guint8 obj_receive_shadow;
 } GthreeLightSetupHash;
 
@@ -35,12 +38,15 @@ struct _GthreeLightSetup
   GPtrArray *directional;
   GPtrArray *directional_shadow_map;
   GArray *directional_shadow_map_matrix;
+  GPtrArray *directional_light_shadows;
   GPtrArray *point;
   GPtrArray *point_shadow_map;
   GArray *point_shadow_map_matrix;
+  GPtrArray *point_light_shadows;
   GPtrArray *spot;
   GPtrArray *spot_shadow_map;
   GArray *spot_shadow_map_matrix;
+  GPtrArray *spot_light_shadows;
   GPtrArray *shadow;
   GPtrArray *hemi;
 
@@ -138,6 +144,10 @@ struct  _GthreeProgramParameters {
   guint16 num_spot_lights;
   guint16 num_hemi_lights;
   guint16 num_rect_area_lights;
+
+  guint16 num_dir_light_shadows;
+  guint16 num_point_light_shadows;
+  guint16 num_spot_light_shadows;
 
   guint16 num_clipping_planes;
   guint16 num_clip_intersection;

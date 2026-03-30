@@ -331,12 +331,15 @@ gthree_renderer_init (GthreeRenderer *renderer)
   priv->light_setup.directional = g_ptr_array_new ();
   priv->light_setup.directional_shadow_map = g_ptr_array_new ();
   priv->light_setup.directional_shadow_map_matrix = g_array_new (FALSE, FALSE, sizeof (graphene_matrix_t));
+  priv->light_setup.directional_light_shadows = g_ptr_array_new_with_free_func (g_object_unref);
   priv->light_setup.point = g_ptr_array_new ();
   priv->light_setup.point_shadow_map = g_ptr_array_new ();
   priv->light_setup.point_shadow_map_matrix = g_array_new (FALSE, FALSE, sizeof (graphene_matrix_t));
+  priv->light_setup.point_light_shadows = g_ptr_array_new_with_free_func (g_object_unref);
   priv->light_setup.spot = g_ptr_array_new ();
   priv->light_setup.spot_shadow_map = g_ptr_array_new ();
   priv->light_setup.spot_shadow_map_matrix = g_array_new (FALSE, FALSE, sizeof (graphene_matrix_t));
+  priv->light_setup.spot_light_shadows = g_ptr_array_new_with_free_func (g_object_unref);
   priv->light_setup.shadow = g_ptr_array_new ();
   priv->light_setup.hemi = g_ptr_array_new ();
 
@@ -418,12 +421,15 @@ gthree_renderer_finalize (GObject *obj)
   g_ptr_array_free (priv->light_setup.directional, TRUE);
   g_ptr_array_free (priv->light_setup.directional_shadow_map, TRUE);
   g_array_free (priv->light_setup.directional_shadow_map_matrix, TRUE);
+  g_ptr_array_free (priv->light_setup.directional_light_shadows, TRUE);
   g_ptr_array_free (priv->light_setup.point, TRUE);
   g_ptr_array_free (priv->light_setup.point_shadow_map, TRUE);
   g_array_free (priv->light_setup.point_shadow_map_matrix, TRUE);
+  g_ptr_array_free (priv->light_setup.point_light_shadows, TRUE);
   g_ptr_array_free (priv->light_setup.spot, TRUE);
   g_ptr_array_free (priv->light_setup.spot_shadow_map, TRUE);
   g_array_free (priv->light_setup.spot_shadow_map_matrix, TRUE);
+  g_ptr_array_free (priv->light_setup.spot_light_shadows, TRUE);
   g_ptr_array_free (priv->light_setup.shadow, TRUE);
   g_ptr_array_free (priv->light_setup.hemi, TRUE);
 
@@ -1482,12 +1488,16 @@ material_apply_light_setup (GthreeUniforms *m_uniforms,
 
   gthree_uniforms_set_texture_array (m_uniforms, "directionalShadowMap", light_setup->directional_shadow_map);
   gthree_uniforms_set_matrix4_array (m_uniforms, "directionalShadowMatrix", light_setup->directional_shadow_map_matrix);
+  gthree_uniforms_set_uarray (m_uniforms, "directionalLightShadows", light_setup->directional_light_shadows, update_only);
 
   gthree_uniforms_set_texture_array (m_uniforms, "spotShadowMap", light_setup->spot_shadow_map);
   gthree_uniforms_set_matrix4_array (m_uniforms, "spotShadowMatrix", light_setup->spot_shadow_map_matrix);
+  gthree_uniforms_set_matrix4_array (m_uniforms, "spotLightMatrix", light_setup->spot_shadow_map_matrix);
+  gthree_uniforms_set_uarray (m_uniforms, "spotLightShadows", light_setup->spot_light_shadows, update_only);
 
   gthree_uniforms_set_texture_array (m_uniforms, "pointShadowMap", light_setup->point_shadow_map);
   gthree_uniforms_set_matrix4_array (m_uniforms, "pointShadowMatrix", light_setup->point_shadow_map_matrix);
+  gthree_uniforms_set_uarray (m_uniforms, "pointLightShadows", light_setup->point_light_shadows, update_only);
 }
 
 static GthreeProgram *
@@ -1520,6 +1530,9 @@ init_material (GthreeRenderer *renderer,
   parameters.num_point_lights = priv->light_setup.point->len;
   parameters.num_spot_lights = priv->light_setup.spot->len;
   parameters.num_hemi_lights = priv->light_setup.hemi->len;
+  parameters.num_dir_light_shadows = priv->light_setup.directional_light_shadows->len;
+  parameters.num_point_light_shadows = priv->light_setup.point_light_shadows->len;
+  parameters.num_spot_light_shadows = priv->light_setup.spot_light_shadows->len;
 
   max_bones = 0;
   if (GTHREE_IS_SKINNED_MESH (object))
@@ -1672,19 +1685,29 @@ setup_lights (GthreeRenderer *renderer, GthreeCamera *camera)
   g_ptr_array_set_size (setup->directional, 0);
   g_ptr_array_set_size (setup->directional_shadow_map, 0);
   g_array_set_size (setup->directional_shadow_map_matrix, 0);
+  g_ptr_array_set_size (setup->directional_light_shadows, 0);
   g_ptr_array_set_size (setup->point, 0);
   g_ptr_array_set_size (setup->point_shadow_map, 0);
   g_array_set_size (setup->point_shadow_map_matrix, 0);
+  g_ptr_array_set_size (setup->point_light_shadows, 0);
   g_ptr_array_set_size (setup->spot, 0);
   g_ptr_array_set_size (setup->spot_shadow_map, 0);
   g_array_set_size (setup->spot_shadow_map_matrix, 0);
+  g_ptr_array_set_size (setup->spot_light_shadows, 0);
   g_ptr_array_set_size (setup->hemi, 0);
 
   for (l = priv->lights; l != NULL; l = l->next)
     {
       GthreeLight *light = l->data;
+      if (gthree_object_get_cast_shadow (GTHREE_OBJECT (light)))
+        gthree_light_setup (light, camera, setup);
+    }
 
-      gthree_light_setup (light, camera, setup);
+  for (l = priv->lights; l != NULL; l = l->next)
+    {
+      GthreeLight *light = l->data;
+      if (!gthree_object_get_cast_shadow (GTHREE_OBJECT (light)))
+        gthree_light_setup (light, camera, setup);
     }
 
   setup->hash.num_directional = setup->directional->len;
@@ -1692,6 +1715,9 @@ setup_lights (GthreeRenderer *renderer, GthreeCamera *camera)
   setup->hash.num_spot = setup->spot->len;
   setup->hash.num_hemi = setup->hemi->len;
   setup->hash.num_shadow = setup->shadow->len;
+  setup->hash.num_dir_shadows = setup->directional_light_shadows->len;
+  setup->hash.num_spot_shadows = setup->spot_light_shadows->len;
+  setup->hash.num_point_shadows = setup->point_light_shadows->len;
 }
 
 static void *

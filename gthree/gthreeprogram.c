@@ -162,15 +162,15 @@ replace_light_nums (GString *str, GthreeProgramParameters *parameters)
 {
   /* Order matters: longer patterns must be replaced before shorter
      ones that are prefixes (e.g. NUM_SPOT_LIGHT_COORDS before NUM_SPOT_LIGHTS) */
-  string_replace_i (str, "NUM_DIR_LIGHT_SHADOWS", 0);
+  string_replace_i (str, "NUM_DIR_LIGHT_SHADOWS", parameters->num_dir_light_shadows);
   string_replace_i (str, "NUM_DIR_LIGHTS", parameters->num_dir_lights);
   string_replace_i (str, "NUM_SPOT_LIGHT_SHADOWS_WITH_MAPS", 0);
-  string_replace_i (str, "NUM_SPOT_LIGHT_SHADOWS", 0);
+  string_replace_i (str, "NUM_SPOT_LIGHT_SHADOWS", parameters->num_spot_light_shadows);
   string_replace_i (str, "NUM_SPOT_LIGHT_MAPS", 0);
-  string_replace_i (str, "NUM_SPOT_LIGHT_COORDS", 0);
+  string_replace_i (str, "NUM_SPOT_LIGHT_COORDS", parameters->num_spot_light_shadows);
   string_replace_i (str, "NUM_SPOT_LIGHTS", parameters->num_spot_lights);
   string_replace_i (str, "NUM_RECT_AREA_LIGHTS", parameters->num_rect_area_lights);
-  string_replace_i (str, "NUM_POINT_LIGHT_SHADOWS", 0);
+  string_replace_i (str, "NUM_POINT_LIGHT_SHADOWS", parameters->num_point_light_shadows);
   string_replace_i (str, "NUM_POINT_LIGHTS", parameters->num_point_lights);
   string_replace_i (str, "NUM_HEMI_LIGHTS", parameters->num_hemi_lights);
 }

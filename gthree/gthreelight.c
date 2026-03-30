@@ -15,6 +15,9 @@ gthree_light_setup_hash_equal (GthreeLightSetupHash *a,
     a->num_spot == b->num_spot &&
     a->num_hemi == b->num_hemi &&
     a->num_shadow == b->num_shadow &&
+    a->num_dir_shadows == b->num_dir_shadows &&
+    a->num_spot_shadows == b->num_spot_shadows &&
+    a->num_point_shadows == b->num_point_shadows &&
     a->obj_receive_shadow == b->obj_receive_shadow;
 }
 

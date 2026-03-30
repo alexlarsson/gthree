@@ -1037,53 +1037,18 @@ static GthreeUniformsDefinition lights_lib[] = {
   {"directionalLights", GTHREE_UNIFORM_TYPE_UNIFORMS_ARRAY, NULL},
   {"directionalShadowMap", GTHREE_UNIFORM_TYPE_TEXTURE_ARRAY, NULL},
   {"directionalShadowMatrix", GTHREE_UNIFORM_TYPE_MATRIX4_ARRAY, NULL},
-  /*
-    properties: {
-      direction: {},
-      color: {},
-      shadow: {},
-      shadowBias: {},
-      shadowRadius: {},
-      shadowMapSize: {}
-      }
-  */
+  {"directionalLightShadows", GTHREE_UNIFORM_TYPE_UNIFORMS_ARRAY, NULL},
 
   {"pointLights", GTHREE_UNIFORM_TYPE_UNIFORMS_ARRAY, NULL},
   {"pointShadowMap", GTHREE_UNIFORM_TYPE_TEXTURE_ARRAY, NULL},
   {"pointShadowMatrix", GTHREE_UNIFORM_TYPE_MATRIX4_ARRAY, NULL},
-  /*
-     properties: {
-       color: {},
-       position: {},
-       decay: {},
-       distance: {},
-
-       shadow: {},
-       shadowBias: {},
-       shadowRadius: {},
-       shadowMapSize: {},
-       shadowCameraNear: {},
-       shadowCameraFar: {}
-       }
-  */
+  {"pointLightShadows", GTHREE_UNIFORM_TYPE_UNIFORMS_ARRAY, NULL},
 
   {"spotLights", GTHREE_UNIFORM_TYPE_UNIFORMS_ARRAY, NULL},
   {"spotShadowMap", GTHREE_UNIFORM_TYPE_TEXTURE_ARRAY, NULL},
   {"spotShadowMatrix", GTHREE_UNIFORM_TYPE_MATRIX4_ARRAY, NULL},
-  /*properties: {
-    color: {},
-    position: {},
-    direction: {},
-    distance: {},
-    coneCos: {},
-    penumbraCos: {},
-    decay: {},
-    shadow: {},
-    shadowBias: {},
-    shadowRadius: {},
-    shadowMapSize: {}
-    }
-  */
+  {"spotLightMatrix", GTHREE_UNIFORM_TYPE_MATRIX4_ARRAY, NULL},
+  {"spotLightShadows", GTHREE_UNIFORM_TYPE_UNIFORMS_ARRAY, NULL},
 
   {"hemisphereLights", GTHREE_UNIFORM_TYPE_UNIFORMS_ARRAY, NULL},
   /*

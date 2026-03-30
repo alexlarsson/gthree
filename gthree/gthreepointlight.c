@@ -57,6 +57,16 @@ static GthreeUniformsDefinition light_uniforms[] = {
   {"shadowCameraFar", GTHREE_UNIFORM_TYPE_FLOAT, &f1000 },
 };
 
+static GthreeUniformsDefinition shadow_uniforms_def[] = {
+  {"shadowIntensity", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
+  {"shadowBias", GTHREE_UNIFORM_TYPE_FLOAT, &f0 },
+  {"shadowNormalBias", GTHREE_UNIFORM_TYPE_FLOAT, &f0 },
+  {"shadowRadius", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
+  {"shadowMapSize", GTHREE_UNIFORM_TYPE_VECTOR2, &zerov2 },
+  {"shadowCameraNear", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
+  {"shadowCameraFar", GTHREE_UNIFORM_TYPE_FLOAT, &f1000 },
+};
+
 static void
 gthree_point_light_init (GthreePointLight *point)
 {
@@ -96,9 +106,6 @@ gthree_point_light_real_setup (GthreeLight *light,
   graphene_vec4_t light_pos;
   graphene_vec3_t light_pos3;
   const graphene_matrix_t *view_matrix = gthree_camera_get_world_inverse_matrix (camera);
-  GthreeTexture *shadow_map_texture = NULL;
-  graphene_matrix_t shadow_matrix;
-
   graphene_vec3_scale (gthree_light_get_color (light), intensity, &color);
   gthree_uniforms_set_vec3 (priv->uniforms, "color", &color);
 
@@ -116,6 +123,8 @@ gthree_point_light_real_setup (GthreeLight *light,
     {
       GthreeLightShadow *shadow = gthree_light_get_shadow (light);
       GthreeCamera *shadow_camera = gthree_light_shadow_get_camera (shadow);
+      GthreeTexture *shadow_map_texture = NULL;
+      graphene_matrix_t shadow_matrix;
       graphene_vec2_t size;
 
       gthree_uniforms_set_float (priv->uniforms, "shadowBias", gthree_light_shadow_get_bias (shadow));
@@ -134,13 +143,22 @@ gthree_point_light_real_setup (GthreeLight *light,
         shadow_map_texture = gthree_render_target_get_texture (shadow_map);
 
       shadow_matrix = *gthree_light_shadow_get_matrix (shadow);
+
+      g_ptr_array_add (setup->point_shadow_map, shadow_map_texture);
+      g_array_append_val (setup->point_shadow_map_matrix, shadow_matrix);
+
+      GthreeUniforms *shadow_uniforms = gthree_uniforms_new_from_definitions (shadow_uniforms_def, G_N_ELEMENTS (shadow_uniforms_def));
+      gthree_uniforms_set_float (shadow_uniforms, "shadowIntensity", gthree_light_shadow_get_intensity (shadow));
+      gthree_uniforms_set_float (shadow_uniforms, "shadowBias", gthree_light_shadow_get_bias (shadow));
+      gthree_uniforms_set_float (shadow_uniforms, "shadowNormalBias", gthree_light_shadow_get_normal_bias (shadow));
+      gthree_uniforms_set_float (shadow_uniforms, "shadowRadius", gthree_light_shadow_get_radius (shadow));
+      gthree_uniforms_set_vec2 (shadow_uniforms, "shadowMapSize", &size);
+      gthree_uniforms_set_float (shadow_uniforms, "shadowCameraNear", gthree_camera_get_near (shadow_camera));
+      gthree_uniforms_set_float (shadow_uniforms, "shadowCameraFar", gthree_camera_get_far (shadow_camera));
+      g_ptr_array_add (setup->point_light_shadows, shadow_uniforms);
     }
-  else
-    graphene_matrix_init_identity (&shadow_matrix);
 
   g_ptr_array_add (setup->point, priv->uniforms);
-  g_ptr_array_add (setup->point_shadow_map, shadow_map_texture);
-  g_array_append_val (setup->point_shadow_map_matrix, shadow_matrix);
 
   GTHREE_LIGHT_CLASS (gthree_point_light_parent_class)->setup (light, camera, setup);
 }
