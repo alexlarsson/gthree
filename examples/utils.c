@@ -126,7 +126,9 @@ GthreeTexture *
 examples_load_texture (const char *file)
 {
   g_autoptr(GdkPixbuf) pixbuf = examples_load_pixbuf (file);
-  return gthree_texture_new (pixbuf);
+  GthreeTexture *texture = gthree_texture_new (pixbuf);
+  gthree_texture_set_encoding (texture, GTHREE_ENCODING_FORMAT_SRGB);
+  return texture;
 }
 
 void

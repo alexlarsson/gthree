@@ -100,7 +100,7 @@ gthree_texture_init (GthreeTexture *texture)
   priv->mag_filter = GTHREE_FILTER_LINEAR;
   priv->min_filter = GTHREE_FILTER_LINEAR_MIPMAP_LINEAR;
   priv->mapping = GTHREE_MAPPING_UV;
-  priv->encoding = GTHREE_ENCODING_FORMAT_SRGB; // Differs from three.js default LINEAR
+  priv->encoding = GTHREE_ENCODING_FORMAT_LINEAR;
 
   priv->format = GTHREE_TEXTURE_FORMAT_RGBA;
   priv->type = GTHREE_DATA_TYPE_UNSIGNED_BYTE;

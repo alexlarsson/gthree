@@ -1184,6 +1184,7 @@ parse_materials (GthreeLoader *loader, JsonObject *root, GError **error)
           if (json_object_has_member (specglos, "diffuseTexture"))
             {
               g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, json_object_get_object_member (specglos, "diffuseTexture"));
+              gthree_texture_set_encoding (texture, GTHREE_ENCODING_FORMAT_SRGB);
               gthree_mesh_specglos_material_set_map (GTHREE_MESH_SPECGLOS_MATERIAL (material), texture);
             }
 
@@ -1219,6 +1220,7 @@ parse_materials (GthreeLoader *loader, JsonObject *root, GError **error)
           if (json_object_has_member (pbr, "baseColorTexture"))
             {
               g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, json_object_get_object_member (pbr, "baseColorTexture"));
+              gthree_texture_set_encoding (texture, GTHREE_ENCODING_FORMAT_SRGB);
               gthree_mesh_standard_material_set_map (GTHREE_MESH_STANDARD_MATERIAL (material), texture);
             }
 
@@ -1279,6 +1281,7 @@ parse_materials (GthreeLoader *loader, JsonObject *root, GError **error)
           JsonObject *texture_j = json_object_get_object_member (material_j, "emissiveTexture");
           g_autoptr(GthreeTexture) texture = parse_texture_ref (loader, texture_j);
 
+          gthree_texture_set_encoding (texture, GTHREE_ENCODING_FORMAT_SRGB);
           g_object_set (material, "emissive-map", texture, NULL);
         }
 

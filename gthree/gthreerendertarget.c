@@ -60,7 +60,7 @@ gthree_render_target_init (GthreeRenderTarget *target)
   gthree_texture_set_mag_filter (priv->texture, GTHREE_FILTER_LINEAR);
   gthree_texture_set_min_filter (priv->texture, GTHREE_FILTER_LINEAR);
 
-  gthree_texture_set_encoding (priv->texture, GTHREE_ENCODING_FORMAT_SRGB);
+  gthree_texture_set_encoding (priv->texture, GTHREE_ENCODING_FORMAT_LINEAR);
   gthree_texture_set_format (priv->texture, GTHREE_TEXTURE_FORMAT_RGBA);
   gthree_texture_set_data_type (priv->texture, GTHREE_DATA_TYPE_UNSIGNED_BYTE);
   gthree_texture_set_anisotropy (priv->texture, 1);
