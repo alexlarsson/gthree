@@ -2,7 +2,6 @@
 
 	#ifdef MORPHTARGETS_TEXTURE
 
-		morphTargetBaseInfluence is set based on BufferGeometry.morphTargetsRelative value:
 		transformed *= morphTargetBaseInfluence;
 
 		for ( int i = 0; i < MORPHTARGETS_COUNT; i ++ ) {
