@@ -682,6 +682,22 @@ gthree_uniform_set_vec3 (GthreeUniform *uniform,
   uniform->value.floats[2] = graphene_vec3_get_z (value);
 }
 
+static float
+srgb_eotf (float c)
+{
+  return c <= 0.04045f ? c / 12.92f : powf ((c + 0.055f) / 1.055f, 2.4f);
+}
+
+void
+gthree_uniform_set_color_srgb (GthreeUniform *uniform,
+                                const graphene_vec3_t *value)
+{
+  g_return_if_fail (uniform->type == GTHREE_UNIFORM_TYPE_VECTOR3);
+  uniform->value.floats[0] = srgb_eotf (graphene_vec3_get_x (value));
+  uniform->value.floats[1] = srgb_eotf (graphene_vec3_get_y (value));
+  uniform->value.floats[2] = srgb_eotf (graphene_vec3_get_z (value));
+}
+
 void
 gthree_uniform_set_vec2 (GthreeUniform *uniform,
                          const graphene_vec2_t *value)

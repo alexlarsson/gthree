@@ -166,7 +166,7 @@ gthree_mesh_toon_material_real_set_uniforms (GthreeMaterial *material,
 
   uni = gthree_uniforms_lookup_from_string (uniforms, "diffuse");
   if (uni != NULL)
-    gthree_uniform_set_vec3 (uni, &priv->color);
+    gthree_uniform_set_color_srgb (uni, &priv->color);
 
   uni = gthree_uniforms_lookup_from_string (uniforms, "map");
   if (uni != NULL)
@@ -207,7 +207,7 @@ gthree_mesh_toon_material_real_set_uniforms (GthreeMaterial *material,
       graphene_vec3_t emissive;
 
       graphene_vec3_scale (&priv->emissive_color, priv->emissive_intensity, &emissive);
-      gthree_uniform_set_vec3 (uni, &emissive);
+      gthree_uniform_set_color_srgb (uni, &emissive);
     }
 
   uni = gthree_uniforms_lookup_from_string (uniforms, "emissiveMap");

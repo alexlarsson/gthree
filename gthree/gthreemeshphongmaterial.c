@@ -149,15 +149,15 @@ gthree_mesh_phong_material_real_set_uniforms (GthreeMaterial *material,
 
   uni = gthree_uniforms_lookup_from_string (uniforms, "diffuse");
   if (uni != NULL)
-    gthree_uniform_set_vec3 (uni, &priv->color);
+    gthree_uniform_set_color_srgb (uni, &priv->color);
 
   uni = gthree_uniforms_lookup_from_string (uniforms, "emissive");
   if (uni != NULL)
-    gthree_uniform_set_vec3 (uni, &priv->emissive);
+    gthree_uniform_set_color_srgb (uni, &priv->emissive);
 
   uni = gthree_uniforms_lookup_from_string (uniforms, "specular");
   if (uni != NULL)
-    gthree_uniform_set_vec3 (uni, &priv->specular);
+    gthree_uniform_set_color_srgb (uni, &priv->specular);
 
   uni = gthree_uniforms_lookup_from_string (uniforms, "shininess");
   if (uni != NULL)

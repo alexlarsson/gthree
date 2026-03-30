@@ -112,11 +112,11 @@ gthree_mesh_lambert_material_real_set_uniforms (GthreeMaterial *material,
 
   uni = gthree_uniforms_lookup_from_string (uniforms, "diffuse");
   if (uni != NULL)
-    gthree_uniform_set_vec3 (uni, &priv->color);
+    gthree_uniform_set_color_srgb (uni, &priv->color);
 
   uni = gthree_uniforms_lookup_from_string (uniforms, "emissive");
   if (uni != NULL)
-    gthree_uniform_set_vec3 (uni, &priv->emissive);
+    gthree_uniform_set_color_srgb (uni, &priv->emissive);
 
   uni = gthree_uniforms_lookup_from_string (uniforms, "map");
   if (uni != NULL)

@@ -49,7 +49,7 @@ gthree_line_basic_material_real_set_uniforms (GthreeMaterial *material,
 
   uni = gthree_uniforms_lookup_from_string (uniforms, "diffuse");
   if (uni != NULL)
-    gthree_uniform_set_vec3 (uni, &priv->color);
+    gthree_uniform_set_color_srgb (uni, &priv->color);
 }
 
 static gboolean
