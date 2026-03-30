@@ -25,6 +25,12 @@ typedef struct {
 
   gint draw_range_start;
   gint draw_range_count;
+
+  guint morph_texture;
+  int morph_texture_width;
+  int morph_texture_height;
+  int morph_target_count;
+  int morph_texture_stride;
 } GthreeGeometryPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeGeometry, gthree_geometry, G_TYPE_OBJECT);
@@ -60,6 +66,9 @@ gthree_geometry_finalize (GObject *obj)
   if (priv->morph_attributes)
     g_hash_table_unref (priv->morph_attributes);
   g_array_unref (priv->groups);
+
+  if (priv->morph_texture != 0)
+    glDeleteTextures (1, &priv->morph_texture);
 
   if (geometry->influences)
     g_array_unref (geometry->influences);
@@ -307,6 +316,128 @@ gthree_geometry_get_morph_attributes_names (GthreeGeometry  *geometry)
 
   return g_hash_table_get_keys (priv->morph_attributes);
 }
+
+void
+gthree_geometry_ensure_morph_texture (GthreeGeometry *geometry)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+  GPtrArray *morph_positions, *morph_normals, *morph_colors;
+  int stride, vertex_count, morph_target_count;
+  int width, height;
+  float *buffer;
+  int buf_size;
+
+  if (priv->morph_texture != 0)
+    return;
+
+  morph_positions = gthree_geometry_get_morph_attributes (geometry, "position");
+  if (morph_positions == NULL || morph_positions->len == 0)
+    return;
+
+  morph_normals = gthree_geometry_get_morph_attributes (geometry, "normal");
+  morph_colors = gthree_geometry_get_morph_attributes (geometry, "color");
+
+  stride = 1;
+  if (morph_normals != NULL && morph_normals->len > 0)
+    stride = 2;
+  if (morph_colors != NULL && morph_colors->len > 0)
+    stride = 3;
+
+  vertex_count = gthree_attribute_get_count (g_ptr_array_index (morph_positions, 0));
+  morph_target_count = morph_positions->len;
+
+  width = vertex_count * stride;
+  height = 1;
+  if (width > 4096)
+    {
+      height = (width + 4095) / 4096;
+      width = 4096;
+    }
+
+  buf_size = width * height * 4 * morph_target_count;
+  buffer = g_new0 (float, buf_size);
+
+  for (int i = 0; i < morph_target_count; i++)
+    {
+      GthreeAttribute *pos_attr = g_ptr_array_index (morph_positions, i);
+      GthreeAttribute *norm_attr = (morph_normals && i < (int)morph_normals->len) ? g_ptr_array_index (morph_normals, i) : NULL;
+      int layer_offset = width * height * 4 * i;
+
+      for (int j = 0; j < vertex_count; j++)
+        {
+          float *pos_data = gthree_attribute_peek_float_at (pos_attr, j);
+          int base = layer_offset + j * stride * 4;
+
+          buffer[base + 0] = pos_data[0];
+          buffer[base + 1] = pos_data[1];
+          buffer[base + 2] = pos_data[2];
+          buffer[base + 3] = 0;
+
+          if (stride >= 2 && norm_attr)
+            {
+              float *norm_data = gthree_attribute_peek_float_at (norm_attr, j);
+              buffer[base + 4] = norm_data[0];
+              buffer[base + 5] = norm_data[1];
+              buffer[base + 6] = norm_data[2];
+              buffer[base + 7] = 0;
+            }
+        }
+    }
+
+  glGenTextures (1, &priv->morph_texture);
+  glBindTexture (GL_TEXTURE_2D_ARRAY, priv->morph_texture);
+  glTexImage3D (GL_TEXTURE_2D_ARRAY, 0, GL_RGBA32F,
+                width, height, morph_target_count,
+                0, GL_RGBA, GL_FLOAT, buffer);
+  glTexParameteri (GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri (GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri (GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri (GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glBindTexture (GL_TEXTURE_2D_ARRAY, 0);
+
+  priv->morph_texture_width = width;
+  priv->morph_texture_height = height;
+  priv->morph_target_count = morph_target_count;
+  priv->morph_texture_stride = stride;
+
+  g_free (buffer);
+}
+
+guint
+gthree_geometry_get_morph_texture (GthreeGeometry *geometry)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+  return priv->morph_texture;
+}
+
+int
+gthree_geometry_get_morph_texture_width (GthreeGeometry *geometry)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+  return priv->morph_texture_width;
+}
+
+int
+gthree_geometry_get_morph_texture_height (GthreeGeometry *geometry)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+  return priv->morph_texture_height;
+}
+
+int
+gthree_geometry_get_morph_target_count (GthreeGeometry *geometry)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+  return priv->morph_target_count;
+}
+
+int
+gthree_geometry_get_morph_texture_stride (GthreeGeometry *geometry)
+{
+  GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);
+  return priv->morph_texture_stride;
+}
+
 
 void
 gthree_geometry_add_group (GthreeGeometry  *geometry,

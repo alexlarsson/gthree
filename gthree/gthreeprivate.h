@@ -151,6 +151,9 @@ struct  _GthreeProgramParameters {
 
   guint16 num_clipping_planes;
   guint16 num_clip_intersection;
+
+  guint16 morph_targets_count;
+  guint8 morph_texture_stride;
 };
 
 
@@ -216,6 +219,13 @@ void gthree_render_target_realize (GthreeRenderTarget *target,
                                    GthreeRenderer *renderer);
 const graphene_rect_t * gthree_render_target_get_viewport (GthreeRenderTarget *target);
 
+
+void gthree_geometry_ensure_morph_texture (GthreeGeometry *geometry);
+guint gthree_geometry_get_morph_texture (GthreeGeometry *geometry);
+int gthree_geometry_get_morph_texture_width (GthreeGeometry *geometry);
+int gthree_geometry_get_morph_texture_height (GthreeGeometry *geometry);
+int gthree_geometry_get_morph_target_count (GthreeGeometry *geometry);
+int gthree_geometry_get_morph_texture_stride (GthreeGeometry *geometry);
 
 GthreeGeometry *gthree_geometry_parse_json (JsonObject *object);
 void gthree_geometry_update           (GthreeGeometry   *geometry,

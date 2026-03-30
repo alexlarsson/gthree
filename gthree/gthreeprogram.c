@@ -580,7 +580,14 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
                                 parameters->max_bones);
 
       if (parameters->morph_targets)
-        g_string_append (vertex, "#define USE_MORPHTARGETS\n");
+        {
+          g_string_append (vertex, "#define USE_MORPHTARGETS\n");
+          g_string_append (vertex, "#define MORPHTARGETS_TEXTURE\n");
+          g_string_append_printf (vertex, "#define MORPHTARGETS_TEXTURE_STRIDE %d\n",
+                                 parameters->morph_texture_stride);
+          g_string_append_printf (vertex, "#define MORPHTARGETS_COUNT %d\n",
+                                 parameters->morph_targets_count);
+        }
       if (parameters->morph_normals && !parameters->flat_shading)
         g_string_append (vertex, "#define USE_MORPHNORMALS\n");
       if (parameters->morph_colors)
@@ -651,24 +658,6 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
                        "	attribute vec4 color;\n"
                        "#elif defined( USE_COLOR )\n"
                        "	attribute vec3 color;\n"
-                       "#endif\n"
-
-                       "#ifdef USE_MORPHTARGETS\n"
-                       "	attribute vec3 morphTarget0;\n"
-                       "	attribute vec3 morphTarget1;\n"
-                       "	attribute vec3 morphTarget2;\n"
-                       "	attribute vec3 morphTarget3;\n"
-                       "	#ifdef USE_MORPHNORMALS\n"
-                       "		attribute vec3 morphNormal0;\n"
-                       "		attribute vec3 morphNormal1;\n"
-                       "		attribute vec3 morphNormal2;\n"
-                       "		attribute vec3 morphNormal3;\n"
-                       "	#else\n"
-                       "		attribute vec3 morphTarget4;\n"
-                       "		attribute vec3 morphTarget5;\n"
-                       "		attribute vec3 morphTarget6;\n"
-                       "		attribute vec3 morphTarget7;\n"
-                       "	#endif\n"
                        "#endif\n"
 
                        "#ifdef USE_SKINNING\n"

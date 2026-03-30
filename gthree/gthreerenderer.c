@@ -25,8 +25,6 @@
 #include "gthreepointlight.h"
 #include "gthreefog.h"
 
-#define MAX_MORPH_TARGETS 8
-#define MAX_MORPH_NORMALS 4
 
 static graphene_vec3_t cube_directions[6];
 static graphene_vec3_t cube_ups[6];
@@ -131,8 +129,6 @@ typedef struct {
 
   guint8 new_attributes[8];
   guint8 enabled_attributes[8];
-
-  float morph_influences[8];
 
   int max_textures;
   int max_vertex_textures;
@@ -1531,6 +1527,30 @@ init_material (GthreeRenderer *renderer,
   parameters.morph_targets = GTHREE_IS_MESH_MATERIAL (material) && gthree_mesh_material_get_morph_targets (GTHREE_MESH_MATERIAL (material));
   parameters.morph_normals = GTHREE_IS_MESH_MATERIAL (material) && gthree_mesh_material_get_morph_normals (GTHREE_MESH_MATERIAL (material));
 
+  if (parameters.morph_targets)
+    {
+      GthreeGeometry *geom = NULL;
+      if (GTHREE_IS_MESH (object))
+        geom = gthree_mesh_get_geometry (GTHREE_MESH (object));
+
+      if (geom)
+        {
+          GPtrArray *morph_pos = gthree_geometry_get_morph_attributes (geom, "position");
+          if (morph_pos && morph_pos->len > 0)
+            {
+              GPtrArray *morph_norm = gthree_geometry_get_morph_attributes (geom, "normal");
+              GPtrArray *morph_col = gthree_geometry_get_morph_attributes (geom, "color");
+              int s = 1;
+              if (morph_norm && morph_norm->len > 0)
+                s = 2;
+              if (morph_col && morph_col->len > 0)
+                s = 3;
+              parameters.morph_targets_count = morph_pos->len;
+              parameters.morph_texture_stride = s;
+            }
+        }
+    }
+
   parameters.num_clipping_planes = priv->num_clipping_planes;
   parameters.num_clip_intersection = priv->num_clipping_intersections;
 
@@ -1549,41 +1569,6 @@ init_material (GthreeRenderer *renderer,
 
   // TODO: thee.js uses the lightstate current_hash and other stuff to avoid some stuff here?
   // I think it caches the material uniforms we calculate here and avoid reloading if switching to a new program?
-
-  if (GTHREE_IS_MESH_MATERIAL (material) &&
-      gthree_mesh_material_get_morph_targets (GTHREE_MESH_MATERIAL (material)))
-    {
-      GHashTable *program_attributes = gthree_program_get_attribute_locations (program);
-      int num_supported = 0;
-
-      for (int i = 0; i < MAX_MORPH_TARGETS; i++ )
-        {
-          g_autofree char *attr = g_strdup_printf ("morphTarget%d", i);
-
-          if (g_hash_table_lookup (program_attributes, attr) != NULL)
-            num_supported++;
-        }
-      gthree_mesh_material_set_num_supported_morph_targets (GTHREE_MESH_MATERIAL (material),
-                                                            num_supported);
-    }
-
-  if (GTHREE_IS_MESH_MATERIAL (material) &&
-      gthree_mesh_material_get_morph_normals (GTHREE_MESH_MATERIAL (material)))
-    {
-      GHashTable *program_attributes = gthree_program_get_attribute_locations (program);
-      int num_supported = 0;
-
-      for (int i = 0; i < MAX_MORPH_NORMALS; i++ )
-        {
-          g_autofree char *attr = g_strdup_printf ("morphNormal%d", i);
-
-          if (g_hash_table_lookup (program_attributes, attr) != NULL)
-            num_supported++;
-        }
-
-      gthree_mesh_material_set_num_supported_morph_normals (GTHREE_MESH_MATERIAL (material),
-                                                            num_supported);
-    }
 
   m_uniforms = gthree_shader_get_uniforms (shader);
 
@@ -2741,26 +2726,6 @@ setup_vertex_attributes (GthreeRenderer *renderer,
 //	var influencesList = {};
 //	var morphInfluences = new Float32Array( 8 );
 
-typedef struct {
-  int index;
-  float value;
-} InfluenceInfo;
-
-static int
-influence_info_cmp (InfluenceInfo *a, InfluenceInfo *b)
-{
-  float aa = fabs (a->value);
-  float bb = fabs (b->value);
-
-  if (aa == bb)
-    return 0;
-
-  if (bb > aa)
-    return -1;
-
-  return 1;
-}
-
 static void
 update_morphtargets (GthreeRenderer *renderer,
                      GthreeMesh *mesh,
@@ -2768,101 +2733,54 @@ update_morphtargets (GthreeRenderer *renderer,
                      GthreeMeshMaterial *material,
                      GthreeProgram *program)
 {
-  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
   GArray *object_influences = gthree_mesh_get_morph_targets (mesh);
-  int length = object_influences->len;
-  GArray *influences;
-  int i;
-  GPtrArray *morphTargets = NULL;
-  GPtrArray *morphNormals = NULL;
+  int morph_target_count;
+  float base_influence;
+  gint loc;
 
+  gthree_geometry_ensure_morph_texture (geometry);
 
-  if (geometry->influences == NULL)
+  guint morph_tex = gthree_geometry_get_morph_texture (geometry);
+  if (morph_tex == 0)
+    return;
+
+  morph_target_count = gthree_geometry_get_morph_target_count (geometry);
+
+  float *influences_array = g_new0 (float, morph_target_count);
+  base_influence = 1.0f;
+
+  for (int i = 0; i < morph_target_count && i < (int)object_influences->len; i++)
     {
-      geometry->influences = g_array_new (FALSE, FALSE, sizeof (InfluenceInfo));
-      for (i = 0; i < length; i++)
-        {
-          InfluenceInfo info = {i, 0};
-          g_array_append_val (geometry->influences, info);
-        }
+      float v = g_array_index (object_influences, float, i);
+      influences_array[i] = v;
+      base_influence -= v;
     }
-  influences = geometry->influences;
+  if (base_influence < 0.0f)
+    base_influence = 0.0f;
 
-  if (gthree_mesh_material_get_morph_targets (material))
-    morphTargets = gthree_geometry_get_morph_attributes (geometry, "position");
+  guint tex_unit = gthree_renderer_allocate_texture_unit (renderer);
+  glActiveTexture (GL_TEXTURE0 + tex_unit);
+  glBindTexture (GL_TEXTURE_2D_ARRAY, morph_tex);
 
-  if (gthree_mesh_material_get_morph_normals (material))
-    morphNormals = gthree_geometry_get_morph_attributes (geometry, "normal");
+  loc = gthree_program_lookup_uniform_location_from_string (program, "morphTargetsTexture");
+  if (loc >= 0)
+    glUniform1i (loc, tex_unit);
 
-  // Remove current morphAttributes
-  for (i = 0; i < length; i++)
-    {
-      InfluenceInfo *info = &g_array_index (influences, InfluenceInfo, i);
-      if (info->value != 0)
-        {
-          if (morphTargets)
-            {
-              g_autofree char *name = g_strdup_printf ("morphTarget%d", i);
-              gthree_geometry_remove_attribute (geometry, name);
-            }
+  loc = gthree_program_lookup_uniform_location_from_string (program, "morphTargetsTextureSize");
+  if (loc >= 0)
+    glUniform2i (loc,
+                 gthree_geometry_get_morph_texture_width (geometry),
+                 gthree_geometry_get_morph_texture_height (geometry));
 
-          if (morphNormals)
-            {
-              g_autofree char *name = g_strdup_printf ("morphNormal%d", i);
-              gthree_geometry_remove_attribute (geometry, name);
-            }
-        }
-    }
+  loc = gthree_program_lookup_uniform_location_from_string (program, "morphTargetBaseInfluence");
+  if (loc >= 0)
+    glUniform1f (loc, base_influence);
 
-  // Collect influences
-  for (i = 0; i < length; i++)
-    {
-      InfluenceInfo *info = &g_array_index (influences, InfluenceInfo, i);
-      info->index = i;
-      info->value = g_array_index (object_influences, float, i);
-    }
+  loc = gthree_program_lookup_uniform_location_from_string (program, "morphTargetInfluences[0]");
+  if (loc >= 0)
+    glUniform1fv (loc, morph_target_count, influences_array);
 
-  g_array_sort (influences, (GCompareFunc)influence_info_cmp);
-
-  // Add morphAttributes
-  for (i = 0; i < 8; i++)
-    {
-      if (i < length)
-        {
-          InfluenceInfo *info = &g_array_index (influences, InfluenceInfo, i);
-
-          if (info->value != 0)
-            {
-              if (morphTargets)
-                {
-                  g_autofree char *name = g_strdup_printf ("morphTarget%d", i);
-                  GthreeAttribute *attribute = g_ptr_array_index (morphTargets, info->index);
-                  gthree_geometry_add_attribute (geometry, name, attribute);
-                }
-
-              if (morphNormals)
-                {
-                  g_autofree char *name = g_strdup_printf ("morphNormal%d", i);
-                  GthreeAttribute *attribute = g_ptr_array_index (morphTargets, info->index);
-                  gthree_geometry_add_attribute (geometry, name, attribute);
-                }
-
-              priv->morph_influences[i] = info->value;
-              continue;
-            }
-
-        }
-
-      priv->morph_influences[i] = 0;
-    }
-
-  gint morph_target_influences_location =
-    gthree_program_lookup_uniform_location_from_string (program, "morphTargetInfluences[0]");
-
-  if (morph_target_influences_location >= 0)
-    glUniform1fv (morph_target_influences_location, 8, priv->morph_influences);
-  else
-    g_warning ("No morphTargetInfluences uniform");
+  g_free (influences_array);
 }
 
 static void
