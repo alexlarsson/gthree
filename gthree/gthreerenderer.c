@@ -1104,10 +1104,11 @@ gthree_set_default_gl_state (GthreeRenderer *renderer)
 
   glClearColor (0, 0, 0, 1);
   graphene_vec4_init (&priv->old_clear_color, 0, 0, 0, 1);
-  glClearDepth (1);
+  glClearDepthf (1);
   glClearStencil (0);
 
-  glEnable (GL_VERTEX_PROGRAM_POINT_SIZE);
+  if (epoxy_is_desktop_gl ())
+    glEnable (GL_VERTEX_PROGRAM_POINT_SIZE);
 
   glEnable (GL_DEPTH_TEST);
   glDepthFunc (GL_LEQUAL);
@@ -1240,7 +1241,8 @@ set_line_width (GthreeRenderer *renderer,
 
   if (priv->old_line_width != line_width)
     {
-      glLineWidth (line_width);
+      if (epoxy_is_desktop_gl () || line_width == 1.0f)
+        glLineWidth (line_width);
       priv->old_line_width = line_width;
     }
 }

@@ -457,9 +457,24 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
 
   if (TRUE /*! material instanceof THREE.RawShaderMaterial */)
     {
-      g_string_append (vertex, "#version 130\n");
-      g_string_append_printf (vertex, "precision %s float;\n", precision_to_string (parameters->precision));
-      g_string_append_printf (vertex, "precision %s int;\n", precision_to_string (parameters->precision));
+      gboolean is_gles = !epoxy_is_desktop_gl ();
+
+      if (is_gles)
+        {
+          g_string_append (vertex, "#version 300 es\n");
+          g_string_append_printf (vertex, "precision %s float;\n", precision_to_string (parameters->precision));
+          g_string_append_printf (vertex, "precision %s int;\n", precision_to_string (parameters->precision));
+          g_string_append (vertex, "#define attribute in\n");
+          g_string_append (vertex, "#define varying out\n");
+          g_string_append (vertex, "#define texture2D texture\n");
+          g_string_append (vertex, "#define textureCube texture\n");
+        }
+      else
+        {
+          g_string_append (vertex, "#version 130\n");
+          g_string_append_printf (vertex, "precision %s float;\n", precision_to_string (parameters->precision));
+          g_string_append_printf (vertex, "precision %s int;\n", precision_to_string (parameters->precision));
+        }
 
       if (shader_name)
         g_string_append_printf (vertex, "#define SHADER_NAME %s\n", shader_name);
@@ -600,9 +615,25 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
 
       /* fragment shader prefix */
 
-      g_string_append (fragment, "#version 130\n");
-      g_string_append_printf (fragment, "precision %s float;\n", precision_to_string (parameters->precision));
-      g_string_append_printf (fragment, "precision %s int;\n", precision_to_string (parameters->precision));
+      if (is_gles)
+        {
+          g_string_append (fragment, "#version 300 es\n");
+          g_string_append_printf (fragment, "precision %s float;\n", precision_to_string (parameters->precision));
+          g_string_append_printf (fragment, "precision %s int;\n", precision_to_string (parameters->precision));
+          g_string_append (fragment, "#define varying in\n");
+          g_string_append (fragment, "#define texture2D texture\n");
+          g_string_append (fragment, "#define textureCube texture\n");
+          g_string_append (fragment, "#define texture2DLodEXT textureLod\n");
+          g_string_append (fragment, "#define textureCubeLodEXT textureLod\n");
+          g_string_append (fragment, "#define gl_FragColor pc_fragColor\n");
+          g_string_append (fragment, "out vec4 pc_fragColor;\n");
+        }
+      else
+        {
+          g_string_append (fragment, "#version 130\n");
+          g_string_append_printf (fragment, "precision %s float;\n", precision_to_string (parameters->precision));
+          g_string_append_printf (fragment, "precision %s int;\n", precision_to_string (parameters->precision));
+        }
 
       if (shader_name)
         g_string_append_printf (fragment, "#define SHADER_NAME %s\n", shader_name);
@@ -692,11 +723,9 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
 
       if (parameters->logarithmic_depth_buffer)
         g_string_append (fragment, "#define USE_LOGDEPTHBUF\n");
-#if TODO
-      // parameters.logarithmicDepthBuffer && ( capabilities.isWebGL2 || extensions.get( 'EXT_frag_depth' ) ) ? '#define USE_LOGDEPTHBUF_EXT' : '',
 
-      parameters.envMap && ( capabilities.isWebGL2 || extensions.get( 'EXT_shader_texture_lod' ) ) ? '#define TEXTURE_LOD_EXT' : '',
-#endif
+      if (is_gles && parameters->env_map)
+        g_string_append (fragment, "#define TEXTURE_LOD_EXT\n");
 
         g_string_append (fragment,
                          "uniform mat4 viewMatrix;\n"
