@@ -99,7 +99,7 @@ gthree_point_light_real_setup (GthreeLight *light,
   GthreeTexture *shadow_map_texture = NULL;
   graphene_matrix_t shadow_matrix;
 
-  graphene_vec3_scale (gthree_light_get_color (light), intensity, &color);
+  graphene_vec3_scale (gthree_light_get_color (light), intensity * G_PI, &color);
   gthree_color_srgb_to_linear (&color, &color);
   gthree_uniforms_set_vec3 (priv->uniforms, "color", &color);
 

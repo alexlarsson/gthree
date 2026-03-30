@@ -85,11 +85,11 @@ gthree_hemisphere_light_real_setup (GthreeLight *light,
   gthree_uniforms_set_vec3 (priv->uniforms, "direction", &direction);
 
   graphene_vec3_scale (gthree_light_get_color (light),
-                       intensity, &color);
+                       intensity * G_PI, &color);
   gthree_color_srgb_to_linear (&color, &color);
   gthree_uniforms_set_vec3 (priv->uniforms, "skyColor", &color);
   graphene_vec3_scale (&priv->ground_color,
-                       intensity, &color);
+                       intensity * G_PI, &color);
   gthree_color_srgb_to_linear (&color, &color);
   gthree_uniforms_set_vec3 (priv->uniforms, "groundColor", &color);
 
