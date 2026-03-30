@@ -198,8 +198,7 @@ void     gthree_texture_bind             (GthreeTexture *texture,
                                           int            slot,
                                           int            target);
 void     gthree_texture_set_parameters (guint texture_type,
-                                        GthreeTexture *texture,
-                                        gboolean is_image_power_of_two);
+                                        GthreeTexture *texture);
 
 guint gthree_render_target_get_gl_framebuffer (GthreeRenderTarget *target,
                                                GthreeRenderer *renderer);

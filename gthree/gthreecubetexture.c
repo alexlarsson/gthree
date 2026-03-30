@@ -57,12 +57,6 @@ gthree_cube_texture_init (GthreeCubeTexture *cube)
 {
 }
 
-static gboolean
-is_power_of_two (guint value)
-{
-  return value != 0 && (value & (value - 1)) == 0;
-}
-
 static void
 gthree_cube_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer, int slot)
 {
@@ -80,7 +74,6 @@ gthree_cube_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer,
       guint width, height;
       gboolean is_compressed = FALSE; //texture instanceof THREE.CompressedTexture;
       guint gl_format, gl_type;
-      gboolean is_image_power_of_two = is_power_of_two (width) && is_power_of_two (height);
 
       for (i = 0; i < 6; i++)
         {
@@ -97,8 +90,6 @@ gthree_cube_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer,
 
       width = gdk_pixbuf_get_width (cube_pixbufs[0]);
       height = gdk_pixbuf_get_height (cube_pixbufs[0]);
-      is_image_power_of_two = is_power_of_two (width) && is_power_of_two (height);
-
       gl_format = gdk_pixbuf_get_has_alpha (cube_pixbufs[0]) ? GL_RGBA : GL_RGB;
       gl_type = GL_UNSIGNED_BYTE;
 
@@ -108,7 +99,7 @@ gthree_cube_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer,
       else
         gl_internal_format = gdk_pixbuf_get_has_alpha (cube_pixbufs[0]) ? GL_RGBA8 : GL_RGB8;
 
-      gthree_texture_set_parameters (GL_TEXTURE_CUBE_MAP, texture, is_image_power_of_two);
+      gthree_texture_set_parameters (GL_TEXTURE_CUBE_MAP, texture);
 
       for (i = 0; i < 6; i++)
         {
@@ -137,7 +128,7 @@ gthree_cube_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer,
 #endif
         }
 
-      if (gthree_texture_get_generate_mipmaps (texture) && is_image_power_of_two)
+      if (gthree_texture_get_generate_mipmaps (texture))
         {
           glGenerateMipmap (GL_TEXTURE_CUBE_MAP);
           gthree_texture_set_max_mip_level (texture, log2 (MAX (width, height)));
