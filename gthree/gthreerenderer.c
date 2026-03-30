@@ -67,6 +67,8 @@ typedef struct {
   float clear_alpha;
   gboolean sort_objects;
   float gamma_factor;
+  GthreeToneMapping tone_mapping;
+  float tone_mapping_exposure;
   gboolean physically_correct_lights;
   gboolean shadowmap_enabled;
   gboolean shadowmap_auto_update;
@@ -171,6 +173,7 @@ static GQuark q_normalMatrix;
 static GQuark q_projectionMatrix;
 static GQuark q_cameraPosition;
 static GQuark q_clippingPlanes;
+static GQuark q_toneMappingExposure;
 static GQuark q_ambientLightColor;
 static GQuark q_directionalLights;
 static GQuark q_hemisphereLights;
@@ -311,6 +314,8 @@ gthree_renderer_init (GthreeRenderer *renderer)
   priv->height = 1;
   priv->pixel_ratio = 1;
   priv->gamma_factor = 2.2; // Differs from three.js default 2.0
+  priv->tone_mapping = GTHREE_TONE_MAPPING_NONE;
+  priv->tone_mapping_exposure = 1.0;
   priv->physically_correct_lights = FALSE;
   priv->shadowmap_type = GTHREE_SHADOW_MAP_TYPE_PCF;
   priv->shadowmap_enabled = FALSE;
@@ -457,6 +462,7 @@ gthree_renderer_class_init (GthreeRendererClass *klass)
   INIT_QUARK(projectionMatrix);
   INIT_QUARK(cameraPosition);
   INIT_QUARK(clippingPlanes);
+  INIT_QUARK(toneMappingExposure);
   INIT_QUARK(ambientLightColor);
   INIT_QUARK(directionalLights);
   INIT_QUARK(hemisphereLights);
@@ -833,6 +839,36 @@ gthree_renderer_get_gamma_factor (GthreeRenderer *renderer)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
   return priv->gamma_factor;
+}
+
+void
+gthree_renderer_set_tone_mapping (GthreeRenderer  *renderer,
+                                  GthreeToneMapping tone_mapping)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  priv->tone_mapping = tone_mapping;
+}
+
+GthreeToneMapping
+gthree_renderer_get_tone_mapping (GthreeRenderer *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  return priv->tone_mapping;
+}
+
+void
+gthree_renderer_set_tone_mapping_exposure (GthreeRenderer *renderer,
+                                           float           exposure)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  priv->tone_mapping_exposure = exposure;
+}
+
+float
+gthree_renderer_get_tone_mapping_exposure (GthreeRenderer *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  return priv->tone_mapping_exposure;
 }
 
 gboolean
@@ -1505,6 +1541,7 @@ init_material (GthreeRenderer *renderer,
 
   parameters.shadow_map_enabled = priv->shadowmap_enabled && gthree_object_get_receive_shadow (object) && priv->shadows != NULL;
   parameters.shadow_map_type = priv->shadowmap_type;
+  parameters.tone_mapping = priv->tone_mapping;
 
   parameters.fog = fog != NULL;
   parameters.use_fog = gthree_material_get_fog (material);
@@ -2450,6 +2487,13 @@ set_program (GthreeRenderer *renderer,
               glUniform3f (camera_position_location,
                            graphene_vec4_get_x (&pos), graphene_vec4_get_y (&pos), graphene_vec4_get_z (&pos));
             }
+        }
+
+      if (priv->tone_mapping != GTHREE_TONE_MAPPING_NONE)
+        {
+          gint tone_mapping_exposure_location = gthree_program_lookup_uniform_location (program, q_toneMappingExposure);
+          if (tone_mapping_exposure_location >= 0)
+            glUniform1f (tone_mapping_exposure_location, priv->tone_mapping_exposure);
         }
 
       if (gthree_material_needs_view_matrix (material))

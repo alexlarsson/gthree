@@ -305,6 +305,21 @@ get_texel_encoding_function (GString *shader,
                           function_name);
 }
 
+static const char *
+get_tone_mapping_function (int tone_mapping)
+{
+  switch (tone_mapping)
+    {
+    case 1: return "LinearToneMapping";
+    case 2: return "ReinhardToneMapping";
+    case 3: return "OptimizedCineonToneMapping";
+    case 4: return "ACESFilmicToneMapping";
+    case 5: return "AgXToneMapping";
+    case 6: return "NeutralToneMapping";
+    default: return "LinearToneMapping";
+    }
+}
+
 static void
 get_luminance_function (GString *shader)
 {
@@ -865,6 +880,9 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
         {
           g_string_append (fragment, "#define TONE_MAPPING\n");
           g_string_append (fragment, "#include <tonemapping_pars_fragment>\n");
+          g_string_append_printf (fragment,
+                                 "vec3 toneMapping( vec3 color ) { return %s( color ); }\n",
+                                 get_tone_mapping_function (parameters->tone_mapping));
         }
 
       if (parameters->dithering)
