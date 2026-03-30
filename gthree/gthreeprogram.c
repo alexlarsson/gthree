@@ -564,10 +564,10 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
         g_string_append (vertex, "#define USE_SIZEATTENUATION\n");
 
       if (parameters->logarithmic_depth_buffer)
-        g_string_append (vertex, "#define USE_LOGDEPTHBUF\n");
-#if TODO
-      // parameters.logarithmicDepthBuffer && ( capabilities.isWebGL2 || extensions.get( 'EXT_frag_depth' ) ) ? '#define USE_LOGDEPTHBUF_EXT' : '',
-#endif
+        {
+          g_string_append (vertex, "#define USE_LOGDEPTHBUF\n");
+          g_string_append (vertex, "#define USE_LOGDEPTHBUF_EXT\n");
+        }
 
         g_string_append (vertex,
                          "uniform mat4 modelMatrix;\n"
@@ -626,6 +626,7 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
           g_string_append (fragment, "#define texture2DLodEXT textureLod\n");
           g_string_append (fragment, "#define textureCubeLodEXT textureLod\n");
           g_string_append (fragment, "#define gl_FragColor pc_fragColor\n");
+          g_string_append (fragment, "#define gl_FragDepthEXT gl_FragDepth\n");
           g_string_append (fragment, "out vec4 pc_fragColor;\n");
         }
       else
@@ -633,6 +634,9 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
           g_string_append (fragment, "#version 130\n");
           g_string_append_printf (fragment, "precision %s float;\n", precision_to_string (parameters->precision));
           g_string_append_printf (fragment, "precision %s int;\n", precision_to_string (parameters->precision));
+          g_string_append (fragment, "#define texture2DLodEXT textureLod\n");
+          g_string_append (fragment, "#define textureCubeLodEXT textureLod\n");
+          g_string_append (fragment, "#define gl_FragDepthEXT gl_FragDepth\n");
         }
 
       if (shader_name)
@@ -722,9 +726,11 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
         g_string_append (fragment, "#define PHYSICALLY_CORRECT_LIGHTS\n");
 
       if (parameters->logarithmic_depth_buffer)
-        g_string_append (fragment, "#define USE_LOGDEPTHBUF\n");
-
-      if (is_gles && parameters->env_map)
+        {
+          g_string_append (fragment, "#define USE_LOGDEPTHBUF\n");
+          g_string_append (fragment, "#define USE_LOGDEPTHBUF_EXT\n");
+        }
+      if (parameters->env_map)
         g_string_append (fragment, "#define TEXTURE_LOD_EXT\n");
 
         g_string_append (fragment,
