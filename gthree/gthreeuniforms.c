@@ -912,15 +912,17 @@ static GthreeUniformsDefinition common_lib[] = {
   {"opacity", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
 
   {"map", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
-  {"uvTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
+  {"mapTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
 
   {"alphaMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
+  {"alphaMapTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
 };
 
 
 static GthreeUniforms *specularmap;
 static GthreeUniformsDefinition specularmap_lib[] = {
   {"specularMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
+  {"specularMapTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
 };
 
 static GthreeUniforms *envmap;
@@ -936,29 +938,34 @@ static GthreeUniforms *aomap;
 static GthreeUniformsDefinition aomap_lib[] = {
   {"aoMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
   {"aoMapIntensity", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
+  {"aoMapTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
 };
 
 static GthreeUniforms *lightmap;
 static GthreeUniformsDefinition lightmap_lib[] = {
   {"lightMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
   {"lightMapIntensity", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
+  {"lightMapTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
 };
 
 static GthreeUniforms *emissivemap;
 static GthreeUniformsDefinition emissivemap_lib[] = {
   {"emissiveMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
+  {"emissiveMapTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
 };
 
 static GthreeUniforms *bumpmap;
 static GthreeUniformsDefinition bumpmap_lib[] = {
   {"bumpMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
-  {"bumpScale", GTHREE_UNIFORM_TYPE_FLOAT, &f1 }
+  {"bumpScale", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
+  {"bumpMapTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
 };
 
 static GthreeUniforms *normalmap;
 static GthreeUniformsDefinition normalmap_lib[] = {
   {"normalMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
-  {"normalScale", GTHREE_UNIFORM_TYPE_VECTOR2, &onev2}
+  {"normalScale", GTHREE_UNIFORM_TYPE_VECTOR2, &onev2},
+  {"normalMapTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
 };
 
 static GthreeUniforms *displacementmap;
@@ -966,11 +973,13 @@ static GthreeUniformsDefinition displacementmap_lib[] = {
   {"displacementMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
   {"displacementScale", GTHREE_UNIFORM_TYPE_FLOAT, &f1},
   {"displacementBias", GTHREE_UNIFORM_TYPE_FLOAT, &f0},
+  {"displacementMapTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
 };
 
 static GthreeUniforms *roughnessmap;
 static GthreeUniformsDefinition roughnessmap_lib[] = {
   {"roughnessMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
+  {"roughnessMapTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
 };
 
 static GthreeUniforms *glossinessmap;
@@ -981,11 +990,13 @@ static GthreeUniformsDefinition glossinessmap_lib[] = {
 static GthreeUniforms *metalnessmap;
 static GthreeUniformsDefinition metalnessmap_lib[] = {
   {"metalnessMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
+  {"metalnessMapTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
 };
 
 static GthreeUniforms *gradientmap;
 static GthreeUniformsDefinition gradientmap_lib[] = {
   {"gradientMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
+  {"gradientMapTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
 };
 
 static GthreeUniforms *fog;
