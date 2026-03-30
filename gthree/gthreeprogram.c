@@ -585,6 +585,9 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
         g_string_append (vertex, "#define USE_SKINNING\n");
       if (parameters->use_vertex_texture)
         g_string_append (vertex, "#define BONE_TEXTURE\n");
+      if (parameters->skinning && !parameters->use_vertex_texture)
+        g_string_append_printf (vertex, "#define MAX_BONES %d\n",
+                                parameters->max_bones);
 
       if (parameters->morph_targets)
         g_string_append (vertex, "#define USE_MORPHTARGETS\n");
