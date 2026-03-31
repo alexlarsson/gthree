@@ -139,6 +139,10 @@ struct  _GthreeProgramParameters {
   guint8 alpha_test;
   guint16 max_bones;
 
+  float cubeuv_texel_width;
+  float cubeuv_texel_height;
+  float cubeuv_max_mip;
+
   guint16 num_dir_lights;
   guint16 num_point_lights;
   guint16 num_spot_lights;
@@ -383,5 +387,8 @@ gthree_color_srgb_to_linear (const graphene_vec3_t *srgb, graphene_vec3_t *linea
                       gthree_srgb_eotf (graphene_vec3_get_y (srgb)),
                       gthree_srgb_eotf (graphene_vec3_get_z (srgb)));
 }
+
+GdkPixbuf *gthree_cube_texture_get_face_pixbuf (GthreeCubeTexture *cube_texture,
+                                                int                face);
 
 #endif /* __GTHREE_PRIVATE_H__ */

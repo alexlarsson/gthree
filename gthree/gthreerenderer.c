@@ -1509,6 +1509,24 @@ init_material (GthreeRenderer *renderer,
   parameters.physically_correct_lights = priv->physically_correct_lights;
 
   gthree_material_set_params (material, &parameters);
+
+  if (parameters.env_map && parameters.env_map_mode == GTHREE_MAPPING_CUBE_UV_REFLECTION)
+    {
+      GthreeTexture *env_tex = NULL;
+      g_object_get (material, "env-map", &env_tex, NULL);
+      if (env_tex)
+        {
+          float *meta = g_object_get_data (G_OBJECT (env_tex), "cubeuv-meta");
+          if (meta)
+            {
+              parameters.cubeuv_texel_width = meta[0];
+              parameters.cubeuv_texel_height = meta[1];
+              parameters.cubeuv_max_mip = meta[2];
+            }
+          g_object_unref (env_tex);
+        }
+    }
+
   parameters.num_dir_lights = priv->light_setup.directional->len;
   parameters.num_point_lights = priv->light_setup.point->len;
   parameters.num_spot_lights = priv->light_setup.spot->len;

@@ -138,6 +138,17 @@ gthree_cube_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer,
     }
 }
 
+GdkPixbuf *
+gthree_cube_texture_get_face_pixbuf (GthreeCubeTexture *cube_texture,
+                                     int                face)
+{
+  GthreeCubeTexturePrivate *priv = gthree_cube_texture_get_instance_private (cube_texture);
+
+  g_return_val_if_fail (face >= 0 && face < 6, NULL);
+
+  return priv->pixbufs[face];
+}
+
 static void
 gthree_cube_texture_finalize (GObject *obj)
 {

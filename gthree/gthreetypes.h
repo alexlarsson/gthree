@@ -42,6 +42,7 @@ typedef struct _GthreeMaterialProperties GthreeMaterialProperties;
 typedef struct _GthreeAnimationAction GthreeAnimationAction;
 typedef struct _GthreeAnimationMixer GthreeAnimationMixer;
 typedef struct _GthreeRaycaster GthreeRaycaster;
+typedef struct _GthreePMREMGenerator GthreePMREMGenerator;
 typedef struct _GthreeFog GthreeFog;
 typedef int GthreeAttributeName;
 

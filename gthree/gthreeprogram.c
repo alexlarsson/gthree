@@ -386,6 +386,8 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
         case GTHREE_MAPPING_CUBE_REFRACTION:
           env_map_type_define = "ENVMAP_TYPE_CUBE";
           break;
+        case GTHREE_MAPPING_CUBE_UV_REFLECTION:
+          env_map_type_define = "ENVMAP_TYPE_CUBE_UV";
           break;
         case GTHREE_MAPPING_SPHERICAL_REFLECTION:
         case GTHREE_MAPPING_SPHERICAL_REFRACTION:
@@ -721,6 +723,19 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
                                   "#define %s\n"
                                   "#define %s\n",
                                   env_map_type_define, env_map_mode_define, env_map_blending_define);
+          if (parameters->env_map_mode == GTHREE_MAPPING_CUBE_UV_REFLECTION)
+            {
+              char buf1[G_ASCII_DTOSTR_BUF_SIZE];
+              char buf2[G_ASCII_DTOSTR_BUF_SIZE];
+              char buf3[G_ASCII_DTOSTR_BUF_SIZE];
+              g_string_append_printf (fragment,
+                                      "#define CUBEUV_TEXEL_WIDTH %s\n"
+                                      "#define CUBEUV_TEXEL_HEIGHT %s\n"
+                                      "#define CUBEUV_MAX_MIP %s\n",
+                                      g_ascii_formatd (buf1, sizeof(buf1), "%f", parameters->cubeuv_texel_width),
+                                      g_ascii_formatd (buf2, sizeof(buf2), "%f", parameters->cubeuv_texel_height),
+                                      g_ascii_formatd (buf3, sizeof(buf3), "%f", parameters->cubeuv_max_mip));
+            }
         }
       if (parameters->light_map)
         g_string_append (fragment, "#define USE_LIGHTMAP\n");

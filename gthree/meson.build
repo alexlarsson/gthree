@@ -85,6 +85,7 @@ gthree_sources = [
     'gthreepropertymixer.c',
     'gthreepropertybinding.c',
     'gthreehemispherelight.c',
+    'gthreepmremgenerator.c',
 ]
 
 gthree_headers = [
@@ -159,6 +160,7 @@ gthree_headers = [
     'gthreeanimationmixer.h',
     'gthreekeyframetrack.h',
     'gthreehemispherelight.h',
+    'gthreepmremgenerator.h',
 ]
 
 gthree_private_headers = [
