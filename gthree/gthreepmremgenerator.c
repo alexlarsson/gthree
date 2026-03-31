@@ -218,6 +218,131 @@ write_texel (float *buffer, int tex_width, int x, int y, const float *rgba)
   p[3] = rgba[3];
 }
 
+/* GGX importance sampling for PMREM filtering */
+
+#define NUM_SAMPLES 128
+
+static float
+radical_inverse_vdc (guint32 bits)
+{
+  bits = (bits << 16u) | (bits >> 16u);
+  bits = ((bits & 0x55555555u) << 1u) | ((bits & 0xAAAAAAAAu) >> 1u);
+  bits = ((bits & 0x33333333u) << 2u) | ((bits & 0xCCCCCCCCu) >> 2u);
+  bits = ((bits & 0x0F0F0F0Fu) << 4u) | ((bits & 0xF0F0F0F0u) >> 4u);
+  bits = ((bits & 0x00FF00FFu) << 8u) | ((bits & 0xFF00FF00u) >> 8u);
+  return (float)bits * 2.3283064365386963e-10f;
+}
+
+static void
+hammersley (int i, int n, float *xi)
+{
+  xi[0] = (float)i / (float)n;
+  xi[1] = radical_inverse_vdc (i);
+}
+
+static void
+importance_sample_ggx (const float *xi, float roughness, const float *N, float *H)
+{
+  float a = roughness * roughness;
+  float phi = 2.0f * G_PI * xi[0];
+  float cos_theta = sqrtf ((1.0f - xi[1]) / (1.0f + (a * a - 1.0f) * xi[1]));
+  float sin_theta = sqrtf (1.0f - cos_theta * cos_theta);
+
+  /* Tangent-space half vector */
+  float Ht[3] = {
+    sin_theta * cosf (phi),
+    sin_theta * sinf (phi),
+    cos_theta
+  };
+
+  /* Build TBN from N */
+  float up[3] = { 0, 1, 0 };
+  if (fabsf (N[1]) > 0.999f)
+    { up[0] = 1; up[1] = 0; up[2] = 0; }
+
+  float T[3], B[3];
+  /* T = normalize(cross(up, N)) */
+  T[0] = up[1] * N[2] - up[2] * N[1];
+  T[1] = up[2] * N[0] - up[0] * N[2];
+  T[2] = up[0] * N[1] - up[1] * N[0];
+  float tlen = sqrtf (T[0]*T[0] + T[1]*T[1] + T[2]*T[2]);
+  T[0] /= tlen; T[1] /= tlen; T[2] /= tlen;
+
+  /* B = cross(N, T) */
+  B[0] = N[1] * T[2] - N[2] * T[1];
+  B[1] = N[2] * T[0] - N[0] * T[2];
+  B[2] = N[0] * T[1] - N[1] * T[0];
+
+  /* Transform to world space: H = T * Ht.x + B * Ht.y + N * Ht.z */
+  H[0] = T[0] * Ht[0] + B[0] * Ht[1] + N[0] * Ht[2];
+  H[1] = T[1] * Ht[0] + B[1] * Ht[1] + N[1] * Ht[2];
+  H[2] = T[2] * Ht[0] + B[2] * Ht[1] + N[2] * Ht[2];
+}
+
+static void
+ggx_filter_color (GdkPixbuf **pixbufs, const float *N, float roughness, float *rgba)
+{
+  if (roughness < 0.01f)
+    {
+      float dir[3] = { -N[0], N[1], N[2] };
+      sample_cubemap (pixbufs, dir, rgba);
+      return;
+    }
+
+  float total_weight = 0;
+  rgba[0] = rgba[1] = rgba[2] = rgba[3] = 0;
+
+  for (int i = 0; i < NUM_SAMPLES; i++)
+    {
+      float xi[2];
+      hammersley (i, NUM_SAMPLES, xi);
+
+      float H[3];
+      importance_sample_ggx (xi, roughness, N, H);
+
+      /* L = reflect(-V, H) where V = N for PMREM (view = normal) */
+      float NdotH = N[0]*H[0] + N[1]*H[1] + N[2]*H[2];
+      float L[3];
+      L[0] = 2.0f * NdotH * H[0] - N[0];
+      L[1] = 2.0f * NdotH * H[1] - N[1];
+      L[2] = 2.0f * NdotH * H[2] - N[2];
+
+      float NdotL = N[0]*L[0] + N[1]*L[1] + N[2]*L[2];
+      if (NdotL > 0)
+        {
+          float sample_dir[3] = { -L[0], L[1], L[2] };
+          float sample_rgba[4];
+          sample_cubemap (pixbufs, sample_dir, sample_rgba);
+          rgba[0] += sample_rgba[0] * NdotL;
+          rgba[1] += sample_rgba[1] * NdotL;
+          rgba[2] += sample_rgba[2] * NdotL;
+          rgba[3] += sample_rgba[3] * NdotL;
+          total_weight += NdotL;
+        }
+    }
+
+  if (total_weight > 0)
+    {
+      rgba[0] /= total_weight;
+      rgba[1] /= total_weight;
+      rgba[2] /= total_weight;
+      rgba[3] /= total_weight;
+    }
+}
+
+/* Roughness values for each LOD level, matching three.js sigma2 table */
+static float
+lod_roughness (int lod_idx, int lod_max)
+{
+  /* three.js uses sigma values: [0, 0.5, 1, 2, 3, 4, 5, 6, ...] mapped to
+     roughness. For simplicity, use a linear-ish mapping. */
+  static const float sigmas[] = { 0.0, 0.02, 0.06, 0.12, 0.2, 0.3, 0.4, 0.55, 0.7, 0.85, 1.0 };
+  int n = G_N_ELEMENTS (sigmas);
+  if (lod_idx >= n)
+    return 1.0f;
+  return sigmas[lod_idx];
+}
+
 GthreeTexture *
 gthree_pmrem_generator_from_cubemap (GthreePMREMGenerator *generator,
                                      GthreeCubeTexture    *cubemap)
@@ -323,12 +448,18 @@ gthree_pmrem_generator_from_cubemap (GthreePMREMGenerator *generator,
                   float dir[3];
                   get_direction (u, v, face, dir);
 
-                  /* Flip X for non-render-target cubemaps (matching three.js
-                   * flipEnvMap = -1 convention) */
-                  dir[0] = -dir[0];
-
+                  float roughness = lod_roughness (lod_idx, lod_max);
                   float rgba[4];
-                  sample_cubemap (pixbufs, dir, rgba);
+
+                  if (roughness < 0.01f)
+                    {
+                      dir[0] = -dir[0];
+                      sample_cubemap (pixbufs, dir, rgba);
+                    }
+                  else
+                    {
+                      ggx_filter_color (pixbufs, dir, roughness, rgba);
+                    }
                   write_texel (buffer, tex_width, out_x, out_y, rgba);
                 }
             }
