@@ -120,6 +120,7 @@ subdir('gthree')
 if get_option('examples')
   subdir('examples')
 endif
+subdir('tests')
 if get_option('gtk_doc')
   subdir('docs')
 endif
