@@ -85,7 +85,7 @@ gthree_spot_light_init (GthreeSpotLight *spot)
 
   priv->target = gthree_object_new ();
   priv->distance = 0;
-  priv->decay = 1;
+  priv->decay = 2;
   priv->angle = G_PI / 3;
   priv->penumbra = 0;
 
@@ -279,7 +279,7 @@ gthree_spot_light_class_init (GthreeSpotLightClass *klass)
 
   obj_props[PROP_DECAY] =
     g_param_spec_float ("decay", "Decay", "Decay",
-                        0.5f, 3.0f, 1.0f,
+                        0.0f, 10.0f, 2.0f,
                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   obj_props[PROP_ANGLE] =
