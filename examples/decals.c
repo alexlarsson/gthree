@@ -74,14 +74,14 @@ init_scene (void)
 
   scene = gthree_scene_new ();
 
-  ambient_light = gthree_ambient_light_new (graphene_vec3_init (&color, 0.27, 0.2, 0.2));
+  ambient_light = gthree_ambient_light_new (graphene_vec3_init (&color, 0.27 * G_PI, 0.2 * G_PI, 0.2 * G_PI));
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));
 
-  directional_light = gthree_directional_light_new (graphene_vec3_init (&color, 1.0, 0.87, 0.8), 1);
+  directional_light = gthree_directional_light_new (graphene_vec3_init (&color, 1.0, 0.87, 0.8), 1 * G_PI);
   gthree_object_set_position_xyz (GTHREE_OBJECT (directional_light), 1, 0.75, 0.5);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (directional_light));
 
-  directional_light2 = gthree_directional_light_new (graphene_vec3_init (&color, 0.8, 0.8, 1.0), 1);
+  directional_light2 = gthree_directional_light_new (graphene_vec3_init (&color, 0.8, 0.8, 1.0), 1 * G_PI);
   gthree_object_set_position_xyz (GTHREE_OBJECT (directional_light2), -1, 0.75, -0.5);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (directional_light2));
 

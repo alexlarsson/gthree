@@ -126,6 +126,7 @@ init_scene (void)
 
   ambient_light = gthree_ambient_light_new (white ());
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient_light));
+  gthree_light_set_intensity (GTHREE_LIGHT (ambient_light), G_PI);
 
   for (i = 0; TRUE; i++)
     {
