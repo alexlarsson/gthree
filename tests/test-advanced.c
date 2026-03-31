@@ -179,6 +179,7 @@ setup_gltf_test (GthreeScene **scene, GthreeCamera **camera, const char *model_n
   gthree_object_update_matrix_world (GTHREE_OBJECT (*scene), TRUE);
 
   graphene_box_t bbox;
+  graphene_box_init_from_box (&bbox, graphene_box_empty ());
   gthree_object_get_mesh_extents (GTHREE_OBJECT (*scene), &bbox);
   graphene_vec3_t size;
   graphene_point3d_t center;
