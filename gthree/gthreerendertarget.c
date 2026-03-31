@@ -320,7 +320,7 @@ setup_renderbuffer_storage (GthreeRenderTarget *render_target, guint gl_renderbu
 
 // Setup GL resources for a non-texture depth buffer
 static void
-setup_depth_renderbuffer (GthreeRenderTarget *render_target, GthreeRenderTargetRealizeData *data)
+setup_depth_renderbuffer (GthreeRenderTarget *render_target, GthreeRenderTargetRealizeData *data, GthreeRenderer *renderer)
 {
   GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (render_target);
   gboolean is_cube = FALSE;
@@ -335,9 +335,32 @@ setup_depth_renderbuffer (GthreeRenderTarget *render_target, GthreeRenderTargetR
         {
           g_error ("target.depthTexture not supported in Cube render targets");
         }
-#ifdef TODO
-    setupDepthTexture( renderTargetProperties.__webglFramebuffer, renderTarget );
-#endif
+
+      glBindFramebuffer (GL_FRAMEBUFFER, data->gl_framebuffer);
+
+      gthree_texture_realize (priv->depth_texture, renderer);
+      gthree_texture_bind (priv->depth_texture, renderer, -1, GL_TEXTURE_2D);
+
+      glTexImage2D (GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24,
+                    priv->width, priv->height, 0,
+                    GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, NULL);
+
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+
+      GthreeFilter min_filter = gthree_texture_get_min_filter (priv->depth_texture);
+      GthreeFilter mag_filter = gthree_texture_get_mag_filter (priv->depth_texture);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                       min_filter == GTHREE_FILTER_LINEAR ? GL_LINEAR : GL_NEAREST);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+                       mag_filter == GTHREE_FILTER_LINEAR ? GL_LINEAR : GL_NEAREST);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+      glFramebufferTexture2D (GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                              GL_TEXTURE_2D,
+                              gthree_texture_get_gl_texture (priv->depth_texture, renderer),
+                              0);
     }
   else
     {
@@ -526,7 +549,7 @@ gthree_render_target_realize (GthreeRenderTarget *target,
 
   // Setup depth and stencil buffers
   if (priv->depth_buffer)
-    setup_depth_renderbuffer (target, data);
+    setup_depth_renderbuffer (target, data, renderer);
 }
 
 void

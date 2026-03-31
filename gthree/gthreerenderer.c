@@ -2263,11 +2263,14 @@ render_shadow_map (GthreeRenderer *renderer,
           gthree_texture_set_mag_filter (texture, GTHREE_FILTER_NEAREST);
           gthree_texture_set_min_filter (texture, GTHREE_FILTER_NEAREST);
 
-          gthree_light_shadow_set_map (shadow, shadow_map);
+          GthreeTexture *depth_tex = gthree_texture_new (NULL);
+          gthree_texture_set_mag_filter (depth_tex, GTHREE_FILTER_LINEAR);
+          gthree_texture_set_min_filter (depth_tex, GTHREE_FILTER_LINEAR);
+          gthree_render_target_set_depth_texture (shadow_map, depth_tex);
+          gthree_render_target_set_stencil_buffer (shadow_map, FALSE);
+          g_object_unref (depth_tex);
 
-#ifdef TODO
-          texture.name = light.name + ".shadowMap";
-#endif
+          gthree_light_shadow_set_map (shadow, shadow_map);
 
           gthree_camera_update (shadow_camera);
         }

@@ -140,7 +140,10 @@ gthree_point_light_real_setup (GthreeLight *light,
 
       GthreeRenderTarget *shadow_map = gthree_light_shadow_get_map (shadow);
       if (shadow_map)
-        shadow_map_texture = gthree_render_target_get_texture (shadow_map);
+        {
+          GthreeTexture *depth_tex = gthree_render_target_get_depth_texture (shadow_map);
+          shadow_map_texture = depth_tex ? depth_tex : gthree_render_target_get_texture (shadow_map);
+        }
 
       shadow_matrix = *gthree_light_shadow_get_matrix (shadow);
 
