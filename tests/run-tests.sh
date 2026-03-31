@@ -92,7 +92,8 @@ for test in $TESTS; do
     fi
 
     if command -v compare &>/dev/null; then
-        DIFF=$(compare -metric AE "$REF_FILE" "$OUT_FILE" /dev/null 2>&1 || true)
+        # Use fuzz factor to tolerate sub-pixel rasterization differences
+        DIFF=$(compare -metric AE -fuzz 5% "$REF_FILE" "$OUT_FILE" /dev/null 2>&1 || true)
         if [ "$DIFF" = "0" ]; then
             echo "PASS"
             PASS=$((PASS + 1))
