@@ -24,6 +24,8 @@
 #include "gthreespotlight.h"
 #include "gthreepointlight.h"
 #include "gthreefog.h"
+#include "gthreepmremgenerator.h"
+#include "gthreemeshstandardmaterial.h"
 
 
 static graphene_vec3_t cube_directions[6];
@@ -138,6 +140,9 @@ typedef struct {
 
   gboolean supports_vertex_textures;
   gboolean supports_bone_textures;
+
+  GthreePMREMGenerator *pmrem_generator;
+  GHashTable *pmrem_cache; /* GthreeCubeTexture* -> GthreeTexture* (PMREM) */
 
   guint vertex_array_object;
 
@@ -321,6 +326,8 @@ gthree_renderer_init (GthreeRenderer *renderer)
   priv->clipping_state = g_array_new (FALSE, FALSE, sizeof (float));
   priv->global_clipping_state = g_array_new (FALSE, FALSE, sizeof (float));
 
+  priv->pmrem_cache = g_hash_table_new_full (g_direct_hash, g_direct_equal, g_object_unref, g_object_unref);
+
   priv->current_framebuffer = 0;
 
   priv->light_setup.directional = g_ptr_array_new ();
@@ -433,6 +440,9 @@ gthree_renderer_finalize (GObject *obj)
   g_clear_object (&priv->bg_box_mesh);
   g_clear_object (&priv->bg_plane_mesh);
   g_clear_object (&priv->current_bg_texture);
+
+  g_clear_pointer (&priv->pmrem_cache, g_hash_table_unref);
+  g_clear_object (&priv->pmrem_generator);
 
   if (priv->dfg_lut_texture != 0)
     glDeleteTextures (1, &priv->dfg_lut_texture);
@@ -1495,6 +1505,43 @@ material_apply_light_setup (GthreeUniforms *m_uniforms,
   gthree_uniforms_set_uarray (m_uniforms, "pointLightShadows", light_setup->point_light_shadows, update_only);
 }
 
+/* Auto-convert CubeTexture env maps to PMREM for PBR materials,
+   matching three.js WebGLEnvironments behavior. */
+static GthreeTexture *
+resolve_env_map (GthreeRenderer *renderer,
+                 GthreeTexture  *env_map,
+                 gboolean        use_pmrem)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  GthreeMapping mapping;
+
+  if (env_map == NULL || !use_pmrem)
+    return env_map;
+
+  mapping = gthree_texture_get_mapping (env_map);
+  if (mapping != GTHREE_MAPPING_CUBE_REFLECTION &&
+      mapping != GTHREE_MAPPING_CUBE_REFRACTION)
+    return env_map;
+
+  if (!GTHREE_IS_CUBE_TEXTURE (env_map))
+    return env_map;
+
+  GthreeTexture *pmrem = g_hash_table_lookup (priv->pmrem_cache, env_map);
+  if (pmrem == NULL)
+    {
+      if (priv->pmrem_generator == NULL)
+        priv->pmrem_generator = gthree_pmrem_generator_new (renderer);
+
+      pmrem = gthree_pmrem_generator_from_cubemap (priv->pmrem_generator,
+                                                    GTHREE_CUBE_TEXTURE (env_map));
+      g_hash_table_insert (priv->pmrem_cache,
+                           g_object_ref (env_map),
+                           g_object_ref (pmrem));
+    }
+
+  return pmrem;
+}
+
 static GthreeProgram *
 init_material (GthreeRenderer *renderer,
                GthreeMaterial *material,
@@ -1521,11 +1568,22 @@ init_material (GthreeRenderer *renderer,
 
   gthree_material_set_params (material, &parameters);
 
-  if (parameters.env_map && parameters.env_map_mode == GTHREE_MAPPING_CUBE_UV_REFLECTION)
+  /* Auto-convert cube env maps to PMREM for PBR materials */
+  if (parameters.env_map &&
+      GTHREE_IS_MESH_STANDARD_MATERIAL (material))
     {
       GthreeTexture *env_tex = NULL;
       g_object_get (material, "env-map", &env_tex, NULL);
       if (env_tex)
+        {
+          GthreeTexture *resolved = resolve_env_map (renderer, env_tex, TRUE);
+          if (resolved != env_tex)
+            parameters.env_map_mode = gthree_texture_get_mapping (resolved);
+          g_object_unref (env_tex);
+          env_tex = resolved;
+        }
+
+      if (env_tex && parameters.env_map_mode == GTHREE_MAPPING_CUBE_UV_REFLECTION)
         {
           float *meta = g_object_get_data (G_OBJECT (env_tex), "cubeuv-meta");
           if (meta)
@@ -1534,7 +1592,6 @@ init_material (GthreeRenderer *renderer,
               parameters.cubeuv_texel_height = meta[1];
               parameters.cubeuv_max_mip = meta[2];
             }
-          g_object_unref (env_tex);
         }
     }
 
@@ -2639,6 +2696,36 @@ set_program (GthreeRenderer *renderer,
         }
 
       gthree_material_set_uniforms (material, m_uniforms, camera, renderer);
+
+      /* Override envMap uniform with PMREM-converted texture for PBR materials */
+      if (GTHREE_IS_MESH_STANDARD_MATERIAL (material))
+        {
+          GthreeTexture *env_tex = gthree_mesh_standard_material_get_env_map (
+              GTHREE_MESH_STANDARD_MATERIAL (material));
+          if (env_tex)
+            {
+              GthreeTexture *resolved = resolve_env_map (renderer, env_tex, TRUE);
+              if (resolved != env_tex)
+                {
+                  GthreeUniform *uni = gthree_uniforms_lookup_from_string (m_uniforms, "envMap");
+                  if (uni)
+                    gthree_uniform_set_texture (uni, resolved);
+
+                  uni = gthree_uniforms_lookup_from_string (m_uniforms, "flipEnvMap");
+                  if (uni)
+                    gthree_uniform_set_float (uni, GTHREE_IS_CUBE_TEXTURE (resolved) ? -1 : 1);
+
+                  float *meta = g_object_get_data (G_OBJECT (resolved), "cubeuv-meta");
+                  if (meta)
+                    {
+                      int max_mip = gthree_texture_get_max_mip_level (resolved);
+                      uni = gthree_uniforms_lookup_from_string (m_uniforms, "maxMipLevel");
+                      if (uni)
+                        gthree_uniform_set_int (uni, max_mip);
+                    }
+                }
+            }
+        }
 
       // refresh uniforms common to several materials
       if (fog != NULL && gthree_material_get_fog (material))
