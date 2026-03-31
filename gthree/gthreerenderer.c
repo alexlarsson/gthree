@@ -1601,7 +1601,6 @@ init_material (GthreeRenderer *renderer,
   parameters.num_spot_light_shadows = priv->light_setup.spot_light_shadows->len;
 
   parameters.skinning = GTHREE_IS_MESH_MATERIAL (material) && gthree_mesh_material_get_skinning (GTHREE_MESH_MATERIAL (material));
-  parameters.use_vertex_texture = parameters.skinning;
 
   parameters.morph_targets = GTHREE_IS_MESH_MATERIAL (material) && gthree_mesh_material_get_morph_targets (GTHREE_MESH_MATERIAL (material));
   parameters.morph_normals = GTHREE_IS_MESH_MATERIAL (material) && gthree_mesh_material_get_morph_normals (GTHREE_MESH_MATERIAL (material));

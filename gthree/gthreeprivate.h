@@ -102,7 +102,6 @@ struct  _GthreeProgramParameters {
   guint size_attenuation : 1;
   guint logarithmic_depth_buffer : 1;
   guint skinning : 1;
-  guint use_vertex_texture : 1;
   guint morph_targets : 1;
   guint morph_normals : 1;
   guint morph_colors : 1;

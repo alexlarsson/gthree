@@ -577,8 +577,6 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
 
       if (parameters->skinning)
         g_string_append (vertex, "#define USE_SKINNING\n");
-      if (parameters->use_vertex_texture)
-        g_string_append (vertex, "#define BONE_TEXTURE\n");
 
       if (parameters->morph_targets)
         {

@@ -670,7 +670,7 @@ gthree_mesh_standard_material_class_init (GthreeMeshStandardMaterialClass *klass
                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   obj_props[PROP_DISPLACEMENT_BIAS] =
     g_param_spec_float ("displacement-bias", "Displacement bias", "Displacement bias",
-                        -G_MAXFLOAT, G_MAXFLOAT, 0.0f,
+                        -100.f, 100.f, 0.0f,
                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   obj_props[PROP_ROUGHNESS_MAP] =
     g_param_spec_object ("roughness-map", "Roughness map", "Roughness map",
