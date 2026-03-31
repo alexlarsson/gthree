@@ -330,17 +330,36 @@ ggx_filter_color (GdkPixbuf **pixbufs, const float *N, float roughness, float *r
     }
 }
 
-/* Roughness values for each LOD level, matching three.js sigma2 table */
+/* Roughness for each LOD level. Must match the inverse of roughnessToMip()
+   in cube_uv_reflection_fragment.glsl. The PMREM layout stores the most
+   blurred (highest roughness) at full resolution (lod_idx 0, mip -2) and
+   the sharpest (lowest roughness) at the smallest extra-filtered levels. */
 static float
 lod_roughness (int lod_idx, int lod_max)
 {
-  /* three.js uses sigma values: [0, 0.5, 1, 2, 3, 4, 5, 6, ...] mapped to
-     roughness. For simplicity, use a linear-ish mapping. */
-  static const float sigmas[] = { 0.0, 0.02, 0.06, 0.12, 0.2, 0.3, 0.4, 0.55, 0.7, 0.85, 1.0 };
-  int n = G_N_ELEMENTS (sigmas);
-  if (lod_idx >= n)
-    return 1.0f;
-  return sigmas[lod_idx];
+  int num_main_lods = lod_max - LOD_MIN + 1;
+
+  if (lod_idx < num_main_lods)
+    {
+      /* Main LODs: mip = -2 + lod_idx
+         roughnessToMip inverse:
+         mip -2 -> r=1.0, mip -1 -> r=0.8, mip 0 -> r=0.667,
+         mip 1 -> r=0.533, mip 2 -> r=0.4 */
+      static const float main_roughness[] = { 1.0f, 0.8f, 0.667f, 0.533f, 0.4f };
+      if (lod_idx < (int)G_N_ELEMENTS (main_roughness))
+        return main_roughness[lod_idx];
+      return 0.4f;
+    }
+  else
+    {
+      /* Extra LODs at MIN_TILE_SIZE: mip 3 -> r=0.305, mip 4 -> r=0.21,
+         then progressively sharper */
+      int extra_idx = lod_idx - num_main_lods;
+      static const float extra_roughness[] = { 0.305f, 0.21f, 0.15f, 0.1f, 0.05f, 0.0f };
+      if (extra_idx < (int)G_N_ELEMENTS (extra_roughness))
+        return extra_roughness[extra_idx];
+      return 0.0f;
+    }
 }
 
 GthreeTexture *
