@@ -46,12 +46,38 @@ mkdir -p "$OUT_DIR"
 
 if [ "$MODE" = "update-ref" ]; then
     [ -n "$REF_DIR" ] && mkdir -p "$REF_DIR" || { echo "Cannot find reference dir"; exit 1; }
+    TMPDIR=$(mktemp -d)
     echo "Generating reference images..."
     echo "Output: $REF_DIR"
     echo ""
-    "$TEST_BIN" --output-dir "$REF_DIR" --all 2>/dev/null
+    "$TEST_BIN" --output-dir "$TMPDIR" --all 2>/dev/null
     echo ""
-    echo "Reference images updated."
+
+    UPDATED=0
+    KEPT=0
+    for f in "$TMPDIR"/*.png; do
+        name=$(basename "$f")
+        ref="$REF_DIR/$name"
+        if [ -f "$ref" ] && command -v compare &>/dev/null; then
+            DIFF=$(compare -metric AE -fuzz 5% "$ref" "$f" /dev/null 2>&1 || true)
+            # Extract pixel count from "131070 (2)" or "0" format
+            DIFF_NUM=$(echo "$DIFF" | grep -oP '\(\K[0-9]+' || echo "$DIFF" | cut -d' ' -f1)
+            # Allow up to 10 pixels to differ (sub-pixel rasterization noise)
+            if [ "$DIFF_NUM" -le 10 ] 2>/dev/null; then
+                KEPT=$((KEPT + 1))
+                continue
+            else
+                # Get more detail about the difference
+                RMSE=$(compare -metric RMSE "$ref" "$f" /dev/null 2>&1 || true)
+                echo "  Changed: $name (AE=$DIFF, RMSE=$RMSE)"
+            fi
+        fi
+        cp "$f" "$ref"
+        UPDATED=$((UPDATED + 1))
+    done
+    rm -rf "$TMPDIR"
+    echo ""
+    echo "Reference images: $UPDATED updated, $KEPT unchanged."
     exit 0
 fi
 
@@ -92,9 +118,9 @@ for test in $TESTS; do
     fi
 
     if command -v compare &>/dev/null; then
-        # Use fuzz factor to tolerate sub-pixel rasterization differences
-        DIFF=$(compare -metric AE -fuzz 5% "$REF_FILE" "$OUT_FILE" /dev/null 2>&1 || true)
-        if [ "$DIFF" = "0" ]; then
+        DIFF=$(compare -metric AE "$REF_FILE" "$OUT_FILE" /dev/null 2>&1 || true)
+        DIFF_NUM=$(echo "$DIFF" | grep -oP '\(\K[0-9]+' || echo "$DIFF" | cut -d' ' -f1)
+        if [ "$DIFF_NUM" -le 10 ] 2>/dev/null; then
             echo "PASS"
             PASS=$((PASS + 1))
         else
