@@ -62,7 +62,7 @@ static const char *fragment_shader1 =
 static const char *fragment_shader2 =
   "uniform float time;\n"
   "uniform vec2 resolution;\n"
-  "uniform sampler2D texture;\n"
+  "uniform sampler2D tDiffuse;\n"
   "varying vec2 vUv;\n"
 
   "void main( void ) {\n"
@@ -77,7 +77,7 @@ static const char *fragment_shader2 =
   "  uv /= 10.0;\n"
   "  uv += time * 0.05;\n"
 
-  "  vec3 color = texture2D( texture, uv ).rgb;\n"
+  "  vec3 color = texture2D( tDiffuse, uv ).rgb;\n"
 
   "  gl_FragColor = vec4( color * r * 1.5, 1.0 );\n"
   "}\n";
@@ -142,7 +142,7 @@ static GthreeUniforms *shader1_uniforms;
 static GthreeUniformsDefinition shader2_uniforms_defs[] = {
   {"time", GTHREE_UNIFORM_TYPE_FLOAT, &f1},
   {"resolution", GTHREE_UNIFORM_TYPE_VEC2_ARRAY, NULL},
-  {"texture", GTHREE_UNIFORM_TYPE_TEXTURE, NULL},
+  {"tDiffuse", GTHREE_UNIFORM_TYPE_TEXTURE, NULL},
 };
 static GthreeUniforms *shader2_uniforms;
 
@@ -178,7 +178,7 @@ init_scene (void)
   pos.y -= 80;
 
   shader2_uniforms = gthree_uniforms_new_from_definitions (shader2_uniforms_defs, G_N_ELEMENTS (shader2_uniforms_defs));
-  gthree_uniforms_set_texture (shader2_uniforms, "texture", texture);
+  gthree_uniforms_set_texture (shader2_uniforms, "tDiffuse", texture);
 
   shader = gthree_shader_new (NULL, shader2_uniforms,
                               vertex_shader,
