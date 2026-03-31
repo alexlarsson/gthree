@@ -153,7 +153,7 @@ on_render (GtkGLArea *gl_area, GdkGLContext *context, gpointer user_data)
 
   data->frame_count++;
 
-  if (data->frame_count < 3)
+  if (data->frame_count < 5)
     {
       gtk_widget_queue_draw (GTK_WIDGET (area));
       return FALSE;
