@@ -3252,12 +3252,15 @@ gthree_renderer_render (GthreeRenderer *renderer,
   /* The GtkGLArea code can change the GL_DEPTH_TEST state, so read current state back here */
   priv->old_depth_test = glIsEnabled (GL_DEPTH_TEST) == GL_TRUE;
 
-  /* GTK4 may use a different FBO each frame, so update the window framebuffer */
-  {
-    GLint current_fbo;
-    glGetIntegerv (GL_FRAMEBUFFER_BINDING, &current_fbo);
-    priv->window_framebuffer = current_fbo;
-  }
+  /* GTK4 may use a different FBO each frame, so update the window framebuffer.
+     Only do this when not rendering to a render target, otherwise we'd
+     overwrite the window FBO with the render target's FBO. */
+  if (priv->current_render_target == NULL)
+    {
+      GLint current_fbo;
+      glGetIntegerv (GL_FRAMEBUFFER_BINDING, &current_fbo);
+      priv->window_framebuffer = current_fbo;
+    }
 
   gthree_renderer_push_current (renderer);
 

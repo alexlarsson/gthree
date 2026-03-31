@@ -764,9 +764,29 @@ gthree_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer, int 
                       // TODO: Support flip
                     }
 
-                  glTexImage2D (GL_TEXTURE_2D, 0, gl_internal_format, width, height, 0,
-                                GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
-                                cairo_image_surface_get_data (priv->surface));
+                  if (epoxy_is_desktop_gl ())
+                    {
+                      glTexImage2D (GL_TEXTURE_2D, 0, gl_internal_format, width, height, 0,
+                                    GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
+                                    cairo_image_surface_get_data (priv->surface));
+                    }
+                  else
+                    {
+                      /* GLES doesn't support GL_BGRA/GL_UNSIGNED_INT_8_8_8_8_REV,
+                         so swizzle BGRA to RGBA */
+                      const guchar *src = cairo_image_surface_get_data (priv->surface);
+                      guchar *rgba = g_malloc (width * height * 4);
+                      for (guint i = 0; i < width * height; i++)
+                        {
+                          rgba[i*4+0] = src[i*4+2]; /* R <- B */
+                          rgba[i*4+1] = src[i*4+1]; /* G <- G */
+                          rgba[i*4+2] = src[i*4+0]; /* B <- R */
+                          rgba[i*4+3] = src[i*4+3]; /* A <- A */
+                        }
+                      glTexImage2D (GL_TEXTURE_2D, 0, gl_internal_format, width, height, 0,
+                                    GL_RGBA, GL_UNSIGNED_BYTE, rgba);
+                      g_free (rgba);
+                    }
                 }
             }
         }

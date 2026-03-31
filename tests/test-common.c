@@ -28,6 +28,19 @@ register_test_full (const char *name, TestSetupFunc setup, TestRendererFunc rend
   tests[n_tests].name = name;
   tests[n_tests].setup = setup;
   tests[n_tests].renderer_setup = renderer_setup;
+  tests[n_tests].pre_render = NULL;
+  n_tests++;
+}
+
+void
+register_test_with_pre_render (const char *name, TestSetupFunc setup,
+                               TestRendererFunc renderer_setup,
+                               TestPreRenderFunc pre_render)
+{
+  tests[n_tests].name = name;
+  tests[n_tests].setup = setup;
+  tests[n_tests].renderer_setup = renderer_setup;
+  tests[n_tests].pre_render = pre_render;
   n_tests++;
 }
 
@@ -135,6 +148,7 @@ typedef struct {
   gboolean done;
   gboolean interactive;
   TestRendererFunc renderer_setup;
+  TestPreRenderFunc pre_render;
   gboolean renderer_configured;
   gboolean size_adjusted;
 } RenderData;
@@ -150,6 +164,9 @@ on_render (GtkGLArea *gl_area, GdkGLContext *context, gpointer user_data)
       data->renderer_setup (gthree_area_get_renderer (area));
       data->renderer_configured = TRUE;
     }
+
+  if (data->pre_render)
+    data->pre_render (gthree_area_get_renderer (area));
 
   data->frame_count++;
 
@@ -240,6 +257,7 @@ run_test (TestCase *test, const char *output_file, gboolean interactive, int tim
     }
 
   data.renderer_setup = test->renderer_setup;
+  data.pre_render = test->pre_render;
 
   data.output_file = g_strdup (output_file);
   data.interactive = interactive;

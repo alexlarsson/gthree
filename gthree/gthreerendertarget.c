@@ -295,7 +295,7 @@ setup_renderbuffer_storage (GthreeRenderTarget *render_target, guint gl_renderbu
 #endif
         }
       else
-        glRenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_STENCIL, priv->width, priv->height);
+        glRenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, priv->width, priv->height);
 
       glFramebufferRenderbuffer (GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, gl_renderbuffer);
     }
