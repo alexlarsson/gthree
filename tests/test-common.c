@@ -162,8 +162,13 @@ on_render (GtkGLArea *gl_area, GdkGLContext *context, gpointer user_data)
   if (data->output_file && !data->done)
     {
       int scale = gtk_widget_get_scale_factor (GTK_WIDGET (area));
+#ifdef USE_GTK4
       int width = gtk_widget_get_width (GTK_WIDGET (area)) * scale;
       int height = gtk_widget_get_height (GTK_WIDGET (area)) * scale;
+#else
+      int width = gtk_widget_get_allocated_width (GTK_WIDGET (area)) * scale;
+      int height = gtk_widget_get_allocated_height (GTK_WIDGET (area)) * scale;
+#endif
 
       if (width > 0 && height > 0)
         {
@@ -239,18 +244,34 @@ run_test (TestCase *test, const char *output_file, gboolean interactive, int tim
   data.output_file = g_strdup (output_file);
   data.interactive = interactive;
 
+#ifdef USE_GTK4
   window = gtk_window_new ();
+#else
+  window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+#endif
   gtk_window_set_title (GTK_WINDOW (window), test->name);
 
   area = gthree_area_new (scene, camera);
   g_signal_connect (area, "render", G_CALLBACK (on_render), &data);
+#ifdef USE_GTK4
   gtk_window_set_child (GTK_WINDOW (window), area);
+#else
+  gtk_container_add (GTK_CONTAINER (window), area);
+#endif
   gtk_widget_add_tick_callback (area, tick_cb, NULL, NULL);
 
+#ifdef USE_GTK4
   g_signal_connect (window, "close-request", G_CALLBACK (on_close_request), &data);
+#else
+  g_signal_connect (window, "delete-event", G_CALLBACK (on_close_request), &data);
+#endif
 
   gtk_widget_set_size_request (area, TEST_WIDTH, TEST_HEIGHT);
+#ifdef USE_GTK4
   gtk_window_present (GTK_WINDOW (window));
+#else
+  gtk_widget_show_all (window);
+#endif
 
   if (interactive && timeout_ms > 0)
     g_timeout_add (timeout_ms, timeout_cb, &data);
@@ -260,7 +281,11 @@ run_test (TestCase *test, const char *output_file, gboolean interactive, int tim
   while (!data.done)
     g_main_context_iteration (NULL, TRUE);
 
+#ifdef USE_GTK4
   gtk_window_destroy (GTK_WINDOW (window));
+#else
+  gtk_widget_destroy (window);
+#endif
   /* Drain pending events so the window actually closes */
   while (g_main_context_pending (NULL))
     g_main_context_iteration (NULL, FALSE);
@@ -287,7 +312,11 @@ test_main (int argc, char *argv[])
   int timeout_ms = 0;
   g_autoptr(GPtrArray) test_names = g_ptr_array_new ();
 
+#ifdef USE_GTK4
   gtk_init ();
+#else
+  gtk_init (NULL, NULL);
+#endif
 
   register_basic_tests ();
   register_material_tests ();
