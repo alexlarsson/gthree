@@ -106,8 +106,8 @@ gthree_mesh_standard_material_init (GthreeMeshStandardMaterial *standard)
                       0.0, 0.0, 0.0);
 
   priv->emissive_intensity = 1;
-  priv->roughness = 0.5;
-  priv->metalness = 0.5;
+  priv->roughness = 1.0;
+  priv->metalness = 0.0;
 
   priv->light_map_intensity = 1.0;
   priv->ao_map_intensity = 1.0;
@@ -617,7 +617,7 @@ gthree_mesh_standard_material_class_init (GthreeMeshStandardMaterialClass *klass
                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   obj_props[PROP_METALNESS] =
     g_param_spec_float ("metalness", "Metalness", "Metalness",
-                        0.f, 1.f, 1.0f,
+                        0.f, 1.f, 0.0f,
                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   obj_props[PROP_MAP] =
     g_param_spec_object ("map", "Map", "Map",
@@ -670,7 +670,7 @@ gthree_mesh_standard_material_class_init (GthreeMeshStandardMaterialClass *klass
                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   obj_props[PROP_DISPLACEMENT_BIAS] =
     g_param_spec_float ("displacement-bias", "Displacement bias", "Displacement bias",
-                        0.f, 10.f, 1.0f,
+                        -G_MAXFLOAT, G_MAXFLOAT, 0.0f,
                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   obj_props[PROP_ROUGHNESS_MAP] =
     g_param_spec_object ("roughness-map", "Roughness map", "Roughness map",
