@@ -55,6 +55,11 @@ enum {
 
 static GParamSpec *obj_props[N_PROPS] = { NULL, };
 
+/**
+ * gthree_material_clone:
+ *
+ * Returns: (transfer full):
+ */
 GthreeMaterial *
 gthree_material_clone (GthreeMaterial *material)
 {
@@ -638,6 +643,11 @@ gthree_material_get_vertex_colors (GthreeMaterial *material)
   return priv->vertex_colors;
 }
 
+/**
+ * gthree_material_get_shader:
+ *
+ * Returns: (transfer full):
+ */
 GthreeShader *
 gthree_material_get_shader (GthreeMaterial *material)
 {
@@ -673,6 +683,11 @@ gthree_material_get_properties (GthreeMaterial  *material)
   return &priv->properties;
 }
 
+/**
+ * gthree_material_get_clipping_planes:
+ *
+ * Returns: (transfer none) (element-type graphene_plane_t):
+ */
 GArray *
 gthree_material_get_clipping_planes (GthreeMaterial *material)
 {

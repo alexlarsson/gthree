@@ -86,6 +86,11 @@ gthree_directional_light_set_target (GthreeDirectionalLight *directional,
     g_object_notify_by_pspec (G_OBJECT (directional), obj_props[PROP_TARGET]);
 }
 
+/**
+ * gthree_directional_light_get_target:
+ *
+ * Returns: (transfer none):
+ */
 GthreeObject *
 gthree_directional_light_get_target (GthreeDirectionalLight *directional)
 {

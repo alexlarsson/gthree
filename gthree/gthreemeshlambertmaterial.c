@@ -402,6 +402,11 @@ gthree_mesh_lambert_material_set_map (GthreeMeshLambertMaterial *lambert,
     }
 }
 
+/**
+ * gthree_mesh_lambert_material_get_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_lambert_material_get_map (GthreeMeshLambertMaterial *lambert)
 {
@@ -424,6 +429,11 @@ gthree_mesh_lambert_material_set_env_map (GthreeMeshLambertMaterial *lambert,
     }
 }
 
+/**
+ * gthree_mesh_lambert_material_get_env_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_lambert_material_get_env_map (GthreeMeshLambertMaterial *lambert)
 {

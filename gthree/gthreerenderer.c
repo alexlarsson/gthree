@@ -934,6 +934,11 @@ gthree_renderer_get_n_clipping_planes (GthreeRenderer *renderer)
   return priv->clipping_planes->len;
 }
 
+/**
+ * gthree_renderer_get_clipping_planes:
+ *
+ * Returns: (transfer none) (element-type graphene_plane_t):
+ */
 GArray *
 gthree_renderer_get_clipping_planes (GthreeRenderer     *renderer)
 {
@@ -942,6 +947,10 @@ gthree_renderer_get_clipping_planes (GthreeRenderer     *renderer)
   return priv->clipping_planes;
 }
 
+/**
+ * gthree_renderer_set_clipping_planes:
+ * @clipping_planes: (element-type graphene_plane_t):
+ */
 void
 gthree_renderer_set_clipping_planes (GthreeRenderer     *renderer,
                                      GArray             *clipping_planes)
@@ -1011,6 +1020,11 @@ gthree_renderer_remove_all_clipping_planes (GthreeRenderer *renderer)
   g_array_set_size (priv->clipping_planes, 0);
 }
 
+/**
+ * gthree_renderer_get_render_target:
+ *
+ * Returns: (transfer none):
+ */
 GthreeRenderTarget *
 gthree_renderer_get_render_target (GthreeRenderer *renderer)
 {

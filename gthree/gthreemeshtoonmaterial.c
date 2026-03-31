@@ -607,6 +607,11 @@ gthree_mesh_toon_material_set_map (GthreeMeshToonMaterial *toon,
     }
 }
 
+/**
+ * gthree_mesh_toon_material_get_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_toon_material_get_map (GthreeMeshToonMaterial *toon)
 {
@@ -615,6 +620,11 @@ gthree_mesh_toon_material_get_map (GthreeMeshToonMaterial *toon)
   return priv->map;
 }
 
+/**
+ * gthree_mesh_toon_material_get_gradient_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_toon_material_get_gradient_map (GthreeMeshToonMaterial *toon)
 {
@@ -638,6 +648,11 @@ gthree_mesh_toon_material_set_gradient_map (GthreeMeshToonMaterial *toon,
 }
 
 
+/**
+ * gthree_mesh_toon_material_get_light_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_toon_material_get_light_map (GthreeMeshToonMaterial *toon)
 {
@@ -681,6 +696,11 @@ gthree_mesh_toon_material_set_light_map_intensity (GthreeMeshToonMaterial *toon,
   g_object_notify_by_pspec (G_OBJECT (toon), obj_props[PROP_LIGHT_MAP_INTENSITY]);
 }
 
+/**
+ * gthree_mesh_toon_material_get_ao_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_toon_material_get_ao_map (GthreeMeshToonMaterial *toon)
 {
@@ -745,6 +765,11 @@ gthree_mesh_toon_material_set_emissive_color (GthreeMeshToonMaterial *toon,
 }
 
 
+/**
+ * gthree_mesh_toon_material_get_emissive_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_toon_material_get_emissive_map (GthreeMeshToonMaterial *toon)
 {
@@ -789,6 +814,11 @@ gthree_mesh_toon_material_set_emissive_intensity (GthreeMeshToonMaterial *toon,
 }
 
 
+/**
+ * gthree_mesh_toon_material_get_bump_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_toon_material_get_bump_map (GthreeMeshToonMaterial *toon)
 {
@@ -832,6 +862,11 @@ gthree_mesh_toon_material_set_bump_scale (GthreeMeshToonMaterial *toon,
   g_object_notify_by_pspec (G_OBJECT (toon), obj_props[PROP_BUMP_SCALE]);
 }
 
+/**
+ * gthree_mesh_toon_material_get_normal_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_toon_material_get_normal_map (GthreeMeshToonMaterial *toon)
 {
@@ -896,6 +931,11 @@ gthree_mesh_toon_material_set_normal_map_scale (GthreeMeshToonMaterial *toon,
   g_object_notify_by_pspec (G_OBJECT (toon), obj_props[PROP_NORMAL_SCALE]);
 }
 
+/**
+ * gthree_mesh_toon_material_get_displacement_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_toon_material_get_displacement_map (GthreeMeshToonMaterial *toon)
 {
@@ -961,6 +1001,11 @@ gthree_mesh_toon_material_set_displacement_bias (GthreeMeshToonMaterial *toon,
   g_object_notify_by_pspec (G_OBJECT (toon), obj_props[PROP_DISPLACEMENT_BIAS]);
 }
 
+/**
+ * gthree_mesh_toon_material_get_alpha_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_toon_material_get_alpha_map (GthreeMeshToonMaterial *toon)
 {

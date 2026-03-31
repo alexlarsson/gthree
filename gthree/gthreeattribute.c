@@ -43,6 +43,11 @@ gthree_attribute_type_length (GthreeAttributeType type)
   return attribute_type_size[type];
 }
 
+/**
+ * gthree_attribute_array_new:
+ *
+ * Returns: (skip) (transfer full):
+ */
 GthreeAttributeArray *
 gthree_attribute_array_new   (GthreeAttributeType   type,
                               int                   count,
@@ -65,6 +70,11 @@ gthree_attribute_array_new   (GthreeAttributeType   type,
   return array;
 }
 
+/**
+ * gthree_attribute_array_new_from_float:
+ *
+ * Returns: (skip) (transfer full):
+ */
 GthreeAttributeArray *
 gthree_attribute_array_new_from_float (float                *data,
                                        int                   count,
@@ -77,6 +87,11 @@ gthree_attribute_array_new_from_float (float                *data,
   return array;
 }
 
+/**
+ * gthree_attribute_array_new_from_uint16:
+ *
+ * Returns: (skip) (transfer full):
+ */
 GthreeAttributeArray *
 gthree_attribute_array_new_from_uint16 (guint16              *data,
                                         int                   count,
@@ -89,6 +104,11 @@ gthree_attribute_array_new_from_uint16 (guint16              *data,
   return array;
 }
 
+/**
+ * gthree_attribute_array_new_from_uint32:
+ *
+ * Returns: (skip) (transfer full):
+ */
 GthreeAttributeArray *
 gthree_attribute_array_new_from_uint32 (guint32              *data,
                                         int                   count,
@@ -101,6 +121,11 @@ gthree_attribute_array_new_from_uint32 (guint32              *data,
   return array;
 }
 
+/**
+ * gthree_attribute_array_reshape:
+ *
+ * Returns: (skip) (transfer full):
+ */
 GthreeAttributeArray *gthree_attribute_array_reshape (GthreeAttributeArray *array,
                                                       guint                 index,
                                                       guint                 offset,
@@ -142,6 +167,11 @@ gthree_attribute_array_get_realize_data_at (GthreeAttributeArray *array,
   return &g_array_index (array->realize_data, GthreeAttributeArrayRealizeData, id);
 }
 
+/**
+ * gthree_attribute_array_ref:
+ *
+ * Returns: (skip) (transfer full):
+ */
 GthreeAttributeArray *
 gthree_attribute_array_ref (GthreeAttributeArray *array)
 {
@@ -987,6 +1017,11 @@ gthree_attribute_new (const char           *name,
   return attribute;
 }
 
+/**
+ * gthree_attribute_copy:
+ *
+ * Returns: (transfer full):
+ */
 GthreeAttribute *
 gthree_attribute_copy (const char           *name,
                        GthreeAttribute      *source)
@@ -1116,6 +1151,11 @@ gthree_attribute_get_name (GthreeAttribute *attribute)
   return attribute->name_intern;
 }
 
+/**
+ * gthree_attribute_get_array:
+ *
+ * Returns: (transfer none) (skip):
+ */
 GthreeAttributeArray *
 gthree_attribute_get_array (GthreeAttribute *attribute)
 {

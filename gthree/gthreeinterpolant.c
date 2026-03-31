@@ -119,6 +119,11 @@ gthree_interpolant_class_init (GthreeInterpolantClass *klass)
   G_OBJECT_CLASS (klass)->finalize = gthree_interpolant_finalize;
 }
 
+/**
+ * gthree_interpolant_get_settings:
+ *
+ * Returns: (transfer none):
+ */
 GthreeInterpolantSettings *
 gthree_interpolant_get_settings (GthreeInterpolant *interpolant)
 {
@@ -150,6 +155,11 @@ gthree_interpolant_get_end_ending_mode (GthreeInterpolant *interpolant)
 }
 
 
+/**
+ * gthree_interpolant_get_parameter_positions:
+ *
+ * Returns: (transfer none) (skip):
+ */
 GthreeAttributeArray *
 gthree_interpolant_get_parameter_positions (GthreeInterpolant *interpolant)
 {
@@ -157,6 +167,11 @@ gthree_interpolant_get_parameter_positions (GthreeInterpolant *interpolant)
   return priv->parameter_positions;
 }
 
+/**
+ * gthree_interpolant_get_sample_values:
+ *
+ * Returns: (transfer none) (skip):
+ */
 GthreeAttributeArray *
 gthree_interpolant_get_sample_values (GthreeInterpolant *interpolant)
 {
@@ -236,6 +251,11 @@ gthree_interpolant_interpolate (GthreeInterpolant *interpolant, int i1, float t0
   return priv->result_buffer;
 }
 
+/**
+ * gthree_interpolant_evaluate:
+ *
+ * Returns: (transfer none) (skip):
+ */
 GthreeAttributeArray *
 gthree_interpolant_evaluate (GthreeInterpolant *interpolant, float t)
 {

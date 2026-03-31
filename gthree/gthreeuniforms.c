@@ -76,6 +76,11 @@ gthree_uniforms_add (GthreeUniforms *uniforms,
   g_hash_table_replace (priv->hash, GINT_TO_POINTER (uniform->name), uniform);
 }
 
+/**
+ * gthree_uniforms_lookup:
+ *
+ * Returns: (transfer none) (skip):
+ */
 GthreeUniform *
 gthree_uniforms_lookup (GthreeUniforms *uniforms,
                         GQuark name)
@@ -85,6 +90,11 @@ gthree_uniforms_lookup (GthreeUniforms *uniforms,
   return g_hash_table_lookup (priv->hash, GINT_TO_POINTER (name));
 }
 
+/**
+ * gthree_uniforms_get_all:
+ *
+ * Returns: (transfer none) (element-type GthreeUniform):
+ */
 GList  *
 gthree_uniforms_get_all (GthreeUniforms *uniforms)
 {
@@ -104,6 +114,11 @@ gthree_uniforms_get_all (GthreeUniforms *uniforms)
   return all;
 }
 
+/**
+ * gthree_uniforms_lookup_from_string:
+ *
+ * Returns: (transfer none) (skip):
+ */
 GthreeUniform *
 gthree_uniforms_lookup_from_string (GthreeUniforms *uniforms,
                                     const char *name)
@@ -111,6 +126,11 @@ gthree_uniforms_lookup_from_string (GthreeUniforms *uniforms,
   return gthree_uniforms_lookup (uniforms, g_quark_from_string (name));
 }
 
+/**
+ * gthree_uniforms_clone:
+ *
+ * Returns: (transfer full):
+ */
 GthreeUniforms *
 gthree_uniforms_clone (GthreeUniforms *uniforms)
 {
@@ -161,6 +181,10 @@ gthree_uniforms_set_float (GthreeUniforms  *uniforms,
     gthree_uniform_set_float (uni, value);
 }
 
+/**
+ * gthree_uniforms_set_float_array:
+ * @array: (element-type float):
+ */
 void
 gthree_uniforms_set_float_array (GthreeUniforms  *uniforms,
                                  const char      *name,
@@ -173,6 +197,10 @@ gthree_uniforms_set_float_array (GthreeUniforms  *uniforms,
     gthree_uniform_set_float_array (uni, array);
 }
 
+/**
+ * gthree_uniforms_set_float3_array:
+ * @array: (element-type float):
+ */
 void
 gthree_uniforms_set_float3_array (GthreeUniforms  *uniforms,
                                   const char      *name,
@@ -185,6 +213,10 @@ gthree_uniforms_set_float3_array (GthreeUniforms  *uniforms,
     gthree_uniform_set_float3_array (uni, array);
 }
 
+/**
+ * gthree_uniforms_set_matrix4_array:
+ * @array: (element-type float):
+ */
 void
 gthree_uniforms_set_matrix4_array (GthreeUniforms  *uniforms,
                                    const char      *name,
@@ -257,6 +289,10 @@ gthree_uniforms_set_texture (GthreeUniforms  *uniforms,
     gthree_uniform_set_texture (uni, value);
 }
 
+/**
+ * gthree_uniforms_set_texture_array:
+ * @value: (element-type GthreeTexture):
+ */
 void
 gthree_uniforms_set_texture_array (GthreeUniforms  *uniforms,
                                    const char      *name,
@@ -269,6 +305,10 @@ gthree_uniforms_set_texture_array (GthreeUniforms  *uniforms,
     gthree_uniform_set_texture_array (uni, value);
 }
 
+/**
+ * gthree_uniforms_set_uarray:
+ * @uarray: (element-type GthreeUniforms):
+ */
 void
 gthree_uniforms_set_uarray (GthreeUniforms  *uniforms,
                             const char      *name,
@@ -617,6 +657,10 @@ set_array (GthreeUniform *uniform, GArray *array)
   uniform->value.array = array;
 }
 
+/**
+ * gthree_uniform_set_float_array:
+ * @array: (element-type float):
+ */
 void
 gthree_uniform_set_float_array (GthreeUniform *uniform,
                                 GArray *array)
@@ -626,6 +670,10 @@ gthree_uniform_set_float_array (GthreeUniform *uniform,
  set_array (uniform, array);
 }
 
+/**
+ * gthree_uniform_set_float3_array:
+ * @array: (element-type float):
+ */
 void
 gthree_uniform_set_float3_array (GthreeUniform *uniform,
                                  GArray *array)
@@ -635,6 +683,10 @@ gthree_uniform_set_float3_array (GthreeUniform *uniform,
  set_array (uniform, array);
 }
 
+/**
+ * gthree_uniform_set_float4_array:
+ * @array: (element-type float):
+ */
 void
 gthree_uniform_set_float4_array (GthreeUniform *uniform,
                                  GArray *array)
@@ -644,6 +696,10 @@ gthree_uniform_set_float4_array (GthreeUniform *uniform,
  set_array (uniform, array);
 }
 
+/**
+ * gthree_uniform_set_matrix4_array:
+ * @array: (element-type float):
+ */
 void
 gthree_uniform_set_matrix4_array (GthreeUniform  *uniform,
                                   GArray          *array)
@@ -721,6 +777,10 @@ gthree_uniform_set_texture (GthreeUniform *uniform,
   uniform->value.texture = value;
 }
 
+/**
+ * gthree_uniform_set_texture_array:
+ * @value: (element-type GthreeTexture):
+ */
 void
 gthree_uniform_set_texture_array (GthreeUniform *uniform,
                                   GPtrArray *value)
@@ -743,6 +803,10 @@ gthree_uniform_set_texture_array (GthreeUniform *uniform,
     }
 }
 
+/**
+ * gthree_uniform_set_uarray:
+ * @uarray: (element-type GthreeUniforms):
+ */
 void
 gthree_uniform_set_uarray (GthreeUniform *uniform,
                            GPtrArray     *value,
@@ -778,6 +842,11 @@ gthree_uniform_set_uarray (GthreeUniform *uniform,
     }
 }
 
+/**
+ * gthree_uniform_get_uarray:
+ *
+ * Returns: (transfer none) (element-type GthreeUniforms):
+ */
 GPtrArray *
 gthree_uniform_get_uarray (GthreeUniform *uniform)
 {
@@ -1174,6 +1243,11 @@ gthree_uniforms_init_libs ()
   initialized = TRUE;
 }
 
+/**
+ * gthree_get_uniforms_from_library:
+ *
+ * Returns: (transfer none):
+ */
 GthreeUniforms *
 gthree_get_uniforms_from_library (const char *name)
 {

@@ -156,6 +156,11 @@ gthree_points_get_property (GObject *obj,
     }
 }
 
+/**
+ * gthree_points_get_material:
+ *
+ * Returns: (transfer none):
+ */
 GthreeMaterial *
 gthree_points_get_material (GthreePoints *points)
 {
@@ -174,6 +179,11 @@ gthree_points_set_material (GthreePoints *points,
 }
 
 
+/**
+ * gthree_points_get_geometry:
+ *
+ * Returns: (transfer none):
+ */
 GthreeGeometry *
 gthree_points_get_geometry (GthreePoints *points)
 {

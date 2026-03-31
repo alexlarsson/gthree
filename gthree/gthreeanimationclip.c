@@ -130,6 +130,11 @@ gthree_animation_clip_get_n_tracks (GthreeAnimationClip *clip)
   return priv->tracks->len;
 }
 
+/**
+ * gthree_animation_clip_get_track:
+ *
+ * Returns: (transfer none):
+ */
 GthreeKeyframeTrack *
 gthree_animation_clip_get_track (GthreeAnimationClip *clip,
                                  int                  i)

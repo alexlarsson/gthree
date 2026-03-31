@@ -379,6 +379,11 @@ gthree_mesh_basic_material_set_map (GthreeMeshBasicMaterial *basic,
     }
 }
 
+/**
+ * gthree_mesh_basic_material_get_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_basic_material_get_map (GthreeMeshBasicMaterial *basic)
 {
@@ -401,6 +406,11 @@ gthree_mesh_basic_material_set_env_map (GthreeMeshBasicMaterial *basic,
     }
 }
 
+/**
+ * gthree_mesh_basic_material_get_env_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_basic_material_get_env_map (GthreeMeshBasicMaterial *basic)
 {

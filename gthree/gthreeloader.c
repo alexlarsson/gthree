@@ -2323,6 +2323,11 @@ parse_animations (GthreeLoader *loader, JsonObject *root, GError **error)
   return TRUE;
 }
 
+/**
+ * gthree_loader_parse_gltf:
+ *
+ * Returns: (transfer full):
+ */
 GthreeLoader *
 gthree_loader_parse_gltf (GBytes *data, GFile *base_path, GError **error)
 {
@@ -2417,6 +2422,11 @@ gthree_loader_get_n_scenes (GthreeLoader *loader)
   return priv->scenes->len;
 }
 
+/**
+ * gthree_loader_get_scene:
+ *
+ * Returns: (transfer none):
+ */
 GthreeScene *
 gthree_loader_get_scene (GthreeLoader *loader,
                          int index)
@@ -2435,6 +2445,11 @@ gthree_loader_get_n_materials (GthreeLoader *loader)
   return priv->final_materials->len;
 }
 
+/**
+ * gthree_loader_get_material:
+ *
+ * Returns: (transfer none):
+ */
 GthreeMaterial *
 gthree_loader_get_material (GthreeLoader *loader,
                             int index)
@@ -2453,6 +2468,11 @@ gthree_loader_get_n_animations (GthreeLoader *loader)
   return priv->animations->len;
 }
 
+/**
+ * gthree_loader_get_animation:
+ *
+ * Returns: (transfer none):
+ */
 GthreeAnimationClip *
 gthree_loader_get_animation (GthreeLoader *loader,
                              int index)
@@ -2462,6 +2482,11 @@ gthree_loader_get_animation (GthreeLoader *loader,
   return g_ptr_array_index (priv->animations, index);
 }
 
+/**
+ * gthree_load_geometry_from_json:
+ *
+ * Returns: (transfer full):
+ */
 GthreeGeometry *
 gthree_load_geometry_from_json (const char *data, GError **error)
 {

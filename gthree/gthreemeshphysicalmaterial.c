@@ -857,6 +857,11 @@ gthree_mesh_physical_material_set_clearcoat (GthreeMeshPhysicalMaterial *physica
   g_object_notify_by_pspec (G_OBJECT (physical), obj_props[PROP_CLEARCOAT]);
 }
 
+/**
+ * gthree_mesh_physical_material_get_clearcoat_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_physical_material_get_clearcoat_map (GthreeMeshPhysicalMaterial *physical)
 {
@@ -900,6 +905,11 @@ gthree_mesh_physical_material_set_clearcoat_roughness (GthreeMeshPhysicalMateria
   g_object_notify_by_pspec (G_OBJECT (physical), obj_props[PROP_CLEARCOAT_ROUGHNESS]);
 }
 
+/**
+ * gthree_mesh_physical_material_get_clearcoat_roughness_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_physical_material_get_clearcoat_roughness_map (GthreeMeshPhysicalMaterial *physical)
 {
@@ -922,6 +932,11 @@ gthree_mesh_physical_material_set_clearcoat_roughness_map (GthreeMeshPhysicalMat
     }
 }
 
+/**
+ * gthree_mesh_physical_material_get_clearcoat_normal_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_physical_material_get_clearcoat_normal_map (GthreeMeshPhysicalMaterial *physical)
 {
@@ -1007,6 +1022,11 @@ gthree_mesh_physical_material_set_iridescence (GthreeMeshPhysicalMaterial *physi
   g_object_notify_by_pspec (G_OBJECT (physical), obj_props[PROP_IRIDESCENCE]);
 }
 
+/**
+ * gthree_mesh_physical_material_get_iridescence_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_physical_material_get_iridescence_map (GthreeMeshPhysicalMaterial *physical)
 {
@@ -1092,6 +1112,11 @@ gthree_mesh_physical_material_set_iridescence_thickness_max (GthreeMeshPhysicalM
   g_object_notify_by_pspec (G_OBJECT (physical), obj_props[PROP_IRIDESCENCE_THICKNESS_MAX]);
 }
 
+/**
+ * gthree_mesh_physical_material_get_iridescence_thickness_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_physical_material_get_iridescence_thickness_map (GthreeMeshPhysicalMaterial *physical)
 {
@@ -1156,6 +1181,11 @@ gthree_mesh_physical_material_set_sheen_color (GthreeMeshPhysicalMaterial *physi
   g_object_notify_by_pspec (G_OBJECT (physical), obj_props[PROP_SHEEN_COLOR]);
 }
 
+/**
+ * gthree_mesh_physical_material_get_sheen_color_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_physical_material_get_sheen_color_map (GthreeMeshPhysicalMaterial *physical)
 {
@@ -1199,6 +1229,11 @@ gthree_mesh_physical_material_set_sheen_roughness (GthreeMeshPhysicalMaterial *p
   g_object_notify_by_pspec (G_OBJECT (physical), obj_props[PROP_SHEEN_ROUGHNESS]);
 }
 
+/**
+ * gthree_mesh_physical_material_get_sheen_roughness_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_physical_material_get_sheen_roughness_map (GthreeMeshPhysicalMaterial *physical)
 {
@@ -1242,6 +1277,11 @@ gthree_mesh_physical_material_set_transmission (GthreeMeshPhysicalMaterial *phys
   g_object_notify_by_pspec (G_OBJECT (physical), obj_props[PROP_TRANSMISSION]);
 }
 
+/**
+ * gthree_mesh_physical_material_get_transmission_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_physical_material_get_transmission_map (GthreeMeshPhysicalMaterial *physical)
 {
@@ -1285,6 +1325,11 @@ gthree_mesh_physical_material_set_thickness (GthreeMeshPhysicalMaterial *physica
   g_object_notify_by_pspec (G_OBJECT (physical), obj_props[PROP_THICKNESS]);
 }
 
+/**
+ * gthree_mesh_physical_material_get_thickness_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_physical_material_get_thickness_map (GthreeMeshPhysicalMaterial *physical)
 {
@@ -1391,6 +1436,11 @@ gthree_mesh_physical_material_set_specular_intensity (GthreeMeshPhysicalMaterial
   g_object_notify_by_pspec (G_OBJECT (physical), obj_props[PROP_SPECULAR_INTENSITY]);
 }
 
+/**
+ * gthree_mesh_physical_material_get_specular_intensity_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_physical_material_get_specular_intensity_map (GthreeMeshPhysicalMaterial *physical)
 {
@@ -1434,6 +1484,11 @@ gthree_mesh_physical_material_set_specular_color (GthreeMeshPhysicalMaterial *ph
   g_object_notify_by_pspec (G_OBJECT (physical), obj_props[PROP_SPECULAR_COLOR]);
 }
 
+/**
+ * gthree_mesh_physical_material_get_specular_color_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_physical_material_get_specular_color_map (GthreeMeshPhysicalMaterial *physical)
 {
@@ -1498,6 +1553,11 @@ gthree_mesh_physical_material_set_anisotropy_rotation (GthreeMeshPhysicalMateria
   g_object_notify_by_pspec (G_OBJECT (physical), obj_props[PROP_ANISOTROPY_ROTATION]);
 }
 
+/**
+ * gthree_mesh_physical_material_get_anisotropy_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_physical_material_get_anisotropy_map (GthreeMeshPhysicalMaterial *physical)
 {

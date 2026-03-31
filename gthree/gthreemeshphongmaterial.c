@@ -612,6 +612,11 @@ gthree_mesh_phong_material_set_map (GthreeMeshPhongMaterial *phong,
     }
 }
 
+/**
+ * gthree_mesh_phong_material_get_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_phong_material_get_map (GthreeMeshPhongMaterial *phong)
 {
@@ -634,6 +639,11 @@ gthree_mesh_phong_material_set_env_map (GthreeMeshPhongMaterial *phong,
     }
 }
 
+/**
+ * gthree_mesh_phong_material_get_env_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_phong_material_get_env_map (GthreeMeshPhongMaterial *phong)
 {
@@ -656,6 +666,11 @@ gthree_mesh_phong_material_set_specular_map (GthreeMeshPhongMaterial *phong,
     }
 }
 
+/**
+ * gthree_mesh_phong_material_get_specular_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_phong_material_get_specular_map (GthreeMeshPhongMaterial *phong)
 {
@@ -664,6 +679,11 @@ gthree_mesh_phong_material_get_specular_map (GthreeMeshPhongMaterial *phong)
   return priv->specular_map;
 }
 
+/**
+ * gthree_mesh_phong_material_get_normal_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_phong_material_get_normal_map (GthreeMeshPhongMaterial *phong)
 {

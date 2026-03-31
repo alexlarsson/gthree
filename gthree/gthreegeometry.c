@@ -93,6 +93,11 @@ gthree_geometry_new ()
   return geometry;
 }
 
+/**
+ * gthree_geometry_add_attribute:
+ *
+ * Returns: (transfer none):
+ */
 GthreeAttribute *
 gthree_geometry_add_attribute (GthreeGeometry  *geometry,
                                const char *name,
@@ -125,6 +130,11 @@ gthree_geometry_remove_attribute (GthreeGeometry  *geometry,
   g_hash_table_remove (priv->attributes, name);
 }
 
+/**
+ * gthree_geometry_get_attribute:
+ *
+ * Returns: (transfer none):
+ */
 GthreeAttribute *
 gthree_geometry_get_attribute (GthreeGeometry  *geometry,
                                const char *name)
@@ -144,6 +154,11 @@ gthree_geometry_has_attribute (GthreeGeometry  *geometry,
 }
 
 
+/**
+ * gthree_geometry_get_index:
+ *
+ * Returns: (transfer none):
+ */
 GthreeAttribute *
 gthree_geometry_get_index (GthreeGeometry  *geometry)
 {
@@ -152,6 +167,11 @@ gthree_geometry_get_index (GthreeGeometry  *geometry)
   return priv->index;
 }
 
+/**
+ * gthree_geometry_get_wireframe_index:
+ *
+ * Returns: (transfer none):
+ */
 GthreeAttribute *
 gthree_geometry_get_wireframe_index (GthreeGeometry *geometry)
 {
@@ -202,6 +222,11 @@ gthree_geometry_set_index (GthreeGeometry  *geometry,
   priv->index = index;
 }
 
+/**
+ * gthree_geometry_get_position:
+ *
+ * Returns: (transfer none):
+ */
 GthreeAttribute *
 gthree_geometry_get_position (GthreeGeometry  *geometry)
 {
@@ -234,18 +259,33 @@ gthree_geometry_get_vertex_count (GthreeGeometry *geometry)
   return 0;
 }
 
+/**
+ * gthree_geometry_get_normal:
+ *
+ * Returns: (transfer none):
+ */
 GthreeAttribute *
 gthree_geometry_get_normal (GthreeGeometry  *geometry)
 {
   return gthree_geometry_get_attribute (geometry, "normal");
 }
 
+/**
+ * gthree_geometry_get_color:
+ *
+ * Returns: (transfer none):
+ */
 GthreeAttribute *
 gthree_geometry_get_color (GthreeGeometry  *geometry)
 {
   return gthree_geometry_get_attribute (geometry, "color");
 }
 
+/**
+ * gthree_geometry_get_uv:
+ *
+ * Returns: (transfer none):
+ */
 GthreeAttribute *
 gthree_geometry_get_uv (GthreeGeometry  *geometry)
 {
@@ -286,6 +326,11 @@ gthree_geometry_remove_morph_attributes (GthreeGeometry *geometry,
   g_hash_table_remove (priv->morph_attributes, name);
 }
 
+/**
+ * gthree_geometry_get_morph_attributes:
+ *
+ * Returns: (transfer none) (element-type GthreeAttribute):
+ */
 GPtrArray *
 gthree_geometry_get_morph_attributes (GthreeGeometry  *geometry,
                                       const char *name)
@@ -306,6 +351,11 @@ gthree_geometry_has_morph_attributes (GthreeGeometry          *geometry)
   return (priv->morph_attributes != NULL);
 }
 
+/**
+ * gthree_geometry_get_morph_attributes_names:
+ *
+ * Returns: (transfer none) (element-type utf8):
+ */
 GList *
 gthree_geometry_get_morph_attributes_names (GthreeGeometry  *geometry)
 {
@@ -466,6 +516,11 @@ gthree_geometry_get_n_groups (GthreeGeometry  *geometry)
   return priv->groups->len;
 }
 
+/**
+ * gthree_geometry_get_group:
+ *
+ * Returns: (transfer none) (skip):
+ */
 GthreeGeometryGroup *
 gthree_geometry_get_group (GthreeGeometry  *geometry, int index)
 {
@@ -475,6 +530,11 @@ gthree_geometry_get_group (GthreeGeometry  *geometry, int index)
   return &g_array_index (priv->groups, GthreeGeometryGroup, index);
 }
 
+/**
+ * gthree_geometry_peek_groups:
+ *
+ * Returns: (transfer none) (skip):
+ */
 GthreeGeometryGroup *
 gthree_geometry_peek_groups (GthreeGeometry  *geometry)
 {

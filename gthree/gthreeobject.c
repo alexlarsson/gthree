@@ -504,6 +504,10 @@ gthree_object_is_in_frustum (GthreeObject *object,
   return TRUE;
 }
 
+/**
+ * gthree_object_raycast:
+ * @intersections: (element-type GthreeRayIntersection):
+ */
 void
 gthree_object_raycast (GthreeObject                *object,
                        GthreeRaycaster             *raycaster,
@@ -1056,6 +1060,11 @@ gthree_object_remove_child (GthreeObject                 *object,
 }
 
 
+/**
+ * gthree_object_get_parent:
+ *
+ * Returns: (transfer none):
+ */
 GthreeObject *
 gthree_object_get_parent (GthreeObject *object)
 {
@@ -1066,6 +1075,11 @@ gthree_object_get_parent (GthreeObject *object)
   return priv->parent;
 }
 
+/**
+ * gthree_object_get_first_child:
+ *
+ * Returns: (transfer none):
+ */
 GthreeObject *
 gthree_object_get_first_child (GthreeObject *object)
 {
@@ -1076,6 +1090,11 @@ gthree_object_get_first_child (GthreeObject *object)
   return priv->first_child;
 }
 
+/**
+ * gthree_object_get_last_child:
+ *
+ * Returns: (transfer none):
+ */
 GthreeObject *
 gthree_object_get_last_child (GthreeObject *object)
 {
@@ -1100,6 +1119,11 @@ gthree_object_get_n_children (GthreeObject *object)
   return len;
 }
 
+/**
+ * gthree_object_get_previous_sibling:
+ *
+ * Returns: (transfer none):
+ */
 GthreeObject *
 gthree_object_get_previous_sibling (GthreeObject *object)
 {
@@ -1110,6 +1134,11 @@ gthree_object_get_previous_sibling (GthreeObject *object)
   return priv->prev_sibling;
 }
 
+/**
+ * gthree_object_get_next_sibling:
+ *
+ * Returns: (transfer none):
+ */
 GthreeObject *
 gthree_object_get_next_sibling (GthreeObject *object)
 {
@@ -1203,6 +1232,10 @@ gthree_object_set_direct_uniforms  (GthreeObject *object,
   class->set_direct_uniforms (object, program, renderer);
 }
 
+/**
+ * gthree_object_set_before_render_callback:
+ * @callback: (scope forever):
+ */
 void
 gthree_object_set_before_render_callback (GthreeObject                *object,
                                           GthreeBeforeRenderCallback  callback)
@@ -1376,6 +1409,10 @@ _gthree_object_traverse (GthreeObject                *object,
   return TRUE;
 }
 
+/**
+ * gthree_object_traverse:
+ * @callback: (scope call):
+ */
 void
 gthree_object_traverse (GthreeObject                *object,
                         GthreeTraverseCallback       callback,
@@ -1409,6 +1446,10 @@ _gthree_object_traverse_visible (GthreeObject                *object,
   return TRUE;
 }
 
+/**
+ * gthree_object_traverse_visible:
+ * @callback: (scope call):
+ */
 void
 gthree_object_traverse_visible (GthreeObject                *object,
                                 GthreeTraverseCallback       callback,
@@ -1417,6 +1458,10 @@ gthree_object_traverse_visible (GthreeObject                *object,
   _gthree_object_traverse_visible (object, callback, user_data);
 }
 
+/**
+ * gthree_object_traverse_ancestors:
+ * @callback: (scope call):
+ */
 void
 gthree_object_traverse_ancestors (GthreeObject                *object,
                                   GthreeTraverseCallback       callback,
@@ -1448,6 +1493,11 @@ find_by_type_cb (GthreeObject *object,
   return TRUE;
 }
 
+/**
+ * gthree_object_find_by_type:
+ *
+ * Returns: (transfer container) (element-type GthreeObject):
+ */
 GList *
 gthree_object_find_by_type (GthreeObject *object,
                             GType  g_type)
@@ -1477,6 +1527,11 @@ find_by_name_cb (GthreeObject *object,
   return TRUE;
 }
 
+/**
+ * gthree_object_find_by_name:
+ *
+ * Returns: (transfer container) (element-type GthreeObject):
+ */
 GList *
 gthree_object_find_by_name (GthreeObject *object,
                             const char *name)
@@ -1509,6 +1564,11 @@ find_first_by_name_cb (GthreeObject *object,
   return TRUE;
 }
 
+/**
+ * gthree_object_find_first_by_name:
+ *
+ * Returns: (transfer none):
+ */
 GthreeObject *
 gthree_object_find_first_by_name (GthreeObject *object,
                                   const char *name)

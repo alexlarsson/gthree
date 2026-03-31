@@ -720,6 +720,11 @@ gthree_mesh_standard_material_set_emissive_color (GthreeMeshStandardMaterial *st
 }
 
 
+/**
+ * gthree_mesh_standard_material_get_emissive_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_standard_material_get_emissive_map (GthreeMeshStandardMaterial *standard)
 {
@@ -823,6 +828,11 @@ gthree_mesh_standard_material_set_map (GthreeMeshStandardMaterial *standard,
     }
 }
 
+/**
+ * gthree_mesh_standard_material_get_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_standard_material_get_map (GthreeMeshStandardMaterial *standard)
 {
@@ -845,6 +855,11 @@ gthree_mesh_standard_material_set_env_map (GthreeMeshStandardMaterial *standard,
     }
 }
 
+/**
+ * gthree_mesh_standard_material_get_env_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_standard_material_get_env_map (GthreeMeshStandardMaterial *standard)
 {
@@ -895,6 +910,11 @@ gthree_mesh_standard_material_set_metalness (GthreeMeshStandardMaterial *standar
   g_object_notify_by_pspec (G_OBJECT (standard), obj_props[PROP_METALNESS]);
 }
 
+/**
+ * gthree_mesh_standard_material_get_light_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_standard_material_get_light_map (GthreeMeshStandardMaterial *standard)
 {
@@ -938,6 +958,11 @@ gthree_mesh_standard_material_set_light_map_intensity (GthreeMeshStandardMateria
   g_object_notify_by_pspec (G_OBJECT (standard), obj_props[PROP_LIGHT_MAP_INTENSITY]);
 }
 
+/**
+ * gthree_mesh_standard_material_get_ao_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_standard_material_get_ao_map (GthreeMeshStandardMaterial *standard)
 {
@@ -982,6 +1007,11 @@ gthree_mesh_standard_material_set_ao_map_intensity (GthreeMeshStandardMaterial *
 
 }
 
+/**
+ * gthree_mesh_standard_material_get_bump_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_standard_material_get_bump_map (GthreeMeshStandardMaterial *standard)
 {
@@ -1025,6 +1055,11 @@ gthree_mesh_standard_material_set_bump_scale (GthreeMeshStandardMaterial *standa
   g_object_notify_by_pspec (G_OBJECT (standard), obj_props[PROP_BUMP_SCALE]);
 }
 
+/**
+ * gthree_mesh_standard_material_get_normal_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_standard_material_get_normal_map (GthreeMeshStandardMaterial *standard)
 {
@@ -1089,6 +1124,11 @@ gthree_mesh_standard_material_set_normal_map_scale (GthreeMeshStandardMaterial *
   g_object_notify_by_pspec (G_OBJECT (standard), obj_props[PROP_NORMAL_SCALE]);
 }
 
+/**
+ * gthree_mesh_standard_material_get_displacement_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_standard_material_get_displacement_map (GthreeMeshStandardMaterial *standard)
 {
@@ -1154,6 +1194,11 @@ gthree_mesh_standard_material_set_displacement_bias (GthreeMeshStandardMaterial 
   g_object_notify_by_pspec (G_OBJECT (standard), obj_props[PROP_DISPLACEMENT_BIAS]);
 }
 
+/**
+ * gthree_mesh_standard_material_get_roughness_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_standard_material_get_roughness_map (GthreeMeshStandardMaterial *standard)
 {
@@ -1176,6 +1221,11 @@ gthree_mesh_standard_material_set_roughness_map (GthreeMeshStandardMaterial *sta
     }
 }
 
+/**
+ * gthree_mesh_standard_material_get_metalness_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_standard_material_get_metalness_map (GthreeMeshStandardMaterial *standard)
 {
@@ -1198,6 +1248,11 @@ gthree_mesh_standard_material_set_metalness_map (GthreeMeshStandardMaterial *sta
     }
 }
 
+/**
+ * gthree_mesh_standard_material_get_alpha_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_mesh_standard_material_get_alpha_map (GthreeMeshStandardMaterial *standard)
 {

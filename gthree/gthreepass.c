@@ -372,6 +372,10 @@ gthree_render_pass_new (GthreeScene *scene,
   return GTHREE_PASS (pass);
 }
 
+/**
+ * gthree_render_pass_set_clipping_planes:
+ * @clipping_planes: (element-type graphene_plane_t):
+ */
 void
 gthree_render_pass_set_clipping_planes  (GthreeRenderPass *render_pass,
                                          GArray *clipping_planes)

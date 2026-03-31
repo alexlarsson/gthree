@@ -201,6 +201,11 @@ gthree_light_setup (GthreeLight *light,
   class->setup (light, camera, setup);
 }
 
+/**
+ * gthree_light_get_shadow:
+ *
+ * Returns: (transfer none):
+ */
 GthreeLightShadow  *
 gthree_light_get_shadow (GthreeLight   *light)
 {

@@ -258,6 +258,11 @@ gthree_points_material_set_map (GthreePointsMaterial *points_material,
 }
 
 
+/**
+ * gthree_points_material_get_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture  *
 gthree_points_material_get_map (GthreePointsMaterial *points_material)
 {

@@ -97,6 +97,11 @@ gthree_mesh_has_morph_targets (GthreeMesh *mesh)
   return priv->morph_target_influences != NULL;
 }
 
+/**
+ * gthree_mesh_get_morph_targets:
+ *
+ * Returns: (transfer none) (element-type float):
+ */
 GArray *
 gthree_mesh_get_morph_targets (GthreeMesh *mesh)
 {
@@ -105,6 +110,10 @@ gthree_mesh_get_morph_targets (GthreeMesh *mesh)
   return priv->morph_target_influences;
 }
 
+/**
+ * gthree_mesh_set_morph_targets:
+ * @morph_targets: (element-type float):
+ */
 void
 gthree_mesh_set_morph_targets (GthreeMesh     *mesh,
                                GArray *morph_targets)
@@ -538,6 +547,11 @@ gthree_mesh_get_property (GObject *obj,
     }
 }
 
+/**
+ * gthree_mesh_get_material:
+ *
+ * Returns: (transfer none):
+ */
 GthreeMaterial *
 gthree_mesh_get_material (GthreeMesh *mesh,
                           int index)
@@ -558,6 +572,10 @@ gthree_mesh_get_n_materials (GthreeMesh *mesh)
   return priv->materials->len;
 }
 
+/**
+ * gthree_mesh_set_materials:
+ * @materials: (element-type GthreeMaterial):
+ */
 void
 gthree_mesh_set_materials (GthreeMesh *mesh,
                            GPtrArray *materials)
@@ -600,6 +618,11 @@ gthree_mesh_set_material (GthreeMesh *mesh,
   g_ptr_array_index (priv->materials, index) = g_object_ref (material);
 }
 
+/**
+ * gthree_mesh_get_geometry:
+ *
+ * Returns: (transfer none):
+ */
 GthreeGeometry *
 gthree_mesh_get_geometry (GthreeMesh *mesh)
 {

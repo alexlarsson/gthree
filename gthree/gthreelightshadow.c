@@ -70,6 +70,11 @@ gthree_light_shadow_new (GthreeCamera *camera)
   return light_shadow;
 }
 
+/**
+ * gthree_light_shadow_get_camera:
+ *
+ * Returns: (transfer none):
+ */
 GthreeCamera *
 gthree_light_shadow_get_camera (GthreeLightShadow *shadow)
 {

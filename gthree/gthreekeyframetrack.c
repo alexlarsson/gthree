@@ -63,12 +63,22 @@ gthree_keyframe_track_get_value_size (GthreeKeyframeTrack     *track)
   return gthree_attribute_array_get_stride (priv->values);
 }
 
+/**
+ * gthree_keyframe_track_get_times:
+ *
+ * Returns: (transfer none) (skip):
+ */
 GthreeAttributeArray *
 gthree_keyframe_track_get_times (GthreeKeyframeTrack     *track)
 {
   GthreeKeyframeTrackPrivate *priv = gthree_keyframe_track_get_instance_private (track);
   return priv->times;
 }
+/**
+ * gthree_keyframe_track_get_values:
+ *
+ * Returns: (transfer none) (skip):
+ */
 GthreeAttributeArray *
 gthree_keyframe_track_get_values (GthreeKeyframeTrack     *track)
 {
@@ -211,6 +221,11 @@ gthree_keyframe_track_optimize (GthreeKeyframeTrack *track)
   g_warning ("TODO: gthree_keyframe_optimize()");
 }
 
+/**
+ * gthree_keyframe_track_create_interpolant:
+ *
+ * Returns: (transfer full):
+ */
 GthreeInterpolant *
 gthree_keyframe_track_create_interpolant (GthreeKeyframeTrack *track)
 {

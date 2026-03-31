@@ -614,6 +614,11 @@ _gthree_animation_mixer_deactivate_action (GthreeAnimationMixer  *mixer,
 // return an action for a clip optionally using a custom root target
 // object (this method allocates a lot of dynamic memory in case a
 // previously unknown clip/root combination is specified)
+/**
+ * gthree_animation_mixer_clip_action:
+ *
+ * Returns: (transfer none):
+ */
 GthreeAnimationAction *
 gthree_animation_mixer_clip_action (GthreeAnimationMixer *mixer,
                                     GthreeAnimationClip *clip,
@@ -653,6 +658,11 @@ gthree_animation_mixer_clip_action (GthreeAnimationMixer *mixer,
 }
 
 // get an existing action
+/**
+ * gthree_animation_mixer_existing_action:
+ *
+ * Returns: (transfer none):
+ */
 GthreeAnimationAction *
 gthree_animation_mixer_existing_action (GthreeAnimationMixer  *mixer,
                                         GthreeAnimationClip *clip,
@@ -812,6 +822,11 @@ gthree_animation_mixer_set_time_scale  (GthreeAnimationMixer *mixer,
 }
 
 // return this mixer's root target object
+/**
+ * gthree_animation_mixer_get_root:
+ *
+ * Returns: (transfer none):
+ */
 GthreeObject *
 gthree_animation_mixer_get_root (GthreeAnimationMixer  *mixer)
 {

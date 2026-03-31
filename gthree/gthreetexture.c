@@ -253,6 +253,11 @@ gthree_texture_class_init (GthreeTextureClass *klass)
   g_object_class_install_properties (gobject_class, N_PROPS, obj_props);
 }
 
+/**
+ * gthree_texture_get_pixbuf:
+ *
+ * Returns: (transfer none):
+ */
 GdkPixbuf *
 gthree_texture_get_pixbuf (GthreeTexture *texture)
 {

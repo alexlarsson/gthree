@@ -169,6 +169,11 @@ gthree_line_class_init (GthreeLineClass *klass)
 }
 
 
+/**
+ * gthree_line_get_material:
+ *
+ * Returns: (transfer none):
+ */
 GthreeMaterial *
 gthree_line_get_material (GthreeLine *line)
 {
@@ -176,6 +181,11 @@ gthree_line_get_material (GthreeLine *line)
   return priv->material;
 }
 
+/**
+ * gthree_line_get_geometry:
+ *
+ * Returns: (transfer none):
+ */
 GthreeGeometry *
 gthree_line_get_geometry (GthreeLine *line)
 {

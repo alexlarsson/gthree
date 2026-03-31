@@ -362,6 +362,11 @@ lod_roughness (int lod_idx, int lod_max)
     }
 }
 
+/**
+ * gthree_pmrem_generator_from_cubemap:
+ *
+ * Returns: (transfer full):
+ */
 GthreeTexture *
 gthree_pmrem_generator_from_cubemap (GthreePMREMGenerator *generator,
                                      GthreeCubeTexture    *cubemap)

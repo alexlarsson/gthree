@@ -92,6 +92,11 @@ gthree_scene_set_background_alpha (GthreeScene   *scene,
   priv->bg_alpha = alpha;
 }
 
+/**
+ * gthree_scene_get_background_texture:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_scene_get_background_texture (GthreeScene   *scene)
 {
@@ -111,6 +116,11 @@ gthree_scene_set_background_texture (GthreeScene   *scene,
   priv->bg_texture = texture;
 }
 
+/**
+ * gthree_scene_get_override_material:
+ *
+ * Returns: (transfer none):
+ */
 GthreeMaterial *
 gthree_scene_get_override_material (GthreeScene *scene)
 {
@@ -131,6 +141,11 @@ gthree_scene_set_override_material (GthreeScene *scene,
   priv->override_material = material;
 }
 
+/**
+ * gthree_scene_get_fog:
+ *
+ * Returns: (transfer none):
+ */
 GthreeFog *
 gthree_scene_get_fog (GthreeScene *scene)
 {

@@ -22,6 +22,10 @@ G_DEFINE_TYPE_WITH_PRIVATE (GthreeShader, gthree_shader, G_TYPE_OBJECT);
 static void gthree_shader_init_libs ();
 static void gthree_shader_init_hash (GthreeShader *shader);
 
+/**
+ * gthree_shader_new:
+ * @defines: (element-type utf8):
+ */
 GthreeShader *
 gthree_shader_new (GPtrArray *defines,
                    GthreeUniforms *uniforms,
@@ -263,6 +267,11 @@ gthree_shader_update_uniform_locations_for_program (GthreeShader *shader,
   g_list_free (unis);
 }
 
+/**
+ * gthree_shader_get_defines:
+ *
+ * Returns: (transfer none) (element-type utf8):
+ */
 GPtrArray *
 gthree_shader_get_defines (GthreeShader  *shader)
 {
@@ -271,6 +280,10 @@ gthree_shader_get_defines (GthreeShader  *shader)
   return priv->defines;
 }
 
+/**
+ * gthree_shader_set_defines:
+ * @defines: (element-type utf8):
+ */
 void
 gthree_shader_set_defines (GthreeShader *shader,
                            GPtrArray *defines)
@@ -289,6 +302,11 @@ gthree_shader_set_defines (GthreeShader *shader,
 
 }
 
+/**
+ * gthree_shader_get_uniforms:
+ *
+ * Returns: (transfer none):
+ */
 GthreeUniforms *
 gthree_shader_get_uniforms (GthreeShader  *shader)
 {
@@ -313,6 +331,11 @@ gthree_shader_get_fragment_shader_text (GthreeShader  *shader)
   return priv->fragment_shader_text;
 }
 
+/**
+ * gthree_shader_clone:
+ *
+ * Returns: (transfer full):
+ */
 GthreeShader *
 gthree_shader_clone (GthreeShader *orig)
 {
@@ -781,6 +804,11 @@ gthree_shader_init_libs ()
   gthree_shader_set_name (convolution, "convolution");
 }
 
+/**
+ * gthree_get_shader_from_library:
+ *
+ * Returns: (transfer none):
+ */
 GthreeShader *
 gthree_get_shader_from_library (const char *name)
 {
@@ -847,6 +875,11 @@ gthree_get_shader_from_library (const char *name)
   return NULL;
 }
 
+/**
+ * gthree_clone_shader_from_library:
+ *
+ * Returns: (transfer full):
+ */
 GthreeShader *
 gthree_clone_shader_from_library (const char *name)
 {
@@ -866,6 +899,11 @@ gauss (float x, float sigma)
   return expf( - (x * x) / (2.0 * sigma * sigma));
 }
 
+/**
+ * gthree_convolution_shader_build_kernel:
+ *
+ * Returns: (transfer full) (element-type float):
+ */
 GArray *
 gthree_convolution_shader_build_kernel (float sigma)
 {

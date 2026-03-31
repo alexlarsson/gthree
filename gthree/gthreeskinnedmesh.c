@@ -110,6 +110,11 @@ gthree_skinned_mesh_get_property (GObject *obj,
 }
 
 
+/**
+ * gthree_skinned_mesh_get_skeleton:
+ *
+ * Returns: (transfer none):
+ */
 GthreeSkeleton *
 gthree_skinned_mesh_get_skeleton (GthreeSkinnedMesh *mesh)
 {

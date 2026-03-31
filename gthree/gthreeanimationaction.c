@@ -469,6 +469,11 @@ gthree_animation_action_stop_warping (GthreeAnimationAction *action)
 
 }
 
+/**
+ * gthree_animation_action_get_mixer:
+ *
+ * Returns: (transfer none):
+ */
 GthreeAnimationMixer *
 gthree_animation_action_get_mixer (GthreeAnimationAction *action)
 {
@@ -477,6 +482,11 @@ gthree_animation_action_get_mixer (GthreeAnimationAction *action)
   return priv->mixer;
 }
 
+/**
+ * gthree_animation_action_get_clip:
+ *
+ * Returns: (transfer none):
+ */
 GthreeAnimationClip *
 gthree_animation_action_get_clip (GthreeAnimationAction *action)
 {
@@ -485,6 +495,11 @@ gthree_animation_action_get_clip (GthreeAnimationAction *action)
   return priv->clip;
 }
 
+/**
+ * gthree_animation_action_get_root:
+ *
+ * Returns: (transfer none):
+ */
 GthreeObject *
 gthree_animation_action_get_root (GthreeAnimationAction *action)
 {

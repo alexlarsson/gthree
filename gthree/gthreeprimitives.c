@@ -1408,15 +1408,10 @@ clip_geometry (GArray *in,
     }
 }
 
-/*
- * You can use this geometry to create a decal mesh, that serves different kinds of purposes.
- * e.g. adding unique details to models, performing dynamic visual environmental changes or covering seams.
+/**
+ * gthree_geometry_new_decal:
  *
- * position — Position of the decal projector
- * orientation — Orientation of the decal projector
- * size — Size of the decal projector
- *
- * reference: http://blog.wolfire.com/2009/06/how-to-project-decals/
+ * Returns: (transfer full):
  */
 GthreeGeometry *
 gthree_geometry_new_decal (GthreeGeometry *original_geometry,

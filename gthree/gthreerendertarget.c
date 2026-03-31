@@ -145,6 +145,11 @@ gthree_render_target_new (int width,
   return target;
 }
 
+/**
+ * gthree_render_target_clone:
+ *
+ * Returns: (transfer full):
+ */
 GthreeRenderTarget *
 gthree_render_target_clone (GthreeRenderTarget *target)
 {
@@ -170,6 +175,11 @@ gthree_render_target_clone (GthreeRenderTarget *target)
   return clone;
 }
 
+/**
+ * gthree_render_target_get_texture:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_render_target_get_texture (GthreeRenderTarget *target)
 {
@@ -234,6 +244,11 @@ gthree_render_target_set_stencil_buffer (GthreeRenderTarget *target,
   priv->stencil_buffer = stencil_buffer;
 }
 
+/**
+ * gthree_render_target_get_depth_texture:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture *
 gthree_render_target_get_depth_texture (GthreeRenderTarget *target)
 {

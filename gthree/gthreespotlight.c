@@ -346,6 +346,11 @@ gthree_spot_light_set_target (GthreeSpotLight *spot,
     g_object_notify_by_pspec (G_OBJECT (spot), obj_props[PROP_TARGET]);
 }
 
+/**
+ * gthree_spot_light_get_target:
+ *
+ * Returns: (transfer none):
+ */
 GthreeObject *
 gthree_spot_light_get_target (GthreeSpotLight *spot)
 {

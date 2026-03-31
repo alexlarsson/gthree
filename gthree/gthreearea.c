@@ -205,6 +205,11 @@ gthree_area_new (GthreeScene *scene,
 
 }
 
+/**
+ * gthree_area_get_renderer:
+ *
+ * Returns: (transfer none):
+ */
 GthreeRenderer *
 gthree_area_get_renderer (GthreeArea *area)
 {
@@ -223,6 +228,11 @@ gthree_area_set_scene (GthreeArea *area,
     g_object_notify_by_pspec (G_OBJECT (area), obj_props[PROP_SCENE]);
 }
 
+/**
+ * gthree_area_get_scene:
+ *
+ * Returns: (transfer none):
+ */
 GthreeScene *
 gthree_area_get_scene (GthreeArea *area)
 {
@@ -241,6 +251,11 @@ gthree_area_set_camera (GthreeArea *area,
     g_object_notify_by_pspec (G_OBJECT (area), obj_props[PROP_CAMERA]);
 }
 
+/**
+ * gthree_area_get_camera:
+ *
+ * Returns: (transfer none):
+ */
 GthreeCamera *
 gthree_area_get_camera (GthreeArea *area)
 {

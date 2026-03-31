@@ -250,6 +250,11 @@ gthree_sprite_material_set_map (GthreeSpriteMaterial *sprite_material,
 }
 
 
+/**
+ * gthree_sprite_material_get_map:
+ *
+ * Returns: (transfer none):
+ */
 GthreeTexture  *
 gthree_sprite_material_get_map (GthreeSpriteMaterial *sprite_material)
 {

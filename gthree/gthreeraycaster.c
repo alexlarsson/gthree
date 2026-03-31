@@ -200,6 +200,12 @@ intersect_object (GthreeRaycaster *raycaster,
     }
 }
 
+/**
+ * gthree_raycaster_intersect_objects:
+ * @optional_target: (element-type GthreeRayIntersection):
+ *
+ * Returns: (transfer container) (element-type GthreeRayIntersection):
+ */
 GPtrArray *
 gthree_raycaster_intersect_objects (GthreeRaycaster *raycaster,
                                     GthreeObject **objects,
@@ -224,6 +230,12 @@ gthree_raycaster_intersect_objects (GthreeRaycaster *raycaster,
 }
 
 
+/**
+ * gthree_raycaster_intersect_object:
+ * @optional_target: (element-type GthreeRayIntersection):
+ *
+ * Returns: (transfer container) (element-type GthreeRayIntersection):
+ */
 GPtrArray *
 gthree_raycaster_intersect_object (GthreeRaycaster *raycaster,
                                    GthreeObject *object,

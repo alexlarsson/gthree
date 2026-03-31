@@ -86,6 +86,11 @@ gthree_skeleton_get_n_bones  (GthreeSkeleton *skeleton)
   return priv->bones->len;
 }
 
+/**
+ * gthree_skeleton_get_bone:
+ *
+ * Returns: (transfer none):
+ */
 GthreeBone *
 gthree_skeleton_get_bone (GthreeSkeleton *skeleton,
                           int           index)
@@ -95,6 +100,11 @@ gthree_skeleton_get_bone (GthreeSkeleton *skeleton,
   return g_ptr_array_index (priv->bones, index);
 }
 
+/**
+ * gthree_skeleton_get_bone_by_name:
+ *
+ * Returns: (transfer none):
+ */
 GthreeBone *
 gthree_skeleton_get_bone_by_name (GthreeSkeleton *skeleton,
                                   const char *name)

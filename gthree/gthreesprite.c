@@ -205,6 +205,11 @@ gthree_sprite_get_property (GObject *obj,
     }
 }
 
+/**
+ * gthree_sprite_get_material:
+ *
+ * Returns: (transfer none):
+ */
 GthreeMaterial *
 gthree_sprite_get_material (GthreeSprite *sprite)
 {

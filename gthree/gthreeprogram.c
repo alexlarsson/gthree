@@ -1029,6 +1029,11 @@ gthree_program_lookup_attribute_location_from_string (GthreeProgram *program,
                                                    g_quark_from_string (attribute));
 }
 
+/**
+ * gthree_program_get_attribute_locations:
+ *
+ * Returns: (transfer none):
+ */
 GHashTable *
 gthree_program_get_attribute_locations (GthreeProgram *program)
 {
@@ -1095,6 +1100,11 @@ gthree_program_priv_equal (GthreeProgramPrivate *a,
     gthree_program_parameters_equal (&a->params, &b->params);
 }
 
+/**
+ * gthree_program_cache_new:
+ *
+ * Returns: (skip) (transfer full):
+ */
 GthreeProgramCache *
 gthree_program_cache_new (void)
 {
@@ -1115,7 +1125,11 @@ gthree_program_cache_remove (GthreeProgramCache *cache, GthreeProgram *program)
   priv->cache = NULL;
 }
 
-/* Returns instance owned by cache */
+/**
+ * gthree_program_cache_get:
+ *
+ * Returns: (transfer none):
+ */
 GthreeProgram *
 gthree_program_cache_get (GthreeProgramCache *cache, GthreeShader *shader, GthreeProgramParameters *parameters, GthreeRenderer *renderer)
 {
