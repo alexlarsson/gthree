@@ -55,6 +55,7 @@ gthree_cube_texture_new_from_array (GdkPixbuf *pixbufs[6])
 static void
 gthree_cube_texture_init (GthreeCubeTexture *cube)
 {
+  gthree_texture_set_mapping (GTHREE_TEXTURE (cube), GTHREE_MAPPING_CUBE_REFLECTION);
 }
 
 static void
