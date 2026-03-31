@@ -68,7 +68,6 @@ typedef struct {
   gboolean sort_objects;
   GthreeToneMapping tone_mapping;
   float tone_mapping_exposure;
-  gboolean physically_correct_lights;
   gboolean shadowmap_enabled;
   gboolean shadowmap_auto_update;
   gboolean shadowmap_needs_update;
@@ -316,7 +315,6 @@ gthree_renderer_init (GthreeRenderer *renderer)
   priv->pixel_ratio = 1;
   priv->tone_mapping = GTHREE_TONE_MAPPING_NONE;
   priv->tone_mapping_exposure = 1.0;
-  priv->physically_correct_lights = FALSE;
   priv->shadowmap_type = GTHREE_SHADOW_MAP_TYPE_PCF;
   priv->shadowmap_enabled = FALSE;
   priv->shadowmap_auto_update = TRUE;
@@ -1564,7 +1562,6 @@ init_material (GthreeRenderer *renderer,
   parameters.precision = GTHREE_PRECISION_HIGH;
   parameters.supports_vertex_textures = priv->supports_vertex_textures;
   parameters.output_color_space = 1; /* sRGB */
-  parameters.physically_correct_lights = priv->physically_correct_lights;
 
   gthree_material_set_params (material, &parameters);
 

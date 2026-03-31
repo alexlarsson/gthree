@@ -5,12 +5,12 @@ add_dir_light (GthreeScene *scene)
 {
   graphene_vec3_t white;
   graphene_vec3_init (&white, 1, 1, 1);
-  GthreeDirectionalLight *light = gthree_directional_light_new (&white, 1);
+  GthreeDirectionalLight *light = gthree_directional_light_new (&white, G_PI);
   gthree_object_set_position_xyz (GTHREE_OBJECT (light), 1, 2, 3);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (light));
 
   graphene_vec3_t ambient_color;
-  GthreeAmbientLight *ambient = gthree_ambient_light_new (graphene_vec3_init (&ambient_color, 0.3, 0.3, 0.3));
+  GthreeAmbientLight *ambient = gthree_ambient_light_new (graphene_vec3_init (&ambient_color, 0.3 * G_PI, 0.3 * G_PI, 0.3 * G_PI));
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient));
 
   return light;

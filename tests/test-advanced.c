@@ -59,11 +59,11 @@ test_clipping (GthreeScene **scene, GthreeCamera **camera)
   gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (*camera));
 
   graphene_vec3_t white;
-  GthreeDirectionalLight *light = gthree_directional_light_new (graphene_vec3_init (&white, 1, 1, 1), 1);
+  GthreeDirectionalLight *light = gthree_directional_light_new (graphene_vec3_init (&white, 1, 1, 1), G_PI);
   gthree_object_set_position_xyz (GTHREE_OBJECT (light), 1, 2, 3);
   gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (light));
 
-  GthreeAmbientLight *ambient = gthree_ambient_light_new (graphene_vec3_init (&white, 0.3, 0.3, 0.3));
+  GthreeAmbientLight *ambient = gthree_ambient_light_new (graphene_vec3_init (&white, 0.3 * G_PI, 0.3 * G_PI, 0.3 * G_PI));
   gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (ambient));
 
   g_autoptr(GthreeMeshPhongMaterial) mat = gthree_mesh_phong_material_new ();
@@ -117,10 +117,10 @@ test_envmap_refraction (GthreeScene **scene, GthreeCamera **camera)
   gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (*camera));
 
   graphene_vec3_t white;
-  GthreeAmbientLight *ambient = gthree_ambient_light_new (graphene_vec3_init (&white, 1, 1, 1));
+  GthreeAmbientLight *ambient = gthree_ambient_light_new (graphene_vec3_init (&white, G_PI, G_PI, G_PI));
   gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (ambient));
 
-  GthreePointLight *point = gthree_point_light_new (graphene_vec3_init (&white, 1, 1, 1), 1, 0);
+  GthreePointLight *point = gthree_point_light_new (graphene_vec3_init (&white, 1, 1, 1), G_PI, 0);
   gthree_object_set_position_xyz (GTHREE_OBJECT (point), 2, 2, 2);
   gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (point));
 
@@ -151,10 +151,10 @@ setup_gltf_test (GthreeScene **scene, GthreeCamera **camera, const char *model_n
   graphene_vec3_t white;
   graphene_vec3_init (&white, 1, 1, 1);
   GthreeAmbientLight *ambient = gthree_ambient_light_new (&white);
-  gthree_light_set_intensity (GTHREE_LIGHT (ambient), 0.5);
+  gthree_light_set_intensity (GTHREE_LIGHT (ambient), 0.5 * G_PI);
   gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (ambient));
 
-  GthreeDirectionalLight *dir = gthree_directional_light_new (&white, 1);
+  GthreeDirectionalLight *dir = gthree_directional_light_new (&white, G_PI);
   gthree_object_set_position_xyz (GTHREE_OBJECT (dir), 1, 2, 3);
   gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (dir));
 
@@ -208,11 +208,11 @@ test_morph_target (GthreeScene **scene, GthreeCamera **camera)
   gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (*camera));
 
   graphene_vec3_t white;
-  GthreeDirectionalLight *light = gthree_directional_light_new (graphene_vec3_init (&white, 1, 1, 1), 1);
+  GthreeDirectionalLight *light = gthree_directional_light_new (graphene_vec3_init (&white, 1, 1, 1), G_PI);
   gthree_object_set_position_xyz (GTHREE_OBJECT (light), 1, 2, 3);
   gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (light));
 
-  GthreeAmbientLight *ambient = gthree_ambient_light_new (graphene_vec3_init (&white, 0.3, 0.3, 0.3));
+  GthreeAmbientLight *ambient = gthree_ambient_light_new (graphene_vec3_init (&white, 0.3 * G_PI, 0.3 * G_PI, 0.3 * G_PI));
   gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (ambient));
 
   g_autoptr(GthreeGeometry) geom = gthree_geometry_new_sphere (0.5, 16, 12);
@@ -266,10 +266,10 @@ test_skeletal_animation (GthreeScene **scene, GthreeCamera **camera)
   graphene_vec3_t white;
   graphene_vec3_init (&white, 1, 1, 1);
   GthreeAmbientLight *ambient = gthree_ambient_light_new (&white);
-  gthree_light_set_intensity (GTHREE_LIGHT (ambient), 0.5);
+  gthree_light_set_intensity (GTHREE_LIGHT (ambient), 0.5 * G_PI);
   gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (ambient));
 
-  GthreeDirectionalLight *dir = gthree_directional_light_new (&white, 1);
+  GthreeDirectionalLight *dir = gthree_directional_light_new (&white, G_PI);
   gthree_object_set_position_xyz (GTHREE_OBJECT (dir), 1, 2, 3);
   gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (dir));
 

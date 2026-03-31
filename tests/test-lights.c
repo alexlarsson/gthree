@@ -11,14 +11,14 @@ test_point_light (GthreeScene **scene, GthreeCamera **camera)
   graphene_vec3_t white, red, blue;
   graphene_vec3_init (&white, 1, 1, 1);
 
-  GthreeAmbientLight *ambient = gthree_ambient_light_new (graphene_vec3_init (&white, 0.1, 0.1, 0.1));
+  GthreeAmbientLight *ambient = gthree_ambient_light_new (graphene_vec3_init (&white, 0.1 * G_PI, 0.1 * G_PI, 0.1 * G_PI));
   gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (ambient));
 
-  GthreePointLight *light1 = gthree_point_light_new (graphene_vec3_init (&red, 1, 0, 0), 1, 0);
+  GthreePointLight *light1 = gthree_point_light_new (graphene_vec3_init (&red, 1, 0, 0), G_PI, 0);
   gthree_object_set_position_xyz (GTHREE_OBJECT (light1), 2, 1, 2);
   gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (light1));
 
-  GthreePointLight *light2 = gthree_point_light_new (graphene_vec3_init (&blue, 0, 0, 1), 1, 0);
+  GthreePointLight *light2 = gthree_point_light_new (graphene_vec3_init (&blue, 0, 0, 1), G_PI, 0);
   gthree_object_set_position_xyz (GTHREE_OBJECT (light2), -2, 1, 2);
   gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (light2));
 
@@ -42,7 +42,7 @@ test_hemisphere_light (GthreeScene **scene, GthreeCamera **camera)
   graphene_vec3_t sky, ground;
   GthreeHemisphereLight *hemi = gthree_hemisphere_light_new (
     graphene_vec3_init (&sky, 0.6, 0.8, 1.0),
-    graphene_vec3_init (&ground, 0.3, 0.2, 0.1), 1.0);
+    graphene_vec3_init (&ground, 0.3, 0.2, 0.1), G_PI);
   gthree_object_set_position_xyz (GTHREE_OBJECT (hemi), 0, 1, 0);
   gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (hemi));
 
@@ -69,10 +69,10 @@ test_shadow (GthreeScene **scene, GthreeCamera **camera)
   graphene_vec3_init (&white, 1, 1, 1);
 
   GthreeAmbientLight *ambient = gthree_ambient_light_new (&white);
-  gthree_light_set_intensity (GTHREE_LIGHT (ambient), 0.3);
+  gthree_light_set_intensity (GTHREE_LIGHT (ambient), 0.3 * G_PI);
   gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (ambient));
 
-  GthreeDirectionalLight *dir = gthree_directional_light_new (&white, 1);
+  GthreeDirectionalLight *dir = gthree_directional_light_new (&white, G_PI);
   gthree_object_set_position_xyz (GTHREE_OBJECT (dir), 2, 4, 3);
   gthree_object_set_cast_shadow (GTHREE_OBJECT (dir), TRUE);
   gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (dir));

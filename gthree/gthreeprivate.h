@@ -110,7 +110,6 @@ struct  _GthreeProgramParameters {
   guint shadow_map_enabled : 1;
   guint shadow_map_type : 2;
   guint tone_mapping : 3;
-  guint physically_correct_lights : 1;
   guint double_sided : 1;
   guint flip_sided : 1;
   guint depth_packing : 2;

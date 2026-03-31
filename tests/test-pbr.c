@@ -10,10 +10,10 @@ add_envmap_lights (GthreeScene *scene)
   graphene_vec3_init (&white, 1, 1, 1);
 
   GthreeAmbientLight *ambient = gthree_ambient_light_new (&white);
-  gthree_light_set_intensity (GTHREE_LIGHT (ambient), 0.4);
+  gthree_light_set_intensity (GTHREE_LIGHT (ambient), 0.4 * G_PI);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (ambient));
 
-  GthreeDirectionalLight *dir = gthree_directional_light_new (&white, 1);
+  GthreeDirectionalLight *dir = gthree_directional_light_new (&white, G_PI);
   gthree_object_set_position_xyz (GTHREE_OBJECT (dir), 2, 3, 4);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (dir));
 }

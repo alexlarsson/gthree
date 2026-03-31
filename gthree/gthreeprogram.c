@@ -798,9 +798,6 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
       if (parameters->premultiplied_alpha)
         g_string_append (fragment, "#define PREMULTIPLIED_ALPHA\n");
 
-      if (parameters->physically_correct_lights)
-        g_string_append (fragment, "#define PHYSICALLY_CORRECT_LIGHTS\n");
-
       if (parameters->logarithmic_depth_buffer)
         {
           g_string_append (fragment, "#define USE_LOGDEPTHBUF\n");

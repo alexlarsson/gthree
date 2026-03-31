@@ -10,10 +10,6 @@ void RE_Direct_Toon( const in IncidentLight directLight, const in vec3 geometryP
 
 	vec3 irradiance = getGradientIrradiance( geometryNormal, directLight.direction ) * directLight.color;
 
-	#ifndef PHYSICALLY_CORRECT_LIGHTS
-		irradiance *= PI;
-	#endif
-
 	reflectedLight.directDiffuse += irradiance * BRDF_Lambert( material.diffuseColor );
 
 }

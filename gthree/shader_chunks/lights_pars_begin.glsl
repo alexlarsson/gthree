@@ -48,42 +48,24 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 
 	vec3 irradiance = ambientLightColor;
 
-	#ifndef PHYSICALLY_CORRECT_LIGHTS
-		irradiance *= PI;
-	#endif
-
 	return irradiance;
 
 }
 
 float getDistanceAttenuation( const in float lightDistance, const in float cutoffDistance, const in float decayExponent ) {
 
-	#ifdef PHYSICALLY_CORRECT_LIGHTS
+	// based upon Frostbite 3 Moving to Physically-based Rendering
+	// page 32, equation 26: E[window1]
+	// https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf
+	float distanceFalloff = 1.0 / max( pow( lightDistance, decayExponent ), 0.01 );
 
-		// based upon Frostbite 3 Moving to Physically-based Rendering
-		// page 32, equation 26: E[window1]
-		// https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf
-		float distanceFalloff = 1.0 / max( pow( lightDistance, decayExponent ), 0.01 );
+	if ( cutoffDistance > 0.0 ) {
 
-		if ( cutoffDistance > 0.0 ) {
+		distanceFalloff *= pow2( saturate( 1.0 - pow4( lightDistance / cutoffDistance ) ) );
 
-			distanceFalloff *= pow2( saturate( 1.0 - pow4( lightDistance / cutoffDistance ) ) );
+	}
 
-		}
-
-		return distanceFalloff;
-
-	#else
-
-		if ( cutoffDistance > 0.0 && decayExponent > 0.0 ) {
-
-			return pow( saturate( - lightDistance / cutoffDistance + 1.0 ), decayExponent );
-
-		}
-
-		return 1.0;
-
-	#endif
+	return distanceFalloff;
 
 }
 
@@ -222,10 +204,6 @@ float getSpotAttenuation( const in float coneCosine, const in float penumbraCosi
 		float hemiDiffuseWeight = 0.5 * dotNL + 0.5;
 
 		vec3 irradiance = mix( hemiLight.groundColor, hemiLight.skyColor, hemiDiffuseWeight );
-
-		#ifndef PHYSICALLY_CORRECT_LIGHTS
-			irradiance *= PI;
-		#endif
 
 		return irradiance;
 
