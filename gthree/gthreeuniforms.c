@@ -503,10 +503,10 @@ gthree_uniform_copy_value (GthreeUniform   *uniform,
         }
       break;
     case GTHREE_UNIFORM_TYPE_MATRIX3:
-      uniform->value.more_floats = g_memdup (uniform->value.more_floats, sizeof (float) * 9);
+      uniform->value.more_floats = g_memdup2 (uniform->value.more_floats, sizeof (float) * 9);
       break;
     case GTHREE_UNIFORM_TYPE_MATRIX4:
-      uniform->value.more_floats = g_memdup (uniform->value.more_floats, sizeof (float) * 16);
+      uniform->value.more_floats = g_memdup2 (uniform->value.more_floats, sizeof (float) * 16);
       break;
     case GTHREE_UNIFORM_TYPE_INT:
     case GTHREE_UNIFORM_TYPE_FLOAT:
@@ -578,10 +578,10 @@ gthree_uniform_clone (GthreeUniform *uniform)
         }
       break;
     case GTHREE_UNIFORM_TYPE_MATRIX3:
-      clone->value.more_floats = g_memdup (clone->value.more_floats, sizeof (float) * 9);
+      clone->value.more_floats = g_memdup2 (clone->value.more_floats, sizeof (float) * 9);
       break;
     case GTHREE_UNIFORM_TYPE_MATRIX4:
-      clone->value.more_floats = g_memdup (clone->value.more_floats, sizeof (float) * 16);
+      clone->value.more_floats = g_memdup2 (clone->value.more_floats, sizeof (float) * 16);
       break;
     case GTHREE_UNIFORM_TYPE_INT:
     case GTHREE_UNIFORM_TYPE_FLOAT:
@@ -1131,7 +1131,7 @@ gthree_uniforms_new_from_definitions (GthreeUniformsDefinition *element, int len
               uniform->value.floats[3] = ((float *)value)[3];
               break;
             case GTHREE_UNIFORM_TYPE_MATRIX3:
-              uniform->value.more_floats = g_memdup (value, sizeof (float) * 9);
+              uniform->value.more_floats = g_memdup2 (value, sizeof (float) * 9);
               break;
             default:
               g_error ("Unsupported type %d in uniform library\n", element->type);
