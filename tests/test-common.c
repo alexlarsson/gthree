@@ -136,6 +136,7 @@ typedef struct {
   gboolean interactive;
   TestRendererFunc renderer_setup;
   gboolean renderer_configured;
+  gboolean size_adjusted;
 } RenderData;
 
 static gboolean
@@ -160,8 +161,9 @@ on_render (GtkGLArea *gl_area, GdkGLContext *context, gpointer user_data)
 
   if (data->output_file && !data->done)
     {
-      int width = gtk_widget_get_width (GTK_WIDGET (area));
-      int height = gtk_widget_get_height (GTK_WIDGET (area));
+      int scale = gtk_widget_get_scale_factor (GTK_WIDGET (area));
+      int width = gtk_widget_get_width (GTK_WIDGET (area)) * scale;
+      int height = gtk_widget_get_height (GTK_WIDGET (area)) * scale;
 
       if (width > 0 && height > 0)
         {
@@ -175,7 +177,7 @@ on_render (GtkGLArea *gl_area, GdkGLContext *context, gpointer user_data)
                     width * 4);
 
           GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data (flipped, GDK_COLORSPACE_RGB, TRUE, 8,
-                                                          width, height, width * 4, NULL, NULL);
+                                                         width, height, width * 4, NULL, NULL);
           g_autoptr(GError) error = NULL;
           if (!gdk_pixbuf_savev (pixbuf, data->output_file, "png", NULL, NULL, &error))
             g_warning ("Failed to save %s: %s", data->output_file, error->message);
@@ -239,7 +241,6 @@ run_test (TestCase *test, const char *output_file, gboolean interactive, int tim
 
   window = gtk_window_new ();
   gtk_window_set_title (GTK_WINDOW (window), test->name);
-  gtk_window_set_default_size (GTK_WINDOW (window), TEST_WIDTH, TEST_HEIGHT);
 
   area = gthree_area_new (scene, camera);
   g_signal_connect (area, "render", G_CALLBACK (on_render), &data);
@@ -248,6 +249,7 @@ run_test (TestCase *test, const char *output_file, gboolean interactive, int tim
 
   g_signal_connect (window, "close-request", G_CALLBACK (on_close_request), &data);
 
+  gtk_widget_set_size_request (area, TEST_WIDTH, TEST_HEIGHT);
   gtk_window_present (GTK_WINDOW (window));
 
   if (interactive && timeout_ms > 0)
