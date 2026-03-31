@@ -77,6 +77,17 @@ test_shadow (GthreeScene **scene, GthreeCamera **camera)
   gthree_object_set_cast_shadow (GTHREE_OBJECT (dir), TRUE);
   gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (dir));
 
+  {
+    GthreeLightShadow *shadow = gthree_light_get_shadow (GTHREE_LIGHT (dir));
+    GthreeCamera *shadow_cam = gthree_light_shadow_get_camera (shadow);
+    gthree_orthographic_camera_set_left (GTHREE_ORTHOGRAPHIC_CAMERA (shadow_cam), -10);
+    gthree_orthographic_camera_set_right (GTHREE_ORTHOGRAPHIC_CAMERA (shadow_cam), 10);
+    gthree_orthographic_camera_set_top (GTHREE_ORTHOGRAPHIC_CAMERA (shadow_cam), 10);
+    gthree_orthographic_camera_set_bottom (GTHREE_ORTHOGRAPHIC_CAMERA (shadow_cam), -10);
+    gthree_camera_set_near (shadow_cam, 0.1);
+    gthree_camera_set_far (shadow_cam, 50);
+  }
+
   g_autoptr(GthreeMeshPhongMaterial) sphere_mat = gthree_mesh_phong_material_new ();
   graphene_vec3_t red;
   gthree_mesh_phong_material_set_color (sphere_mat, graphene_vec3_init (&red, 0.8, 0.2, 0.2));
