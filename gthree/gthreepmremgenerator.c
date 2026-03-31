@@ -331,9 +331,13 @@ ggx_filter_color (GdkPixbuf **pixbufs, const float *N, float roughness, float *r
 }
 
 /* Roughness for each LOD level. Must match the inverse of roughnessToMip()
-   in cube_uv_reflection_fragment.glsl. The PMREM layout stores the most
-   blurred (highest roughness) at full resolution (lod_idx 0, mip -2) and
-   the sharpest (lowest roughness) at the smallest extra-filtered levels. */
+   in cube_uv_reflection_fragment.glsl.
+
+   Layout: LOD 0 is the sharpest (sigma=0, roughness=0) at filterInt=0.
+   Main LODs (0 to lodMax-LOD_MIN) have decreasing face sizes with increasing
+   roughness. Extra LODs (at MIN_TILE_SIZE) continue with filterInt=1,2,...
+   and roughness values matching the roughnessToMip inverse at each integer
+   filterInt boundary. */
 static float
 lod_roughness (int lod_idx, int lod_max)
 {
@@ -341,24 +345,26 @@ lod_roughness (int lod_idx, int lod_max)
 
   if (lod_idx < num_main_lods)
     {
-      /* Main LODs: mip = -2 + lod_idx
-         roughnessToMip inverse:
-         mip -2 -> r=1.0, mip -1 -> r=0.8, mip 0 -> r=0.667,
-         mip 1 -> r=0.533, mip 2 -> r=0.4 */
-      static const float main_roughness[] = { 1.0f, 0.8f, 0.667f, 0.533f, 0.4f };
+      if (lod_idx == 0)
+        return 0.0f;
+
+      /* Intermediate main LODs: roughness increases as face size decreases.
+         These map to filterInt=0 with varying faceSize. */
+      static const float main_roughness[] = { 0.0f, 0.1f, 0.21f };
       if (lod_idx < (int)G_N_ELEMENTS (main_roughness))
         return main_roughness[lod_idx];
-      return 0.4f;
+      return 0.21f;
     }
   else
     {
-      /* Extra LODs at MIN_TILE_SIZE: mip 3 -> r=0.305, mip 4 -> r=0.21,
-         then progressively sharper */
+      /* Extra LODs at MIN_TILE_SIZE with filterInt = 1,2,...,6.
+         Roughness increases: these are the inverse of roughnessToMip()
+         at integer mip values (3, 2, 1, 0, -1, -2). */
       int extra_idx = lod_idx - num_main_lods;
-      static const float extra_roughness[] = { 0.305f, 0.21f, 0.15f, 0.1f, 0.05f, 0.0f };
+      static const float extra_roughness[] = { 0.305f, 0.4f, 0.533f, 0.667f, 0.8f, 1.0f };
       if (extra_idx < (int)G_N_ELEMENTS (extra_roughness))
         return extra_roughness[extra_idx];
-      return 0.0f;
+      return 1.0f;
     }
 }
 
