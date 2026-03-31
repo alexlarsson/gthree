@@ -2683,10 +2683,9 @@ set_program (GthreeRenderer *renderer,
     }
   else
     {
-      // We always reload the clipping planes because it may change outside of the material
-      GthreeUniform *uni =  gthree_uniforms_lookup (m_uniforms, q_clippingPlanes);
-      if (uni)
-        gthree_uniform_load (uni, renderer);
+      // Always reload uniforms (including textures) to keep texture unit
+      // bindings consistent, matching three.js behavior
+      gthree_uniforms_load (m_uniforms, renderer);
     }
 
   {
