@@ -379,6 +379,7 @@ gthree_pmrem_generator_from_cubemap (GthreePMREMGenerator *generator,
 {
   GthreePMREMGeneratorPrivate *priv = gthree_pmrem_generator_get_instance_private (generator);
   GdkPixbuf *pixbufs[6];
+  gboolean pixbufs_scaled = FALSE;
   int cube_size, lod_max;
   int tex_width, tex_height;
   float *buffer;
@@ -390,6 +391,20 @@ gthree_pmrem_generator_from_cubemap (GthreePMREMGenerator *generator,
     pixbufs[i] = gthree_cube_texture_get_face_pixbuf (cubemap, i);
 
   cube_size = gdk_pixbuf_get_width (pixbufs[0]);
+
+  /* Cap input size to avoid extremely slow CPU-side GGX filtering.
+     Three.js uses GPU rendering so it handles large sizes efficiently;
+     our CPU path would take minutes for 1024+ faces. */
+  if (cube_size > 256)
+    {
+      for (int i = 0; i < 6; i++)
+        {
+          GdkPixbuf *scaled = gdk_pixbuf_scale_simple (pixbufs[i], 256, 256, GDK_INTERP_BILINEAR);
+          pixbufs[i] = scaled;
+        }
+      cube_size = 256;
+      pixbufs_scaled = TRUE;
+    }
 
   lod_max = (int)floor (log2 (cube_size));
   cube_size = 1 << lod_max;
@@ -525,6 +540,10 @@ gthree_pmrem_generator_from_cubemap (GthreePMREMGenerator *generator,
 
   g_free (buffer);
   g_free (size_lods);
+
+  if (pixbufs_scaled)
+    for (int i = 0; i < 6; i++)
+      g_object_unref (pixbufs[i]);
 
   priv->texture_width = tex_width;
   priv->texture_height = tex_height;
