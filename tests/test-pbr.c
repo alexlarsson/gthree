@@ -278,6 +278,35 @@ test_physical_ior (GthreeScene **scene, GthreeCamera **camera)
     }
 }
 
+/* Simplified WaterBottle body: gold metallic sphere at various roughness */
+static void
+test_standard_gold_metallic (GthreeScene **scene, GthreeCamera **camera)
+{
+  *scene = gthree_scene_new ();
+  *camera = GTHREE_CAMERA (gthree_perspective_camera_new (45, 4.0/3.0, 0.1, 100));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (*camera), 0, 0, 3.5);
+  gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (*camera));
+
+  add_envmap_lights (*scene);
+
+  g_autoptr(GthreeGeometry) geom = gthree_geometry_new_sphere (0.4, 32, 16);
+
+  /* Roughness: 0.1, 0.3, 0.6, 1.0 — all at metalness 1.0, gold color */
+  float roughness[] = { 0.1, 0.3, 0.6, 1.0 };
+  for (int i = 0; i < 4; i++)
+    {
+      g_autoptr(GthreeMeshStandardMaterial) mat = gthree_mesh_standard_material_new ();
+      graphene_vec3_t gold;
+      gthree_mesh_standard_material_set_color (mat, graphene_vec3_init (&gold, 0.7, 0.55, 0.15));
+      gthree_mesh_standard_material_set_metalness (mat, 1.0);
+      gthree_mesh_standard_material_set_roughness (mat, roughness[i]);
+
+      GthreeMesh *mesh = gthree_mesh_new (geom, GTHREE_MATERIAL (mat));
+      gthree_object_set_position_xyz (GTHREE_OBJECT (mesh), (i - 1.5) * 1.0, 0, 0);
+      gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (mesh));
+    }
+}
+
 void
 register_pbr_tests (void)
 {
@@ -289,4 +318,5 @@ register_pbr_tests (void)
   register_test ("physical-transmission", test_physical_transmission);
   register_test ("physical-iridescence", test_physical_iridescence);
   register_test ("physical-ior", test_physical_ior);
+  register_test ("standard-gold-metallic", test_standard_gold_metallic);
 }
