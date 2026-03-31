@@ -550,6 +550,8 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
         g_string_append (vertex, "#define USE_SHEEN_COLORMAP\n");
       if (parameters->sheen_roughness_map)
         g_string_append (vertex, "#define USE_SHEEN_ROUGHNESSMAP\n");
+      if (parameters->transmission)
+        g_string_append (vertex, "#define USE_TRANSMISSION\n");
       if (parameters->transmission_map)
         g_string_append (vertex, "#define USE_TRANSMISSIONMAP\n");
       if (parameters->thickness_map)

@@ -2,6 +2,16 @@ PhysicalMaterial material;
 material.diffuseColor = diffuseColor.rgb;
 material.diffuseContribution = diffuseColor.rgb * ( 1.0 - metalnessFactor );
 material.metalness = metalnessFactor;
+#ifdef USE_DISPERSION
+material.dispersion = 0.0;
+#endif
+#ifdef USE_TRANSMISSION
+material.transmission = 0.0;
+material.transmissionAlpha = 1.0;
+material.thickness = 0.0;
+material.attenuationDistance = 0.0;
+material.attenuationColor = vec3( 1.0 );
+#endif
 
 vec3 dxy = max( abs( dFdx( nonPerturbedNormal ) ), abs( dFdy( nonPerturbedNormal ) ) );
 float geometryRoughness = max( max( dxy.x, dxy.y ), dxy.z );
