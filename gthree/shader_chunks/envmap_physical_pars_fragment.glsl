@@ -11,6 +11,7 @@
 			return PI * envMapColor.rgb * envMapIntensity;
 
 		#elif defined( ENVMAP_TYPE_CUBE )
+                        // GTHREE: This should eventually be replaced by the CUBE_UV code when we can auto-convert (its not in three.js anymore)
 
 			vec3 worldNormal = inverseTransformDirection( normal, viewMatrix );
 
@@ -46,6 +47,7 @@
 			return envMapColor.rgb * envMapIntensity;
 
 		#elif defined( ENVMAP_TYPE_CUBE )
+                        // GTHREE: This should eventually be replaced by the CUBE_UV code when we can auto-convert (its not in three.js anymore)
 
 			vec3 reflectVec = reflect( - viewDir, normal );
 
