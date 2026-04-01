@@ -10,6 +10,18 @@
 
 			return PI * envMapColor.rgb * envMapIntensity;
 
+		#elif defined( ENVMAP_TYPE_CUBE )
+
+			vec3 worldNormal = inverseTransformDirection( normal, viewMatrix );
+
+			vec3 cubeWorldNormal = inverseTransformDirection( normal, viewMatrix );
+
+			vec3 queryVec = vec3( flipEnvMap * cubeWorldNormal.x, cubeWorldNormal.yz );
+
+			vec4 envMapColor = textureCube( envMap, envMapRotation * queryVec );
+
+			return PI * envMapColor.rgb * envMapIntensity;
+
 		#else
 
 			return vec3( 0.0 );
@@ -30,6 +42,24 @@
 			reflectVec = inverseTransformDirection( reflectVec, viewMatrix );
 
 			vec4 envMapColor = textureCubeUV( envMap, envMapRotation * reflectVec, roughness );
+
+			return envMapColor.rgb * envMapIntensity;
+
+		#elif defined( ENVMAP_TYPE_CUBE )
+
+			vec3 reflectVec = reflect( - viewDir, normal );
+
+			reflectVec = normalize( mix( reflectVec, normal, pow4( roughness ) ) );
+
+			reflectVec = inverseTransformDirection( reflectVec, viewMatrix );
+
+			vec3 cubeReflectVec = reflect( - viewDir, normal );
+			cubeReflectVec = normalize( mix( cubeReflectVec, normal, pow4( roughness ) ) );
+			cubeReflectVec = inverseTransformDirection( cubeReflectVec, viewMatrix );
+
+			vec3 queryVec = vec3( flipEnvMap * cubeReflectVec.x, cubeReflectVec.yz );
+
+			vec4 envMapColor = textureCube( envMap, envMapRotation * queryVec );
 
 			return envMapColor.rgb * envMapIntensity;
 
