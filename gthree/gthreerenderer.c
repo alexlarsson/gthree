@@ -44,6 +44,36 @@ typedef struct {
   float z;
 } GthreeRenderListItem;
 
+#define MAX_VAO_ATTRIBUTES 8
+
+typedef struct {
+  GthreeGeometry *geometry; /* non-owning */
+  GthreeProgram *program;   /* non-owning */
+  gboolean wireframe;
+} VaoKey;
+
+typedef struct {
+  VaoKey key;
+  guint vao;
+  int n_cached_buffers;
+  guint cached_buffers[MAX_VAO_ATTRIBUTES];
+  guint cached_index_buffer;
+} VaoEntry;
+
+static guint
+vao_key_hash (gconstpointer v)
+{
+  const VaoKey *key = v;
+  return g_direct_hash (key->geometry) ^ g_direct_hash (key->program) ^ key->wireframe;
+}
+
+static gboolean
+vao_key_equal (gconstpointer v1, gconstpointer v2)
+{
+  const VaoKey *a = v1, *b = v2;
+  return a->geometry == b->geometry && a->program == b->program && a->wireframe == b->wireframe;
+}
+
 struct _GthreeRenderList {
   float current_z;
   gboolean use_background;
@@ -126,14 +156,7 @@ typedef struct {
   guint old_local_clipping_enabled;
   gboolean rendering_shadows;
 
-  GthreeGeometry *current_geometry_program_geometry;
-  GthreeProgram *current_geometry_program_program;
-  gboolean current_geometry_program_wireframe;
-
   GthreeRenderList *current_render_list;
-
-  guint8 new_attributes[8];
-  guint8 enabled_attributes[8];
 
   int max_textures;
   int max_vertex_textures;
@@ -144,7 +167,9 @@ typedef struct {
   gboolean supports_vertex_textures;
   gboolean supports_bone_textures;
 
-  guint vertex_array_object;
+  GHashTable *vao_cache; /* VaoKey -> VaoEntry */
+  GHashTable *vao_geometries; /* set of GthreeGeometry* with weak refs */
+  guint bound_vao;
 
   guint dfg_lut_texture;
 
@@ -356,9 +381,9 @@ gthree_renderer_init (GthreeRenderer *renderer)
 
   gthree_set_default_gl_state (renderer);
 
-  /* We only use one vao, so bind it here */
-  glGenVertexArrays (1, &priv->vertex_array_object);
-  glBindVertexArray (priv->vertex_array_object);
+  priv->vao_cache = g_hash_table_new (vao_key_hash, vao_key_equal);
+  priv->vao_geometries = g_hash_table_new (g_direct_hash, g_direct_equal);
+  priv->bound_vao = 0;
 
   // GPU capabilities
   glGetIntegerv (GL_MAX_TEXTURE_IMAGE_UNITS, &priv->max_textures);
@@ -395,6 +420,72 @@ release_resource_id (guint32 resource_id)
   g_array_insert_val (free_resource_ids, i, resource_id);
 }
 
+/* GL_ELEMENT_ARRAY_BUFFER is part of VAO state, so any glBindBuffer
+   call for it while a VAO is bound will modify that VAO. This must be
+   called before any code path that uploads index buffer data (i.e.
+   gthree_geometry_update / gthree_attribute_update with
+   GL_ELEMENT_ARRAY_BUFFER) outside of VAO setup. */
+static inline void
+unbind_vao (GthreeRenderer *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  if (priv->bound_vao != 0)
+    {
+      glBindVertexArray (0);
+      priv->bound_vao = 0;
+    }
+}
+
+static void
+vao_cache_remove_for_geometry (gpointer data,
+                               GObject *where_the_geometry_was)
+{
+  GthreeRenderer *renderer = data;
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  GHashTableIter iter;
+  gpointer value;
+
+  g_hash_table_remove (priv->vao_geometries, where_the_geometry_was);
+
+  g_hash_table_iter_init (&iter, priv->vao_cache);
+  while (g_hash_table_iter_next (&iter, NULL, &value))
+    {
+      VaoEntry *entry = value;
+      if ((gpointer) entry->key.geometry == (gpointer) where_the_geometry_was)
+        {
+          gthree_renderer_lazy_delete (renderer, GTHREE_RESOURCE_KIND_VERTEX_ARRAY, entry->vao);
+          if (priv->bound_vao == entry->vao)
+            priv->bound_vao = 0;
+          g_free (entry);
+          g_hash_table_iter_remove (&iter);
+        }
+    }
+}
+
+static void
+vao_cache_unrealize (GthreeRenderer *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  GHashTableIter iter;
+  gpointer key, value;
+
+  g_hash_table_iter_init (&iter, priv->vao_cache);
+  while (g_hash_table_iter_next (&iter, NULL, &value))
+    {
+      VaoEntry *entry = value;
+      glDeleteVertexArrays (1, &entry->vao);
+      g_free (entry);
+    }
+  g_hash_table_remove_all (priv->vao_cache);
+
+  g_hash_table_iter_init (&iter, priv->vao_geometries);
+  while (g_hash_table_iter_next (&iter, &key, NULL))
+    g_object_weak_unref (G_OBJECT (key), vao_cache_remove_for_geometry, renderer);
+  g_hash_table_remove_all (priv->vao_geometries);
+
+  priv->bound_vao = 0;
+}
+
 static void
 gthree_renderer_finalize (GObject *obj)
 {
@@ -402,9 +493,14 @@ gthree_renderer_finalize (GObject *obj)
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
 
   g_assert (priv->realized_resources->len == 0);
+  g_assert (g_hash_table_size (priv->vao_cache) == 0);
+  g_assert (g_hash_table_size (priv->vao_geometries) == 0);
 
   /* TODO: Drop these, should not be needed, and if they are, move that to unrealize */
   gthree_renderer_push_current (renderer);
+
+  g_hash_table_unref (priv->vao_cache);
+  g_hash_table_unref (priv->vao_geometries);
 
   g_clear_object (&priv->current_render_target);
 
@@ -547,6 +643,9 @@ do_delete (GthreeResourceKind kind,
     case GTHREE_RESOURCE_KIND_RENDERBUFFER:
       glDeleteRenderbuffers (1, &id);
       break;
+    case GTHREE_RESOURCE_KIND_VERTEX_ARRAY:
+      glDeleteVertexArrays (1, &id);
+      break;
     }
 }
 
@@ -608,6 +707,8 @@ gthree_renderer_unrealize (GthreeRenderer *renderer)
 
       /* TEST */ g_assert (!g_ptr_array_find (priv->realized_resources, resource, NULL));
     }
+
+  vao_cache_unrealize (renderer);
 
   gthree_renderer_flush_deletes (renderer);
 
@@ -2065,6 +2166,7 @@ shadow_map_render_object (GthreeRenderer *renderer,
           gboolean uses_groups = FALSE;
 
           gthree_object_update_matrix_view (object, gthree_camera_get_world_inverse_matrix (shadow_camera));
+          unbind_vao (renderer);
           gthree_object_update (object, renderer);
 
           // TODO: Abstract this out into vfuncs
@@ -2754,56 +2856,17 @@ set_program (GthreeRenderer *renderer,
 }
 
 static void
-init_attributes (GthreeRenderer *renderer)
-{
-  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
-  int i;
-
-  for (i = 0; i < G_N_ELEMENTS(priv->new_attributes); i++)
-    priv->new_attributes[i] = 0;
-}
-
-static void
-enable_attribute (GthreeRenderer *renderer,
-                  guint attribute)
-{
-  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
-
-  priv->new_attributes[attribute] = 1;
-  if (priv->enabled_attributes[attribute] == 0)
-    {
-      glEnableVertexAttribArray(attribute);
-      priv->enabled_attributes[attribute] = 1;
-    }
-}
-
-static void
-disable_unused_attributes (GthreeRenderer *renderer)
-{
-  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
-  int i;
-
-  for (i = 0; i < G_N_ELEMENTS(priv->new_attributes); i++)
-    {
-      if (priv->enabled_attributes[i] != priv->new_attributes[i])
-        {
-          glDisableVertexAttribArray(i);
-          priv->enabled_attributes[i] = 0;
-        }
-    }
-}
-
-static void
-setup_vertex_attributes (GthreeRenderer *renderer,
-                         GthreeMaterial *material,
-                         GthreeProgram *program,
-                         GthreeGeometry *geometry)
+bind_vertex_attributes (GthreeRenderer *renderer,
+                        GthreeMaterial *material,
+                        GthreeProgram *program,
+                        GthreeGeometry *geometry,
+                        guint *out_buffers,
+                        int *out_n_buffers)
 {
   GHashTable *program_attributes;
   GHashTableIter iter;
   gpointer key, value;
-
-  init_attributes (renderer);
+  int n_buffers = 0;
 
   program_attributes = gthree_program_get_attribute_locations (program);
 
@@ -2828,22 +2891,12 @@ setup_vertex_attributes (GthreeRenderer *renderer,
               int type = gthree_attribute_get_gl_type (geometry_attribute);
               int bytes_per_element = gthree_attribute_get_gl_bytes_per_element (geometry_attribute);
 
-              /*
-                if ( geometryAttribute.isInstancedBufferAttribute )
-                {
-                state.enableAttributeAndDivisor( programAttribute, geometryAttribute.meshPerAttribute );
-                if ( geometry.maxInstancedCount === undefined )
-                {
-                geometry.maxInstancedCount = geometryAttribute.meshPerAttribute * geometryAttribute.count;
-                }
-                }
-                else
-              */
-              {
-                enable_attribute (renderer, program_attribute);
-              }
+              glEnableVertexAttribArray (program_attribute);
               glBindBuffer (GL_ARRAY_BUFFER, buffer);
               glVertexAttribPointer (program_attribute, size, type, normalized, stride * bytes_per_element, GINT_TO_POINTER (offset * bytes_per_element));
+
+              if (out_buffers && n_buffers < MAX_VAO_ATTRIBUTES)
+                out_buffers[n_buffers++] = buffer;
             }
           else
             {
@@ -2852,9 +2905,100 @@ setup_vertex_attributes (GthreeRenderer *renderer,
         }
     }
 
+  if (out_n_buffers)
+    *out_n_buffers = n_buffers;
+}
 
+static gboolean
+vao_entry_is_valid (VaoEntry *entry,
+                    GthreeRenderer *renderer,
+                    GthreeMaterial *material,
+                    GthreeProgram *program,
+                    GthreeGeometry *geometry,
+                    GthreeAttribute *index)
+{
+  GHashTable *program_attributes;
+  GHashTableIter iter;
+  gpointer key, value;
+  guint index_buffer;
+  int n = 0;
 
-  disable_unused_attributes (renderer);
+  index_buffer = index ? (guint) gthree_attribute_get_gl_buffer (index, renderer) : 0;
+  if (index_buffer != entry->cached_index_buffer)
+    return FALSE;
+
+  program_attributes = gthree_program_get_attribute_locations (program);
+  g_hash_table_iter_init (&iter, program_attributes);
+  while (g_hash_table_iter_next (&iter, &key, &value))
+    {
+      int program_attribute = GPOINTER_TO_INT (value);
+      if (program_attribute >= 0)
+        {
+          const char *name = g_quark_to_string (GPOINTER_TO_INT (key));
+          GthreeAttribute *geometry_attribute = gthree_geometry_get_attribute (geometry, name);
+          if (geometry_attribute != NULL)
+            {
+              guint buffer = gthree_attribute_get_gl_buffer (geometry_attribute, renderer);
+              if (n >= entry->n_cached_buffers || buffer != entry->cached_buffers[n])
+                return FALSE;
+              n++;
+            }
+        }
+    }
+
+  return n == entry->n_cached_buffers;
+}
+
+static void
+setup_vertex_attributes (GthreeRenderer *renderer,
+                         GthreeMaterial *material,
+                         GthreeProgram *program,
+                         GthreeGeometry *geometry,
+                         gboolean wireframe,
+                         GthreeAttribute *index)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  VaoKey lookup_key = { geometry, program, wireframe };
+  VaoEntry *entry;
+  gboolean need_setup = FALSE;
+
+  entry = g_hash_table_lookup (priv->vao_cache, &lookup_key);
+
+  if (entry != NULL)
+    {
+      if (!vao_entry_is_valid (entry, renderer, material, program, geometry, index))
+        need_setup = TRUE;
+    }
+  else
+    {
+      entry = g_new0 (VaoEntry, 1);
+      entry->key = lookup_key;
+      glGenVertexArrays (1, &entry->vao);
+      g_hash_table_insert (priv->vao_cache, &entry->key, entry);
+
+      if (g_hash_table_add (priv->vao_geometries, geometry))
+        g_object_weak_ref (G_OBJECT (geometry), vao_cache_remove_for_geometry, renderer);
+
+      need_setup = TRUE;
+    }
+
+  if (entry->vao != priv->bound_vao)
+    {
+      glBindVertexArray (entry->vao);
+      priv->bound_vao = entry->vao;
+    }
+
+  if (need_setup)
+    {
+      guint index_buffer = index ? (guint) gthree_attribute_get_gl_buffer (index, renderer) : 0;
+
+      bind_vertex_attributes (renderer, material, program, geometry,
+                              entry->cached_buffers, &entry->n_cached_buffers);
+      entry->cached_index_buffer = index_buffer;
+
+      if (index)
+        glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, index_buffer);
+    }
 }
 
 //	var influencesList = {};
@@ -2924,13 +3068,11 @@ render_item (GthreeRenderer *renderer,
              GthreeMaterial *material,
              GthreeRenderListItem *item)
 {
-  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
   GthreeGeometry *geometry = item->geometry;
   GthreeGeometryGroup *group = item->group;
   GthreeObject *object = item->object;
   GthreeProgram *program;
   GthreeAttribute *position, *index;
-  gboolean update_buffers = FALSE;
   gboolean wireframe = FALSE;
   int data_count;
   int range_factor, range_start, range_count, group_start, group_count, draw_start, draw_end, draw_count;
@@ -2945,22 +3087,11 @@ render_item (GthreeRenderer *renderer,
 
   program = set_program (renderer, camera, fog, material, object);
 
-  if (geometry != priv->current_geometry_program_geometry ||
-      program != priv->current_geometry_program_program ||
-      wireframe != priv->current_geometry_program_wireframe)
-    {
-      priv->current_geometry_program_geometry = geometry;
-      priv->current_geometry_program_program = program;
-      priv->current_geometry_program_wireframe = wireframe;
-      update_buffers = true;
-    }
-
   if (GTHREE_IS_MESH (object) &&
       gthree_mesh_has_morph_targets (GTHREE_MESH (object)) &&
       GTHREE_IS_MESH_MATERIAL (material))
     {
       update_morphtargets (renderer, GTHREE_MESH (object), geometry, GTHREE_MESH_MATERIAL (material), program);
-      update_buffers = TRUE;
     }
 
   index = gthree_geometry_get_index (geometry);
@@ -2970,16 +3101,13 @@ render_item (GthreeRenderer *renderer,
   if (wireframe)
     {
       index = gthree_geometry_get_wireframe_index (geometry);
+
+      unbind_vao (renderer);
       gthree_attribute_update (index, renderer, GL_ELEMENT_ARRAY_BUFFER);
       range_factor = 2;
     }
 
-  if (update_buffers)
-    {
-      setup_vertex_attributes (renderer, material, program, geometry);
-      if (index != NULL)
-        glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, gthree_attribute_get_gl_buffer (index, renderer));
-    }
+  setup_vertex_attributes (renderer, material, program, geometry, wireframe, index);
 
   data_count = -1;
 
@@ -3282,6 +3410,7 @@ gthree_renderer_render_background (GthreeRenderer *renderer,
 
   if (bg_mesh != NULL)
     {
+      unbind_vao (renderer);
       gthree_object_update (GTHREE_OBJECT (bg_mesh), renderer);
 
       priv->current_render_list->use_background = TRUE;
@@ -3327,9 +3456,6 @@ gthree_renderer_render (GthreeRenderer *renderer,
   priv->scene_environment_intensity = gthree_scene_get_environment_intensity (scene);
   priv->current_material = NULL;
   priv->current_camera = NULL;
-  priv->current_geometry_program_geometry = NULL;
-  priv->current_geometry_program_program = NULL;
-  priv->current_geometry_program_wireframe = FALSE;
 
   /* update scene graph */
 
@@ -3351,6 +3477,8 @@ gthree_renderer_render (GthreeRenderer *renderer,
   gthree_renderer_flush_deletes (renderer);
 
   gthree_render_list_init (priv->current_render_list);
+
+  unbind_vao (renderer);
 
   project_object (renderer, scene, GTHREE_OBJECT (scene), camera);
 

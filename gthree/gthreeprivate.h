@@ -367,6 +367,7 @@ typedef enum {
   GTHREE_RESOURCE_KIND_BUFFER,
   GTHREE_RESOURCE_KIND_FRAMEBUFFER,
   GTHREE_RESOURCE_KIND_RENDERBUFFER,
+  GTHREE_RESOURCE_KIND_VERTEX_ARRAY,
 } GthreeResourceKind;
 
 void gthree_renderer_lazy_delete (GthreeRenderer *renderer,
