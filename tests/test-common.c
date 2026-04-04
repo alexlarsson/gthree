@@ -87,8 +87,8 @@ test_geometry_torus_knot (void)
 static GdkPixbuf *
 make_checker_pixbuf (int r, int g, int b)
 {
-  int size = 16;
-  int cell = 4;
+  int size = 256;
+  int cell = 64;
   GdkPixbuf *pixbuf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE, 8, size, size);
   guchar *pixels = gdk_pixbuf_get_pixels (pixbuf);
   int stride = gdk_pixbuf_get_rowstride (pixbuf);
