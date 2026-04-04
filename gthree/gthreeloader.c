@@ -660,9 +660,9 @@ parse_asset (GthreeLoader *loader, JsonObject *root, GError **error)
       return FALSE;
     }
 
-  if (json_object_has_member (asset, "extensionsRequired"))
+  if (json_object_has_member (root, "extensionsRequired"))
     {
-      JsonArray *required_extensions = json_object_get_array_member (asset, "extensionsRequired");
+      JsonArray *required_extensions = json_object_get_array_member (root, "extensionsRequired");
       int i, len = json_array_get_length (required_extensions);
       for (i = 0; i < len; i++)
         {
