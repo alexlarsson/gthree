@@ -28,7 +28,21 @@
 #include "gthreemeshstandardmaterial.h"
 #include "gthreemeshlambertmaterial.h"
 #include "gthreemeshphongmaterial.h"
+#include "gthreepmremgeneratorprivate.h"
+#include "gthreerendertarget.h"
 
+typedef struct {
+  GthreeTexture *pmrem_texture; /* owned */
+  guint source_pmrem_version;
+} PmremCacheEntry;
+
+static void
+pmrem_cache_entry_free (gpointer data)
+{
+  PmremCacheEntry *entry = data;
+  g_object_unref (entry->pmrem_texture);
+  g_free (entry);
+}
 
 static graphene_vec3_t cube_directions[6];
 static graphene_vec3_t cube_ups[6];
@@ -173,7 +187,12 @@ typedef struct {
 
   guint dfg_lut_texture;
 
+  /* PMREM auto-conversion cache */
+  GthreePMREMGenerator *pmrem_generator;
+  GHashTable *pmrem_cache; /* GthreeTexture* (cube) -> PmremCacheEntry*, owns values */
+
   GthreeTexture *scene_environment;
+  GthreeTexture *scene_environment_pmrem; /* CubeUV version, if scene_environment is a cube texture */
   float scene_environment_intensity;
 
   /* Background */
@@ -385,6 +404,9 @@ gthree_renderer_init (GthreeRenderer *renderer)
   priv->vao_geometries = g_hash_table_new (g_direct_hash, g_direct_equal);
   priv->bound_vao = 0;
 
+  priv->pmrem_cache = g_hash_table_new_full (g_direct_hash, g_direct_equal,
+                                              NULL, pmrem_cache_entry_free);
+
   // GPU capabilities
   glGetIntegerv (GL_MAX_TEXTURE_IMAGE_UNITS, &priv->max_textures);
   glGetIntegerv (GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, &priv->max_vertex_textures);
@@ -495,12 +517,16 @@ gthree_renderer_finalize (GObject *obj)
   g_assert (priv->realized_resources->len == 0);
   g_assert (g_hash_table_size (priv->vao_cache) == 0);
   g_assert (g_hash_table_size (priv->vao_geometries) == 0);
+  g_assert (g_hash_table_size (priv->pmrem_cache) == 0);
 
   /* TODO: Drop these, should not be needed, and if they are, move that to unrealize */
   gthree_renderer_push_current (renderer);
 
   g_hash_table_unref (priv->vao_cache);
   g_hash_table_unref (priv->vao_geometries);
+
+  g_hash_table_unref (priv->pmrem_cache);
+  g_clear_object (&priv->pmrem_generator);
 
   g_clear_object (&priv->current_render_target);
 
@@ -623,6 +649,11 @@ gthree_renderer_mark_unrealized (GthreeRenderer *renderer,
     g_warning ("Can't unrealize non-realized resource %p", resource);
 
   /* TEST */ g_assert (!g_ptr_array_find (priv->realized_resources, resource, NULL));
+
+  /* If a cube texture used as PMREM source is being unrealized,
+     evict its cached CubeUV texture (which will be unrealized separately) */
+  if (GTHREE_IS_TEXTURE (resource))
+    g_hash_table_remove (priv->pmrem_cache, resource);
 }
 
 static void
@@ -699,6 +730,11 @@ gthree_renderer_unrealize (GthreeRenderer *renderer)
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
 
   gthree_renderer_push_current (renderer);
+
+  /* Clear PMREM cache before unrealizing resources — the cached CubeUV textures
+     are realized resources and will be unrealized+finalized when we drop our ref */
+  g_hash_table_remove_all (priv->pmrem_cache);
+  g_clear_object (&priv->pmrem_generator);
 
   while (priv->realized_resources->len > 0)
     {
@@ -1596,6 +1632,10 @@ material_apply_light_setup (GthreeUniforms *m_uniforms,
   gthree_uniforms_set_uarray (m_uniforms, "pointLightShadows", light_setup->point_light_shadows, update_only);
 }
 
+static GthreeTexture *material_get_pmrem_env_map (GthreeMaterial *material);
+static gboolean material_uses_env_map (GthreeMaterial *material);
+static GthreeTexture *lookup_pmrem (GthreeRenderer *renderer, GthreeTexture *cube_tex);
+
 static GthreeProgram *
 init_material (GthreeRenderer *renderer,
                GthreeMaterial *material,
@@ -1626,16 +1666,46 @@ init_material (GthreeRenderer *renderer,
        GTHREE_IS_MESH_LAMBERT_MATERIAL (material) ||
        GTHREE_IS_MESH_PHONG_MATERIAL (material)))
     {
+      GthreeTexture *effective_env = priv->scene_environment;
+      if (GTHREE_IS_MESH_STANDARD_MATERIAL (material) && priv->scene_environment_pmrem)
+        effective_env = priv->scene_environment_pmrem;
+
       parameters.env_map = TRUE;
-      parameters.env_map_mode = gthree_texture_get_mapping (priv->scene_environment);
+      parameters.env_map_mode = gthree_texture_get_mapping (effective_env);
+    }
+
+  /* If the material's env map has a PMREM version in cache, use CUBE_UV mapping.
+     For lambert/phong, PMREM is only used for the scene environment (no per-material
+     env map), so we check via material_get_pmrem_env_map which returns NULL for those. */
+  if (parameters.env_map &&
+      parameters.env_map_mode != GTHREE_MAPPING_CUBE_UV_REFLECTION)
+    {
+      GthreeTexture *env_tex = material_get_pmrem_env_map (material);
+      if (env_tex && lookup_pmrem (renderer, env_tex))
+        parameters.env_map_mode = GTHREE_MAPPING_CUBE_UV_REFLECTION;
+      else if (!env_tex && !material_uses_env_map (material) &&
+               priv->scene_environment_pmrem)
+        parameters.env_map_mode = GTHREE_MAPPING_CUBE_UV_REFLECTION;
     }
 
   if (parameters.env_map && parameters.env_map_mode == GTHREE_MAPPING_CUBE_UV_REFLECTION)
     {
-      GthreeTexture *env_tex = NULL;
-      g_object_get (material, "env-map", &env_tex, NULL);
-      if (env_tex == NULL && priv->scene_environment)
-        env_tex = g_object_ref (priv->scene_environment);
+      GthreeTexture *env_tex = material_get_pmrem_env_map (material);
+
+      /* If material has a cube env map, look up its PMREM version for meta */
+      if (env_tex)
+        {
+          GthreeTexture *pmrem = lookup_pmrem (renderer, env_tex);
+          if (pmrem)
+            env_tex = pmrem;
+        }
+      else
+        {
+          if (priv->scene_environment_pmrem)
+            env_tex = priv->scene_environment_pmrem;
+          else
+            env_tex = priv->scene_environment;
+        }
       if (env_tex)
         {
           float *meta = g_object_get_data (G_OBJECT (env_tex), "cubeuv-meta");
@@ -1645,7 +1715,6 @@ init_material (GthreeRenderer *renderer,
               parameters.cubeuv_texel_height = meta[1];
               parameters.cubeuv_max_mip = meta[2];
             }
-          g_object_unref (env_tex);
         }
     }
 
@@ -2760,25 +2829,28 @@ set_program (GthreeRenderer *renderer,
 
       gthree_material_set_uniforms (material, m_uniforms, camera, renderer);
 
-      if (priv->scene_environment &&
-          (GTHREE_IS_MESH_STANDARD_MATERIAL (material) ||
+      if ((GTHREE_IS_MESH_STANDARD_MATERIAL (material) ||
            GTHREE_IS_MESH_LAMBERT_MATERIAL (material) ||
            GTHREE_IS_MESH_PHONG_MATERIAL (material)))
         {
           GthreeTexture *mat_env = NULL;
           g_object_get (material, "env-map", &mat_env, NULL);
-          if (mat_env == NULL)
+          if (mat_env == NULL && priv->scene_environment)
             {
               GthreeUniform *uni;
 
+              GthreeTexture *effective_env = priv->scene_environment;
+              if (priv->scene_environment_pmrem)
+                effective_env = priv->scene_environment_pmrem;
+
               uni = gthree_uniforms_lookup_from_string (m_uniforms, "envMap");
               if (uni != NULL)
-                gthree_uniform_set_texture (uni, priv->scene_environment);
+                gthree_uniform_set_texture (uni, effective_env);
 
               uni = gthree_uniforms_lookup_from_string (m_uniforms, "flipEnvMap");
               if (uni != NULL)
                 gthree_uniform_set_float (uni,
-                  GTHREE_IS_CUBE_TEXTURE (priv->scene_environment) ? -1 : 1);
+                  GTHREE_IS_CUBE_TEXTURE (effective_env) ? -1 : 1);
 
               uni = gthree_uniforms_lookup_from_string (m_uniforms, "envMapIntensity");
               if (uni != NULL)
@@ -2787,10 +2859,26 @@ set_program (GthreeRenderer *renderer,
               uni = gthree_uniforms_lookup_from_string (m_uniforms, "maxMipLevel");
               if (uni != NULL)
                 gthree_uniform_set_int (uni,
-                  gthree_texture_get_max_mip_level (priv->scene_environment));
+                  gthree_texture_get_max_mip_level (effective_env));
             }
-          else
-            g_object_unref (mat_env);
+          else if (mat_env)
+            {
+              if (GTHREE_IS_MESH_STANDARD_MATERIAL (material))
+                {
+                  GthreeTexture *pmrem = lookup_pmrem (renderer, mat_env);
+                  if (pmrem)
+                    {
+                      GthreeUniform *uni;
+                      uni = gthree_uniforms_lookup_from_string (m_uniforms, "envMap");
+                      if (uni != NULL)
+                        gthree_uniform_set_texture (uni, pmrem);
+                      uni = gthree_uniforms_lookup_from_string (m_uniforms, "flipEnvMap");
+                      if (uni != NULL)
+                        gthree_uniform_set_float (uni, 1);
+                    }
+                }
+              g_object_unref (mat_env);
+            }
         }
 
       // refresh uniforms common to several materials
@@ -3420,6 +3508,168 @@ gthree_renderer_render_background (GthreeRenderer *renderer,
     }
 }
 
+static gboolean
+texture_is_cube_mapping (GthreeTexture *texture)
+{
+  GthreeMapping mapping = gthree_texture_get_mapping (texture);
+  return mapping == GTHREE_MAPPING_CUBE_REFLECTION ||
+         mapping == GTHREE_MAPPING_CUBE_REFRACTION;
+}
+
+static int
+get_cube_texture_size (GthreeTexture *texture)
+{
+  if (GTHREE_IS_CUBE_TEXTURE (texture))
+    {
+      GdkPixbuf *pb = gthree_cube_texture_get_face_pixbuf (GTHREE_CUBE_TEXTURE (texture), 0);
+      return gdk_pixbuf_get_width (pb);
+    }
+
+  /* For render target textures, query GL */
+  GLint size = 0;
+  glGetTexLevelParameteriv (GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_TEXTURE_WIDTH, &size);
+  return size > 0 ? size : 256;
+}
+
+/* Returns the cached PMREM texture if up-to-date, or generates a new one.
+   Sets *was_regenerated to TRUE if a new PMREM was generated (caller may
+   need to invalidate materials). */
+static GthreeTexture *
+get_or_create_pmrem (GthreeRenderer *renderer, GthreeTexture *cube_tex,
+                     gboolean *was_regenerated)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  guint current_version = gthree_texture_get_pmrem_version (cube_tex);
+
+  PmremCacheEntry *entry = g_hash_table_lookup (priv->pmrem_cache, cube_tex);
+  if (entry && entry->source_pmrem_version == current_version)
+    {
+      if (was_regenerated)
+        *was_regenerated = FALSE;
+      return entry->pmrem_texture;
+    }
+
+  if (!priv->pmrem_generator)
+    priv->pmrem_generator = gthree_pmrem_generator_new (renderer);
+
+  /* Bind the source texture so we can query its size for render target textures */
+  gthree_texture_realize (cube_tex, renderer);
+  gthree_texture_load (cube_tex, renderer, 0);
+  gthree_texture_bind (cube_tex, renderer, 0, GL_TEXTURE_CUBE_MAP);
+  int cube_size = get_cube_texture_size (cube_tex);
+
+  GthreeTexture *cubeuv = gthree_pmrem_generator_from_cubemap (priv->pmrem_generator,
+                                                                cube_tex, cube_size);
+
+  if (entry)
+    {
+      g_object_unref (entry->pmrem_texture);
+      entry->pmrem_texture = cubeuv;
+      entry->source_pmrem_version = current_version;
+    }
+  else
+    {
+      entry = g_new (PmremCacheEntry, 1);
+      entry->pmrem_texture = cubeuv;
+      entry->source_pmrem_version = current_version;
+      g_hash_table_insert (priv->pmrem_cache, cube_tex, entry);
+    }
+
+  if (was_regenerated)
+    *was_regenerated = TRUE;
+
+  return cubeuv;
+}
+
+static gboolean
+should_pmrem_convert (GthreeTexture *texture)
+{
+  if (!texture_is_cube_mapping (texture))
+    return FALSE;
+
+  /* GthreeCubeTexture (file-based) is always eligible */
+  if (GTHREE_IS_CUBE_TEXTURE (texture))
+    return TRUE;
+
+  /* Render target textures (from CubeCamera) are only eligible after
+     the first CubeCamera update has completed (pmrem_version > 0).
+     This avoids trying to PMREM-convert during CubeCamera sub-renders. */
+  return gthree_texture_get_pmrem_version (texture) > 0;
+}
+
+/* Returns the material's env map if it should be PMREM-converted.
+   Lambert/phong only get PMREM for the scene environment (IBL irradiance),
+   not for per-material env maps (which use direct cube reflection). */
+static GthreeTexture *
+material_get_pmrem_env_map (GthreeMaterial *material)
+{
+  if (GTHREE_IS_MESH_STANDARD_MATERIAL (material))
+    return gthree_mesh_standard_material_get_env_map (GTHREE_MESH_STANDARD_MATERIAL (material));
+  return NULL;
+}
+
+static gboolean
+material_uses_env_map (GthreeMaterial *material)
+{
+  if (GTHREE_IS_MESH_STANDARD_MATERIAL (material))
+    return gthree_mesh_standard_material_get_env_map (GTHREE_MESH_STANDARD_MATERIAL (material)) != NULL;
+  if (GTHREE_IS_MESH_LAMBERT_MATERIAL (material))
+    return gthree_mesh_lambert_material_get_env_map (GTHREE_MESH_LAMBERT_MATERIAL (material)) != NULL;
+  if (GTHREE_IS_MESH_PHONG_MATERIAL (material))
+    return gthree_mesh_phong_material_get_env_map (GTHREE_MESH_PHONG_MATERIAL (material)) != NULL;
+  return FALSE;
+}
+
+static GthreeTexture *
+lookup_pmrem (GthreeRenderer *renderer, GthreeTexture *cube_tex)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  PmremCacheEntry *entry = g_hash_table_lookup (priv->pmrem_cache, cube_tex);
+  if (entry)
+    return entry->pmrem_texture;
+  return NULL;
+}
+
+static void
+ensure_pmrem_textures (GthreeRenderer *renderer, GthreeScene *scene)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  gboolean was_regenerated = FALSE;
+
+  priv->scene_environment_pmrem = NULL;
+  if (priv->scene_environment && should_pmrem_convert (priv->scene_environment))
+    priv->scene_environment_pmrem = get_or_create_pmrem (renderer, priv->scene_environment, &was_regenerated);
+
+  /* Pre-generate PMREM for standard material env maps (lambert/phong only
+     get PMREM for scene environment, not per-material env maps) */
+  for (guint i = 0; i < priv->current_render_list->items->len; i++)
+    {
+      GthreeRenderListItem *item = &g_array_index (priv->current_render_list->items,
+                                                    GthreeRenderListItem, i);
+      GthreeTexture *env_tex = material_get_pmrem_env_map (item->material);
+      if (env_tex && should_pmrem_convert (env_tex))
+        {
+          gboolean mat_pmrem_regenerated = FALSE;
+          get_or_create_pmrem (renderer, env_tex, &mat_pmrem_regenerated);
+          if (mat_pmrem_regenerated)
+            was_regenerated = TRUE;
+        }
+    }
+
+  if (was_regenerated)
+    {
+      for (guint i = 0; i < priv->current_render_list->items->len; i++)
+        {
+          GthreeRenderListItem *item = &g_array_index (priv->current_render_list->items,
+                                                        GthreeRenderListItem, i);
+          GthreeTexture *env_tex = material_get_pmrem_env_map (item->material);
+          if (env_tex && should_pmrem_convert (env_tex))
+            gthree_material_set_needs_update (item->material);
+        }
+    }
+}
+
 void
 gthree_renderer_render (GthreeRenderer *renderer,
                         GthreeScene    *scene,
@@ -3484,6 +3734,8 @@ gthree_renderer_render (GthreeRenderer *renderer,
 
   if (priv->sort_objects)
     gthree_render_list_sort (priv->current_render_list);
+
+  ensure_pmrem_textures (renderer, scene);
 
   if (priv->clipping_enabled )
     clipping_begin_shadows (renderer);

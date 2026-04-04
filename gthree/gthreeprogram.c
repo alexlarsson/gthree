@@ -2,6 +2,7 @@
 #include <epoxy/gl.h>
 
 #include "gthreeprogram.h"
+#include "gthreeprogramprivate.h"
 #include "gthreeuniforms.h"
 #include "gthreeshader.h"
 #include "gthreerenderer.h"
@@ -54,7 +55,7 @@ get_vertex_type_name (int type)
 }
 
 GLuint
-create_shader (int type, const char *code)
+gthree_create_shader (int type, const char *code)
 {
   GLuint shader = glCreateShader (type);
   GLint status;
@@ -893,8 +894,8 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
                fragment_expanded);
     }
 
-  glVertexShader = create_shader (GL_VERTEX_SHADER, vertex_expanded);
-  glFragmentShader = create_shader (GL_FRAGMENT_SHADER, fragment_expanded);
+  glVertexShader = gthree_create_shader (GL_VERTEX_SHADER, vertex_expanded);
+  glFragmentShader = gthree_create_shader (GL_FRAGMENT_SHADER, fragment_expanded);
 
   g_string_free (vertex, TRUE);
   g_string_free (fragment, TRUE);

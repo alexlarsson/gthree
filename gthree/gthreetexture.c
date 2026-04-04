@@ -47,6 +47,8 @@ typedef struct {
   int unpack_alignment;
 
   guint max_mip_level;
+
+  guint pmrem_version;
 } GthreeTexturePrivate;
 
 typedef struct {
@@ -278,6 +280,20 @@ void
 gthree_texture_set_needs_update (GthreeTexture *texture)
 {
   gthree_resource_mark_dirty (GTHREE_RESOURCE (texture));
+}
+
+void
+gthree_texture_set_needs_pmrem_update (GthreeTexture *texture)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+  priv->pmrem_version++;
+}
+
+guint
+gthree_texture_get_pmrem_version (GthreeTexture *texture)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+  return priv->pmrem_version;
 }
 
 void
@@ -526,6 +542,20 @@ gthree_texture_realize (GthreeTexture *texture, GthreeRenderer *renderer)
       }
 #endif
     }
+}
+
+void
+gthree_texture_set_gl_texture (GthreeTexture *texture, GthreeRenderer *renderer, guint gl_texture)
+{
+  GthreeTextureRealizeData *data = gthree_resource_get_data_for (GTHREE_RESOURCE (texture), renderer);
+
+  if (data->gl_texture && data->gl_texture != gl_texture)
+    glDeleteTextures (1, &data->gl_texture);
+
+  if (!data->parent.realized_for)
+    gthree_resource_set_realized_for (GTHREE_RESOURCE (texture), renderer);
+
+  data->gl_texture = gl_texture;
 }
 
 void

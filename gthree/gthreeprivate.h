@@ -391,6 +391,12 @@ gthree_color_srgb_to_linear (const graphene_vec3_t *srgb, graphene_vec3_t *linea
                       gthree_srgb_eotf (graphene_vec3_get_z (srgb)));
 }
 
+void     gthree_texture_set_gl_texture      (GthreeTexture  *texture,
+                                              GthreeRenderer *renderer,
+                                              guint           gl_texture);
+void     gthree_texture_set_needs_pmrem_update (GthreeTexture *texture);
+guint    gthree_texture_get_pmrem_version      (GthreeTexture *texture);
+
 GdkPixbuf *gthree_cube_texture_get_face_pixbuf (GthreeCubeTexture *cube_texture,
                                                 int                face);
 

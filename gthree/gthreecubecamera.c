@@ -125,6 +125,9 @@ gthree_cube_camera_update (GthreeCubeCamera *cube_camera,
     }
 
   gthree_renderer_set_render_target (renderer, NULL, 0, 0);
+
+  gthree_texture_set_needs_pmrem_update (
+    gthree_render_target_get_texture (priv->render_target));
 }
 
 /**

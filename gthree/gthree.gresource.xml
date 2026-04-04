@@ -142,6 +142,9 @@
     <file>shader_lib/meshphysical_vert.glsl</file>
     <file>shader_lib/meshtoon_frag.glsl</file>
     <file>shader_lib/meshtoon_vert.glsl</file>
+    <file>shader_lib/pmrem_cubemap_frag.glsl</file>
+    <file>shader_lib/pmrem_cubemap_vert.glsl</file>
+    <file>shader_lib/pmrem_ggx_frag.glsl</file>
     <file>shader_lib/points_frag.glsl</file>
     <file>shader_lib/points_vert.glsl</file>
     <file>shader_lib/shadow_frag.glsl</file>

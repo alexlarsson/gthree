@@ -65,7 +65,6 @@
 #include <gthree/gthreeeffectcomposer.h>
 #include <gthree/gthreeraycaster.h>
 #include <gthree/gthreefog.h>
-#include <gthree/gthreepmremgenerator.h>
 #undef __GTHREE_H_INSIDE__
 
 #endif /* __GTHREE_H__ */

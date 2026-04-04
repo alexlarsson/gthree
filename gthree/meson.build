@@ -162,10 +162,11 @@ gthree_headers = [
     'gthreeanimationmixer.h',
     'gthreekeyframetrack.h',
     'gthreehemispherelight.h',
-    'gthreepmremgenerator.h',
 ]
 
 gthree_private_headers = [
+    'gthreepmremgeneratorprivate.h',
+    'gthreeprogramprivate.h',
     'gthreepropertymixerprivate.h',
     'gthreepropertybindingprivate.h',
     'gthreeobjectprivate.h',

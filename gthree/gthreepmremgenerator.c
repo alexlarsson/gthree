@@ -1,22 +1,60 @@
 #include <math.h>
-#include <string.h>
 #include <epoxy/gl.h>
 
-#include "gthreepmremgenerator.h"
+#include "gthreepmremgeneratorprivate.h"
+#include "gthreecubetexture.h"
 #include "gthreeprivate.h"
+#include "gthreeprogramprivate.h"
+#include "gthree-resources.h"
+
+#define PMREM_SHADER_PATH "/org/gnome/gthree/shader_lib/"
 
 #define LOD_MIN 4
 #define MIN_TILE_SIZE 16
 #define EXTRA_LOD_COUNT 6
+#define GGX_SAMPLES 256
 
 typedef struct {
   GthreeRenderer *renderer;
-  guint gl_texture;
-  int texture_width;
-  int texture_height;
+
+  GBytes *vert_src;
+  GBytes *cubemap_frag_src;
+  GBytes *ggx_frag_src;
+
+  /* Size-independent (built once) */
+  guint vert_shader;
+  guint cubemap_program;
+
+  /* Size-dependent (rebuilt when cube_size changes) */
+  int cube_size;
+  guint ggx_program;
+  guint *lod_vaos;
+  guint *lod_vbos;
+  int total_lods;
 } GthreePMREMGeneratorPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (GthreePMREMGenerator, gthree_pmrem_generator, G_TYPE_OBJECT)
+
+static void
+cleanup_sized_resources (GthreePMREMGeneratorPrivate *priv)
+{
+  if (priv->ggx_program)
+    {
+      glDeleteProgram (priv->ggx_program);
+      priv->ggx_program = 0;
+    }
+  if (priv->lod_vaos)
+    {
+      glDeleteVertexArrays (priv->total_lods, priv->lod_vaos);
+      glDeleteBuffers (priv->total_lods, priv->lod_vbos);
+      g_free (priv->lod_vaos);
+      g_free (priv->lod_vbos);
+      priv->lod_vaos = NULL;
+      priv->lod_vbos = NULL;
+    }
+  priv->cube_size = 0;
+  priv->total_lods = 0;
+}
 
 static void
 gthree_pmrem_generator_finalize (GObject *obj)
@@ -24,13 +62,16 @@ gthree_pmrem_generator_finalize (GObject *obj)
   GthreePMREMGenerator *gen = GTHREE_PMREM_GENERATOR (obj);
   GthreePMREMGeneratorPrivate *priv = gthree_pmrem_generator_get_instance_private (gen);
 
-  g_clear_object (&priv->renderer);
+  cleanup_sized_resources (priv);
 
-  if (priv->gl_texture)
-    {
-      glDeleteTextures (1, &priv->gl_texture);
-      priv->gl_texture = 0;
-    }
+  if (priv->vert_shader)
+    glDeleteShader (priv->vert_shader);
+  if (priv->cubemap_program)
+    glDeleteProgram (priv->cubemap_program);
+
+  g_clear_pointer (&priv->vert_src, g_bytes_unref);
+  g_clear_pointer (&priv->cubemap_frag_src, g_bytes_unref);
+  g_clear_pointer (&priv->ggx_frag_src, g_bytes_unref);
 
   G_OBJECT_CLASS (gthree_pmrem_generator_parent_class)->finalize (obj);
 }
@@ -38,6 +79,13 @@ gthree_pmrem_generator_finalize (GObject *obj)
 static void
 gthree_pmrem_generator_init (GthreePMREMGenerator *gen)
 {
+  GthreePMREMGeneratorPrivate *priv = gthree_pmrem_generator_get_instance_private (gen);
+
+  gthree_register_resource ();
+
+  priv->vert_src = g_resources_lookup_data (PMREM_SHADER_PATH "pmrem_cubemap_vert.glsl", 0, NULL);
+  priv->cubemap_frag_src = g_resources_lookup_data (PMREM_SHADER_PATH "pmrem_cubemap_frag.glsl", 0, NULL);
+  priv->ggx_frag_src = g_resources_lookup_data (PMREM_SHADER_PATH "pmrem_ggx_frag.glsl", 0, NULL);
 }
 
 static void
@@ -54,370 +102,220 @@ gthree_pmrem_generator_new (GthreeRenderer *renderer)
 
   gen = g_object_new (GTHREE_TYPE_PMREM_GENERATOR, NULL);
   priv = gthree_pmrem_generator_get_instance_private (gen);
-  priv->renderer = g_object_ref (renderer);
+  priv->renderer = renderer;
 
   return gen;
 }
 
-void
-gthree_pmrem_generator_dispose (GthreePMREMGenerator *generator)
+static guint
+link_program (guint vert, guint frag)
 {
-  GthreePMREMGeneratorPrivate *priv = gthree_pmrem_generator_get_instance_private (generator);
+  guint program = glCreateProgram ();
+  GLint status;
 
-  if (priv->gl_texture)
+  glAttachShader (program, vert);
+  glAttachShader (program, frag);
+
+  glBindAttribLocation (program, 0, "position");
+  glBindAttribLocation (program, 1, "uv");
+  glBindAttribLocation (program, 2, "faceIndex");
+
+  glLinkProgram (program);
+  glGetProgramiv (program, GL_LINK_STATUS, &status);
+  if (!status)
     {
-      glDeleteTextures (1, &priv->gl_texture);
-      priv->gl_texture = 0;
-    }
-}
-
-static void
-pixbuf_get_pixel_float (GdkPixbuf *pixbuf, int x, int y, float *rgba)
-{
-  int n_channels = gdk_pixbuf_get_n_channels (pixbuf);
-  int rowstride = gdk_pixbuf_get_rowstride (pixbuf);
-  const guchar *pixels = gdk_pixbuf_get_pixels (pixbuf);
-  const guchar *p = pixels + y * rowstride + x * n_channels;
-
-  rgba[0] = p[0] / 255.0f;
-  rgba[1] = p[1] / 255.0f;
-  rgba[2] = p[2] / 255.0f;
-  rgba[3] = (n_channels == 4) ? p[3] / 255.0f : 1.0f;
-}
-
-static void
-pixbuf_sample_bilinear (GdkPixbuf *pixbuf, float u, float v, float *rgba)
-{
-  int w = gdk_pixbuf_get_width (pixbuf);
-  int h = gdk_pixbuf_get_height (pixbuf);
-
-  float fx = u * (w - 1);
-  float fy = v * (h - 1);
-  int x0 = (int)floorf (fx);
-  int y0 = (int)floorf (fy);
-  int x1 = MIN (x0 + 1, w - 1);
-  int y1 = MIN (y0 + 1, h - 1);
-  x0 = MAX (x0, 0);
-  y0 = MAX (y0, 0);
-
-  float sx = fx - floorf (fx);
-  float sy = fy - floorf (fy);
-
-  float p00[4], p10[4], p01[4], p11[4];
-  pixbuf_get_pixel_float (pixbuf, x0, y0, p00);
-  pixbuf_get_pixel_float (pixbuf, x1, y0, p10);
-  pixbuf_get_pixel_float (pixbuf, x0, y1, p01);
-  pixbuf_get_pixel_float (pixbuf, x1, y1, p11);
-
-  for (int c = 0; c < 4; c++)
-    rgba[c] = (p00[c] * (1 - sx) + p10[c] * sx) * (1 - sy) +
-              (p01[c] * (1 - sx) + p11[c] * sx) * sy;
-}
-
-/* PMREM face-indexing convention (RH coordinate system).
- * Given a face index and UV in [0,1], return the 3D direction.
- * Must match getDirection() in the vertex shader and
- * getFace()/getUV() in cube_uv_reflection_fragment.glsl */
-static void
-get_direction (float u, float v, int face, float *dir)
-{
-  u = 2.0f * u - 1.0f;
-  v = 2.0f * v - 1.0f;
-  float len;
-
-  switch (face)
-    {
-    case 0: /* +X: direction = (1, v, u) => getUV gives (z, y)/|x| */
-      dir[0] = 1.0f;  dir[1] = v;  dir[2] = u;
-      break;
-    case 1: /* +Y: direction = (-u, 1, -v) => getUV gives (-x, -z)/|y| */
-      dir[0] = -u;  dir[1] = 1.0f;  dir[2] = -v;
-      break;
-    case 2: /* +Z: direction = (-u, v, 1) => getUV gives (-x, y)/|z| */
-      dir[0] = -u;  dir[1] = v;  dir[2] = 1.0f;
-      break;
-    case 3: /* -X: direction = (-1, v, -u) => getUV gives (-z, y)/|x| */
-      dir[0] = -1.0f;  dir[1] = v;  dir[2] = -u;
-      break;
-    case 4: /* -Y: direction = (-u, -1, v) => getUV gives (-x, z)/|y| */
-      dir[0] = -u;  dir[1] = -1.0f;  dir[2] = v;
-      break;
-    case 5: /* -Z: direction = (u, v, -1) => getUV gives (x, y)/|z| */
-      dir[0] = u;  dir[1] = v;  dir[2] = -1.0f;
-      break;
+      char log[1024];
+      glGetProgramInfoLog (program, sizeof (log), NULL, log);
+      g_warning ("PMREM program link error: %s", log);
+      glDeleteProgram (program);
+      return 0;
     }
 
-  len = sqrtf (dir[0] * dir[0] + dir[1] * dir[1] + dir[2] * dir[2]);
-  dir[0] /= len;
-  dir[1] /= len;
-  dir[2] /= len;
+  glDetachShader (program, vert);
+  glDetachShader (program, frag);
+
+  return program;
 }
 
-/* Map a 3D direction to cubemap face + UV.
- * Must match getFace()/getUV() in cube_uv_reflection_fragment.glsl */
-static int
-direction_to_face_uv (const float *dir, float *out_u, float *out_v)
+static void
+ensure_gpu_resources (GthreePMREMGeneratorPrivate *priv,
+                      int cube_size, int lod_max, int total_lods,
+                      int tex_width, int tex_height,
+                      int *size_lods)
 {
-  float ax = fabsf (dir[0]);
-  float ay = fabsf (dir[1]);
-  float az = fabsf (dir[2]);
-  int face;
-  float u, v;
+  if (priv->cube_size == cube_size)
+    return;
 
-  if (ax > az)
+  if (!priv->vert_src || !priv->cubemap_frag_src || !priv->ggx_frag_src)
     {
-      if (ax > ay)
-        face = dir[0] > 0.0f ? 0 : 3;
-      else
-        face = dir[1] > 0.0f ? 1 : 4;
-    }
-  else
-    {
-      if (az > ay)
-        face = dir[2] > 0.0f ? 2 : 5;
-      else
-        face = dir[1] > 0.0f ? 1 : 4;
-    }
-
-  switch (face)
-    {
-    case 0: u = dir[2] / ax;  v = dir[1] / ax;  break;
-    case 1: u = -dir[0] / ay;  v = -dir[2] / ay;  break;
-    case 2: u = -dir[0] / az;  v = dir[1] / az;  break;
-    case 3: u = -dir[2] / ax;  v = dir[1] / ax;  break;
-    case 4: u = -dir[0] / ay;  v = dir[2] / ay;  break;
-    default:
-    case 5: u = dir[0] / az;  v = dir[1] / az;  break;
-    }
-
-  *out_u = 0.5f * (u + 1.0f);
-  *out_v = 0.5f * (v + 1.0f);
-  return face;
-}
-
-static void
-sample_cubemap (GdkPixbuf **pixbufs, const float *dir, float *rgba)
-{
-  float u, v;
-  int face = direction_to_face_uv (dir, &u, &v);
-
-  /* Flip the v coordinate: pixbufs have (0,0) at top-left but UV has
-   * (0,0) at bottom-left in the shader convention */
-  v = 1.0f - v;
-
-  pixbuf_sample_bilinear (pixbufs[face], u, v, rgba);
-}
-
-static void
-write_texel (float *buffer, int tex_width, int x, int y, const float *rgba)
-{
-  float *p = buffer + (y * tex_width + x) * 4;
-  p[0] = rgba[0];
-  p[1] = rgba[1];
-  p[2] = rgba[2];
-  p[3] = rgba[3];
-}
-
-/* GGX importance sampling for PMREM filtering */
-
-#define NUM_SAMPLES 128
-
-static float
-radical_inverse_vdc (guint32 bits)
-{
-  bits = (bits << 16u) | (bits >> 16u);
-  bits = ((bits & 0x55555555u) << 1u) | ((bits & 0xAAAAAAAAu) >> 1u);
-  bits = ((bits & 0x33333333u) << 2u) | ((bits & 0xCCCCCCCCu) >> 2u);
-  bits = ((bits & 0x0F0F0F0Fu) << 4u) | ((bits & 0xF0F0F0F0u) >> 4u);
-  bits = ((bits & 0x00FF00FFu) << 8u) | ((bits & 0xFF00FF00u) >> 8u);
-  return (float)bits * 2.3283064365386963e-10f;
-}
-
-static void
-hammersley (int i, int n, float *xi)
-{
-  xi[0] = (float)i / (float)n;
-  xi[1] = radical_inverse_vdc (i);
-}
-
-static void
-importance_sample_ggx (const float *xi, float roughness, const float *N, float *H)
-{
-  float a = roughness * roughness;
-  float phi = 2.0f * G_PI * xi[0];
-  float cos_theta = sqrtf ((1.0f - xi[1]) / (1.0f + (a * a - 1.0f) * xi[1]));
-  float sin_theta = sqrtf (1.0f - cos_theta * cos_theta);
-
-  /* Tangent-space half vector */
-  float Ht[3] = {
-    sin_theta * cosf (phi),
-    sin_theta * sinf (phi),
-    cos_theta
-  };
-
-  /* Build TBN from N */
-  float up[3] = { 0, 1, 0 };
-  if (fabsf (N[1]) > 0.999f)
-    { up[0] = 1; up[1] = 0; up[2] = 0; }
-
-  float T[3], B[3];
-  /* T = normalize(cross(up, N)) */
-  T[0] = up[1] * N[2] - up[2] * N[1];
-  T[1] = up[2] * N[0] - up[0] * N[2];
-  T[2] = up[0] * N[1] - up[1] * N[0];
-  float tlen = sqrtf (T[0]*T[0] + T[1]*T[1] + T[2]*T[2]);
-  T[0] /= tlen; T[1] /= tlen; T[2] /= tlen;
-
-  /* B = cross(N, T) */
-  B[0] = N[1] * T[2] - N[2] * T[1];
-  B[1] = N[2] * T[0] - N[0] * T[2];
-  B[2] = N[0] * T[1] - N[1] * T[0];
-
-  /* Transform to world space: H = T * Ht.x + B * Ht.y + N * Ht.z */
-  H[0] = T[0] * Ht[0] + B[0] * Ht[1] + N[0] * Ht[2];
-  H[1] = T[1] * Ht[0] + B[1] * Ht[1] + N[1] * Ht[2];
-  H[2] = T[2] * Ht[0] + B[2] * Ht[1] + N[2] * Ht[2];
-}
-
-static void
-ggx_filter_color (GdkPixbuf **pixbufs, const float *N, float roughness, float *rgba)
-{
-  if (roughness < 0.01f)
-    {
-      float dir[3] = { -N[0], N[1], N[2] };
-      sample_cubemap (pixbufs, dir, rgba);
+      g_warning ("PMREM shader resources not loaded");
       return;
     }
 
-  float total_weight = 0;
-  rgba[0] = rgba[1] = rgba[2] = rgba[3] = 0;
+  cleanup_sized_resources (priv);
 
-  for (int i = 0; i < NUM_SAMPLES; i++)
-    {
-      float xi[2];
-      hammersley (i, NUM_SAMPLES, xi);
+  priv->cube_size = cube_size;
+  priv->total_lods = total_lods;
 
-      float H[3];
-      importance_sample_ggx (xi, roughness, N, H);
+  gboolean is_gles = !epoxy_is_desktop_gl ();
+  const char *frag_header;
 
-      /* L = reflect(-V, H) where V = N for PMREM (view = normal) */
-      float NdotH = N[0]*H[0] + N[1]*H[1] + N[2]*H[2];
-      float L[3];
-      L[0] = 2.0f * NdotH * H[0] - N[0];
-      L[1] = 2.0f * NdotH * H[1] - N[1];
-      L[2] = 2.0f * NdotH * H[2] - N[2];
-
-      float NdotL = N[0]*L[0] + N[1]*L[1] + N[2]*L[2];
-      if (NdotL > 0)
-        {
-          float sample_dir[3] = { -L[0], L[1], L[2] };
-          float sample_rgba[4];
-          sample_cubemap (pixbufs, sample_dir, sample_rgba);
-          rgba[0] += sample_rgba[0] * NdotL;
-          rgba[1] += sample_rgba[1] * NdotL;
-          rgba[2] += sample_rgba[2] * NdotL;
-          rgba[3] += sample_rgba[3] * NdotL;
-          total_weight += NdotL;
-        }
-    }
-
-  if (total_weight > 0)
-    {
-      rgba[0] /= total_weight;
-      rgba[1] /= total_weight;
-      rgba[2] /= total_weight;
-      rgba[3] /= total_weight;
-    }
-}
-
-/* Roughness for each LOD level. Must match the inverse of roughnessToMip()
-   in cube_uv_reflection_fragment.glsl.
-
-   Layout: LOD 0 is the sharpest (sigma=0, roughness=0) at filterInt=0.
-   Main LODs (0 to lodMax-LOD_MIN) have decreasing face sizes with increasing
-   roughness. Extra LODs (at MIN_TILE_SIZE) continue with filterInt=1,2,...
-   and roughness values matching the roughnessToMip inverse at each integer
-   filterInt boundary. */
-static float
-lod_roughness (int lod_idx, int lod_max)
-{
-  int num_main_lods = lod_max - LOD_MIN + 1;
-
-  if (lod_idx < num_main_lods)
-    {
-      if (lod_idx == 0)
-        return 0.0f;
-
-      /* Intermediate main LODs: roughness increases as face size decreases.
-         These map to filterInt=0 with varying faceSize. */
-      static const float main_roughness[] = { 0.0f, 0.1f, 0.21f };
-      if (lod_idx < (int)G_N_ELEMENTS (main_roughness))
-        return main_roughness[lod_idx];
-      return 0.21f;
-    }
+  if (is_gles)
+    frag_header =
+      "#version 300 es\n"
+      "precision highp float;\n"
+      "precision highp int;\n"
+      "#define varying in\n"
+      "#define textureCube texture\n"
+      "#define texture2D texture\n"
+      "#define gl_FragColor pmrem_FragColor\n"
+      "out vec4 pmrem_FragColor;\n";
   else
+    frag_header =
+      "#version 150\n"
+      "#define varying in\n"
+      "#define textureCube texture\n"
+      "#define texture2D texture\n"
+      "#define gl_FragColor pmrem_FragColor\n"
+      "out vec4 pmrem_FragColor;\n";
+
+  /* Build cubemap program once (size-independent) */
+  if (!priv->cubemap_program)
     {
-      /* Extra LODs at MIN_TILE_SIZE with filterInt = 1,2,...,6.
-         Roughness increases: these are the inverse of roughnessToMip()
-         at integer mip values (3, 2, 1, 0, -1, -2). */
-      int extra_idx = lod_idx - num_main_lods;
-      static const float extra_roughness[] = { 0.305f, 0.4f, 0.533f, 0.667f, 0.8f, 1.0f };
-      if (extra_idx < (int)G_N_ELEMENTS (extra_roughness))
-        return extra_roughness[extra_idx];
-      return 1.0f;
+      const char *vert_header;
+
+      if (is_gles)
+        vert_header =
+          "#version 300 es\n"
+          "precision highp float;\n"
+          "precision highp int;\n"
+          "#define attribute in\n"
+          "#define varying out\n"
+          "#define textureCube texture\n";
+      else
+        vert_header =
+          "#version 150\n"
+          "#define attribute in\n"
+          "#define varying out\n"
+          "#define textureCube texture\n";
+
+      const char *vert_src_raw = g_bytes_get_data (priv->vert_src, NULL);
+      const char *cubemap_frag_src_raw = g_bytes_get_data (priv->cubemap_frag_src, NULL);
+
+      g_autofree char *vert_src = g_strconcat (vert_header, vert_src_raw, NULL);
+      g_autofree char *cubemap_frag_src = g_strconcat (frag_header, cubemap_frag_src_raw, NULL);
+
+      priv->vert_shader = gthree_create_shader (GL_VERTEX_SHADER, vert_src);
+      guint cubemap_frag = gthree_create_shader (GL_FRAGMENT_SHADER, cubemap_frag_src);
+      priv->cubemap_program = link_program (priv->vert_shader, cubemap_frag);
+      glDeleteShader (cubemap_frag);
+    }
+
+  /* Build GGX program (size-dependent due to texel size and max mip defines) */
+  const char *ggx_frag_src_raw = g_bytes_get_data (priv->ggx_frag_src, NULL);
+
+  char texel_w[G_ASCII_DTOSTR_BUF_SIZE], texel_h[G_ASCII_DTOSTR_BUF_SIZE];
+  g_ascii_dtostr (texel_w, sizeof (texel_w), 1.0 / tex_width);
+  g_ascii_dtostr (texel_h, sizeof (texel_h), 1.0 / tex_height);
+
+  g_autofree char *ggx_frag_src = g_strdup_printf (
+    "%s"
+    "#define GGX_SAMPLES %d\n"
+    "#define CUBEUV_TEXEL_WIDTH %s\n"
+    "#define CUBEUV_TEXEL_HEIGHT %s\n"
+    "#define CUBEUV_MAX_MIP %d.0\n"
+    "%s",
+    frag_header,
+    GGX_SAMPLES,
+    texel_w, texel_h,
+    lod_max,
+    ggx_frag_src_raw);
+
+  guint ggx_frag = gthree_create_shader (GL_FRAGMENT_SHADER, ggx_frag_src);
+  priv->ggx_program = link_program (priv->vert_shader, ggx_frag);
+  glDeleteShader (ggx_frag);
+
+  /* Create per-LOD geometry: 6 faces x 2 triangles x 3 vertices = 36 vertices
+     Each vertex: position(3) + uv(2) + faceIndex(1) = 6 floats */
+  priv->lod_vaos = g_new0 (guint, total_lods);
+  priv->lod_vbos = g_new0 (guint, total_lods);
+  glGenVertexArrays (total_lods, priv->lod_vaos);
+  glGenBuffers (total_lods, priv->lod_vbos);
+
+  for (int lod_idx = 0; lod_idx < total_lods; lod_idx++)
+    {
+      int face_size = size_lods[lod_idx];
+      float texel_size = 1.0f / (face_size - 2);
+      float uv_min = -texel_size;
+      float uv_max = 1.0f + texel_size;
+
+      float verts[6 * 6 * 6];
+      int vi = 0;
+
+      for (int face = 0; face < 6; face++)
+        {
+          float x = (face % 3) * 2.0f / 3.0f - 1.0f;
+          float y = face > 2 ? 0.0f : -1.0f;
+          float w = 2.0f / 3.0f;
+          float h = 1.0f;
+          float fi = (float)face;
+
+          /* Triangle 1 */
+          verts[vi++] = x;     verts[vi++] = y;     verts[vi++] = 0;
+          verts[vi++] = uv_min; verts[vi++] = uv_min; verts[vi++] = fi;
+          verts[vi++] = x + w; verts[vi++] = y;     verts[vi++] = 0;
+          verts[vi++] = uv_max; verts[vi++] = uv_min; verts[vi++] = fi;
+          verts[vi++] = x + w; verts[vi++] = y + h; verts[vi++] = 0;
+          verts[vi++] = uv_max; verts[vi++] = uv_max; verts[vi++] = fi;
+
+          /* Triangle 2 */
+          verts[vi++] = x;     verts[vi++] = y;     verts[vi++] = 0;
+          verts[vi++] = uv_min; verts[vi++] = uv_min; verts[vi++] = fi;
+          verts[vi++] = x + w; verts[vi++] = y + h; verts[vi++] = 0;
+          verts[vi++] = uv_max; verts[vi++] = uv_max; verts[vi++] = fi;
+          verts[vi++] = x;     verts[vi++] = y + h; verts[vi++] = 0;
+          verts[vi++] = uv_min; verts[vi++] = uv_max; verts[vi++] = fi;
+        }
+
+      glBindVertexArray (priv->lod_vaos[lod_idx]);
+      glBindBuffer (GL_ARRAY_BUFFER, priv->lod_vbos[lod_idx]);
+      glBufferData (GL_ARRAY_BUFFER, sizeof (verts), verts, GL_STATIC_DRAW);
+
+      GLint stride = 6 * sizeof (float);
+      glEnableVertexAttribArray (0);
+      glVertexAttribPointer (0, 3, GL_FLOAT, GL_FALSE, stride, (void *)0);
+      glEnableVertexAttribArray (1);
+      glVertexAttribPointer (1, 2, GL_FLOAT, GL_FALSE, stride, (void *)(3 * sizeof(float)));
+      glEnableVertexAttribArray (2);
+      glVertexAttribPointer (2, 1, GL_FLOAT, GL_FALSE, stride, (void *)(5 * sizeof(float)));
+
+      glBindVertexArray (0);
+      glBindBuffer (GL_ARRAY_BUFFER, 0);
     }
 }
 
 /**
  * gthree_pmrem_generator_from_cubemap:
  *
- * Returns: (transfer full):
+ * GPU-accelerated PMREM generation. Renders fullscreen quads through
+ * GGX filter shaders into a CubeUV layout texture.
+ *
+ * Returns: (transfer full): A CubeUV texture
  */
 GthreeTexture *
 gthree_pmrem_generator_from_cubemap (GthreePMREMGenerator *generator,
-                                     GthreeCubeTexture    *cubemap)
+                                     GthreeTexture        *cube_texture,
+                                     int                   cube_size)
 {
   GthreePMREMGeneratorPrivate *priv = gthree_pmrem_generator_get_instance_private (generator);
-  GdkPixbuf *pixbufs[6];
-  gboolean pixbufs_scaled = FALSE;
-  int cube_size, lod_max;
-  int tex_width, tex_height;
-  float *buffer;
-  GthreeTexture *result;
-  int total_lods;
-  int *size_lods;
 
-  for (int i = 0; i < 6; i++)
-    pixbufs[i] = gthree_cube_texture_get_face_pixbuf (cubemap, i);
-
-  cube_size = gdk_pixbuf_get_width (pixbufs[0]);
-
-  /* Cap input size to avoid extremely slow CPU-side GGX filtering.
-     Three.js uses GPU rendering so it handles large sizes efficiently;
-     our CPU path would take minutes for 1024+ faces. */
-  if (cube_size > 256)
-    {
-      for (int i = 0; i < 6; i++)
-        {
-          GdkPixbuf *scaled = gdk_pixbuf_scale_simple (pixbufs[i], 256, 256, GDK_INTERP_BILINEAR);
-          pixbufs[i] = scaled;
-        }
-      cube_size = 256;
-      pixbufs_scaled = TRUE;
-    }
-
-  lod_max = (int)floor (log2 (cube_size));
+  int lod_max = (int)floor (log2 (cube_size));
   cube_size = 1 << lod_max;
+  int tex_width = 3 * MAX (cube_size, MIN_TILE_SIZE * 7);
+  int tex_height = 4 * cube_size;
+  int total_lods = lod_max - LOD_MIN + 1 + EXTRA_LOD_COUNT;
 
-  /* Match three.js: width = 3 * max(cubeSize, 16*7), height = 4 * cubeSize */
-  tex_width = 3 * MAX (cube_size, MIN_TILE_SIZE * 7);
-  tex_height = 4 * cube_size;
-
-  /* Number of LOD levels: from lodMax down to LOD_MIN, plus EXTRA_LOD_COUNT
-   * extra levels at MIN_TILE_SIZE resolution */
-  total_lods = lod_max - LOD_MIN + 1 + EXTRA_LOD_COUNT;
-  size_lods = g_new (int, total_lods);
-
+  int *size_lods = g_newa (int, total_lods);
   {
     int lod = lod_max;
     for (int i = 0; i < total_lods; i++)
@@ -428,91 +326,160 @@ gthree_pmrem_generator_from_cubemap (GthreePMREMGenerator *generator,
       }
   }
 
-  buffer = g_new0 (float, tex_width * tex_height * 4);
+  ensure_gpu_resources (priv, cube_size, lod_max, total_lods,
+                        tex_width, tex_height, size_lods);
 
-  /* For each LOD level, render 6 faces into the CubeUV layout.
-   *
-   * Layout (matching bilinearCubeUV in the shader):
-   *   - Each face tile is faceSize x faceSize pixels, with a 1-pixel border
-   *     on each side for seamless bilinear filtering. The face content
-   *     occupies (faceSize - 2) x (faceSize - 2) interior pixels.
-   *   - Faces 0,1,2 go in the top row; faces 3,4,5 in the bottom row
-   *     (offset by +faceSize in Y).
-   *   - face columns: x = face_in_row * faceSize
-   *   - For LODs with faceSize == MIN_TILE_SIZE (the extra filter levels),
-   *     they are offset in X by filterInt * 3 * MIN_TILE_SIZE.
-   *   - Y offset: 4 * (cubeSize - faceSize) to stack mips from top. */
-  for (int lod_idx = 0; lod_idx < total_lods; lod_idx++)
+  /* Save GL state */
+  GLint old_fbo, old_viewport[4], old_program, old_vao;
+  GLint old_active_texture;
+  GLfloat old_clear_color[4];
+  GLboolean old_depth_test, old_blend, old_scissor_test;
+  glGetIntegerv (GL_FRAMEBUFFER_BINDING, &old_fbo);
+  glGetIntegerv (GL_VIEWPORT, old_viewport);
+  glGetIntegerv (GL_CURRENT_PROGRAM, &old_program);
+  glGetIntegerv (GL_VERTEX_ARRAY_BINDING, &old_vao);
+  glGetIntegerv (GL_ACTIVE_TEXTURE, &old_active_texture);
+  glGetFloatv (GL_COLOR_CLEAR_VALUE, old_clear_color);
+  old_depth_test = glIsEnabled (GL_DEPTH_TEST);
+  old_blend = glIsEnabled (GL_BLEND);
+  old_scissor_test = glIsEnabled (GL_SCISSOR_TEST);
+
+  glDisable (GL_DEPTH_TEST);
+  glDisable (GL_BLEND);
+  glEnable (GL_SCISSOR_TEST);
+  glActiveTexture (GL_TEXTURE0);
+
+  /* Create the two render targets (FBO + texture) */
+  guint cubeuv_tex, cubeuv_fbo;
+  guint pingpong_tex, pingpong_fbo;
+
+  glGenTextures (1, &cubeuv_tex);
+  glBindTexture (GL_TEXTURE_2D, cubeuv_tex);
+  glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA16F, tex_width, tex_height, 0, GL_RGBA, GL_HALF_FLOAT, NULL);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+  glGenFramebuffers (1, &cubeuv_fbo);
+  glBindFramebuffer (GL_FRAMEBUFFER, cubeuv_fbo);
+  glFramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, cubeuv_tex, 0);
+
+  glViewport (0, 0, tex_width, tex_height);
+  glScissor (0, 0, tex_width, tex_height);
+  glClearColor (0, 0, 0, 1);
+  glClear (GL_COLOR_BUFFER_BIT);
+
+  glGenTextures (1, &pingpong_tex);
+  glBindTexture (GL_TEXTURE_2D, pingpong_tex);
+  glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA16F, tex_width, tex_height, 0, GL_RGBA, GL_HALF_FLOAT, NULL);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+  glGenFramebuffers (1, &pingpong_fbo);
+  glBindFramebuffer (GL_FRAMEBUFFER, pingpong_fbo);
+  glFramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pingpong_tex, 0);
+  glClearColor (0, 0, 0, 1);
+  glClear (GL_COLOR_BUFFER_BIT);
+
+  /* Ensure cube texture is realized */
+  gthree_texture_realize (cube_texture, priv->renderer);
+  gthree_texture_load (cube_texture, priv->renderer, 0);
+
+  /* Step 1: Render cubemap into CubeUV LOD 0 */
+  {
+    int size = size_lods[0];
+    int vp_w = 3 * size;
+    int vp_h = 2 * size;
+    int vp_x = 0;
+    int vp_y = 4 * (cube_size - size);
+
+    glBindFramebuffer (GL_FRAMEBUFFER, cubeuv_fbo);
+    glViewport (vp_x, vp_y, vp_w, vp_h);
+    glScissor (vp_x, vp_y, vp_w, vp_h);
+
+    glUseProgram (priv->cubemap_program);
+
+    GLint loc_env = glGetUniformLocation (priv->cubemap_program, "envMap");
+    GLint loc_flip = glGetUniformLocation (priv->cubemap_program, "flipEnvMap");
+
+    glUniform1i (loc_env, 0);
+    glUniform1f (loc_flip, GTHREE_IS_CUBE_TEXTURE (cube_texture) ? -1.0f : 1.0f);
+
+    gthree_texture_bind (cube_texture, priv->renderer, 0, GL_TEXTURE_CUBE_MAP);
+
+    glBindVertexArray (priv->lod_vaos[0]);
+    glDrawArrays (GL_TRIANGLES, 0, 36);
+  }
+
+  /* Step 2: GGX filter for each subsequent LOD level */
+  for (int lod_out = 1; lod_out < total_lods; lod_out++)
     {
-      int face_size = size_lods[lod_idx];
-      int mip_int = lod_max - (lod_idx < (lod_max - LOD_MIN + 1) ? lod_idx : (lod_max - LOD_MIN));
-      int filter_int = LOD_MIN - mip_int;
-      if (filter_int < 0)
-        filter_int = 0;
-      mip_int = MAX (mip_int, LOD_MIN);
+      int lod_in = lod_out - 1;
+      int out_size = size_lods[lod_out];
 
-      int base_x, base_y;
-      if (lod_idx > lod_max - LOD_MIN)
-        base_x = (lod_idx - (lod_max - LOD_MIN)) * 3 * MIN_TILE_SIZE;
-      else
-        base_x = 0;
-      base_y = 4 * (cube_size - face_size);
+      float target_roughness = (float)lod_out / (float)(total_lods - 1);
+      float source_roughness = (float)lod_in / (float)(total_lods - 1);
+      float incremental_roughness = sqrtf (target_roughness * target_roughness - source_roughness * source_roughness);
+      float blur_strength = target_roughness * 1.25f;
+      float adjusted_roughness = incremental_roughness * blur_strength;
 
-      for (int face = 0; face < 6; face++)
-        {
-          int face_in_row = face % 3;
-          int row = face > 2 ? 1 : 0;
+      int x = 3 * out_size * (lod_out > lod_max - LOD_MIN ? lod_out - lod_max + LOD_MIN : 0);
+      int y = 4 * (cube_size - out_size);
+      int vp_w = 3 * out_size;
+      int vp_h = 2 * out_size;
 
-          int tile_x = base_x + face_in_row * face_size;
-          int tile_y = base_y + row * face_size;
+      GLint loc_env = glGetUniformLocation (priv->ggx_program, "envMap");
+      GLint loc_rough = glGetUniformLocation (priv->ggx_program, "roughness");
+      GLint loc_mip = glGetUniformLocation (priv->ggx_program, "mipInt");
 
-          int content_size = face_size - 2;
-          if (content_size < 1)
-            content_size = 1;
+      glUseProgram (priv->ggx_program);
+      glUniform1i (loc_env, 0);
 
-          for (int py = 0; py < face_size; py++)
-            {
-              for (int px = 0; px < face_size; px++)
-                {
-                  int out_x = tile_x + px;
-                  int out_y = tile_y + py;
+      /* Pass 1: Filter from cubeUV into pingPong */
+      glBindFramebuffer (GL_FRAMEBUFFER, pingpong_fbo);
+      glViewport (x, y, vp_w, vp_h);
+      glScissor (x, y, vp_w, vp_h);
 
-                  if (out_x < 0 || out_x >= tex_width ||
-                      out_y < 0 || out_y >= tex_height)
-                    continue;
+      glBindTexture (GL_TEXTURE_2D, cubeuv_tex);
+      glUniform1f (loc_rough, adjusted_roughness);
+      glUniform1f (loc_mip, (float)(lod_max - lod_in));
 
-                  /* Map pixel to UV within the face content area.
-                   * Interior pixels [1..faceSize-2] map to [0..1].
-                   * Border pixels (0 and faceSize-1) map to slightly
-                   * outside [0,1], which we clamp. */
-                  float u = ((float)(px - 1) + 0.5f) / (float)content_size;
-                  float v = ((float)(py - 1) + 0.5f) / (float)content_size;
-                  u = CLAMP (u, 0.0f, 1.0f);
-                  v = CLAMP (v, 0.0f, 1.0f);
+      glBindVertexArray (priv->lod_vaos[lod_out]);
+      glDrawArrays (GL_TRIANGLES, 0, 36);
 
-                  float dir[3];
-                  get_direction (u, v, face, dir);
+      /* Pass 2: Copy from pingPong back to cubeUV */
+      glBindFramebuffer (GL_FRAMEBUFFER, cubeuv_fbo);
+      glViewport (x, y, vp_w, vp_h);
+      glScissor (x, y, vp_w, vp_h);
 
-                  float roughness = lod_roughness (lod_idx, lod_max);
-                  float rgba[4];
+      glBindTexture (GL_TEXTURE_2D, pingpong_tex);
+      glUniform1f (loc_rough, 0.0f);
+      glUniform1f (loc_mip, (float)(lod_max - lod_out));
 
-                  if (roughness < 0.01f)
-                    {
-                      dir[0] = -dir[0];
-                      sample_cubemap (pixbufs, dir, rgba);
-                    }
-                  else
-                    {
-                      ggx_filter_color (pixbufs, dir, roughness, rgba);
-                    }
-                  write_texel (buffer, tex_width, out_x, out_y, rgba);
-                }
-            }
-        }
+      glDrawArrays (GL_TRIANGLES, 0, 36);
     }
 
-  /* Create a GthreeTexture and upload the data via GL */
-  result = g_object_new (GTHREE_TYPE_TEXTURE, NULL);
+  /* Clean up render targets */
+  glDeleteFramebuffers (1, &pingpong_fbo);
+  glDeleteTextures (1, &pingpong_tex);
+  glDeleteFramebuffers (1, &cubeuv_fbo);
+
+  /* Restore GL state */
+  glBindVertexArray (old_vao);
+  glUseProgram (old_program);
+  glBindFramebuffer (GL_FRAMEBUFFER, old_fbo);
+  glViewport (old_viewport[0], old_viewport[1], old_viewport[2], old_viewport[3]);
+  glActiveTexture (old_active_texture);
+  glClearColor (old_clear_color[0], old_clear_color[1], old_clear_color[2], old_clear_color[3]);
+  if (old_depth_test) glEnable (GL_DEPTH_TEST); else glDisable (GL_DEPTH_TEST);
+  if (old_blend) glEnable (GL_BLEND); else glDisable (GL_BLEND);
+  if (old_scissor_test) glEnable (GL_SCISSOR_TEST); else glDisable (GL_SCISSOR_TEST);
+
+  /* Wrap the GL texture in a GthreeTexture */
+  GthreeTexture *result = g_object_new (GTHREE_TYPE_TEXTURE, NULL);
   gthree_texture_set_mapping (result, GTHREE_MAPPING_CUBE_UV_REFLECTION);
   gthree_texture_set_generate_mipmaps (result, FALSE);
   gthree_texture_set_mag_filter (result, GTHREE_FILTER_LINEAR);
@@ -520,33 +487,8 @@ gthree_pmrem_generator_from_cubemap (GthreePMREMGenerator *generator,
   gthree_texture_set_flip_y (result, FALSE);
   gthree_texture_set_name (result, "PMREM.cubeUv");
 
-  gthree_renderer_push_current (priv->renderer);
-
-  gthree_texture_realize (result, priv->renderer);
-  gthree_texture_bind (result, priv->renderer, -1, GL_TEXTURE_2D);
-
-  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-  glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA16F,
-                tex_width, tex_height, 0,
-                GL_RGBA, GL_FLOAT, buffer);
-
+  gthree_texture_set_gl_texture (result, priv->renderer, cubeuv_tex);
   gthree_resource_mark_clean_for (GTHREE_RESOURCE (result), priv->renderer);
-
-  gthree_renderer_pop_current (priv->renderer);
-
-  g_free (buffer);
-  g_free (size_lods);
-
-  if (pixbufs_scaled)
-    for (int i = 0; i < 6; i++)
-      g_object_unref (pixbufs[i]);
-
-  priv->texture_width = tex_width;
-  priv->texture_height = tex_height;
 
   {
     float *meta = g_new (float, 3);
