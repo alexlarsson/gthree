@@ -107,6 +107,8 @@ typedef struct {
   guint old_num_global_clipping_planes;
   graphene_vec4_t old_clear_color;
   GthreeRenderTarget *current_render_target;
+  int current_active_cube_face;
+  int current_active_mipmap_level;
   GthreeProgram *current_program;
   GthreeMaterial *current_material;
   GthreeCamera *current_camera;
@@ -1057,6 +1059,8 @@ gthree_renderer_set_render_target (GthreeRenderer *renderer,
 
   g_clear_object (&priv->current_render_target);
   priv->current_render_target = render_target;
+  priv->current_active_cube_face = active_cube_target;
+  priv->current_active_mipmap_level = active_mipmap_level;
 
   if (render_target != NULL)
     gthree_render_target_realize (render_target, renderer);
@@ -1066,19 +1070,12 @@ gthree_renderer_set_render_target (GthreeRenderer *renderer,
 
   if (render_target)
     {
-#ifdef TODO
-      if ( renderTarget.isWebGLRenderTargetCube )
+      if (gthree_render_target_get_is_cube (render_target))
         {
-          var __webglFramebuffer = properties.get( renderTarget ).__webglFramebuffer;
-          framebuffer = __webglFramebuffer[ activeCubeFace || 0 ];
-          isCube = true;
-        }
-      else if ( renderTarget.isWebGLMultisampleRenderTarget )
-        {
-          framebuffer = properties.get( renderTarget ).__webglMultisampledFramebuffer;
+          framebuffer = gthree_render_target_get_gl_framebuffer_for_face (render_target, renderer, active_cube_target);
+          is_cube = TRUE;
         }
       else
-#endif
         {
           framebuffer = gthree_render_target_get_gl_framebuffer (render_target, renderer);
         }
@@ -1119,13 +1116,11 @@ gthree_renderer_set_render_target (GthreeRenderer *renderer,
 
   if (is_cube)
     {
-#ifdef TODO
-      var textureProperties = properties.get( renderTarget.texture );
-      _gl.framebufferTexture2D( _gl.FRAMEBUFFER, _gl.COLOR_ATTACHMENT0,
-                                _gl.TEXTURE_CUBE_MAP_POSITIVE_X + ( activeCubeFace || 0 ),
-                                textureProperties.__webglTexture,
-                                activeMipMapLevel || 0 );
-#endif
+      GthreeTexture *texture = gthree_render_target_get_texture (render_target);
+      glFramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                              GL_TEXTURE_CUBE_MAP_POSITIVE_X + active_cube_target,
+                              gthree_texture_get_gl_texture (texture, renderer),
+                              active_mipmap_level);
     }
 
   gthree_renderer_pop_current (renderer);
@@ -2108,6 +2103,8 @@ render_shadow_map (GthreeRenderer *renderer,
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
   g_autoptr(GthreeRenderTarget) current_render_target = NULL;
+  int current_active_cube_face;
+  int current_active_mipmap_level;
   GList *l;
   int faceCount;
   graphene_vec3_t c;
@@ -2124,6 +2121,8 @@ render_shadow_map (GthreeRenderer *renderer,
   push_debug_group ("rendering shadow maps");
 
   g_set_object (&current_render_target,  priv->current_render_target);
+  current_active_cube_face = priv->current_active_cube_face;
+  current_active_mipmap_level = priv->current_active_mipmap_level;
 
   // Set GL state for depth map.
   set_blending (renderer, GTHREE_BLEND_NO, 0, 0, 0);
@@ -2320,7 +2319,9 @@ render_shadow_map (GthreeRenderer *renderer,
 
   priv->shadowmap_needs_update = FALSE;
 
-  gthree_renderer_set_render_target (renderer, current_render_target, 0, 0);
+  gthree_renderer_set_render_target (renderer, current_render_target,
+                                     current_active_cube_face,
+                                     current_active_mipmap_level);
 
   pop_debug_group ();
 }
@@ -3313,7 +3314,9 @@ gthree_renderer_render (GthreeRenderer *renderer,
   if (priv->clipping_enabled)
     clipping_end_shadows (renderer);
 
-  gthree_renderer_set_render_target (renderer, priv->current_render_target, 0, 0);
+  gthree_renderer_set_render_target (renderer, priv->current_render_target,
+                                     priv->current_active_cube_face,
+                                     priv->current_active_mipmap_level);
 
   gthree_renderer_render_background (renderer, scene);
 

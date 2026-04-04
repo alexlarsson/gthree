@@ -20,6 +20,7 @@ typedef struct {
 
   gboolean depth_buffer;
   gboolean stencil_buffer;
+  gboolean is_cube;
 
   GthreeTexture *texture;
   GthreeTexture *depth_texture;
@@ -30,6 +31,8 @@ typedef struct {
   GthreeResourceRealizeData parent;
   guint gl_framebuffer;
   guint gl_depthbuffer;
+  guint gl_cube_framebuffers[6];
+  guint gl_cube_depthbuffers[6];
 } GthreeRenderTargetRealizeData;
 
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeRenderTarget, gthree_render_target, GTHREE_TYPE_RESOURCE)
@@ -103,6 +106,7 @@ gthree_render_target_unrealize (GthreeResource *resource,
                                 GthreeRenderer *renderer)
 {
   GthreeRenderTargetRealizeData *data = gthree_resource_get_data_for (resource, renderer);
+  int i;
 
   if (data->gl_framebuffer)
     {
@@ -114,6 +118,20 @@ gthree_render_target_unrealize (GthreeResource *resource,
     {
       gthree_renderer_lazy_delete (renderer, GTHREE_RESOURCE_KIND_RENDERBUFFER, data->gl_depthbuffer);
       data->gl_depthbuffer = 0;
+    }
+
+  for (i = 0; i < 6; i++)
+    {
+      if (data->gl_cube_framebuffers[i])
+        {
+          gthree_renderer_lazy_delete (renderer, GTHREE_RESOURCE_KIND_FRAMEBUFFER, data->gl_cube_framebuffers[i]);
+          data->gl_cube_framebuffers[i] = 0;
+        }
+      if (data->gl_cube_depthbuffers[i])
+        {
+          gthree_renderer_lazy_delete (renderer, GTHREE_RESOURCE_KIND_RENDERBUFFER, data->gl_cube_depthbuffers[i]);
+          data->gl_cube_depthbuffers[i] = 0;
+        }
     }
 }
 
@@ -143,6 +161,31 @@ gthree_render_target_new (int width,
   graphene_rect_init (&priv->viewport, 0, 0, width, height);
 
   return target;
+}
+
+GthreeRenderTarget *
+gthree_render_target_new_cube (int size)
+{
+  GthreeRenderTarget *target = g_object_new (GTHREE_TYPE_RENDER_TARGET, NULL);
+  GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
+
+  priv->width = size;
+  priv->height = size;
+  priv->is_cube = TRUE;
+
+  graphene_rect_init (&priv->scissor, 0, 0, size, size);
+  graphene_rect_init (&priv->viewport, 0, 0, size, size);
+
+  gthree_texture_set_mapping (priv->texture, GTHREE_MAPPING_CUBE_REFLECTION);
+
+  return target;
+}
+
+gboolean
+gthree_render_target_get_is_cube (GthreeRenderTarget *target)
+{
+  GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
+  return priv->is_cube;
 }
 
 /**
@@ -323,15 +366,10 @@ static void
 setup_depth_renderbuffer (GthreeRenderTarget *render_target, GthreeRenderTargetRealizeData *data, GthreeRenderer *renderer)
 {
   GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (render_target);
-  gboolean is_cube = FALSE;
-
-#ifdef TODO
-  is_cube = ( renderTarget.isWebGLRenderTargetCube === true );
-#endif
 
   if (priv->depth_texture)
     {
-      if (is_cube)
+      if (priv->is_cube)
         {
           g_error ("target.depthTexture not supported in Cube render targets");
         }
@@ -364,17 +402,21 @@ setup_depth_renderbuffer (GthreeRenderTarget *render_target, GthreeRenderTargetR
     }
   else
     {
-      if (is_cube)
+      if (priv->is_cube)
         {
-#ifdef TODO
-          renderTargetProperties.__webglDepthbuffer = [];
-          for ( var i = 0; i < 6; i ++ )
+          int i;
+          for (i = 0; i < 6; i++)
             {
-              _gl.bindFramebuffer( _gl.FRAMEBUFFER, renderTargetProperties.__webglFramebuffer[ i ] );
-              renderTargetProperties.__webglDepthbuffer[ i ] = _gl.createRenderbuffer();
-              setupRenderBufferStorage( renderTargetProperties.__webglDepthbuffer[ i ], renderTarget );
-            }
+              glBindFramebuffer (GL_FRAMEBUFFER, data->gl_cube_framebuffers[i]);
+              glGenRenderbuffers (1, &data->gl_cube_depthbuffers[i]);
+#ifdef DEBUG_LABELS
+              {
+                g_autofree char *label = g_strdup_printf ("rendertarget.%d.RB.cube_depth.%d", priv->instance_id, i);
+                glObjectLabel (GL_RENDERBUFFER, data->gl_cube_depthbuffers[i], strlen (label), label);
+              }
 #endif
+              setup_renderbuffer_storage (render_target, data->gl_cube_depthbuffers[i], FALSE);
+            }
         }
       else
         {
@@ -399,6 +441,16 @@ gthree_render_target_get_gl_framebuffer (GthreeRenderTarget *target,
 {
   GthreeRenderTargetRealizeData *data = gthree_resource_get_data_for (GTHREE_RESOURCE (target), renderer);
   return data->gl_framebuffer;
+}
+
+guint
+gthree_render_target_get_gl_framebuffer_for_face (GthreeRenderTarget *target,
+                                                  GthreeRenderer *renderer,
+                                                  int face)
+{
+  GthreeRenderTargetRealizeData *data = gthree_resource_get_data_for (GTHREE_RESOURCE (target), renderer);
+  g_return_val_if_fail (face >= 0 && face < 6, 0);
+  return data->gl_cube_framebuffers[face];
 }
 
 const graphene_rect_t *
@@ -435,14 +487,10 @@ gthree_render_target_update_mipmap (GthreeRenderTarget *target,
   GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
   if (texture_needs_generate_mipmaps (priv->texture))
     {
-      guint target = GL_TEXTURE_2D;
-#ifdef TOOD
-      if (renderTarget.isWebGLRenderTargetCube)
-        target = GL_TEXTURE_CUBE_MAP;
-#endif
-      gthree_texture_bind (priv->texture, renderer, -1, target);
-      generate_mipmap (target, priv->texture, priv->width, priv->height);
-      glBindTexture (target, 0);
+      guint gl_target = priv->is_cube ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D;
+      gthree_texture_bind (priv->texture, renderer, -1, gl_target);
+      generate_mipmap (gl_target, priv->texture, priv->width, priv->height);
+      glBindTexture (gl_target, 0);
     }
 }
 
@@ -452,89 +500,70 @@ gthree_render_target_realize (GthreeRenderTarget *target,
 {
   GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
   GthreeRenderTargetRealizeData *data = gthree_resource_get_data_for (GTHREE_RESOURCE (target), renderer);
-  gboolean is_cube = FALSE, is_multisample = FALSE;
   GthreeTexture *texture;
 
-  if (data->gl_framebuffer)
-    return;
+  if (priv->is_cube)
+    {
+      if (data->gl_cube_framebuffers[0])
+        return;
+    }
+  else
+    {
+      if (data->gl_framebuffer)
+        return;
+    }
 
   gthree_resource_set_realized_for (GTHREE_RESOURCE (target), renderer);
 
-  glGenFramebuffers (1, &data->gl_framebuffer);
-#ifdef DEBUG_LABELS
-  {
-    g_autofree char *label = g_strdup_printf ("rendertarget.%d.FB", priv->instance_id);
-    glObjectLabel (GL_FRAMEBUFFER, data->gl_framebuffer, strlen (label), label);
-  }
-#endif
-
   texture = priv->texture;
 
-#ifdef TODO
-  is_cube = ( renderTarget.isWebGLRenderTargetCube === true );
-  is_multisample = ( renderTarget.isWebGLMultisampleRenderTarget === true );
-#endif
-  // Setup framebuffer
-  if (is_cube)
+  if (priv->is_cube)
     {
-#ifdef TODO
-      renderTargetProperties.__webglFramebuffer = [];
-      for ( var i = 0; i < 6; i ++ ) {
-        renderTargetProperties.__webglFramebuffer[ i ] = _gl.createFramebuffer();
+      int i;
+      guint gl_format, gl_type, gl_internal_format;
+
+      glGenFramebuffers (6, data->gl_cube_framebuffers);
+#ifdef DEBUG_LABELS
+      for (i = 0; i < 6; i++)
+        {
+          g_autofree char *label = g_strdup_printf ("rendertarget.%d.FB.cube.%d", priv->instance_id, i);
+          glObjectLabel (GL_FRAMEBUFFER, data->gl_cube_framebuffers[i], strlen (label), label);
+        }
+#endif
+
+      gthree_texture_bind (texture, renderer, -1, GL_TEXTURE_CUBE_MAP);
+      gthree_texture_set_parameters (GL_TEXTURE_CUBE_MAP, texture);
+
+      gl_format = gthree_texture_format_to_gl (gthree_texture_get_format (texture));
+      gl_type = gthree_texture_data_type_to_gl (gthree_texture_get_data_type (texture));
+      gl_internal_format = gthree_texture_get_internal_gl_format (gl_format, gl_type);
+
+      for (i = 0; i < 6; i++)
+        {
+          glTexImage2D (GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, gl_internal_format,
+                        priv->width, priv->height, 0, gl_format, gl_type, NULL);
+          glBindFramebuffer (GL_FRAMEBUFFER, data->gl_cube_framebuffers[i]);
+          glFramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                  GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                                  gthree_texture_get_gl_texture (texture, renderer), 0);
+        }
+
+      if (texture_needs_generate_mipmaps (texture))
+        generate_mipmap (GL_TEXTURE_CUBE_MAP, texture, priv->width, priv->height);
+
+      glBindTexture (GL_TEXTURE_CUBE_MAP, 0);
+      glBindFramebuffer (GL_FRAMEBUFFER, 0);
+    }
+  else
+    {
+      glGenFramebuffers (1, &data->gl_framebuffer);
+#ifdef DEBUG_LABELS
+      {
+        g_autofree char *label = g_strdup_printf ("rendertarget.%d.FB", priv->instance_id);
+        glObjectLabel (GL_FRAMEBUFFER, data->gl_framebuffer, strlen (label), label);
       }
 #endif
-    }
-  else
-    {
-      if (is_multisample)
-        {
-#ifdef TODO
-          renderTargetProperties.__webglMultisampledFramebuffer = _gl.createFramebuffer();
-          renderTargetProperties.__webglColorRenderbuffer = _gl.createRenderbuffer();
 
-          _gl.bindRenderbuffer( _gl.RENDERBUFFER, renderTargetProperties.__webglColorRenderbuffer );
-          var glFormat = utils.convert( renderTarget.texture.format );
-          var glType = utils.convert( renderTarget.texture.type );
-          var glInternalFormat = getInternalFormat( glFormat, glType );
-          var samples = getRenderTargetSamples( renderTarget );
-          _gl.renderbufferStorageMultisample( _gl.RENDERBUFFER, samples, glInternalFormat, renderTarget.width, renderTarget.height );
-
-          _gl.bindFramebuffer( _gl.FRAMEBUFFER, renderTargetProperties.__webglMultisampledFramebuffer );
-          _gl.framebufferRenderbuffer( _gl.FRAMEBUFFER, _gl.COLOR_ATTACHMENT0, _gl.RENDERBUFFER, renderTargetProperties.__webglColorRenderbuffer );
-          _gl.bindRenderbuffer( _gl.RENDERBUFFER, null );
-
-          if ( renderTarget.depthBuffer )
-            {
-              renderTargetProperties.__webglDepthRenderbuffer = _gl.createRenderbuffer();
-              setupRenderBufferStorage( renderTargetProperties.__webglDepthRenderbuffer, renderTarget, true );
-            }
-          _gl.bindFramebuffer( _gl.FRAMEBUFFER, null );
-#endif
-        }
-    }
-
-  // Setup color buffer
-  if (is_cube)
-    {
-#ifdef TODO
-      state.bindTexture( _gl.TEXTURE_CUBE_MAP, textureProperties.__webglTexture );
-      setTextureParameters( _gl.TEXTURE_CUBE_MAP, renderTarget.texture, supportsMips );
-
-      for ( var i = 0; i < 6; i ++ )
-        {
-          setupFrameBufferTexture( renderTargetProperties.__webglFramebuffer[ i ], renderTarget,
-                                   _gl.COLOR_ATTACHMENT0, _gl.TEXTURE_CUBE_MAP_POSITIVE_X + i );
-        }
-
-      if ( textureNeedsGenerateMipmaps( renderTarget.texture, supportsMips ) )
-        {
-          generateMipmap( _gl.TEXTURE_CUBE_MAP, renderTarget.texture, renderTarget.width, renderTarget.height );
-        }
-      state.bindTexture( _gl.TEXTURE_CUBE_MAP, null );
-#endif
-    }
-  else
-    {
       gthree_texture_bind (texture, renderer, -1, GL_TEXTURE_2D);
       gthree_texture_set_parameters (GL_TEXTURE_2D, texture);
       gthree_texture_setup_framebuffer (texture, renderer,
@@ -547,7 +576,6 @@ gthree_render_target_realize (GthreeRenderTarget *target,
       glBindTexture (GL_TEXTURE_2D, 0);
     }
 
-  // Setup depth and stencil buffers
   if (priv->depth_buffer)
     setup_depth_renderbuffer (target, data, renderer);
 }

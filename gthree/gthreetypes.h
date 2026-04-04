@@ -34,6 +34,7 @@ typedef struct _GthreeLightSetup GthreeLightSetup;
 typedef struct _GthreeResource GthreeResource;
 typedef struct _GthreeTexture GthreeTexture;
 typedef struct _GthreeCubeTexture GthreeCubeTexture;
+typedef struct _GthreeCubeCamera GthreeCubeCamera;
 typedef struct _GthreeGeometry GthreeGeometry;
 typedef struct _GthreeAttribute GthreeAttribute;
 typedef struct _GthreeAttributeArray GthreeAttributeArray;

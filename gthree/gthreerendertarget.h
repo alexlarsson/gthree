@@ -42,7 +42,11 @@ GTHREE_API
 GthreeRenderTarget *gthree_render_target_new (int width,
                                               int height);
 GTHREE_API
+GthreeRenderTarget *gthree_render_target_new_cube (int size);
+GTHREE_API
 GthreeRenderTarget *gthree_render_target_clone (GthreeRenderTarget *target);
+GTHREE_API
+gboolean       gthree_render_target_get_is_cube      (GthreeRenderTarget *target);
 
 GTHREE_API
 int            gthree_render_target_get_width         (GthreeRenderTarget *target);

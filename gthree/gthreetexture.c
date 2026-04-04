@@ -652,12 +652,28 @@ gthree_texture_setup_framebuffer (GthreeTexture *texture,
 }
 
 
+static int
+gthree_texture_get_gl_target (GthreeTexture *texture)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  switch (priv->mapping)
+    {
+    case GTHREE_MAPPING_CUBE_REFLECTION:
+    case GTHREE_MAPPING_CUBE_REFRACTION:
+      return GL_TEXTURE_CUBE_MAP;
+    default:
+      return GL_TEXTURE_2D;
+    }
+}
+
 static void
 gthree_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer, int slot)
 {
   GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+  int gl_target = gthree_texture_get_gl_target (texture);
 
-  gthree_texture_bind (texture, renderer, slot, GL_TEXTURE_2D);
+  gthree_texture_bind (texture, renderer, slot, gl_target);
 
   if (gthree_resource_get_dirty_for (GTHREE_RESOURCE (texture), renderer) && (priv->pixbuf || priv->surface))
     {

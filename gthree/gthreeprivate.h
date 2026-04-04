@@ -216,6 +216,9 @@ void     gthree_texture_set_parameters (guint texture_type,
 
 guint gthree_render_target_get_gl_framebuffer (GthreeRenderTarget *target,
                                                GthreeRenderer *renderer);
+guint gthree_render_target_get_gl_framebuffer_for_face (GthreeRenderTarget *target,
+                                                        GthreeRenderer *renderer,
+                                                        int face);
 void gthree_render_target_realize (GthreeRenderTarget *target,
                                    GthreeRenderer *renderer);
 const graphene_rect_t * gthree_render_target_get_viewport (GthreeRenderTarget *target);

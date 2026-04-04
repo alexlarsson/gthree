@@ -25,6 +25,7 @@
 #include <gthree/gthreescene.h>
 #include <gthree/gthreetexture.h>
 #include <gthree/gthreecubetexture.h>
+#include <gthree/gthreecubecamera.h>
 #include <gthree/gthreeloader.h>
 #include <gthree/gthreelight.h>
 #include <gthree/gthreelightshadow.h>
