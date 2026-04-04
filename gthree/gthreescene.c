@@ -11,6 +11,8 @@ typedef struct {
   gboolean bg_color_is_set;
   float bg_alpha;
   GthreeTexture *bg_texture;
+  GthreeTexture *environment;
+  float environment_intensity;
   GthreeMaterial *override_material;
   GthreeFog *fog;
 } GthreeScenePrivate;
@@ -35,6 +37,7 @@ gthree_scene_init (GthreeScene *scene)
   GthreeScenePrivate *priv = gthree_scene_get_instance_private (scene);
 
   priv->bg_alpha = -1;
+  priv->environment_intensity = 1.0f;
   gthree_object_set_matrix_auto_update (GTHREE_OBJECT (scene), FALSE);
 }
 
@@ -45,6 +48,7 @@ gthree_scene_finalize (GObject *obj)
   GthreeScenePrivate *priv = gthree_scene_get_instance_private (scene);
 
   g_clear_object (&priv->bg_texture);
+  g_clear_object (&priv->environment);
 
   g_clear_object (&priv->override_material);
 
@@ -114,6 +118,48 @@ gthree_scene_set_background_texture (GthreeScene   *scene,
   g_object_ref (texture);
   g_clear_object (&priv->bg_texture);
   priv->bg_texture = texture;
+}
+
+/**
+ * gthree_scene_get_environment:
+ *
+ * Returns: (transfer none) (nullable): The scene environment texture
+ */
+GthreeTexture *
+gthree_scene_get_environment (GthreeScene *scene)
+{
+  GthreeScenePrivate *priv = gthree_scene_get_instance_private (scene);
+
+  return priv->environment;
+}
+
+void
+gthree_scene_set_environment (GthreeScene   *scene,
+                              GthreeTexture *texture)
+{
+  GthreeScenePrivate *priv = gthree_scene_get_instance_private (scene);
+
+  if (texture)
+    g_object_ref (texture);
+  g_clear_object (&priv->environment);
+  priv->environment = texture;
+}
+
+float
+gthree_scene_get_environment_intensity (GthreeScene *scene)
+{
+  GthreeScenePrivate *priv = gthree_scene_get_instance_private (scene);
+
+  return priv->environment_intensity;
+}
+
+void
+gthree_scene_set_environment_intensity (GthreeScene *scene,
+                                        float        intensity)
+{
+  GthreeScenePrivate *priv = gthree_scene_get_instance_private (scene);
+
+  priv->environment_intensity = intensity;
 }
 
 /**

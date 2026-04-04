@@ -357,6 +357,39 @@ cube_camera_pre_render (GthreeRenderer *renderer)
   gthree_cube_camera_update (cc_cube_camera, renderer, cc_scene);
 }
 
+/* Scene environment test: the background cube texture is also set as
+   scene.environment, so the standard material sphere picks it up
+   automatically without an explicit env_map. */
+static void
+test_scene_environment (GthreeScene **scene, GthreeCamera **camera)
+{
+  graphene_vec3_t color;
+
+  *scene = gthree_scene_new ();
+  *camera = GTHREE_CAMERA (gthree_perspective_camera_new (45, 4.0/3.0, 0.1, 100));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (*camera), 0, 0, 2.8);
+  gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (*camera));
+
+  g_autoptr(GthreeCubeTexture) cube_tex = test_cube_texture_colored ();
+  gthree_scene_set_background_texture (*scene, GTHREE_TEXTURE (cube_tex));
+  gthree_scene_set_environment (*scene, GTHREE_TEXTURE (cube_tex));
+
+  GthreeAmbientLight *ambient = gthree_ambient_light_new (graphene_vec3_init (&color, 0.3, 0.3, 0.3));
+  gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (ambient));
+
+  GthreeDirectionalLight *dir = gthree_directional_light_new (graphene_vec3_init (&color, 1, 1, 1), G_PI);
+  gthree_object_set_position_xyz (GTHREE_OBJECT (dir), 2, 2, 2);
+  gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (dir));
+
+  g_autoptr(GthreeMeshStandardMaterial) mat = gthree_mesh_standard_material_new ();
+  gthree_mesh_standard_material_set_roughness (mat, 0.1);
+  gthree_mesh_standard_material_set_metalness (mat, 0.9);
+
+  g_autoptr(GthreeGeometry) geom = test_geometry_sphere ();
+  GthreeMesh *mesh = gthree_mesh_new (geom, GTHREE_MATERIAL (mat));
+  gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (mesh));
+}
+
 void
 register_feature_tests (void)
 {
@@ -368,4 +401,5 @@ register_feature_tests (void)
   register_test_with_pre_render ("render-target", test_render_target, NULL, render_target_pre_render);
   register_test ("cairo-texture", test_cairo_texture);
   register_test_with_pre_render ("cube-camera", test_cube_camera, NULL, cube_camera_pre_render);
+  register_test ("scene-environment", test_scene_environment);
 }

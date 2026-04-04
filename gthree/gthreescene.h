@@ -56,6 +56,16 @@ GTHREE_API
 void            gthree_scene_set_background_texture (GthreeScene   *scene,
                                                      GthreeTexture *texture);
 GTHREE_API
+GthreeTexture * gthree_scene_get_environment        (GthreeScene   *scene);
+GTHREE_API
+void            gthree_scene_set_environment        (GthreeScene   *scene,
+                                                     GthreeTexture *texture);
+GTHREE_API
+float           gthree_scene_get_environment_intensity (GthreeScene *scene);
+GTHREE_API
+void            gthree_scene_set_environment_intensity (GthreeScene *scene,
+                                                        float        intensity);
+GTHREE_API
 GthreeFog *     gthree_scene_get_fog                (GthreeScene   *scene);
 GTHREE_API
 void            gthree_scene_set_fog                (GthreeScene   *scene,

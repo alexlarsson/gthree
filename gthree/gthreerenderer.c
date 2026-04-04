@@ -24,6 +24,10 @@
 #include "gthreespotlight.h"
 #include "gthreepointlight.h"
 #include "gthreefog.h"
+#include "gthreescene.h"
+#include "gthreemeshstandardmaterial.h"
+#include "gthreemeshlambertmaterial.h"
+#include "gthreemeshphongmaterial.h"
 
 
 static graphene_vec3_t cube_directions[6];
@@ -143,6 +147,9 @@ typedef struct {
   guint vertex_array_object;
 
   guint dfg_lut_texture;
+
+  GthreeTexture *scene_environment;
+  float scene_environment_intensity;
 
   /* Background */
   GthreeMesh *bg_box_mesh;
@@ -1513,10 +1520,21 @@ init_material (GthreeRenderer *renderer,
 
   gthree_material_set_params (material, &parameters);
 
+  if (!parameters.env_map && priv->scene_environment &&
+      (GTHREE_IS_MESH_STANDARD_MATERIAL (material) ||
+       GTHREE_IS_MESH_LAMBERT_MATERIAL (material) ||
+       GTHREE_IS_MESH_PHONG_MATERIAL (material)))
+    {
+      parameters.env_map = TRUE;
+      parameters.env_map_mode = gthree_texture_get_mapping (priv->scene_environment);
+    }
+
   if (parameters.env_map && parameters.env_map_mode == GTHREE_MAPPING_CUBE_UV_REFLECTION)
     {
       GthreeTexture *env_tex = NULL;
       g_object_get (material, "env-map", &env_tex, NULL);
+      if (env_tex == NULL && priv->scene_environment)
+        env_tex = g_object_ref (priv->scene_environment);
       if (env_tex)
         {
           float *meta = g_object_get_data (G_OBJECT (env_tex), "cubeuv-meta");
@@ -2640,6 +2658,39 @@ set_program (GthreeRenderer *renderer,
 
       gthree_material_set_uniforms (material, m_uniforms, camera, renderer);
 
+      if (priv->scene_environment &&
+          (GTHREE_IS_MESH_STANDARD_MATERIAL (material) ||
+           GTHREE_IS_MESH_LAMBERT_MATERIAL (material) ||
+           GTHREE_IS_MESH_PHONG_MATERIAL (material)))
+        {
+          GthreeTexture *mat_env = NULL;
+          g_object_get (material, "env-map", &mat_env, NULL);
+          if (mat_env == NULL)
+            {
+              GthreeUniform *uni;
+
+              uni = gthree_uniforms_lookup_from_string (m_uniforms, "envMap");
+              if (uni != NULL)
+                gthree_uniform_set_texture (uni, priv->scene_environment);
+
+              uni = gthree_uniforms_lookup_from_string (m_uniforms, "flipEnvMap");
+              if (uni != NULL)
+                gthree_uniform_set_float (uni,
+                  GTHREE_IS_CUBE_TEXTURE (priv->scene_environment) ? -1 : 1);
+
+              uni = gthree_uniforms_lookup_from_string (m_uniforms, "envMapIntensity");
+              if (uni != NULL)
+                gthree_uniform_set_float (uni, priv->scene_environment_intensity);
+
+              uni = gthree_uniforms_lookup_from_string (m_uniforms, "maxMipLevel");
+              if (uni != NULL)
+                gthree_uniform_set_int (uni,
+                  gthree_texture_get_max_mip_level (priv->scene_environment));
+            }
+          else
+            g_object_unref (mat_env);
+        }
+
       // refresh uniforms common to several materials
       if (fog != NULL && gthree_material_get_fog (material))
         refresh_uniforms_fog (renderer, m_uniforms, fog);
@@ -3272,6 +3323,8 @@ gthree_renderer_render (GthreeRenderer *renderer,
   g_list_free (priv->shadows);
   priv->shadows = NULL;
 
+  priv->scene_environment = gthree_scene_get_environment (scene);
+  priv->scene_environment_intensity = gthree_scene_get_environment_intensity (scene);
   priv->current_material = NULL;
   priv->current_camera = NULL;
   priv->current_geometry_program_geometry = NULL;
