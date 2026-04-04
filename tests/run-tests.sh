@@ -42,6 +42,25 @@ while [ $# -gt 0 ]; do
     esac
 done
 
+# Fuzzy-compare two images. Returns 0 if they match within tolerance.
+# Sets DIFF_RESULT to the AE metric string on mismatch.
+fuzzy_compare() {
+    local ref="$1" img="$2"
+    local diff diff_num
+
+    if ! command -v compare &>/dev/null; then
+        cmp -s "$ref" "$img"
+        return $?
+    fi
+
+    diff=$(compare -metric AE -fuzz 5% "$ref" "$img" /dev/null 2>&1 || true)
+    # Extract pixel count from "131070 (2)" or "0" format
+    diff_num=$(echo "$diff" | grep -oP '\(\K[0-9]+' || echo "$diff" | cut -d' ' -f1)
+    DIFF_RESULT="$diff"
+    # Allow up to 10 pixels to differ (sub-pixel rasterization noise)
+    [ "$diff_num" -le 10 ] 2>/dev/null
+}
+
 mkdir -p "$OUT_DIR"
 
 if [ "$MODE" = "update-ref" ]; then
@@ -58,19 +77,12 @@ if [ "$MODE" = "update-ref" ]; then
     for f in "$TMPDIR"/*.png; do
         name=$(basename "$f")
         ref="$REF_DIR/$name"
-        if [ -f "$ref" ] && command -v compare &>/dev/null; then
-            DIFF=$(compare -metric AE -fuzz 5% "$ref" "$f" /dev/null 2>&1 || true)
-            # Extract pixel count from "131070 (2)" or "0" format
-            DIFF_NUM=$(echo "$DIFF" | grep -oP '\(\K[0-9]+' || echo "$DIFF" | cut -d' ' -f1)
-            # Allow up to 10 pixels to differ (sub-pixel rasterization noise)
-            if [ "$DIFF_NUM" -le 10 ] 2>/dev/null; then
-                KEPT=$((KEPT + 1))
-                continue
-            else
-                # Get more detail about the difference
-                RMSE=$(compare -metric RMSE "$ref" "$f" /dev/null 2>&1 || true)
-                echo "  Changed: $name (AE=$DIFF, RMSE=$RMSE)"
-            fi
+        if [ -f "$ref" ] && fuzzy_compare "$ref" "$f"; then
+            KEPT=$((KEPT + 1))
+            continue
+        elif [ -f "$ref" ]; then
+            RMSE=$(compare -metric RMSE "$ref" "$f" /dev/null 2>&1 || true)
+            echo "  Changed: $name (AE=$DIFF_RESULT, RMSE=$RMSE)"
         fi
         cp "$f" "$ref"
         UPDATED=$((UPDATED + 1))
@@ -117,27 +129,18 @@ for test in $TESTS; do
         continue
     fi
 
-    if command -v compare &>/dev/null; then
-        DIFF=$(compare -metric AE "$REF_FILE" "$OUT_FILE" /dev/null 2>&1 || true)
-        DIFF_NUM=$(echo "$DIFF" | grep -oP '\(\K[0-9]+' || echo "$DIFF" | cut -d' ' -f1)
-        if [ "$DIFF_NUM" -le 10 ] 2>/dev/null; then
-            echo "PASS"
-            PASS=$((PASS + 1))
-        else
-            compare "$REF_FILE" "$OUT_FILE" -compose src "$DIFF_DIR/$test-delta.png" 2>/dev/null || true
-            # Side-by-side: ref | new | diff
-            convert "$REF_FILE" "$OUT_FILE" "$DIFF_DIR/$test-delta.png" +append "$DIFF_DIR/$test-compare.png" 2>/dev/null || true
-            echo "DIFF ($DIFF px) -> $test-compare.png"
-            FAIL=$((FAIL + 1))
-        fi
+    if fuzzy_compare "$REF_FILE" "$OUT_FILE"; then
+        echo "PASS"
+        PASS=$((PASS + 1))
     else
-        if cmp -s "$REF_FILE" "$OUT_FILE"; then
-            echo "PASS"
-            PASS=$((PASS + 1))
+        if command -v compare &>/dev/null; then
+            compare "$REF_FILE" "$OUT_FILE" -compose src "$DIFF_DIR/$test-delta.png" 2>/dev/null || true
+            convert "$REF_FILE" "$OUT_FILE" "$DIFF_DIR/$test-delta.png" +append "$DIFF_DIR/$test-compare.png" 2>/dev/null || true
+            echo "DIFF ($DIFF_RESULT px) -> $test-compare.png"
         else
             echo "DIFF"
-            FAIL=$((FAIL + 1))
         fi
+        FAIL=$((FAIL + 1))
     fi
 done
 
