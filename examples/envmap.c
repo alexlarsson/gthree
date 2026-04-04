@@ -101,8 +101,8 @@ tick (GtkWidget     *widget,
   relative_time = (frame_time - first_frame_time) * 60 / (float) G_USEC_PER_SEC;
 
   /* Control camera with mouse */
-  camera_angle = (cursor_x)  * 2.0 * G_PI / gtk_widget_get_allocated_width (widget) - G_PI / 2.0;
-  camera_height = (((float)cursor_y / gtk_widget_get_allocated_height (widget)) - 0.5) * 500;
+  camera_angle = (cursor_x)  * 2.0 * G_PI / gtk_widget_get_width (widget) - G_PI / 2.0;
+  camera_height = (((float)cursor_y / gtk_widget_get_height (widget)) - 0.5) * 500;
 
   gthree_object_set_position_xyz (GTHREE_OBJECT (camera),
                                   cos (camera_angle) * 500,

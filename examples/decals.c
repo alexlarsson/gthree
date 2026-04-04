@@ -131,8 +131,8 @@ motion_cb (GtkEventControllerMotion *controller,
   g_autoptr(GthreeRaycaster) raycaster = gthree_raycaster_new ();
   g_autoptr(GPtrArray) intersections = NULL;
 
-  x = (x / gtk_widget_get_allocated_width (widget)) * 2 - 1;
-  y = -(y / gtk_widget_get_allocated_height (widget)) * 2 + 1;
+  x = (x / gtk_widget_get_width (widget)) * 2 - 1;
+  y = -(y / gtk_widget_get_height (widget)) * 2 + 1;
 
   gthree_raycaster_set_from_camera  (raycaster, camera, x, y);
 

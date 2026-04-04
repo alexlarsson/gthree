@@ -161,8 +161,8 @@ tick (GtkWidget     *widget,
   gthree_object_look_at_xyz (GTHREE_OBJECT (camera), 0, 0, 0);
   gthree_object_update_matrix_world (GTHREE_OBJECT (scene), FALSE);
 
-  x = ((float)cursor_x / gtk_widget_get_allocated_width (widget)) * 2 - 1;
-  y = -((float)cursor_y / gtk_widget_get_allocated_height (widget)) * 2 + 1;
+  x = ((float)cursor_x / gtk_widget_get_width (widget)) * 2 - 1;
+  y = -((float)cursor_y / gtk_widget_get_height (widget)) * 2 + 1;
 
   gthree_raycaster_set_from_camera  (raycaster, GTHREE_CAMERA (camera), x, y);
 

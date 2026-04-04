@@ -247,7 +247,7 @@ gthree_orbit_controls_pan (GthreeOrbitControls *orbit,
     {
       const graphene_vec3_t *position = gthree_object_get_position (orbit->object);
       graphene_vec3_t offset;
-      int height = gtk_widget_get_allocated_height (orbit->darea);
+      int height = gtk_widget_get_height (orbit->darea);
       float targetDistance;
       float fov = gthree_perspective_camera_get_fov (GTHREE_PERSPECTIVE_CAMERA (orbit->object));
 
@@ -264,8 +264,8 @@ gthree_orbit_controls_pan (GthreeOrbitControls *orbit,
   else if (GTHREE_IS_ORTHOGRAPHIC_CAMERA (orbit->object))
     {
       GthreeOrthographicCamera *orthographic = GTHREE_ORTHOGRAPHIC_CAMERA (orbit->object);
-      int width = gtk_widget_get_allocated_width (orbit->darea);
-      int height = gtk_widget_get_allocated_height (orbit->darea);
+      int width = gtk_widget_get_width (orbit->darea);
+      int height = gtk_widget_get_height (orbit->darea);
       float object_zoom = 1.0; // TODO: orbit->object.zoom
       gthree_orbit_controls_pan_left (orbit,
                                deltaX * (gthree_orthographic_camera_get_right (orthographic) - gthree_orthographic_camera_get_left (orthographic)) / object_zoom / width,
@@ -328,7 +328,7 @@ drag_update_cb (GtkGestureDrag *gesture,
                 gpointer        user_data)
 {
   GthreeOrbitControls *orbit = user_data;
-  int height = gtk_widget_get_allocated_height (orbit->darea);
+  int height = gtk_widget_get_height (orbit->darea);
   double x, y;
   graphene_vec2_t dragEnd;
   graphene_vec2_t delta;

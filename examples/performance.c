@@ -107,8 +107,8 @@ motion_event (GtkEventControllerMotion *controller,
               gpointer                  user_data)
 {
   GtkWidget *widget = gtk_event_controller_get_widget (GTK_EVENT_CONTROLLER (controller));
-  pointer_x = (x - gtk_widget_get_allocated_width (widget) / 2) / (double)(gtk_widget_get_allocated_width (widget) / 2);
-  pointer_y = (y - gtk_widget_get_allocated_height (widget) / 2) / (double)(gtk_widget_get_allocated_height (widget) / 2);
+  pointer_x = (x - gtk_widget_get_width (widget) / 2) / (double)(gtk_widget_get_width (widget) / 2);
+  pointer_y = (y - gtk_widget_get_height (widget) / 2) / (double)(gtk_widget_get_height (widget) / 2);
   return FALSE;
 }
 
