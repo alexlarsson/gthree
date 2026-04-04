@@ -32,6 +32,7 @@ init_scene (void)
   background_cube = gthree_cube_texture_new_from_array (pixbufs);
   gthree_texture_set_encoding (GTHREE_TEXTURE (background_cube), GTHREE_ENCODING_FORMAT_SRGB);
   gthree_scene_set_background_texture (scene, GTHREE_TEXTURE (background_cube));
+  gthree_scene_set_environment (scene, GTHREE_TEXTURE (background_cube));
 
   cube_render_target = gthree_render_target_new_cube (256);
 
@@ -49,7 +50,6 @@ init_scene (void)
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (sphere));
 
   material2 = gthree_mesh_standard_material_new ();
-  gthree_mesh_standard_material_set_env_map (material2, GTHREE_TEXTURE (background_cube));
   gthree_mesh_standard_material_set_roughness (material2, 0.1);
   gthree_mesh_standard_material_set_metalness (material2, 0.0);
 

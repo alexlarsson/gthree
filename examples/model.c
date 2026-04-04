@@ -157,18 +157,10 @@ add_camera (GthreeArea *area)
 static void
 apply_env_map (void)
 {
-  int n_materials, i;
   GthreeTexture *texture = g_ptr_array_index (env_maps, current_env_map);
 
   gthree_scene_set_background_texture (scene, texture);
-
-  n_materials = gthree_loader_get_n_materials (loader);
-  for (i = 0; i < n_materials; i++)
-    {
-      GthreeMaterial *m = gthree_loader_get_material (loader, i);
-      if (g_object_class_find_property (G_OBJECT_GET_CLASS (m), "env-map"))
-        g_object_set (m, "env-map", texture, NULL);
-    }
+  gthree_scene_set_environment (scene, texture);
 }
 
 static gboolean
