@@ -398,6 +398,10 @@ main (int argc, char *argv[])
     { "WaterBottle.glb", "WaterBottle" },
     { "Soldier.glb", "Soldier" },
     { "RobotExpressive.glb", "Robot" },
+    { "ClearCoatCarPaint.glb", "Clear Coat Car Paint" },
+    { "LeePerrySmith/LeePerrySmith.glb", "LeePerrySmith" },
+    { "DamagedHelmet.glb", "Damaged Helmet"},
+    { "LittlestTokyo.glb", "Littlest Tokyo"},
   };
 
   env_maps = g_ptr_array_new_with_free_func (g_object_unref);
