@@ -536,6 +536,65 @@ gthree_object_get_up (GthreeObject *object)
   return &priv->up;
 }
 
+/* graphene_quaternion_init_from_matrix has a bug when the rotation
+   has trace=-1 (w=0): it can't determine component signs from the
+   off-diagonal elements. Use the Shepperd method instead, which
+   always divides by the largest component. */
+static void
+quaternion_init_from_rotation_matrix (graphene_quaternion_t    *q,
+                                      const graphene_matrix_t  *m)
+{
+  /* graphene_matrix_get_value(a,b) returns mathematical element
+     at (row=b, col=a) due to column-major storage */
+  float m11 = graphene_matrix_get_value (m, 0, 0);
+  float m12 = graphene_matrix_get_value (m, 1, 0);
+  float m13 = graphene_matrix_get_value (m, 2, 0);
+  float m21 = graphene_matrix_get_value (m, 0, 1);
+  float m22 = graphene_matrix_get_value (m, 1, 1);
+  float m23 = graphene_matrix_get_value (m, 2, 1);
+  float m31 = graphene_matrix_get_value (m, 0, 2);
+  float m32 = graphene_matrix_get_value (m, 1, 2);
+  float m33 = graphene_matrix_get_value (m, 2, 2);
+  float trace = m11 + m22 + m33;
+
+  if (trace > 0)
+    {
+      float s = 0.5f / sqrtf (trace + 1.0f);
+      graphene_quaternion_init (q,
+                                (m32 - m23) * s,
+                                (m13 - m31) * s,
+                                (m21 - m12) * s,
+                                0.25f / s);
+    }
+  else if (m11 > m22 && m11 > m33)
+    {
+      float s = 2.0f * sqrtf (1.0f + m11 - m22 - m33);
+      graphene_quaternion_init (q,
+                                0.25f * s,
+                                (m12 + m21) / s,
+                                (m13 + m31) / s,
+                                (m32 - m23) / s);
+    }
+  else if (m22 > m33)
+    {
+      float s = 2.0f * sqrtf (1.0f + m22 - m11 - m33);
+      graphene_quaternion_init (q,
+                                (m12 + m21) / s,
+                                0.25f * s,
+                                (m23 + m32) / s,
+                                (m13 - m31) / s);
+    }
+  else
+    {
+      float s = 2.0f * sqrtf (1.0f + m33 - m11 - m22);
+      graphene_quaternion_init (q,
+                                (m13 + m31) / s,
+                                (m23 + m32) / s,
+                                0.25f * s,
+                                (m21 - m12) / s);
+    }
+}
+
 void
 gthree_object_look_at (GthreeObject *object,
                        const graphene_vec3_t *pos)
@@ -544,7 +603,7 @@ gthree_object_look_at (GthreeObject *object,
   graphene_matrix_t m;
 
   graphene_matrix_init_look_at (&m, &priv->position, pos, &priv->up);
-  graphene_quaternion_init_from_matrix (&priv->quaternion, &m);
+  quaternion_init_from_rotation_matrix (&priv->quaternion, &m);
   priv->matrix_need_update = TRUE;
   priv->euler_valid = FALSE;
 }
