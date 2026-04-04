@@ -193,13 +193,11 @@ main (int argc, char *argv[])
   gtk_widget_set_hexpand (area, TRUE);
   gtk_widget_set_vexpand (area, TRUE);
   gtk_box_append (GTK_BOX (box), area);
-  gtk_widget_show (area);
 
   orbit = gthree_orbit_controls_new (GTHREE_OBJECT (camera), area);
   gthree_orbit_controls_set_enable_pan (orbit, FALSE);
 
   hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
-  gtk_widget_show (hbox);
   gtk_box_append (GTK_BOX (box), hbox);
 
   check = gtk_check_button_new_with_label ("Clip intersection");
@@ -209,7 +207,6 @@ main (int argc, char *argv[])
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (check), TRUE);
 #endif
   gtk_box_append (GTK_BOX (hbox), check);
-  gtk_widget_show (check);
   g_signal_connect (check, "toggled", G_CALLBACK (clip_intersection_toggled), area);
 
   check = gtk_check_button_new_with_label ("Show helpers");
@@ -219,17 +216,15 @@ main (int argc, char *argv[])
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (check), TRUE);
 #endif
   gtk_box_append (GTK_BOX (hbox), check);
-  gtk_widget_show (check);
   g_signal_connect (check, "toggled", G_CALLBACK (show_helpers_toggled), area);
 
   scale = gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL, -1, 1, 0.01);
   gtk_range_set_value (GTK_RANGE (scale), 0);
   gtk_widget_set_hexpand (scale, TRUE);
   gtk_box_append (GTK_BOX (hbox), scale);
-  gtk_widget_show (scale);
   g_signal_connect (scale, "value-changed", G_CALLBACK (scale_value_changed), area);
 
-  gtk_widget_show (window);
+  gtk_window_present (GTK_WINDOW (window));
 
   while (!done)
     g_main_context_iteration (NULL, TRUE);

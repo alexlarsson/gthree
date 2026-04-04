@@ -238,14 +238,13 @@ main (int argc, char *argv[])
   gtk_widget_set_hexpand (area, TRUE);
   gtk_widget_set_vexpand (area, TRUE);
   gtk_box_append (GTK_BOX (box), area);
-  gtk_widget_show (area);
 
   motion = motion_controller_for (GTK_WIDGET (area));
   g_signal_connect (motion, "motion", (GCallback)motion_cb, NULL);
 
   gtk_widget_add_tick_callback (GTK_WIDGET (area), tick, area, NULL);
 
-  gtk_widget_show (window);
+  gtk_window_present (GTK_WINDOW (window));
 
   while (!done)
     g_main_context_iteration (NULL, TRUE);

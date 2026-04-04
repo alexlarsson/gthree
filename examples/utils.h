@@ -6,6 +6,7 @@
 static inline void gtk_box_append (GtkBox *box, GtkWidget *child) {
   gtk_container_add (GTK_CONTAINER (box), child);
 }
+#define gtk_window_present(w) gtk_widget_show_all(GTK_WIDGET(w))
 #endif
 
 GdkPixbuf *examples_load_pixbuf (const char *file);

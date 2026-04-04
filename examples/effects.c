@@ -292,14 +292,12 @@ main (int argc, char *argv[])
   gtk_widget_set_hexpand (area, TRUE);
   gtk_widget_set_vexpand (area, TRUE);
   gtk_box_append (GTK_BOX (box), area);
-  gtk_widget_show (area);
 
   gtk_widget_add_tick_callback (GTK_WIDGET (area), tick, area, NULL);
 
   hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
   gtk_box_set_spacing (GTK_BOX (hbox), 6);
   gtk_box_append (GTK_BOX (box), hbox);
-  gtk_widget_show (hbox);
 
   check = gtk_check_button_new_with_label ("Fancy effect");
 #ifdef USE_GTK4
@@ -308,7 +306,6 @@ main (int argc, char *argv[])
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (check), TRUE);
 #endif
   gtk_box_append (GTK_BOX (hbox), check);
-  gtk_widget_show (check);
   g_signal_connect (check, "toggled", G_CALLBACK (pass_toggled), psycho_pass);
 
   check = gtk_check_button_new_with_label ("Scene 1");
@@ -318,7 +315,6 @@ main (int argc, char *argv[])
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (check), TRUE);
 #endif
   gtk_box_append (GTK_BOX (hbox), check);
-  gtk_widget_show (check);
   g_signal_connect (check, "toggled", G_CALLBACK (pass_toggled), render_pass);
 
   check = gtk_check_button_new_with_label ("Bloom");
@@ -328,7 +324,6 @@ main (int argc, char *argv[])
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (check), FALSE);
 #endif
   gtk_box_append (GTK_BOX (hbox), check);
-  gtk_widget_show (check);
   g_signal_connect (check, "toggled", G_CALLBACK (pass_toggled), bloom_pass);
 
   check = gtk_check_button_new_with_label ("Scene 2");
@@ -338,7 +333,6 @@ main (int argc, char *argv[])
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (check), TRUE);
 #endif
   gtk_box_append (GTK_BOX (hbox), check);
-  gtk_widget_show (check);
   g_signal_connect (check, "toggled", G_CALLBACK (pass_toggled), render2_pass);
 
   check = gtk_check_button_new_with_label ("Greyscale");
@@ -348,10 +342,9 @@ main (int argc, char *argv[])
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (check), FALSE);
 #endif
   gtk_box_append (GTK_BOX (hbox), check);
-  gtk_widget_show (check);
   g_signal_connect (check, "toggled", G_CALLBACK (pass_toggled), greyscale_pass);
 
-  gtk_widget_show (window);
+  gtk_window_present (GTK_WINDOW (window));
 
   while (!done)
     g_main_context_iteration (NULL, TRUE);

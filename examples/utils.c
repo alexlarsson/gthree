@@ -269,12 +269,9 @@ examples_init (const char *title,
   gtk_container_add (GTK_CONTAINER (window), outer_box);
 #endif
 
-  gtk_widget_show (outer_box);
-
   *box = gtk_box_new (GTK_ORIENTATION_VERTICAL, FALSE);
   gtk_box_set_spacing (GTK_BOX (*box), 6);
   gtk_box_append (GTK_BOX (outer_box), *box);
-  gtk_widget_show (*box);
 
   button = gtk_button_new_with_label ("Quit");
   gtk_widget_set_hexpand (button, TRUE);
@@ -287,7 +284,6 @@ examples_init (const char *title,
                             G_CALLBACK (gtk_widget_destroy),
 #endif
                             window);
-  gtk_widget_show (button);
 
   return window;
 }

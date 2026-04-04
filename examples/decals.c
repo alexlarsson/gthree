@@ -309,7 +309,6 @@ main (int argc, char *argv[])
   gtk_widget_set_hexpand (area, TRUE);
   gtk_widget_set_vexpand (area, TRUE);
   gtk_box_append (GTK_BOX (box), area);
-  gtk_widget_show (area);
 
   gthree_object_set_position_xyz (GTHREE_OBJECT (camera), 0, 0, 120);
   orbit = gthree_orbit_controls_new (GTHREE_OBJECT (camera), area);
@@ -329,45 +328,37 @@ main (int argc, char *argv[])
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (check), TRUE);
 #endif
   gtk_box_append (GTK_BOX (box), check);
-  gtk_widget_show (check);
   g_signal_connect (check, "toggled", G_CALLBACK (rotate_toggled), area);
 
   hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
-  gtk_widget_show (hbox);
   gtk_box_append (GTK_BOX (box), hbox);
 
   label = gtk_label_new ("Min scale: ");
-  gtk_widget_show (label);
   gtk_box_append (GTK_BOX (hbox), label);
 
   scale = gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL, 0, 30, 0.1);
   gtk_range_set_value (GTK_RANGE (scale), params_min_scale);
   gtk_widget_set_hexpand (scale, TRUE);
   gtk_box_append (GTK_BOX (hbox), scale);
-  gtk_widget_show (scale);
   g_signal_connect (scale, "value-changed", G_CALLBACK (min_changed), area);
 
   hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
-  gtk_widget_show (hbox);
   gtk_box_append (GTK_BOX (box), hbox);
 
   label = gtk_label_new ("Max scale: ");
-  gtk_widget_show (label);
   gtk_box_append (GTK_BOX (hbox), label);
 
   scale = gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL, 0, 30, 0.1);
   gtk_range_set_value (GTK_RANGE (scale), params_max_scale);
   gtk_widget_set_hexpand (scale, TRUE);
   gtk_box_append (GTK_BOX (hbox), scale);
-  gtk_widget_show (scale);
   g_signal_connect (scale, "value-changed", G_CALLBACK (max_changed), area);
 
   button = gtk_button_new_with_label ("Clear");
-  gtk_widget_show (button);
   gtk_box_append (GTK_BOX (box), button);
   g_signal_connect (button, "clicked", G_CALLBACK (clear), area);
 
-  gtk_widget_show (window);
+  gtk_window_present (GTK_WINDOW (window));
 
   while (!done)
     g_main_context_iteration (NULL, TRUE);

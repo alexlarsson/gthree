@@ -273,7 +273,6 @@ main (int argc, char *argv[])
   gtk_widget_set_hexpand (area, TRUE);
   gtk_widget_set_vexpand (area, TRUE);
   gtk_box_append (GTK_BOX (box), area);
-  gtk_widget_show (area);
 
   gtk_widget_add_tick_callback (GTK_WIDGET (area), tick, area, NULL);
 
@@ -285,7 +284,6 @@ main (int argc, char *argv[])
 
   g_signal_connect (combo, "changed", (GCallback)material_combo_changed, NULL);
 
-  gtk_widget_show (combo);
   gtk_box_append (GTK_BOX (box), combo);
 
 #ifdef USE_GTK4
@@ -295,11 +293,10 @@ main (int argc, char *argv[])
 #endif
   gtk_scrolled_window_set_min_content_height (GTK_SCROLLED_WINDOW (sw), 300);
   gtk_box_append (GTK_BOX (box), sw);
-  gtk_widget_show (sw);
 
   property_pane = sw;
 
-  gtk_widget_show (window);
+  gtk_window_present (GTK_WINDOW (window));
 
   update_property_pane ();
 

@@ -196,7 +196,6 @@ main (int argc, char *argv[])
 
   grid = gtk_grid_new ();
   gtk_box_append (GTK_BOX (box), grid);
-  gtk_widget_show (grid);
   gtk_grid_set_row_homogeneous (GTK_GRID (grid), TRUE);
   gtk_grid_set_row_spacing (GTK_GRID (grid), 6);
   gtk_grid_set_column_homogeneous (GTK_GRID (grid), TRUE);
@@ -214,7 +213,6 @@ main (int argc, char *argv[])
   gtk_widget_set_vexpand (area_z, TRUE);
   gtk_grid_attach (GTK_GRID (grid), area_z,
                    0, 1, 1, 1);
-  gtk_widget_show (area_z);
 
   click = click_controller_for (area_z);
   g_signal_connect (click, "pressed", G_CALLBACK (clicked_z), NULL);
@@ -233,7 +231,6 @@ main (int argc, char *argv[])
   gtk_widget_set_vexpand (area_y, TRUE);
   gtk_grid_attach (GTK_GRID (grid), area_y,
                    0, 0, 1, 1);
-  gtk_widget_show (area_y);
 
   click = click_controller_for (area_y);
   g_signal_connect (click, "pressed", G_CALLBACK (clicked_y), NULL);
@@ -252,14 +249,13 @@ main (int argc, char *argv[])
   gtk_widget_set_vexpand (area_x, TRUE);
   gtk_grid_attach (GTK_GRID (grid), area_x,
                    1, 1, 1, 1);
-  gtk_widget_show (area_x);
 
   click = click_controller_for (area_x);
   g_signal_connect (click, "pressed", G_CALLBACK (clicked_x), NULL);
 
   gtk_widget_add_tick_callback (GTK_WIDGET (area_z), tick, NULL, NULL);
 
-  gtk_widget_show (window);
+  gtk_window_present (GTK_WINDOW (window));
 
   while (!done)
     g_main_context_iteration (NULL, TRUE);

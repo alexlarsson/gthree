@@ -386,16 +386,13 @@ main (int argc, char *argv[])
   gtk_widget_set_hexpand (area, TRUE);
   gtk_widget_set_vexpand (area, TRUE);
   gtk_box_append (GTK_BOX (box), area);
-  gtk_widget_show (area);
 
   gtk_widget_add_tick_callback (GTK_WIDGET (area), tick, area, NULL);
 
   outer_hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
-  gtk_widget_show (outer_hbox);
   gtk_box_append (GTK_BOX (box), outer_hbox);
 
   box = gtk_box_new (GTK_ORIENTATION_VERTICAL, FALSE);
-  gtk_widget_show (box);
   gtk_box_append (GTK_BOX (outer_hbox), box);
 
 
@@ -406,102 +403,82 @@ main (int argc, char *argv[])
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (check), FALSE);
 #endif
   gtk_box_append (GTK_BOX (box), check);
-  gtk_widget_show (check);
   g_signal_connect (check, "toggled", G_CALLBACK (show_skeleton_toggled), area);
 
   hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
-  gtk_widget_show (hbox);
   gtk_box_append (GTK_BOX (box), hbox);
 
   label = gtk_label_new ("Crossfades: ");
-  gtk_widget_show (label);
   gtk_box_append (GTK_BOX (hbox), label);
 
   walk_to_idle_button = button = gtk_button_new_with_label ("Walk to Idle");
-  gtk_widget_show (button);
   gtk_box_append (GTK_BOX (hbox), button);
   g_signal_connect (button, "clicked", G_CALLBACK (walk_to_idle), area);
 
   idle_to_walk_button = button = gtk_button_new_with_label ("Idle to Walk");
-  gtk_widget_show (button);
   gtk_box_append (GTK_BOX (hbox), button);
   g_signal_connect (button, "clicked", G_CALLBACK (idle_to_walk), area);
 
   walk_to_run_button = button = gtk_button_new_with_label ("Walk to Run");
-  gtk_widget_show (button);
   gtk_box_append (GTK_BOX (hbox), button);
   g_signal_connect (button, "clicked", G_CALLBACK (walk_to_run), area);
 
   run_to_walk_button = button = gtk_button_new_with_label ("Run to Walk");
-  gtk_widget_show (button);
   gtk_box_append (GTK_BOX (hbox), button);
   g_signal_connect (button, "clicked", G_CALLBACK (run_to_walk), area);
 
   hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
-  gtk_widget_show (hbox);
   gtk_box_append (GTK_BOX (box), hbox);
 
   label = gtk_label_new ("Time scale: ");
-  gtk_widget_show (label);
   gtk_box_append (GTK_BOX (hbox), label);
 
   time_scale = scale = gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL, 0, 3, 0.01);
   gtk_range_set_value (GTK_RANGE (scale), 1.0);
   gtk_widget_set_hexpand (scale, TRUE);
   gtk_box_append (GTK_BOX (hbox), scale);
-  gtk_widget_show (scale);
   g_signal_connect (scale, "value-changed", G_CALLBACK (time_scale_changed), area);
 
   box = gtk_box_new (GTK_ORIENTATION_VERTICAL, FALSE);
-  gtk_widget_show (box);
   gtk_box_append (GTK_BOX (outer_hbox), box);
 
   hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
-  gtk_widget_show (hbox);
   gtk_box_append (GTK_BOX (box), hbox);
 
   label = gtk_label_new ("Idle weight: ");
-  gtk_widget_show (label);
   gtk_box_append (GTK_BOX (hbox), label);
 
   idle_scale = scale = gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL, 0, 1, 0.01);
   gtk_range_set_value (GTK_RANGE (scale), setting_idle_weight);
   gtk_widget_set_hexpand (scale, TRUE);
   gtk_box_append (GTK_BOX (hbox), scale);
-  gtk_widget_show (scale);
   g_signal_connect (scale, "value-changed", G_CALLBACK (idle_weight_changed), area);
 
   hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
-  gtk_widget_show (hbox);
   gtk_box_append (GTK_BOX (box), hbox);
 
   label = gtk_label_new ("Walk weight: ");
-  gtk_widget_show (label);
   gtk_box_append (GTK_BOX (hbox), label);
 
   walk_scale = scale = gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL, 0, 1, 0.01);
   gtk_range_set_value (GTK_RANGE (scale), setting_walk_weight);
   gtk_widget_set_hexpand (scale, TRUE);
   gtk_box_append (GTK_BOX (hbox), scale);
-  gtk_widget_show (scale);
   g_signal_connect (scale, "value-changed", G_CALLBACK (walk_weight_changed), area);
 
   hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
-  gtk_widget_show (hbox);
   gtk_box_append (GTK_BOX (box), hbox);
 
   label = gtk_label_new ("Run weight: ");
-  gtk_widget_show (label);
   gtk_box_append (GTK_BOX (hbox), label);
 
   run_scale = scale = gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL, 0, 1, 0.01);
   gtk_range_set_value (GTK_RANGE (scale), setting_run_weight);
   gtk_widget_set_hexpand (scale, TRUE);
   gtk_box_append (GTK_BOX (hbox), scale);
-  gtk_widget_show (scale);
   g_signal_connect (scale, "value-changed", G_CALLBACK (run_weight_changed), area);
 
-  gtk_widget_show (window);
+  gtk_window_present (GTK_WINDOW (window));
 
   while (!done)
     g_main_context_iteration (NULL, TRUE);
