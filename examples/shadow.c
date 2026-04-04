@@ -5,6 +5,7 @@
 
 #include <gthree/gthree.h>
 #include "utils.h"
+#include "orbitcontrols.h"
 
 static GthreeScene *scene;
 static GthreePerspectiveCamera *camera;
@@ -14,6 +15,7 @@ static GthreeSpotLight *spot_light;
 static GthreePointLight *point_light;
 static GthreeMesh *ball;
 static GthreeMesh *cube;
+static GthreeOrbitControls *orbit;
 
 static void
 init_scene (void)
@@ -30,10 +32,10 @@ init_scene (void)
 
   scene = gthree_scene_new ();
 
-  camera = gthree_perspective_camera_new (45, 1, 1, 2000);
+  camera = gthree_perspective_camera_new (45, 1, 1, 5000);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (camera));
   gthree_object_set_position_xyz (GTHREE_OBJECT (camera),
-                                  0, 200, 2000);
+                                  0, 200, 1000);
 
   ball_material = gthree_mesh_phong_material_new ();
   gthree_mesh_phong_material_set_color (ball_material, white ());
@@ -73,7 +75,7 @@ init_scene (void)
 
   /* Directional light */
 
-  directional_light = gthree_directional_light_new (green (), 0.3 * G_PI);
+  directional_light = gthree_directional_light_new (green (), 0.6);
   gthree_object_set_cast_shadow (GTHREE_OBJECT (directional_light), TRUE);
   gthree_object_set_position_xyz (GTHREE_OBJECT (directional_light),
                                   0, 200, 200);
@@ -95,7 +97,7 @@ init_scene (void)
 
   /* Spot light */
 
-  spot_light = gthree_spot_light_new (blue (), 1.5 * G_PI, 5000, G_PI/4, 0.2);
+  spot_light = gthree_spot_light_new (blue (), 80000, 0, G_PI/3, 0.2);
   gthree_object_set_cast_shadow (GTHREE_OBJECT (spot_light), TRUE);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (spot_light));
 
@@ -106,7 +108,7 @@ init_scene (void)
 
   /* Point light */
 
-  point_light = gthree_point_light_new (red (), 0.5 * G_PI, 0);
+  point_light = gthree_point_light_new (red (), 0.5 * G_PI * 10000, 0);
   gthree_object_set_cast_shadow (GTHREE_OBJECT (point_light), TRUE);
   gthree_object_add_child (GTHREE_OBJECT (scene), GTHREE_OBJECT (point_light));
 
@@ -135,19 +137,12 @@ tick (GtkWidget     *widget,
     first_frame_time = frame_time;
   angle = (frame_time - first_frame_time) / 4000000.0;
 
-  gthree_object_set_position_xyz (GTHREE_OBJECT (camera),
-                                  cos (angle*2) * 1000,
-                                  200,
-                                  sin (angle*2) * 1000);
-  gthree_object_look_at_xyz (GTHREE_OBJECT (camera),
-                             0, 0, 0);
-
   gthree_object_set_rotation_xyz (GTHREE_OBJECT (cube),
                                   angle*300, angle * 123, 0);
 
   gthree_object_set_position_xyz (GTHREE_OBJECT (spot_light),
                                   cos (angle*10) * 150,
-                                  150,
+                                  200,
                                   cos (angle*7) * 150);
 
   gthree_object_set_position_xyz (GTHREE_OBJECT (point_light),
@@ -192,6 +187,8 @@ main (int argc, char *argv[])
   gtk_widget_set_vexpand (area, TRUE);
   gtk_box_append (GTK_BOX (box), area);
   gtk_widget_show (area);
+
+  orbit = gthree_orbit_controls_new (GTHREE_OBJECT (camera), GTK_WIDGET (area));
 
   gtk_widget_add_tick_callback (GTK_WIDGET (area), tick, area, NULL);
 

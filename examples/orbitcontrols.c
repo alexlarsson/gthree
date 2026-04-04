@@ -108,7 +108,7 @@ struct _GthreeOrbitControls {
 
 G_DEFINE_TYPE (GthreeOrbitControls, gthree_orbit_controls, G_TYPE_OBJECT)
 
-static gboolean gthree_orbit_controls_update (GthreeOrbitControls *orbit);
+gboolean gthree_orbit_controls_update (GthreeOrbitControls *orbit);
 
 static void
 drag_begin_cb (GtkGestureDrag *gesture,
@@ -586,6 +586,8 @@ gthree_orbit_controls_new (GthreeObject *object, GtkWidget *darea)
                     G_CALLBACK (scroll_event_cb), orbit);
 #endif
 
+  gthree_orbit_controls_update (orbit);
+
   return orbit;
 }
 
@@ -598,7 +600,7 @@ distanceToSquared (const graphene_vec3_t *a,
   return graphene_vec3_dot (&diff, &diff);
 }
 
-static gboolean
+gboolean
 gthree_orbit_controls_update (GthreeOrbitControls *orbit)
 {
   const graphene_vec3_t *position = gthree_object_get_position (orbit->object);
