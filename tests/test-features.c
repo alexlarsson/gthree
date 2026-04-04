@@ -266,6 +266,97 @@ test_cairo_texture (GthreeScene **scene, GthreeCamera **camera)
   gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (mesh));
 }
 
+/* Cube camera test: a reflective sphere surrounded by colored objects.
+   The cube camera renders the scene into a cube render target, which
+   is used as the env map on the sphere material. Tests that all 6
+   cube map faces render with correct orientation. */
+static GthreeScene *cc_scene;
+static GthreeCubeCamera *cc_cube_camera;
+
+static void
+test_cube_camera (GthreeScene **scene, GthreeCamera **camera)
+{
+  graphene_vec3_t color;
+
+  cc_scene = gthree_scene_new ();
+  *scene = cc_scene;
+
+  gthree_scene_set_background_texture (*scene,
+    GTHREE_TEXTURE (test_cube_texture_colored ()));
+
+  *camera = GTHREE_CAMERA (gthree_perspective_camera_new (60, 4.0/3.0, 1, 1000));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (*camera), 0, 20, 55);
+  gthree_object_look_at_xyz (GTHREE_OBJECT (*camera), 0, 0, 0);
+  gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (*camera));
+
+  GthreeAmbientLight *ambient = gthree_ambient_light_new (graphene_vec3_init (&color, 0.5, 0.5, 0.5));
+  gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (ambient));
+
+  GthreeDirectionalLight *dir = gthree_directional_light_new (graphene_vec3_init (&color, 1, 1, 1), 2.0);
+  gthree_object_set_position_xyz (GTHREE_OBJECT (dir), 30, 30, 30);
+  gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (dir));
+
+  GthreeRenderTarget *cube_rt = gthree_render_target_new_cube (128);
+  cc_cube_camera = gthree_cube_camera_new (1, 1000, cube_rt);
+  gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (cc_cube_camera));
+
+  /* Reflective sphere using the cube render target as env map */
+  g_autoptr(GthreeMeshStandardMaterial) sphere_mat = gthree_mesh_standard_material_new ();
+  gthree_mesh_standard_material_set_env_map (sphere_mat,
+    gthree_render_target_get_texture (cube_rt));
+  gthree_mesh_standard_material_set_roughness (sphere_mat, 0.05);
+  gthree_mesh_standard_material_set_metalness (sphere_mat, 1.0);
+
+  g_autoptr(GthreeGeometry) sphere_geom = gthree_geometry_new_icosahedron (10, 5);
+  GthreeMesh *sphere = gthree_mesh_new (sphere_geom, GTHREE_MATERIAL (sphere_mat));
+  gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (sphere));
+
+  /* Place colored boxes around the sphere so reflections are visible */
+  g_autoptr(GthreeGeometry) box_geom = gthree_geometry_new_box (8, 8, 8, 1, 1, 1);
+
+  g_autoptr(GthreeMeshStandardMaterial) red_mat = gthree_mesh_standard_material_new ();
+  gthree_mesh_standard_material_set_color (red_mat, graphene_vec3_init (&color, 0.9, 0.1, 0.1));
+  GthreeMesh *box = gthree_mesh_new (box_geom, GTHREE_MATERIAL (red_mat));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (box), 25, 0, 0);
+  gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (box));
+
+  g_autoptr(GthreeMeshStandardMaterial) green_mat = gthree_mesh_standard_material_new ();
+  gthree_mesh_standard_material_set_color (green_mat, graphene_vec3_init (&color, 0.1, 0.9, 0.1));
+  box = gthree_mesh_new (box_geom, GTHREE_MATERIAL (green_mat));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (box), -25, 0, 0);
+  gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (box));
+
+  g_autoptr(GthreeMeshStandardMaterial) blue_mat = gthree_mesh_standard_material_new ();
+  gthree_mesh_standard_material_set_color (blue_mat, graphene_vec3_init (&color, 0.1, 0.1, 0.9));
+  box = gthree_mesh_new (box_geom, GTHREE_MATERIAL (blue_mat));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (box), 0, 0, 25);
+  gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (box));
+
+  g_autoptr(GthreeMeshStandardMaterial) yellow_mat = gthree_mesh_standard_material_new ();
+  gthree_mesh_standard_material_set_color (yellow_mat, graphene_vec3_init (&color, 0.9, 0.9, 0.1));
+  box = gthree_mesh_new (box_geom, GTHREE_MATERIAL (yellow_mat));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (box), 0, 0, -25);
+  gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (box));
+
+  g_autoptr(GthreeMeshStandardMaterial) white_mat = gthree_mesh_standard_material_new ();
+  gthree_mesh_standard_material_set_color (white_mat, graphene_vec3_init (&color, 0.9, 0.9, 0.9));
+  box = gthree_mesh_new (box_geom, GTHREE_MATERIAL (white_mat));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (box), 0, 25, 0);
+  gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (box));
+
+  g_autoptr(GthreeMeshStandardMaterial) purple_mat = gthree_mesh_standard_material_new ();
+  gthree_mesh_standard_material_set_color (purple_mat, graphene_vec3_init (&color, 0.7, 0.1, 0.9));
+  box = gthree_mesh_new (box_geom, GTHREE_MATERIAL (purple_mat));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (box), 0, -25, 0);
+  gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (box));
+}
+
+static void
+cube_camera_pre_render (GthreeRenderer *renderer)
+{
+  gthree_cube_camera_update (cc_cube_camera, renderer, cc_scene);
+}
+
 void
 register_feature_tests (void)
 {
@@ -276,4 +367,5 @@ register_feature_tests (void)
   register_test ("envmap", test_envmap);
   register_test_with_pre_render ("render-target", test_render_target, NULL, render_target_pre_render);
   register_test ("cairo-texture", test_cairo_texture);
+  register_test_with_pre_render ("cube-camera", test_cube_camera, NULL, cube_camera_pre_render);
 }
