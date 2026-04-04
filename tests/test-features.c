@@ -390,6 +390,71 @@ test_scene_environment (GthreeScene **scene, GthreeCamera **camera)
   gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (mesh));
 }
 
+/* Dynamic cubemap test: cube camera renders 6 faces per frame, then
+   main render draws the scene. Tests that VAO caching works correctly
+   when the same geometry is rendered multiple times per frame across
+   different render passes. */
+static GthreeScene *dc_scene;
+static GthreeCubeCamera *dc_cube_camera;
+
+static void
+test_dynamic_cubemap (GthreeScene **scene, GthreeCamera **camera)
+{
+  graphene_vec3_t color;
+
+  dc_scene = gthree_scene_new ();
+  *scene = dc_scene;
+
+  graphene_vec3_t red;
+  graphene_vec3_init (&red, 0.8, 0.2, 0.2);
+  gthree_scene_set_background_color (*scene, &red);
+
+  *camera = GTHREE_CAMERA (gthree_perspective_camera_new (60, 4.0/3.0, 1, 1000));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (*camera), 0, 20, 55);
+  gthree_object_look_at_xyz (GTHREE_OBJECT (*camera), 0, 0, 0);
+  gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (*camera));
+
+  GthreeAmbientLight *ambient = gthree_ambient_light_new (graphene_vec3_init (&color, 0.5, 0.5, 0.5));
+  gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (ambient));
+
+  GthreeDirectionalLight *dir = gthree_directional_light_new (graphene_vec3_init (&color, 1, 1, 1), 2.0);
+  gthree_object_set_position_xyz (GTHREE_OBJECT (dir), 30, 30, 30);
+  gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (dir));
+
+  GthreeRenderTarget *cube_rt = gthree_render_target_new_cube (64);
+  dc_cube_camera = gthree_cube_camera_new (1, 1000, cube_rt);
+  gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (dc_cube_camera));
+
+  g_autoptr(GthreeMeshStandardMaterial) sphere_mat = gthree_mesh_standard_material_new ();
+  gthree_mesh_standard_material_set_env_map (sphere_mat,
+      gthree_render_target_get_texture (cube_rt));
+  gthree_mesh_standard_material_set_roughness (sphere_mat, 0.05);
+  gthree_mesh_standard_material_set_metalness (sphere_mat, 1.0);
+
+  g_autoptr(GthreeGeometry) sphere_geom = gthree_geometry_new_icosahedron (20, 5);
+  GthreeMesh *sphere = gthree_mesh_new (sphere_geom, GTHREE_MATERIAL (sphere_mat));
+  gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (sphere));
+
+  g_autoptr(GthreeMeshStandardMaterial) mat = gthree_mesh_standard_material_new ();
+  gthree_mesh_standard_material_set_roughness (mat, 0.1);
+
+  g_autoptr(GthreeGeometry) box_geom = gthree_geometry_new_box (15, 15, 15, 1, 1, 1);
+  GthreeMesh *box = gthree_mesh_new (box_geom, GTHREE_MATERIAL (mat));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (box), 30, 0, 0);
+  gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (box));
+
+  g_autoptr(GthreeGeometry) torus_geom = gthree_geometry_new_torus_knot (8, 3, 128, 16, 2, 3);
+  GthreeMesh *torus = gthree_mesh_new (torus_geom, GTHREE_MATERIAL (mat));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (torus), -35, 0, 0);
+  gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (torus));
+}
+
+static void
+dynamic_cubemap_pre_render (GthreeRenderer *renderer)
+{
+  gthree_cube_camera_update (dc_cube_camera, renderer, dc_scene);
+}
+
 void
 register_feature_tests (void)
 {
@@ -402,4 +467,5 @@ register_feature_tests (void)
   register_test ("cairo-texture", test_cairo_texture);
   register_test_with_pre_render ("cube-camera", test_cube_camera, NULL, cube_camera_pre_render);
   register_test ("scene-environment", test_scene_environment);
+  register_test_with_pre_render ("dynamic-cubemap", test_dynamic_cubemap, NULL, dynamic_cubemap_pre_render);
 }
