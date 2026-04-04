@@ -1,6 +1,7 @@
 examples = [
   'cairo',
   'cubes',
+  'dynamic-cubemap',
   'effects',
   'envmap',
   'gtklogo',
