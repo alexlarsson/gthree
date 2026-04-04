@@ -42,6 +42,10 @@ gtk4_dep       = dependency('gtk4', version: '>= 4.0',
                                               'build-examples=false', 'build-tests=false'])
 epoxy_dep      = dependency('epoxy', version: '>= 1.4')
 json_glib_dep  = dependency('json-glib-1.0', version: '>= 1.2.0')
+draco_dep      = dependency('draco', required: get_option('draco'))
+if draco_dep.found()
+  add_languages('cpp', required: true)
+endif
 
 gthree_prefix = get_option('prefix')
 gthree_libdir = join_paths(gthree_prefix, get_option('libdir'))
@@ -134,6 +138,7 @@ summary = [
   '  GTK 4 widgetry: @0@'.format(get_option('gtk4')),
   '   Introspection: @0@'.format(get_option('introspection')),
   '   Documentation: @0@'.format(get_option('gtk_doc')),
+  '  Draco support: @0@'.format(draco_dep.found()),
   'Directories:',
   '          prefix: @0@'.format(gthree_prefix),
   '      includedir: @0@'.format(gthree_includedir),

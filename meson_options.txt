@@ -28,3 +28,7 @@ option('vapi',
        description: 'Wether to generate Vala API',
        type: 'boolean',
        value: true)
+option('draco',
+       description: 'Whether to enable Draco mesh decompression',
+       type: 'feature',
+       value: 'auto')

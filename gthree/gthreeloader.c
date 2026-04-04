@@ -19,6 +19,9 @@
 #include "gthreenumberkeyframetrack.h"
 #include "gthreequaternionkeyframetrack.h"
 #include <json-glib/json-glib.h>
+#ifdef HAVE_DRACO
+#include "gthreedraco.h"
+#endif
 
 /* TODO:
  * object.set_matrix need to decompose position, etc. or we can't expect e.g. get_position to work.
@@ -613,6 +616,10 @@ supports_extension (const char *extension)
 {
   if (strcmp (extension, "KHR_materials_pbrSpecularGlossiness") == 0)
     return TRUE;
+#ifdef HAVE_DRACO
+  if (strcmp (extension, "KHR_draco_mesh_compression") == 0)
+    return TRUE;
+#endif
   return FALSE;
 }
 
@@ -1636,38 +1643,59 @@ parse_meshes (GthreeLoader *loader, JsonObject *root, GError **error)
 
           primitive->geometry = gthree_geometry_new ();
 
-          for (l = members; l != NULL; l = l->next)
+#ifdef HAVE_DRACO
+          if (json_object_has_member (primitive_j, "extensions") &&
+              json_object_has_member (json_object_get_object_member (primitive_j, "extensions"),
+                                     "KHR_draco_mesh_compression"))
             {
-              const char *attr_name = l->data;
-              gint64 accessor_index = json_object_get_int_member (attributes, attr_name);
-              const char *gthree_name = gltl_attribute_name_to_gthree (attr_name);
-              Accessor *accessor = g_ptr_array_index (priv->accessors, accessor_index);
-              GthreeAttribute *attribute;
+              JsonObject *extensions = json_object_get_object_member (primitive_j, "extensions");
+              JsonObject *draco_ext = json_object_get_object_member (extensions, "KHR_draco_mesh_compression");
+              int bv_index = json_object_get_int_member (draco_ext, "bufferView");
+              BufferView *bv = g_ptr_array_index (priv->buffer_views, bv_index);
+              gsize bv_len;
+              const guint8 *bv_data = g_bytes_get_data (bv->bytes, &bv_len);
 
-              attribute = gthree_attribute_new_with_array_interleaved (gthree_name,
-                                                                       accessor->array,
-                                                                       accessor->normalized,
-                                                                       accessor->item_size,
-                                                                       accessor->item_offset,
-                                                                       accessor->count);
-              gthree_geometry_add_attribute (primitive->geometry,
-                                             gthree_name,
-                                             attribute);
+              if (!gthree_draco_decode (bv_data, bv_len,
+                                        primitive->geometry, draco_ext,
+                                        attributes, error))
+                return FALSE;
             }
-
-          if (json_object_has_member (primitive_j, "indices"))
+          else
+#endif
             {
-              int index_index = json_object_get_int_member (primitive_j, "indices");
-              g_autoptr(GthreeAttribute) attribute = NULL;
-              Accessor *accessor = g_ptr_array_index (priv->accessors, index_index);
+              for (l = members; l != NULL; l = l->next)
+                {
+                  const char *attr_name = l->data;
+                  gint64 accessor_index = json_object_get_int_member (attributes, attr_name);
+                  const char *gthree_name = gltl_attribute_name_to_gthree (attr_name);
+                  Accessor *accessor = g_ptr_array_index (priv->accessors, accessor_index);
+                  GthreeAttribute *attribute;
 
-              attribute = gthree_attribute_new_with_array_interleaved ("index",
-                                                                       accessor->array,
-                                                                       accessor->normalized,
-                                                                       accessor->item_size,
-                                                                       accessor->item_offset,
-                                                                       accessor->count);
-              gthree_geometry_set_index (primitive->geometry, attribute);
+                  attribute = gthree_attribute_new_with_array_interleaved (gthree_name,
+                                                                           accessor->array,
+                                                                           accessor->normalized,
+                                                                           accessor->item_size,
+                                                                           accessor->item_offset,
+                                                                           accessor->count);
+                  gthree_geometry_add_attribute (primitive->geometry,
+                                                 gthree_name,
+                                                 attribute);
+                }
+
+              if (json_object_has_member (primitive_j, "indices"))
+                {
+                  int index_index = json_object_get_int_member (primitive_j, "indices");
+                  g_autoptr(GthreeAttribute) attribute = NULL;
+                  Accessor *accessor = g_ptr_array_index (priv->accessors, index_index);
+
+                  attribute = gthree_attribute_new_with_array_interleaved ("index",
+                                                                           accessor->array,
+                                                                           accessor->normalized,
+                                                                           accessor->item_size,
+                                                                           accessor->item_offset,
+                                                                           accessor->count);
+                  gthree_geometry_set_index (primitive->geometry, attribute);
+                }
             }
 
           if (json_object_has_member (primitive_j, "mode"))

@@ -209,6 +209,13 @@ gthree_inc = include_directories('.')
 gthree_deps = [glib_dep, gobject_dep, graphene_dep, gdkpixbuf_dep, cairo_dep, json_glib_dep]
 gthree_private_deps = [epoxy_dep, libm]
 
+if draco_dep.found()
+  gthree_sources += ['gthreedraco.cpp']
+  gthree_private_headers += ['gthreedraco.h']
+  gthree_private_deps += [draco_dep]
+  gthree_cflags += ['-DHAVE_DRACO']
+endif
+
 if get_option('shared_lib')
   libtype = 'shared_library'
 else
@@ -223,6 +230,7 @@ libgthree = build_target('gthree-1',
                            dependencies: gthree_deps + gthree_private_deps,
                            include_directories: [ root_inc, gthree_inc ],
                            c_args: common_cflags + gthree_cflags,
+                           cpp_args: common_cflags + gthree_cflags,
                            link_args: common_ldflags,
                            target_type: libtype)
 gthree_dep_sources = [gthree_typebuiltins_h]
