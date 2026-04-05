@@ -307,6 +307,37 @@ test_standard_gold_metallic (GthreeScene **scene, GthreeCamera **camera)
     }
 }
 
+/* Scene environment (IBL only, no lights, no per-material env map) */
+static void
+test_scene_env_roughness (GthreeScene **scene, GthreeCamera **camera)
+{
+  *scene = gthree_scene_new ();
+  *camera = GTHREE_CAMERA (gthree_perspective_camera_new (45, 4.0/3.0, 0.1, 100));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (*camera), 0, 0, 3.5);
+  gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (*camera));
+
+  g_autoptr(GthreeCubeTexture) cube_tex = test_cube_texture_colored ();
+  gthree_scene_set_environment (*scene, GTHREE_TEXTURE (cube_tex));
+
+  g_autoptr(GthreeGeometry) geom = gthree_geometry_new_sphere (0.4, 32, 16);
+
+  float roughness[] = { 0.0, 0.3, 0.6, 1.0 };
+  for (int i = 0; i < 4; i++)
+    {
+      GthreeMeshPhysicalMaterial *mat = gthree_mesh_physical_material_new ();
+      graphene_vec3_t white;
+      gthree_mesh_standard_material_set_color (GTHREE_MESH_STANDARD_MATERIAL (mat),
+                                                graphene_vec3_init (&white, 1, 1, 1));
+      gthree_mesh_standard_material_set_metalness (GTHREE_MESH_STANDARD_MATERIAL (mat), 1.0);
+      gthree_mesh_standard_material_set_roughness (GTHREE_MESH_STANDARD_MATERIAL (mat), roughness[i]);
+
+      GthreeMesh *mesh = gthree_mesh_new (geom, GTHREE_MATERIAL (mat));
+      gthree_object_set_position_xyz (GTHREE_OBJECT (mesh), (i - 1.5) * 1.0, 0, 0);
+      gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (mesh));
+      g_object_unref (mat);
+    }
+}
+
 void
 register_pbr_tests (void)
 {
@@ -319,4 +350,5 @@ register_pbr_tests (void)
   register_test ("physical-iridescence", test_physical_iridescence);
   register_test ("physical-ior", test_physical_ior);
   register_test ("standard-gold-metallic", test_standard_gold_metallic);
+  register_test ("scene-env-roughness", test_scene_env_roughness);
 }
