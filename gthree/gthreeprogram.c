@@ -357,7 +357,6 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
   const char *shader_name;
   GLuint glVertexShader, glFragmentShader;
   GLint status;
-  char formatd_buffer[G_ASCII_DTOSTR_BUF_SIZE];
 
   program = g_object_new (gthree_program_get_type (),
                           NULL);
@@ -704,11 +703,7 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
         generate_defines (fragment, defines);
 
       if (parameters->alpha_test > 0)
-        {
-          g_string_append_printf (fragment, "#define ALPHATEST %s\n",
-                                  g_ascii_formatd (formatd_buffer, sizeof(formatd_buffer),
-                                                   "%.3f", parameters->alpha_test / 255.0));
-        }
+        g_string_append (fragment, "#define USE_ALPHATEST\n");
 
       if (parameters->use_fog && parameters->fog)
         g_string_append (fragment, "#define USE_FOG\n");

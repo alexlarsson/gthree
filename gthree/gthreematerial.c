@@ -267,6 +267,8 @@ gthree_material_real_set_uniforms (GthreeMaterial *material,
   if (class->apply_common_uniforms)
     {
       gthree_uniforms_set_float (uniforms, "opacity", priv->opacity);
+      if (priv->alpha_test > 0)
+        gthree_uniforms_set_float (uniforms, "alphaTest", priv->alpha_test);
     }
 }
 

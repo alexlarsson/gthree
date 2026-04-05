@@ -1001,6 +1001,8 @@ static GthreeUniformsDefinition common_lib[] = {
 
   {"alphaMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
   {"alphaMapTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
+
+  {"alphaTest", GTHREE_UNIFORM_TYPE_FLOAT, &f0 },
 };
 
 
