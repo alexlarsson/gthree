@@ -249,6 +249,7 @@ void gthree_light_set_shadow (GthreeLight   *light,
 
 void gthree_skeleton_update  (GthreeSkeleton *skeleton);
 float *gthree_skeleton_get_bone_matrices (GthreeSkeleton *skeleton);
+const graphene_matrix_t *gthree_skeleton_get_bone_inverse (GthreeSkeleton *skeleton, int index);
 guint gthree_skeleton_get_bone_texture (GthreeSkeleton *skeleton);
 int gthree_skeleton_get_bone_texture_size (GthreeSkeleton *skeleton);
 

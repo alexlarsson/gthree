@@ -3,6 +3,8 @@
 
 #include "gthreeobjectprivate.h"
 #include "gthreemesh.h"
+#include "gthreeskinnedmesh.h"
+#include "gthreeprivate.h"
 
 #include <graphene.h>
 
@@ -1660,13 +1662,95 @@ gthree_object_print_tree (GthreeObject *object, int depth)
 }
 
 static void
+_gthree_object_get_skinned_mesh_extents (GthreeSkinnedMesh *skinned_mesh,
+                                         graphene_box_t *box)
+{
+  GthreeGeometry *geometry = gthree_mesh_get_geometry (GTHREE_MESH (skinned_mesh));
+  GthreeAttribute *position = gthree_geometry_get_position (geometry);
+  GthreeAttribute *skin_index = gthree_geometry_get_attribute (geometry, "skinIndex");
+  GthreeAttribute *skin_weight = gthree_geometry_get_attribute (geometry, "skinWeight");
+  GthreeSkeleton *skeleton = gthree_skinned_mesh_get_skeleton (skinned_mesh);
+  const graphene_matrix_t *bind_matrix = gthree_skinned_mesh_get_bind_matrix (skinned_mesh);
+  const graphene_matrix_t *bind_matrix_inverse = gthree_skinned_mesh_get_inverse_bind_matrix (skinned_mesh);
+  int count = gthree_attribute_get_count (position);
+
+  if (skin_index == NULL || skin_weight == NULL || skeleton == NULL)
+    return;
+
+  const graphene_matrix_t *mesh_world = gthree_object_get_world_matrix (GTHREE_OBJECT (skinned_mesh));
+
+  for (int i = 0; i < count; i++)
+    {
+      graphene_point3d_t pos;
+      graphene_vec4_t sw;
+      graphene_vec4_t base_pos4, skinned_pos4;
+      graphene_point3d_t result;
+
+      gthree_attribute_get_point3d (position, i, &pos);
+      gthree_attribute_get_vec4 (skin_weight, i, &sw);
+
+      graphene_vec4_init (&base_pos4, pos.x, pos.y, pos.z, 1.0f);
+      graphene_matrix_transform_vec4 (bind_matrix, &base_pos4, &base_pos4);
+
+      float weights[4] = {
+        graphene_vec4_get_x (&sw), graphene_vec4_get_y (&sw),
+        graphene_vec4_get_z (&sw), graphene_vec4_get_w (&sw)
+      };
+      GthreeAttributeArray *si_array = gthree_attribute_get_array (skin_index);
+      int si_offset = gthree_attribute_get_item_offset (skin_index);
+      int bone_indices[4] = {
+        gthree_attribute_array_get_uint (si_array, i, si_offset + 0),
+        gthree_attribute_array_get_uint (si_array, i, si_offset + 1),
+        gthree_attribute_array_get_uint (si_array, i, si_offset + 2),
+        gthree_attribute_array_get_uint (si_array, i, si_offset + 3)
+      };
+
+      graphene_vec4_init (&skinned_pos4, 0, 0, 0, 0);
+
+      for (int j = 0; j < 4; j++)
+        {
+          float weight = weights[j];
+          if (weight == 0)
+            continue;
+
+          int bone_idx = bone_indices[j];
+          GthreeBone *bone = gthree_skeleton_get_bone (skeleton, bone_idx);
+          const graphene_matrix_t *bone_inverse = gthree_skeleton_get_bone_inverse (skeleton, bone_idx);
+          const graphene_matrix_t *bone_world = gthree_object_get_world_matrix (GTHREE_OBJECT (bone));
+
+          graphene_matrix_t offset;
+          graphene_matrix_multiply (bone_inverse, bone_world, &offset);
+
+          graphene_vec4_t transformed;
+          graphene_matrix_transform_vec4 (&offset, &base_pos4, &transformed);
+          graphene_vec4_scale (&transformed, weight, &transformed);
+          graphene_vec4_add (&skinned_pos4, &transformed, &skinned_pos4);
+        }
+
+      graphene_matrix_transform_vec4 (bind_matrix_inverse, &skinned_pos4, &skinned_pos4);
+
+      graphene_matrix_transform_vec4 (mesh_world, &skinned_pos4, &skinned_pos4);
+
+      graphene_point3d_init (&result,
+                             graphene_vec4_get_x (&skinned_pos4),
+                             graphene_vec4_get_y (&skinned_pos4),
+                             graphene_vec4_get_z (&skinned_pos4));
+      graphene_box_expand (box, &result, box);
+    }
+}
+
+static void
 _gthree_object_get_mesh_extents (GthreeObject *object,
                                  graphene_box_t *box)
 {
   GthreeObjectIter iter;
   GthreeObject *child;
 
-  if (GTHREE_IS_MESH (object))
+  if (GTHREE_IS_SKINNED_MESH (object))
+    {
+      _gthree_object_get_skinned_mesh_extents (GTHREE_SKINNED_MESH (object), box);
+    }
+  else if (GTHREE_IS_MESH (object))
     {
       GthreeGeometry *geometry = gthree_mesh_get_geometry (GTHREE_MESH (object));
       graphene_box_t bounding_box;

@@ -86,6 +86,14 @@ gthree_skeleton_get_n_bones  (GthreeSkeleton *skeleton)
   return priv->bones->len;
 }
 
+const graphene_matrix_t *
+gthree_skeleton_get_bone_inverse (GthreeSkeleton *skeleton, int index)
+{
+  GthreeSkeletonPrivate *priv = gthree_skeleton_get_instance_private (skeleton);
+
+  return &priv->bone_inverses[index];
+}
+
 /**
  * gthree_skeleton_get_bone:
  *
