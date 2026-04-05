@@ -26,6 +26,7 @@
 #include "gthreefog.h"
 #include "gthreescene.h"
 #include "gthreemeshstandardmaterial.h"
+#include "gthreemeshphysicalmaterial.h"
 #include "gthreemeshlambertmaterial.h"
 #include "gthreemeshphongmaterial.h"
 #include "gthreepmremgeneratorprivate.h"
@@ -93,6 +94,7 @@ struct _GthreeRenderList {
   gboolean use_background;
   GArray *items;
   GArray *opaque;
+  GArray *transmissive;
   GArray *transparent;
   GArray *background;
 };
@@ -195,6 +197,8 @@ typedef struct {
   GthreeTexture *scene_environment;
   GthreeTexture *scene_environment_pmrem; /* CubeUV version, if scene_environment is a cube texture */
   float scene_environment_intensity;
+
+  GthreeRenderTarget *transmission_render_target;
 
   /* Background */
   GthreeMesh *bg_box_mesh;
@@ -530,6 +534,7 @@ gthree_renderer_finalize (GObject *obj)
   g_clear_object (&priv->pmrem_generator);
 
   g_clear_object (&priv->current_render_target);
+  g_clear_object (&priv->transmission_render_target);
 
   if (priv->shadowmap_depth_materials)
     g_ptr_array_unref (priv->shadowmap_depth_materials);
@@ -2931,6 +2936,26 @@ set_program (GthreeRenderer *renderer,
             }
         }
 
+      if (GTHREE_IS_MESH_PHYSICAL_MATERIAL (material) && priv->transmission_render_target)
+        {
+          GthreeUniform *uni;
+          GthreeTexture *tx_tex = gthree_render_target_get_texture (priv->transmission_render_target);
+
+          uni = gthree_uniforms_lookup_from_string (m_uniforms, "transmissionSamplerMap");
+          if (uni != NULL)
+            gthree_uniform_set_texture (uni, tx_tex);
+
+          uni = gthree_uniforms_lookup_from_string (m_uniforms, "transmissionSamplerSize");
+          if (uni != NULL)
+            {
+              graphene_vec2_t size;
+              graphene_vec2_init (&size,
+                                 gthree_render_target_get_width (priv->transmission_render_target),
+                                 gthree_render_target_get_height (priv->transmission_render_target));
+              gthree_uniform_set_vec2 (uni, &size);
+            }
+        }
+
       // refresh uniforms common to several materials
       if (fog != NULL && gthree_material_get_fog (material))
         refresh_uniforms_fog (renderer, m_uniforms, fog);
@@ -3331,6 +3356,53 @@ render_item (GthreeRenderer *renderer,
     {
       glDrawArrays (draw_mode, draw_start, draw_count);
     }
+}
+
+static void
+render_objects (GthreeRenderer *renderer, GthreeScene *scene,
+               GArray *render_list_indexes, GthreeCamera *camera,
+               GthreeFog *fog, gboolean use_blending,
+               GthreeMaterial *override_material);
+
+static void
+render_transmission_pass (GthreeRenderer *renderer,
+                          GthreeScene    *scene,
+                          GthreeCamera   *camera,
+                          GthreeFog      *fog)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  int vp_width = (int)graphene_rect_get_width (&priv->current_viewport);
+  int vp_height = (int)graphene_rect_get_height (&priv->current_viewport);
+
+  if (priv->transmission_render_target == NULL ||
+      gthree_render_target_get_width (priv->transmission_render_target) != vp_width ||
+      gthree_render_target_get_height (priv->transmission_render_target) != vp_height)
+    {
+      g_clear_object (&priv->transmission_render_target);
+      priv->transmission_render_target = gthree_render_target_new (vp_width, vp_height);
+
+      GthreeTexture *tex = gthree_render_target_get_texture (priv->transmission_render_target);
+      gthree_texture_set_generate_mipmaps (tex, TRUE);
+      gthree_texture_set_min_filter (tex, GTHREE_FILTER_LINEAR_MIPMAP_LINEAR);
+    }
+
+  GthreeRenderTarget *saved_target = priv->current_render_target;
+  if (saved_target)
+    g_object_ref (saved_target);
+
+  gthree_renderer_set_render_target (renderer, priv->transmission_render_target, 0, 0);
+  gthree_renderer_clear (renderer, TRUE, TRUE, TRUE);
+
+  render_objects (renderer, scene, priv->current_render_list->background, camera, fog, FALSE, NULL);
+  render_objects (renderer, scene, priv->current_render_list->opaque, camera, fog, FALSE, NULL);
+
+  gthree_render_target_update_mipmap (priv->transmission_render_target, renderer);
+
+  gthree_renderer_set_render_target (renderer, saved_target, 0, 0);
+  g_clear_object (&saved_target);
+
+  render_objects (renderer, scene, priv->current_render_list->transmissive, camera, fog, TRUE, NULL);
 }
 
 static void
@@ -3834,6 +3906,10 @@ gthree_renderer_render (GthreeRenderer *renderer,
       // opaque pass (front-to-back order)
       render_objects (renderer, scene, priv->current_render_list->opaque, camera, fog, FALSE, NULL);
 
+      // transmission pass
+      if (priv->current_render_list->transmissive->len > 0)
+        render_transmission_pass (renderer, scene, camera, fog);
+
       // transparent pass (back-to-front order)
       render_objects (renderer, scene, priv->current_render_list->transparent, camera, fog, TRUE, NULL);
     }
@@ -3873,6 +3949,7 @@ gthree_render_list_new ()
 
   list->items = g_array_new (FALSE, FALSE, sizeof (GthreeRenderListItem));
   list->opaque = g_array_new (FALSE, FALSE, sizeof (int));
+  list->transmissive = g_array_new (FALSE, FALSE, sizeof (int));
   list->transparent = g_array_new (FALSE, FALSE, sizeof (int));
   list->background = g_array_new (FALSE, FALSE, sizeof (int));
 
@@ -3884,6 +3961,7 @@ gthree_render_list_free (GthreeRenderList *list)
 {
   g_array_unref (list->items);
   g_array_unref (list->opaque);
+  g_array_unref (list->transmissive);
   g_array_unref (list->transparent);
   g_array_unref (list->background);
   g_free (list);
@@ -3896,6 +3974,7 @@ gthree_render_list_init (GthreeRenderList *list)
   list->use_background = FALSE;
   g_array_set_size (list->items, 0);
   g_array_set_size (list->opaque, 0);
+  g_array_set_size (list->transmissive, 0);
   g_array_set_size (list->transparent, 0);
   g_array_set_size (list->background, 0);
 }
@@ -3958,6 +4037,7 @@ void
 gthree_render_list_sort (GthreeRenderList *list)
 {
   g_array_sort_with_data (list->opaque, render_list_painter_sort_stable, list);
+  g_array_sort_with_data (list->transmissive, render_list_painter_sort_stable, list);
   g_array_sort_with_data (list->transparent, render_list_reverse_painter_sort_stable, list);
 }
 
@@ -3977,6 +4057,9 @@ gthree_render_list_push (GthreeRenderList *list,
     g_array_append_val (list->background, index);
   else if (gthree_material_get_is_transparent (material))
     g_array_append_val (list->transparent, index);
+  else if (GTHREE_IS_MESH_PHYSICAL_MATERIAL (material) &&
+           gthree_mesh_physical_material_get_transmission (GTHREE_MESH_PHYSICAL_MATERIAL (material)) > 0)
+    g_array_append_val (list->transmissive, index);
   else
     g_array_append_val (list->opaque, index);
 }
