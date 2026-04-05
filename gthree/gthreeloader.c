@@ -616,6 +616,8 @@ supports_extension (const char *extension)
 {
   if (strcmp (extension, "KHR_materials_pbrSpecularGlossiness") == 0)
     return TRUE;
+  if (strcmp (extension, "KHR_texture_transform") == 0)
+    return TRUE;
 #ifdef HAVE_DRACO
   if (strcmp (extension, "KHR_draco_mesh_compression") == 0)
     return TRUE;
@@ -1128,7 +1130,38 @@ parse_texture_ref (GthreeLoader *loader, JsonObject *texture_def)
   GthreeLoaderPrivate *priv = gthree_loader_get_instance_private (loader);
   gint64 index = json_object_get_int_member (texture_def, "index");
 
-  return g_object_ref (g_ptr_array_index (priv->textures, index));
+  GthreeTexture *texture = g_object_ref (g_ptr_array_index (priv->textures, index));
+
+  if (json_object_has_member (texture_def, "extensions"))
+    {
+      JsonObject *extensions = json_object_get_object_member (texture_def, "extensions");
+      if (json_object_has_member (extensions, "KHR_texture_transform"))
+        {
+          JsonObject *transform = json_object_get_object_member (extensions, "KHR_texture_transform");
+          if (json_object_has_member (transform, "offset"))
+            {
+              JsonArray *arr = json_object_get_array_member (transform, "offset");
+              graphene_vec2_t offset;
+              graphene_vec2_init (&offset,
+                                 json_array_get_double_element (arr, 0),
+                                 json_array_get_double_element (arr, 1));
+              gthree_texture_set_offset (texture, &offset);
+            }
+          if (json_object_has_member (transform, "scale"))
+            {
+              JsonArray *arr = json_object_get_array_member (transform, "scale");
+              graphene_vec2_t repeat;
+              graphene_vec2_init (&repeat,
+                                 json_array_get_double_element (arr, 0),
+                                 json_array_get_double_element (arr, 1));
+              gthree_texture_set_repeat (texture, &repeat);
+            }
+          if (json_object_has_member (transform, "rotation"))
+            g_warning ("KHR_texture_transform: rotation is not supported");
+        }
+    }
+
+  return texture;
 }
 
 static gboolean
