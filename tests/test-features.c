@@ -455,6 +455,33 @@ dynamic_cubemap_pre_render (GthreeRenderer *renderer)
   gthree_cube_camera_update (dc_cube_camera, renderer, dc_scene);
 }
 
+static void
+test_standard_box (GthreeScene **scene, GthreeCamera **camera)
+{
+  graphene_vec3_t color;
+
+  *scene = gthree_scene_new ();
+  gthree_scene_set_background_color (*scene, graphene_vec3_init (&color, 0.2, 0.2, 0.2));
+
+  *camera = GTHREE_CAMERA (gthree_perspective_camera_new (60, 4.0/3.0, 1, 1000));
+  gthree_object_set_position_xyz (GTHREE_OBJECT (*camera), 0, 20, 55);
+  gthree_object_look_at_xyz (GTHREE_OBJECT (*camera), 0, 0, 0);
+  gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (*camera));
+
+  GthreeAmbientLight *ambient = gthree_ambient_light_new (graphene_vec3_init (&color, 0.5, 0.5, 0.5));
+  gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (ambient));
+
+  GthreeDirectionalLight *dir = gthree_directional_light_new (graphene_vec3_init (&color, 1, 1, 1), 2.0);
+  gthree_object_set_position_xyz (GTHREE_OBJECT (dir), 30, 30, 30);
+  gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (dir));
+
+  g_autoptr(GthreeGeometry) box_geom = gthree_geometry_new_box (8, 8, 8, 1, 1, 1);
+  g_autoptr(GthreeMeshStandardMaterial) mat = gthree_mesh_standard_material_new ();
+  gthree_mesh_standard_material_set_color (mat, graphene_vec3_init (&color, 0.9, 0.1, 0.1));
+  GthreeMesh *box = gthree_mesh_new (box_geom, GTHREE_MATERIAL (mat));
+  gthree_object_add_child (GTHREE_OBJECT (*scene), GTHREE_OBJECT (box));
+}
+
 void
 register_feature_tests (void)
 {
@@ -468,4 +495,5 @@ register_feature_tests (void)
   register_test_with_pre_render ("cube-camera", test_cube_camera, NULL, cube_camera_pre_render);
   register_test ("scene-environment", test_scene_environment);
   register_test_with_pre_render ("dynamic-cubemap", test_dynamic_cubemap, NULL, dynamic_cubemap_pre_render);
+  register_test ("standard-box", test_standard_box);
 }

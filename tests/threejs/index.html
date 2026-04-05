@@ -682,6 +682,30 @@ tests['cube-camera'] = () => {
   };
 };
 
+tests['standard-box'] = () => {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0.2, 0.2, 0.2);
+
+  const camera = new THREE.PerspectiveCamera(60, 4/3, 1, 1000);
+  camera.position.set(0, 20, 55);
+  camera.lookAt(0, 0, 0);
+  scene.add(camera);
+
+  const ambient = new THREE.AmbientLight(new THREE.Color(0.5, 0.5, 0.5));
+  scene.add(ambient);
+
+  const dir = new THREE.DirectionalLight(new THREE.Color(1, 1, 1), 2.0);
+  dir.position.set(30, 30, 30);
+  scene.add(dir);
+
+  const geom = new THREE.BoxGeometry(8, 8, 8, 1, 1, 1);
+  const mat = new THREE.MeshStandardMaterial({ color: new THREE.Color(0.9, 0.1, 0.1) });
+  const box = new THREE.Mesh(geom, mat);
+  scene.add(box);
+
+  return { scene, camera };
+};
+
 tests['scene-environment'] = () => {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(45, 4/3, 0.1, 100);
