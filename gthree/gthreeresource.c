@@ -188,10 +188,14 @@ gthree_resource_unrealize (GthreeResource *resource,
                            GthreeRenderer *renderer)
 {
   GthreeResourceClass *class = GTHREE_RESOURCE_GET_CLASS(resource);
+  GthreeResourceRealizeData *data = gthree_resource_peek_data_for (resource, renderer);
 
   class->unrealize (resource, renderer);
 
   gthree_renderer_mark_unrealized (renderer, resource);
+
+  if (data)
+    data->realized_for = NULL;
 }
 
 gboolean
