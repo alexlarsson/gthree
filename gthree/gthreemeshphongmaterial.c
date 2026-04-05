@@ -75,7 +75,7 @@ gthree_mesh_phong_material_init (GthreeMeshPhongMaterial *phong)
   graphene_vec3_init (&priv->emissive,
                       0.0, 0.0, 0.0);
   graphene_vec3_init (&priv->specular,
-                      0.07, 0.07, 0.07);
+                      0.00562, 0.00562, 0.00562);
 
   priv->combine = GTHREE_OPERATION_MULTIPLY;
 
