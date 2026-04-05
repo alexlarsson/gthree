@@ -982,6 +982,7 @@ static float f1 = 1.0;
 static float fm1 = -1.0;
 static float f2000 = 2000;
 static float fp98 = 0.98;
+static float f1p5 = 1.5;
 static float fp00025 = 0.00025;
 static float grey[3] = { 0.9333333333333333, 0.9333333333333333, 0.9333333333333333 };
 static float white[3] = { 1, 1, 1 };
@@ -1019,7 +1020,9 @@ static GthreeUniformsDefinition envmap_lib[] = {
   {"envMapRotation", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
   {"flipEnvMap", GTHREE_UNIFORM_TYPE_FLOAT, &fm1 },
   {"reflectivity", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
+  {"ior", GTHREE_UNIFORM_TYPE_FLOAT, &f1p5 },
   {"refractionRatio", GTHREE_UNIFORM_TYPE_FLOAT, &fp98 },
+  {"dfgLUT", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
   {"maxMipLevel",  GTHREE_UNIFORM_TYPE_INT, &i0 },
 };
 
@@ -1146,6 +1149,9 @@ static GthreeUniformsDefinition points_lib[] = {
   {"size", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
   {"scale", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
   {"map", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
+  {"alphaMap", GTHREE_UNIFORM_TYPE_TEXTURE, NULL },
+  {"alphaMapTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
+  {"alphaTest", GTHREE_UNIFORM_TYPE_FLOAT, &f0 },
   {"uvTransform", GTHREE_UNIFORM_TYPE_MATRIX3, &one_matrix3 },
 };
 
