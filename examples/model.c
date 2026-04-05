@@ -298,6 +298,14 @@ env_map_combo_changed (GtkComboBox *combo)
 }
 
 static void
+tone_mapping_combo_changed (GtkComboBox *combo, GthreeArea *area)
+{
+  GthreeRenderer *renderer = gthree_area_get_renderer (area);
+  int index = gtk_combo_box_get_active (combo);
+  gthree_renderer_set_tone_mapping (renderer, (GthreeToneMapping)index);
+}
+
+static void
 auto_rotate_toggled (GtkWidget *toggle_button)
 {
 #ifdef USE_GTK4
@@ -463,6 +471,18 @@ main (int argc, char *argv[])
   gtk_combo_box_set_active (GTK_COMBO_BOX (combo), 0);
   g_signal_connect (combo, "changed", G_CALLBACK (env_map_combo_changed), NULL);
 
+  gtk_box_append (GTK_BOX (hbox), combo);
+
+  combo = gtk_combo_box_text_new ();
+  {
+    const char *tone_mappings[] = {
+      "No Tone Mapping", "Linear", "Reinhard", "Cineon", "ACES Filmic", "AgX", "Neutral"
+    };
+    for (i = 0; i < G_N_ELEMENTS (tone_mappings); i++)
+      gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), tone_mappings[i]);
+  }
+  gtk_combo_box_set_active (GTK_COMBO_BOX (combo), 0);
+  g_signal_connect (combo, "changed", G_CALLBACK (tone_mapping_combo_changed), area);
   gtk_box_append (GTK_BOX (hbox), combo);
 
   check = gtk_check_button_new_with_label ("Auto rotate");
