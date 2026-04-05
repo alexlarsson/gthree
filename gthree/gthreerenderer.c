@@ -1446,6 +1446,15 @@ set_polygon_offset (GthreeRenderer *renderer,
     }
 }
 
+static float
+linear_to_srgb (float c)
+{
+  if (c <= 0.0031308f)
+    return c * 12.92f;
+  else
+    return 1.055f * powf (c, 1.0f / 2.4f) - 0.055f;
+}
+
 static void
 set_clear_color (GthreeRenderer *renderer,
                  const graphene_vec3_t *color,
@@ -1457,9 +1466,9 @@ set_clear_color (GthreeRenderer *renderer,
   graphene_vec4_init_from_vec3 (&c4, color, alpha);
   if (!graphene_vec4_equal (&c4, &priv->old_clear_color))
     {
-      glClearColor (graphene_vec4_get_x (&c4),
-                    graphene_vec4_get_y (&c4),
-                    graphene_vec4_get_z (&c4),
+      glClearColor (linear_to_srgb (graphene_vec4_get_x (&c4)),
+                    linear_to_srgb (graphene_vec4_get_y (&c4)),
+                    linear_to_srgb (graphene_vec4_get_z (&c4)),
                     graphene_vec4_get_w (&c4));
       priv->old_clear_color = c4;
     }
