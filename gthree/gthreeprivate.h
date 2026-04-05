@@ -62,6 +62,7 @@ struct _GthreeMaterialProperties
   guint num_clipping_planes;
   guint num_intersection;
   GthreeColorSpace output_color_space;
+  GthreeToneMapping tone_mapping;
 };
 
 struct  _GthreeProgramParameters {
