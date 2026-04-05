@@ -102,19 +102,19 @@ function testCubeTextureColored() {
 
 // Standard directional + ambient light setup used by material tests
 function addDirLight(scene) {
-  const light = new THREE.DirectionalLight(0xffffff, Math.PI);
+  const light = new THREE.DirectionalLight(new THREE.Color(1, 1, 1), Math.PI);
   light.position.set(1, 2, 3);
   scene.add(light);
-  const ambient = new THREE.AmbientLight(0xffffff, 0.3 * Math.PI);
+  const ambient = new THREE.AmbientLight(new THREE.Color(1, 1, 1), 0.3 * Math.PI);
   scene.add(ambient);
   return light;
 }
 
 // PBR test lights
 function addEnvmapLights(scene) {
-  const ambient = new THREE.AmbientLight(0xffffff, 0.4 * Math.PI);
+  const ambient = new THREE.AmbientLight(new THREE.Color(1, 1, 1), 0.4 * Math.PI);
   scene.add(ambient);
-  const dir = new THREE.DirectionalLight(0xffffff, Math.PI);
+  const dir = new THREE.DirectionalLight(new THREE.Color(1, 1, 1), Math.PI);
   dir.position.set(2, 3, 4);
   scene.add(dir);
 }
@@ -321,7 +321,7 @@ tests['point-light'] = () => {
   camera.position.set(0, 0, 3);
   scene.add(camera);
 
-  const ambient = new THREE.AmbientLight(0xffffff, 0.1 * Math.PI);
+  const ambient = new THREE.AmbientLight(new THREE.Color(1, 1, 1), 0.1 * Math.PI);
   scene.add(ambient);
 
   const light1 = new THREE.PointLight(new THREE.Color(1, 0, 0), Math.PI, 0);
@@ -367,10 +367,10 @@ tests['shadow'] = () => {
   camera.lookAt(0, 0, 0);
   scene.add(camera);
 
-  const ambient = new THREE.AmbientLight(0xffffff, 0.3 * Math.PI);
+  const ambient = new THREE.AmbientLight(new THREE.Color(1, 1, 1), 0.3 * Math.PI);
   scene.add(ambient);
 
-  const dir = new THREE.DirectionalLight(0xffffff, Math.PI);
+  const dir = new THREE.DirectionalLight(new THREE.Color(1, 1, 1), Math.PI);
   dir.position.set(2, 4, 3);
   dir.castShadow = true;
   dir.shadow.camera.left = -10;
@@ -409,7 +409,7 @@ tests['fog'] = () => {
   scene.fog = new THREE.Fog(new THREE.Color(0.5, 0.5, 0.7), 2, 8);
   scene.background = new THREE.Color(0.5, 0.5, 0.7);
 
-  const light = new THREE.DirectionalLight(0xffffff, Math.PI);
+  const light = new THREE.DirectionalLight(new THREE.Color(1, 1, 1), Math.PI);
   light.position.set(1, 2, 3);
   scene.add(light);
 
@@ -429,7 +429,7 @@ tests['transparency'] = () => {
   camera.position.set(0, 0, 3.5);
   scene.add(camera);
 
-  const light = new THREE.DirectionalLight(0xffffff, Math.PI);
+  const light = new THREE.DirectionalLight(new THREE.Color(1, 1, 1), Math.PI);
   light.position.set(1, 2, 3);
   scene.add(light);
 
@@ -455,11 +455,11 @@ tests['multi-material'] = () => {
   camera.position.set(0, 0, 3.5);
   scene.add(camera);
 
-  const light = new THREE.DirectionalLight(0xffffff, Math.PI);
+  const light = new THREE.DirectionalLight(new THREE.Color(1, 1, 1), Math.PI);
   light.position.set(1, 2, 3);
   scene.add(light);
 
-  const ambient = new THREE.AmbientLight(0xffffff, 0.2 * Math.PI);
+  const ambient = new THREE.AmbientLight(new THREE.Color(1, 1, 1), 0.2 * Math.PI);
   scene.add(ambient);
 
   const colors = [
@@ -486,7 +486,7 @@ tests['double-sided'] = () => {
   camera.lookAt(0, 0, 0);
   scene.add(camera);
 
-  const light = new THREE.DirectionalLight(0xffffff, Math.PI);
+  const light = new THREE.DirectionalLight(new THREE.Color(1, 1, 1), Math.PI);
   light.position.set(1, 2, 3);
   scene.add(light);
 
@@ -512,10 +512,10 @@ tests['envmap'] = () => {
   camera.position.set(0, 0, 2.8);
   scene.add(camera);
 
-  const ambient = new THREE.AmbientLight(0xffffff, Math.PI);
+  const ambient = new THREE.AmbientLight(new THREE.Color(1, 1, 1), Math.PI);
   scene.add(ambient);
 
-  const point = new THREE.PointLight(0xffffff, Math.PI, 0);
+  const point = new THREE.PointLight(new THREE.Color(1, 1, 1), Math.PI, 0);
   point.position.set(2, 2, 2);
   scene.add(point);
 
@@ -551,11 +551,11 @@ tests['render-target'] = () => {
   const innerScene = new THREE.Scene();
   innerScene.background = new THREE.Color(0.8, 0.2, 0.2);
 
-  const light = new THREE.DirectionalLight(0xffffff, Math.PI);
+  const light = new THREE.DirectionalLight(new THREE.Color(1, 1, 1), Math.PI);
   light.position.set(1, 2, 3);
   innerScene.add(light);
 
-  const ambient = new THREE.AmbientLight(0xffffff, 0.3 * Math.PI);
+  const ambient = new THREE.AmbientLight(new THREE.Color(1, 1, 1), 0.3 * Math.PI);
   innerScene.add(ambient);
 
   const sphereMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(0.2, 0.4, 0.9) });
@@ -639,7 +639,7 @@ tests['cube-camera'] = () => {
   const ambient = new THREE.AmbientLight(new THREE.Color(0.5, 0.5, 0.5));
   scene.add(ambient);
 
-  const dir = new THREE.DirectionalLight(0xffffff, 2.0);
+  const dir = new THREE.DirectionalLight(new THREE.Color(1, 1, 1), 2.0);
   dir.position.set(30, 30, 30);
   scene.add(dir);
 
@@ -719,7 +719,7 @@ tests['scene-environment'] = () => {
   const ambient = new THREE.AmbientLight(new THREE.Color(0.3, 0.3, 0.3));
   scene.add(ambient);
 
-  const dir = new THREE.DirectionalLight(0xffffff, Math.PI);
+  const dir = new THREE.DirectionalLight(new THREE.Color(1, 1, 1), Math.PI);
   dir.position.set(2, 2, 2);
   scene.add(dir);
 
@@ -742,7 +742,7 @@ tests['dynamic-cubemap'] = () => {
   const ambient = new THREE.AmbientLight(new THREE.Color(0.5, 0.5, 0.5));
   scene.add(ambient);
 
-  const dir = new THREE.DirectionalLight(0xffffff, 2.0);
+  const dir = new THREE.DirectionalLight(new THREE.Color(1, 1, 1), 2.0);
   dir.position.set(30, 30, 30);
   scene.add(dir);
 
@@ -1048,11 +1048,11 @@ tests['clipping'] = () => {
   camera.position.set(0, 0, 2.8);
   scene.add(camera);
 
-  const light = new THREE.DirectionalLight(0xffffff, Math.PI);
+  const light = new THREE.DirectionalLight(new THREE.Color(1, 1, 1), Math.PI);
   light.position.set(1, 2, 3);
   scene.add(light);
 
-  const ambient = new THREE.AmbientLight(0xffffff, 0.3 * Math.PI);
+  const ambient = new THREE.AmbientLight(new THREE.Color(1, 1, 1), 0.3 * Math.PI);
   scene.add(ambient);
 
   const clipPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
@@ -1101,10 +1101,10 @@ tests['envmap-refraction'] = () => {
   camera.lookAt(0, 0, 0);
   scene.add(camera);
 
-  const ambient = new THREE.AmbientLight(0xffffff, Math.PI);
+  const ambient = new THREE.AmbientLight(new THREE.Color(1, 1, 1), Math.PI);
   scene.add(ambient);
 
-  const point = new THREE.PointLight(0xffffff, Math.PI, 0);
+  const point = new THREE.PointLight(new THREE.Color(1, 1, 1), Math.PI, 0);
   point.position.set(2, 2, 2);
   scene.add(point);
 
@@ -1133,10 +1133,10 @@ function setupGltfTest(modelName) {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(45, 4/3, 0.01, 1000);
 
-  const ambient = new THREE.AmbientLight(0xffffff, 0.5 * Math.PI);
+  const ambient = new THREE.AmbientLight(new THREE.Color(1, 1, 1), 0.5 * Math.PI);
   scene.add(ambient);
 
-  const dir = new THREE.DirectionalLight(0xffffff, Math.PI);
+  const dir = new THREE.DirectionalLight(new THREE.Color(1, 1, 1), Math.PI);
   dir.position.set(1, 2, 3);
   scene.add(dir);
 
@@ -1178,11 +1178,11 @@ tests['morph-target'] = () => {
   camera.position.set(0, 0, 3.5);
   scene.add(camera);
 
-  const light = new THREE.DirectionalLight(0xffffff, Math.PI);
+  const light = new THREE.DirectionalLight(new THREE.Color(1, 1, 1), Math.PI);
   light.position.set(1, 2, 3);
   scene.add(light);
 
-  const ambient = new THREE.AmbientLight(0xffffff, 0.3 * Math.PI);
+  const ambient = new THREE.AmbientLight(new THREE.Color(1, 1, 1), 0.3 * Math.PI);
   scene.add(ambient);
 
   const baseGeom = new THREE.SphereGeometry(0.5, 16, 12);
@@ -1222,10 +1222,10 @@ tests['skeletal-animation'] = () => {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(45, 4/3, 0.01, 1000);
 
-  const ambient = new THREE.AmbientLight(0xffffff, 0.5 * Math.PI);
+  const ambient = new THREE.AmbientLight(new THREE.Color(1, 1, 1), 0.5 * Math.PI);
   scene.add(ambient);
 
-  const dir = new THREE.DirectionalLight(0xffffff, Math.PI);
+  const dir = new THREE.DirectionalLight(new THREE.Color(1, 1, 1), Math.PI);
   dir.position.set(1, 2, 3);
   scene.add(dir);
 
