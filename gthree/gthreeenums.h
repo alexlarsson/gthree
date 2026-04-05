@@ -84,6 +84,11 @@ typedef enum {
 } GthreeAttributeType;
 
 typedef enum {
+  GTHREE_COLOR_SPACE_LINEAR_SRGB,
+  GTHREE_COLOR_SPACE_SRGB,
+} GthreeColorSpace;
+
+typedef enum {
   GTHREE_ENCODING_FORMAT_LINEAR,
   GTHREE_ENCODING_FORMAT_SRGB,
   GTHREE_ENCODING_FORMAT_GAMMA,

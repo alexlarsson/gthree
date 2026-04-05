@@ -66,7 +66,7 @@ struct _GthreeMaterialProperties
 struct  _GthreeProgramParameters {
   guint precision : 2; /* GthreePrecision */
   guint supports_vertex_textures : 1;
-  guint output_color_space : 3;
+  guint output_color_space : 3; /* GthreeColorSpace */
   guint map : 1;
   guint matcap : 1;
   guint env_map : 1;
@@ -183,6 +183,7 @@ void gthree_resource_mark_clean_for (GthreeResource *resource,
                                      GthreeRenderer *renderer);
 
 guint gthree_renderer_allocate_texture_unit (GthreeRenderer *renderer);
+GthreeColorSpace gthree_renderer_get_output_color_space (GthreeRenderer *renderer);
 
 int gthree_texture_get_internal_gl_format (guint gl_format,
                                            guint gl_type);

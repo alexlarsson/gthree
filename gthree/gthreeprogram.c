@@ -299,11 +299,17 @@ parse_text_with_includes (const char *text)
 
 static void
 get_texel_encoding_function (GString *shader,
-                             const char *function_name)
+                             const char *function_name,
+                             GthreeColorSpace color_space)
 {
-  g_string_append_printf (shader,
-                          "vec4 %s( vec4 value ) { return sRGBTransferOETF( value ); }\n",
-                          function_name);
+  if (color_space == GTHREE_COLOR_SPACE_SRGB)
+    g_string_append_printf (shader,
+                            "vec4 %s( vec4 value ) { return sRGBTransferOETF( value ); }\n",
+                            function_name);
+  else
+    g_string_append_printf (shader,
+                            "vec4 %s( vec4 value ) { return value; }\n",
+                            function_name);
 }
 
 static const char *
@@ -859,7 +865,7 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
         g_string_append (fragment, "#define DITHERING\n");
 
       g_string_append (fragment, "#include <colorspace_pars_fragment>\n");
-      get_texel_encoding_function (fragment, "linearToOutputTexel");
+      get_texel_encoding_function (fragment, "linearToOutputTexel", parameters->output_color_space);
       get_luminance_function (fragment);
 
       if (parameters->depth_packing > 0)

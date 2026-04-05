@@ -154,6 +154,7 @@ typedef struct {
   guint old_blend_dst;
   guint old_num_global_clipping_planes;
   graphene_vec4_t old_clear_color;
+  GthreeColorSpace old_clear_color_space;
   GthreeRenderTarget *current_render_target;
   int current_active_cube_face;
   int current_active_mipmap_level;
@@ -1178,6 +1179,17 @@ gthree_renderer_get_render_target (GthreeRenderer *renderer)
 }
 
 
+GthreeColorSpace
+gthree_renderer_get_output_color_space (GthreeRenderer *renderer)
+{
+  GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+
+  if (priv->current_render_target != NULL)
+    return GTHREE_COLOR_SPACE_LINEAR_SRGB;
+
+  return GTHREE_COLOR_SPACE_SRGB;
+}
+
 static void
 update_multisample_render_target (GthreeRenderer *renderer,
                                   GthreeRenderTarget *render_target)
@@ -1456,21 +1468,37 @@ linear_to_srgb (float c)
 }
 
 static void
+linear_to_colorspace (graphene_vec4_t *color, GthreeColorSpace color_space)
+{
+  if (color_space == GTHREE_COLOR_SPACE_SRGB)
+    graphene_vec4_init (color,
+                        linear_to_srgb (graphene_vec4_get_x (color)),
+                        linear_to_srgb (graphene_vec4_get_y (color)),
+                        linear_to_srgb (graphene_vec4_get_z (color)),
+                        graphene_vec4_get_w (color));
+}
+
+static void
 set_clear_color (GthreeRenderer *renderer,
                  const graphene_vec3_t *color,
                  float alpha)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
+  GthreeColorSpace color_space = gthree_renderer_get_output_color_space (renderer);
   graphene_vec4_t c4;
 
   graphene_vec4_init_from_vec3 (&c4, color, alpha);
-  if (!graphene_vec4_equal (&c4, &priv->old_clear_color))
+  if (!graphene_vec4_equal (&c4, &priv->old_clear_color) ||
+      color_space != priv->old_clear_color_space)
     {
-      glClearColor (linear_to_srgb (graphene_vec4_get_x (&c4)),
-                    linear_to_srgb (graphene_vec4_get_y (&c4)),
-                    linear_to_srgb (graphene_vec4_get_z (&c4)),
-                    graphene_vec4_get_w (&c4));
+      graphene_vec4_t converted = c4;
+      linear_to_colorspace (&converted, color_space);
+      glClearColor (graphene_vec4_get_x (&converted),
+                    graphene_vec4_get_y (&converted),
+                    graphene_vec4_get_z (&converted),
+                    graphene_vec4_get_w (&converted));
       priv->old_clear_color = c4;
+      priv->old_clear_color_space = color_space;
     }
 }
 
@@ -1666,7 +1694,7 @@ init_material (GthreeRenderer *renderer,
 
   parameters.precision = GTHREE_PRECISION_HIGH;
   parameters.supports_vertex_textures = priv->supports_vertex_textures;
-  parameters.output_color_space = 1; /* sRGB */
+  parameters.output_color_space = gthree_renderer_get_output_color_space (renderer);
 
   gthree_material_set_params (material, &parameters);
 
