@@ -61,6 +61,7 @@ struct _GthreeMaterialProperties
   GthreeLightSetupHash light_hash;
   guint num_clipping_planes;
   guint num_intersection;
+  GthreeColorSpace output_color_space;
 };
 
 struct  _GthreeProgramParameters {

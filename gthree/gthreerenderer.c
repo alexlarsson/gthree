@@ -1833,6 +1833,7 @@ init_material (GthreeRenderer *renderer,
     }
 
   material_properties->fog = fog;
+  material_properties->output_color_space = parameters.output_color_space;
 
   material_apply_light_setup (m_uniforms, &priv->light_setup, FALSE);
 
@@ -2700,7 +2701,8 @@ set_program (GthreeRenderer *renderer,
       !gthree_light_setup_hash_equal (&material_properties->light_hash, &priv->light_setup.hash) ||
       (gthree_material_get_fog (material) && material_properties->fog != fog) ||
       material_properties->num_clipping_planes != priv->num_clipping_planes ||
-      material_properties->num_intersection != priv->num_clipping_intersections)
+      material_properties->num_intersection != priv->num_clipping_intersections ||
+      material_properties->output_color_space != gthree_renderer_get_output_color_space (renderer))
     {
       init_material (renderer, material, fog, object);
       gthree_material_mark_valid_for (material, priv->renderer_id);
