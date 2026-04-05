@@ -2591,7 +2591,18 @@ refresh_uniforms_fog (GthreeRenderer *renderer,
 
   uni = gthree_uniforms_lookup_from_string (uniforms, "fogColor");
   if (uni != NULL)
-    gthree_uniform_set_vec3 (uni, gthree_fog_get_color (fog));
+    {
+      const graphene_vec3_t *color = gthree_fog_get_color (fog);
+      graphene_vec4_t c4;
+      graphene_vec4_init_from_vec3 (&c4, color, 1.0f);
+      linear_to_colorspace (&c4, gthree_renderer_get_output_color_space (renderer));
+      graphene_vec3_t converted;
+      graphene_vec3_init (&converted,
+                          graphene_vec4_get_x (&c4),
+                          graphene_vec4_get_y (&c4),
+                          graphene_vec4_get_z (&c4));
+      gthree_uniform_set_vec3 (uni, &converted);
+    }
 
   if (gthree_fog_get_style (fog) == GTHREE_FOG_STYLE_LINEAR)
     {
