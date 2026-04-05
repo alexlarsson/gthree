@@ -605,6 +605,10 @@ static GthreeUniformsDefinition shadow_uniforms[] = {
 
 static const char *physical_uniform_libs[] = { "common", "envmap", "aomap", "lightmap", "emissivemap", "bumpmap", "normalmap", "displacementmap", "roughnessmap", "metalnessmap", "fog", "lights", NULL };
 static GthreeUniformsDefinition physical_uniforms[] = {
+  {"emissive", GTHREE_UNIFORM_TYPE_VECTOR3, &black },
+  {"roughness", GTHREE_UNIFORM_TYPE_FLOAT, &fp5 },
+  {"metalness", GTHREE_UNIFORM_TYPE_FLOAT, &fp5 },
+  {"envMapIntensity", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
   {"ior", GTHREE_UNIFORM_TYPE_FLOAT, &f1p5 },
   {"specularIntensity", GTHREE_UNIFORM_TYPE_FLOAT, &f1 },
   {"specularColor", GTHREE_UNIFORM_TYPE_VECTOR3, &white },
