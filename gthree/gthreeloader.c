@@ -614,14 +614,28 @@ parse_quaternion (JsonArray *quat_j, graphene_quaternion_t *q)
 static gboolean
 supports_extension (const char *extension)
 {
-  if (strcmp (extension, "KHR_materials_pbrSpecularGlossiness") == 0)
-    return TRUE;
-  if (strcmp (extension, "KHR_texture_transform") == 0)
-    return TRUE;
+  const char *supported[] = {
+    "KHR_materials_pbrSpecularGlossiness",
+    "KHR_texture_transform",
+    "KHR_materials_clearcoat",
+    "KHR_materials_sheen",
+    "KHR_materials_transmission",
+    "KHR_materials_volume",
+    "KHR_materials_ior",
+    "KHR_materials_iridescence",
+    "KHR_materials_anisotropy",
+    "KHR_materials_specular",
+    "KHR_materials_dispersion",
 #ifdef HAVE_DRACO
-  if (strcmp (extension, "KHR_draco_mesh_compression") == 0)
-    return TRUE;
+    "KHR_draco_mesh_compression",
 #endif
+  };
+
+  for (gsize i = 0; i < G_N_ELEMENTS (supported); i++)
+    {
+      if (strcmp (extension, supported[i]) == 0)
+        return TRUE;
+    }
   return FALSE;
 }
 
