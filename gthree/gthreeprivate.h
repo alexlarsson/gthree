@@ -138,6 +138,31 @@ struct  _GthreeProgramParameters {
 
   guint8 alpha_test;
 
+  guint8 map_channel;
+  guint8 alpha_map_channel;
+  guint8 light_map_channel;
+  guint8 ao_map_channel;
+  guint8 emissive_map_channel;
+  guint8 bump_map_channel;
+  guint8 normal_map_channel;
+  guint8 displacement_map_channel;
+  guint8 specular_map_channel;
+  guint8 specular_color_map_channel;
+  guint8 specular_intensity_map_channel;
+  guint8 roughness_map_channel;
+  guint8 metalness_map_channel;
+  guint8 gradient_map_channel;
+  guint8 anisotropy_map_channel;
+  guint8 clearcoat_map_channel;
+  guint8 clearcoat_roughness_map_channel;
+  guint8 clearcoat_normal_map_channel;
+  guint8 iridescence_map_channel;
+  guint8 iridescence_thickness_map_channel;
+  guint8 sheen_color_map_channel;
+  guint8 sheen_roughness_map_channel;
+  guint8 transmission_map_channel;
+  guint8 thickness_map_channel;
+
   float cubeuv_texel_width;
   float cubeuv_texel_height;
   float cubeuv_max_mip;

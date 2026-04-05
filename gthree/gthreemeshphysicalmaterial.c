@@ -175,28 +175,52 @@ gthree_mesh_physical_material_real_set_params (GthreeMaterial *material,
 
   params->clearcoat = priv->clearcoat > 0;
   params->clearcoat_map = priv->clearcoat_map != NULL;
+  if (params->clearcoat_map)
+    params->clearcoat_map_channel = gthree_texture_get_channel (priv->clearcoat_map);
   params->clearcoat_roughness_map = priv->clearcoat_roughness_map != NULL;
+  if (params->clearcoat_roughness_map)
+    params->clearcoat_roughness_map_channel = gthree_texture_get_channel (priv->clearcoat_roughness_map);
   params->clearcoat_normal_map = priv->clearcoat_normal_map != NULL;
+  if (params->clearcoat_normal_map)
+    params->clearcoat_normal_map_channel = gthree_texture_get_channel (priv->clearcoat_normal_map);
 
   params->anisotropy = priv->anisotropy != 0;
   params->anisotropy_map = priv->anisotropy_map != NULL;
+  if (params->anisotropy_map)
+    params->anisotropy_map_channel = gthree_texture_get_channel (priv->anisotropy_map);
 
   params->iridescence = priv->iridescence > 0;
   params->iridescence_map = priv->iridescence_map != NULL;
+  if (params->iridescence_map)
+    params->iridescence_map_channel = gthree_texture_get_channel (priv->iridescence_map);
   params->iridescence_thickness_map = priv->iridescence_thickness_map != NULL;
+  if (params->iridescence_thickness_map)
+    params->iridescence_thickness_map_channel = gthree_texture_get_channel (priv->iridescence_thickness_map);
 
   params->sheen = priv->sheen > 0;
   params->sheen_color_map = priv->sheen_color_map != NULL;
+  if (params->sheen_color_map)
+    params->sheen_color_map_channel = gthree_texture_get_channel (priv->sheen_color_map);
   params->sheen_roughness_map = priv->sheen_roughness_map != NULL;
+  if (params->sheen_roughness_map)
+    params->sheen_roughness_map_channel = gthree_texture_get_channel (priv->sheen_roughness_map);
 
   params->transmission = priv->transmission > 0;
   params->transmission_map = priv->transmission_map != NULL;
+  if (params->transmission_map)
+    params->transmission_map_channel = gthree_texture_get_channel (priv->transmission_map);
   params->thickness_map = priv->thickness_map != NULL;
+  if (params->thickness_map)
+    params->thickness_map_channel = gthree_texture_get_channel (priv->thickness_map);
 
   params->dispersion = priv->dispersion > 0;
 
   params->specular_color_map = priv->specular_color_map != NULL;
+  if (params->specular_color_map)
+    params->specular_color_map_channel = gthree_texture_get_channel (priv->specular_color_map);
   params->specular_intensity_map = priv->specular_intensity_map != NULL;
+  if (params->specular_intensity_map)
+    params->specular_intensity_map_channel = gthree_texture_get_channel (priv->specular_intensity_map);
 }
 
 static void

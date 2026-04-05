@@ -117,17 +117,22 @@ gthree_mesh_phong_material_real_set_params (GthreeMaterial *material,
   GthreeMeshPhongMaterialPrivate *priv = gthree_mesh_phong_material_get_instance_private (phong);
 
   params->map = priv->map != NULL;
+  if (params->map)
+    params->map_channel = gthree_texture_get_channel (priv->map);
 
   params->env_map = priv->env_map != NULL;
   if (params->env_map)
     params->env_map_mode = gthree_texture_get_mapping (priv->env_map);
 
   params->specular_map = priv->specular_map != NULL;
+  if (params->specular_map)
+    params->specular_map_channel = gthree_texture_get_channel (priv->specular_map);
   params->normal_map = priv->normal_map != NULL;
   if (params->normal_map)
     {
       params->normal_map_object_space = priv->normal_map_type == GTHREE_NORMAL_MAP_TYPE_OBJECT_SPACE;
       params->normal_map_tangent_space = priv->normal_map_type == GTHREE_NORMAL_MAP_TYPE_TANGENT_SPACE;
+      params->normal_map_channel = gthree_texture_get_channel (priv->normal_map);
     }
 
   params->flat_shading = priv->flat_shading;

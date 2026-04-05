@@ -1146,6 +1146,9 @@ parse_texture_ref (GthreeLoader *loader, JsonObject *texture_def)
 
   GthreeTexture *texture = g_object_ref (g_ptr_array_index (priv->textures, index));
 
+  if (json_object_has_member (texture_def, "texCoord"))
+    gthree_texture_set_channel (texture, json_object_get_int_member (texture_def, "texCoord"));
+
   if (json_object_has_member (texture_def, "extensions"))
     {
       JsonObject *extensions = json_object_get_object_member (texture_def, "extensions");
@@ -1548,7 +1551,11 @@ gltl_attribute_name_to_gthree (const char *attr_name)
   else if (strcmp (attr_name, "TEXCOORD_0") == 0)
       return "uv";
   else if (strcmp (attr_name, "TEXCOORD_1") == 0)
+      return "uv1";
+  else if (strcmp (attr_name, "TEXCOORD_2") == 0)
       return "uv2";
+  else if (strcmp (attr_name, "TEXCOORD_3") == 0)
+      return "uv3";
   else if (strcmp (attr_name, "COLOR_0") == 0)
       return "color";
   else if (strcmp (attr_name, "WEIGHTS_0") == 0)

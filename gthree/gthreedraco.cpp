@@ -27,7 +27,9 @@ gltf_attribute_name_to_gthree (const char *name)
   if (g_str_equal (name, "NORMAL"))     return "normal";
   if (g_str_equal (name, "TANGENT"))    return "tangent";
   if (g_str_equal (name, "TEXCOORD_0")) return "uv";
-  if (g_str_equal (name, "TEXCOORD_1")) return "uv2";
+  if (g_str_equal (name, "TEXCOORD_1")) return "uv1";
+  if (g_str_equal (name, "TEXCOORD_2")) return "uv2";
+  if (g_str_equal (name, "TEXCOORD_3")) return "uv3";
   if (g_str_equal (name, "COLOR_0"))    return "color";
   if (g_str_equal (name, "WEIGHTS_0"))  return "skinWeight";
   if (g_str_equal (name, "JOINTS_0"))   return "skinIndex";

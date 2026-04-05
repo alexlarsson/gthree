@@ -113,6 +113,11 @@ void                   gthree_texture_set_anisotropy       (GthreeTexture       
 GTHREE_API
 int                    gthree_texture_get_anisotropy       (GthreeTexture        *texture);
 GTHREE_API
+void                   gthree_texture_set_channel          (GthreeTexture        *texture,
+                                                            int                   channel);
+GTHREE_API
+int                    gthree_texture_get_channel          (GthreeTexture        *texture);
+GTHREE_API
 void                   gthree_texture_copy_settings        (GthreeTexture        *texture,
                                                             GthreeTexture        *source);
 GTHREE_API

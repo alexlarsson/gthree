@@ -132,22 +132,39 @@ gthree_mesh_toon_material_real_set_params (GthreeMaterial *material,
   GthreeMeshToonMaterialPrivate *priv = gthree_mesh_toon_material_get_instance_private (toon);
 
   params->map = priv->map != NULL;
+  if (params->map)
+    params->map_channel = gthree_texture_get_channel (priv->map);
 
   params->gradient_map = priv->gradient_map != NULL;
+  if (params->gradient_map)
+    params->gradient_map_channel = gthree_texture_get_channel (priv->gradient_map);
   params->light_map = priv->light_map != NULL;
+  if (params->light_map)
+    params->light_map_channel = gthree_texture_get_channel (priv->light_map);
   params->ao_map = priv->ao_map != NULL;
+  if (params->ao_map)
+    params->ao_map_channel = gthree_texture_get_channel (priv->ao_map);
 
   params->emissive_map = priv->emissive_map != NULL;
+  if (params->emissive_map)
+    params->emissive_map_channel = gthree_texture_get_channel (priv->emissive_map);
 
   params->bump_map = priv->bump_map != NULL;
+  if (params->bump_map)
+    params->bump_map_channel = gthree_texture_get_channel (priv->bump_map);
   params->normal_map = priv->normal_map != NULL;
   if (params->normal_map)
     {
       params->normal_map_object_space = priv->normal_map_type == GTHREE_NORMAL_MAP_TYPE_OBJECT_SPACE;
       params->normal_map_tangent_space = priv->normal_map_type == GTHREE_NORMAL_MAP_TYPE_TANGENT_SPACE;
+      params->normal_map_channel = gthree_texture_get_channel (priv->normal_map);
     }
   params->displacement_map = priv->displacement_map != NULL;
+  if (params->displacement_map)
+    params->displacement_map_channel = gthree_texture_get_channel (priv->displacement_map);
   params->alpha_map = priv->alpha_map != NULL;
+  if (params->alpha_map)
+    params->alpha_map_channel = gthree_texture_get_channel (priv->alpha_map);
 
   GTHREE_MATERIAL_CLASS (gthree_mesh_toon_material_parent_class)->set_params (material, params);
 }

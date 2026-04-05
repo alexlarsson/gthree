@@ -90,6 +90,8 @@ gthree_mesh_lambert_material_real_set_params (GthreeMaterial *material,
   GthreeMeshLambertMaterialPrivate *priv = gthree_mesh_lambert_material_get_instance_private (lambert);
 
   params->map = priv->map != NULL;
+  if (params->map)
+    params->map_channel = gthree_texture_get_channel (priv->map);
 
   params->env_map = priv->env_map != NULL;
   if (params->env_map)

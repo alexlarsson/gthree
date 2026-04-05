@@ -49,6 +49,8 @@ typedef struct {
   guint max_mip_level;
 
   guint pmrem_version;
+
+  int channel;
 } GthreeTexturePrivate;
 
 typedef struct {
@@ -974,6 +976,23 @@ gthree_texture_get_anisotropy (GthreeTexture *texture)
   GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
 
   return priv->anisotropy;
+}
+
+void
+gthree_texture_set_channel (GthreeTexture *texture,
+                            int            channel)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  priv->channel = channel;
+}
+
+int
+gthree_texture_get_channel (GthreeTexture *texture)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  return priv->channel;
 }
 
 int

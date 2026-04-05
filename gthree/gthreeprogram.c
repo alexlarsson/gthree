@@ -337,6 +337,27 @@ get_luminance_function (GString *shader)
                    "}\n");
 }
 
+static const char *
+get_channel_name (int channel)
+{
+  switch (channel)
+    {
+    case 0: return "uv";
+    case 1: return "uv1";
+    case 2: return "uv2";
+    case 3: return "uv3";
+    default: return "uv";
+    }
+}
+
+static void
+append_uv_channel_define (GString *str, const char *define_name, int channel, gboolean *active_channels)
+{
+  g_string_append_printf (str, "#define %s %s\n", define_name, get_channel_name (channel));
+  if (channel > 0 && channel <= 3)
+    active_channels[channel - 1] = TRUE;
+}
+
 GthreeProgram *
 gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, GthreeRenderer *renderer)
 {
@@ -350,6 +371,7 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
   const char *env_map_blending_define;
   GLuint gl_program;
   GString *vertex, *fragment;
+  gboolean active_channels[3] = { FALSE, FALSE, FALSE };
   g_autofree char *vertex_unrolled = NULL;
   g_autofree char *fragment_unrolled = NULL;
   g_autofree char *vertex_expanded = NULL;
@@ -488,55 +510,54 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
       if (parameters->alpha_hash)
         g_string_append (vertex, "#define USE_ALPHAHASH\n");
 
-      /* UV channel mapping — all maps currently use channel 0 (uv) */
       if (parameters->map)
-        g_string_append (vertex, "#define MAP_UV uv\n");
+        append_uv_channel_define (vertex, "MAP_UV", parameters->map_channel, active_channels);
       if (parameters->alpha_map)
-        g_string_append (vertex, "#define ALPHAMAP_UV uv\n");
+        append_uv_channel_define (vertex, "ALPHAMAP_UV", parameters->alpha_map_channel, active_channels);
       if (parameters->light_map)
-        g_string_append (vertex, "#define LIGHTMAP_UV uv\n");
+        append_uv_channel_define (vertex, "LIGHTMAP_UV", parameters->light_map_channel, active_channels);
       if (parameters->ao_map)
-        g_string_append (vertex, "#define AOMAP_UV uv\n");
+        append_uv_channel_define (vertex, "AOMAP_UV", parameters->ao_map_channel, active_channels);
       if (parameters->emissive_map)
-        g_string_append (vertex, "#define EMISSIVEMAP_UV uv\n");
+        append_uv_channel_define (vertex, "EMISSIVEMAP_UV", parameters->emissive_map_channel, active_channels);
       if (parameters->bump_map)
-        g_string_append (vertex, "#define BUMPMAP_UV uv\n");
+        append_uv_channel_define (vertex, "BUMPMAP_UV", parameters->bump_map_channel, active_channels);
       if (parameters->normal_map)
-        g_string_append (vertex, "#define NORMALMAP_UV uv\n");
+        append_uv_channel_define (vertex, "NORMALMAP_UV", parameters->normal_map_channel, active_channels);
       if (parameters->displacement_map)
-        g_string_append (vertex, "#define DISPLACEMENTMAP_UV uv\n");
+        append_uv_channel_define (vertex, "DISPLACEMENTMAP_UV", parameters->displacement_map_channel, active_channels);
       if (parameters->metalness_map)
-        g_string_append (vertex, "#define METALNESSMAP_UV uv\n");
+        append_uv_channel_define (vertex, "METALNESSMAP_UV", parameters->metalness_map_channel, active_channels);
       if (parameters->roughness_map)
-        g_string_append (vertex, "#define ROUGHNESSMAP_UV uv\n");
+        append_uv_channel_define (vertex, "ROUGHNESSMAP_UV", parameters->roughness_map_channel, active_channels);
       if (parameters->specular_map)
-        g_string_append (vertex, "#define SPECULARMAP_UV uv\n");
+        append_uv_channel_define (vertex, "SPECULARMAP_UV", parameters->specular_map_channel, active_channels);
       if (parameters->specular_color_map)
-        g_string_append (vertex, "#define SPECULAR_COLORMAP_UV uv\n");
+        append_uv_channel_define (vertex, "SPECULAR_COLORMAP_UV", parameters->specular_color_map_channel, active_channels);
       if (parameters->specular_intensity_map)
-        g_string_append (vertex, "#define SPECULAR_INTENSITYMAP_UV uv\n");
+        append_uv_channel_define (vertex, "SPECULAR_INTENSITYMAP_UV", parameters->specular_intensity_map_channel, active_channels);
       if (parameters->anisotropy_map)
-        g_string_append (vertex, "#define ANISOTROPYMAP_UV uv\n");
+        append_uv_channel_define (vertex, "ANISOTROPYMAP_UV", parameters->anisotropy_map_channel, active_channels);
       if (parameters->clearcoat_map)
-        g_string_append (vertex, "#define CLEARCOATMAP_UV uv\n");
+        append_uv_channel_define (vertex, "CLEARCOATMAP_UV", parameters->clearcoat_map_channel, active_channels);
       if (parameters->clearcoat_normal_map)
-        g_string_append (vertex, "#define CLEARCOAT_NORMALMAP_UV uv\n");
+        append_uv_channel_define (vertex, "CLEARCOAT_NORMALMAP_UV", parameters->clearcoat_normal_map_channel, active_channels);
       if (parameters->clearcoat_roughness_map)
-        g_string_append (vertex, "#define CLEARCOAT_ROUGHNESSMAP_UV uv\n");
+        append_uv_channel_define (vertex, "CLEARCOAT_ROUGHNESSMAP_UV", parameters->clearcoat_roughness_map_channel, active_channels);
       if (parameters->iridescence_map)
-        g_string_append (vertex, "#define IRIDESCENCEMAP_UV uv\n");
+        append_uv_channel_define (vertex, "IRIDESCENCEMAP_UV", parameters->iridescence_map_channel, active_channels);
       if (parameters->iridescence_thickness_map)
-        g_string_append (vertex, "#define IRIDESCENCE_THICKNESSMAP_UV uv\n");
+        append_uv_channel_define (vertex, "IRIDESCENCE_THICKNESSMAP_UV", parameters->iridescence_thickness_map_channel, active_channels);
       if (parameters->sheen_color_map)
-        g_string_append (vertex, "#define SHEEN_COLORMAP_UV uv\n");
+        append_uv_channel_define (vertex, "SHEEN_COLORMAP_UV", parameters->sheen_color_map_channel, active_channels);
       if (parameters->sheen_roughness_map)
-        g_string_append (vertex, "#define SHEEN_ROUGHNESSMAP_UV uv\n");
+        append_uv_channel_define (vertex, "SHEEN_ROUGHNESSMAP_UV", parameters->sheen_roughness_map_channel, active_channels);
       if (parameters->transmission_map)
-        g_string_append (vertex, "#define TRANSMISSIONMAP_UV uv\n");
+        append_uv_channel_define (vertex, "TRANSMISSIONMAP_UV", parameters->transmission_map_channel, active_channels);
       if (parameters->thickness_map)
-        g_string_append (vertex, "#define THICKNESSMAP_UV uv\n");
+        append_uv_channel_define (vertex, "THICKNESSMAP_UV", parameters->thickness_map_channel, active_channels);
       if (parameters->gradient_map)
-        g_string_append (vertex, "#define GRADIENTMAP_UV uv\n");
+        append_uv_channel_define (vertex, "GRADIENTMAP_UV", parameters->gradient_map_channel, active_channels);
 
       if (parameters->anisotropy)
         g_string_append (vertex, "#define USE_ANISOTROPY\n");
@@ -569,11 +590,11 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
         g_string_append (vertex, "#define USE_COLOR\n");
       if (parameters->vertex_alphas)
         g_string_append (vertex, "#define USE_COLOR_ALPHA\n");
-      if (parameters->vertex_uv1s)
+      if (active_channels[0])
         g_string_append (vertex, "#define USE_UV1\n");
-      if (parameters->vertex_uv2s)
+      if (active_channels[1])
         g_string_append (vertex, "#define USE_UV2\n");
-      if (parameters->vertex_uv3s)
+      if (active_channels[2])
         g_string_append (vertex, "#define USE_UV3\n");
       if (parameters->points_uvs)
         g_string_append (vertex, "#define USE_POINTS_UV\n");
@@ -771,11 +792,11 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
         g_string_append (fragment, "#define USE_COLOR\n");
       if (parameters->vertex_alphas)
         g_string_append (fragment, "#define USE_COLOR_ALPHA\n");
-      if (parameters->vertex_uv1s)
+      if (active_channels[0])
         g_string_append (fragment, "#define USE_UV1\n");
-      if (parameters->vertex_uv2s)
+      if (active_channels[1])
         g_string_append (fragment, "#define USE_UV2\n");
-      if (parameters->vertex_uv3s)
+      if (active_channels[2])
         g_string_append (fragment, "#define USE_UV3\n");
 
       if (parameters->gradient_map)
