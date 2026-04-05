@@ -27,20 +27,35 @@ fi
 
 # Parse arguments
 MODE="compare"
+CUSTOM_REF_DIR=""
 while [ $# -gt 0 ]; do
     case "$1" in
         --update-ref)
             MODE="update-ref"
             shift
             ;;
+        --ref-dir)
+            CUSTOM_REF_DIR="$2"
+            shift 2
+            ;;
         *)
-            echo "Usage: $0 [--update-ref]"
+            echo "Usage: $0 [--update-ref] [--ref-dir DIR]"
             echo "  (no args)     Run tests and compare with reference"
             echo "  --update-ref  Regenerate all reference images"
+            echo "  --ref-dir DIR Use DIR as reference image directory"
             exit 1
             ;;
     esac
 done
+
+if [ -n "$CUSTOM_REF_DIR" ]; then
+    if [ -d "$CUSTOM_REF_DIR" ]; then
+        REF_DIR="$(cd "$CUSTOM_REF_DIR" && pwd)"
+    else
+        echo "Reference directory not found: $CUSTOM_REF_DIR"
+        exit 1
+    fi
+fi
 
 # Fuzzy-compare two images. Returns 0 if they match within tolerance.
 # Sets DIFF_RESULT to the AE metric string on mismatch.

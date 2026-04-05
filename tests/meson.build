@@ -33,6 +33,11 @@ if get_option('gtk4')
   run_target('visual-test-update-ref',
     command: [find_program('bash'), meson.current_build_dir() / 'run-tests.sh', '--update-ref'],
   )
+
+  run_target('visual-test-threejs',
+    command: [find_program('bash'), meson.current_build_dir() / 'run-tests.sh',
+              '--ref-dir', meson.current_source_dir() / 'reference-three.js'],
+  )
 endif
 
 if get_option('gtk3')

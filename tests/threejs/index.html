@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>gthree three.js comparison tests</title>
+<style>
+  body { margin: 0; background: #000; display: flex; flex-direction: column; align-items: center; }
+  #controls { background: #222; color: #fff; padding: 8px; width: 100%; box-sizing: border-box; font-family: monospace; }
+  #controls select, #controls button { font-family: monospace; margin: 0 4px; }
+  canvas { display: block; }
+  #info { color: #888; font-family: monospace; font-size: 12px; padding: 4px; }
+</style>
+</head>
+<body>
+<div id="controls">
+  <select id="test-select"></select>
+  <button id="run-btn">Run</button>
+  <button id="save-btn">Save PNG</button>
+  <button id="run-all-btn">Run All &amp; Save</button>
+  <span id="info"></span>
+</div>
+<canvas id="canvas" width="800" height="600"></canvas>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "../../three.js/build/three.module.js",
+    "three/addons/": "../../three.js/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const TEST_WIDTH = 800;
+const TEST_HEIGHT = 600;
+const canvas = document.getElementById('canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, preserveDrawingBuffer: true });
+renderer.setSize(TEST_WIDTH, TEST_HEIGHT);
+renderer.setPixelRatio(1);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+// Helper: load checkerboard texture (async)
+async function loadTexture(filename) {
+  const loader = new THREE.TextureLoader();
+  const tex = await loader.loadAsync('../textures/' + filename);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+// Helper geometries matching gthree test helpers
+function testGeometryBox() { return new THREE.BoxGeometry(1, 1, 1, 1, 1, 1); }
+function testGeometrySphere() { return new THREE.SphereGeometry(1.0, 32, 16); }
+function testGeometryPlane() { return new THREE.PlaneGeometry(3, 3, 1, 1); }
+function testGeometryTorusKnot() { return new THREE.TorusKnotGeometry(0.6, 0.2, 128, 32, 2, 3); }
+
+// Procedural checkerboard cube texture matching test_cube_texture_colored()
+function makeCheckerPixels(r, g, b) {
+  const size = 256, cell = 64;
+  const data = new Uint8Array(size * size * 4);
+  for (let y = 0; y < size; y++)
+    for (let x = 0; x < size; x++) {
+      const i = (y * size + x) * 4;
+      if (((Math.floor(x / cell)) + (Math.floor(y / cell))) % 2) {
+        data[i] = r; data[i+1] = g; data[i+2] = b; data[i+3] = 255;
+      } else {
+        data[i] = 0; data[i+1] = 0; data[i+2] = 0; data[i+3] = 255;
+      }
+    }
+  return data;
+}
+
+function testCubeTextureColored() {
+  const faces = [
+    makeCheckerPixels(255, 0, 0),     // +X red
+    makeCheckerPixels(0, 255, 255),   // -X cyan
+    makeCheckerPixels(0, 255, 0),     // +Y green
+    makeCheckerPixels(255, 0, 255),   // -Y magenta
+    makeCheckerPixels(0, 0, 255),     // +Z blue
+    makeCheckerPixels(255, 255, 0),   // -Z yellow
+  ];
+  const textures = faces.map(data => {
+    const t = new THREE.DataTexture(data, 256, 256, THREE.RGBAFormat);
+    t.needsUpdate = true;
+    return t;
+  });
+  const ct = new THREE.CubeTexture(textures.map(t => {
+    const c = document.createElement('canvas');
+    c.width = 256; c.height = 256;
+    const ctx = c.getContext('2d');
+    const imgData = ctx.createImageData(256, 256);
+    imgData.data.set(t.image.data);
+    ctx.putImageData(imgData, 0, 0);
+    return c;
+  }));
+  ct.colorSpace = THREE.SRGBColorSpace;
+  ct.needsUpdate = true;
+  return ct;
+}
+
+// Standard directional + ambient light setup used by material tests
+function addDirLight(scene) {
+  const light = new THREE.DirectionalLight(0xffffff, Math.PI);
+  light.position.set(1, 2, 3);
+  scene.add(light);
+  const ambient = new THREE.AmbientLight(0xffffff, 0.3 * Math.PI);
+  scene.add(ambient);
+  return light;
+}
+
+// PBR test lights
+function addEnvmapLights(scene) {
+  const ambient = new THREE.AmbientLight(0xffffff, 0.4 * Math.PI);
+  scene.add(ambient);
+  const dir = new THREE.DirectionalLight(0xffffff, Math.PI);
+  dir.position.set(2, 3, 4);
+  scene.add(dir);
+}
+
+// Colorise box faces with vertex colors (6 faces, 4 verts each)
+function coloriseFaces(geometry) {
+  const count = geometry.attributes.position.count;
+  const colors = new Float32Array(count * 3);
+  const faceColors = [
+    [1,0,0], [0,1,0], [0,0,1], [0,1,1], [1,0,1], [1,1,0]
+  ];
+  for (let i = 0; i < Math.floor(count / 4); i++)
+    for (let j = 0; j < 4; j++) {
+      const idx = (i * 4 + j) * 3;
+      const c = faceColors[i] || [1,1,1];
+      colors[idx] = c[0]; colors[idx+1] = c[1]; colors[idx+2] = c[2];
+    }
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+}
+
+// GLTF loader helper
+async function loadGLTF(name) {
+  const loader = new GLTFLoader();
+  return new Promise((resolve, reject) => {
+    loader.load('../../../examples/models/' + name, resolve, undefined, reject);
+  });
+}
+
+// ==================== TEST DEFINITIONS ====================
+
+const tests = {};
+
+// ---------- BASIC ----------
+
+tests['basic-color'] = () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.1, 100);
+  camera.position.set(0, 0, 2.8);
+  scene.add(camera);
+
+  const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(1, 0, 0) });
+  const geom = testGeometryBox();
+  const mesh = new THREE.Mesh(geom, mat);
+  mesh.rotation.order = 'ZYX';
+  mesh.rotation.set(
+    THREE.MathUtils.degToRad(30),
+    THREE.MathUtils.degToRad(45),
+    0
+  );
+  scene.add(mesh);
+  return { scene, camera };
+};
+
+tests['basic-texture'] = async () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.1, 100);
+  camera.position.set(0, 0, 2.8);
+  scene.add(camera);
+
+  const tex = await loadTexture('checkerboard.png');
+  const mat = new THREE.MeshBasicMaterial({ map: tex });
+  const geom = testGeometryBox();
+  const mesh = new THREE.Mesh(geom, mat);
+  mesh.rotation.order = 'ZYX';
+  mesh.rotation.set(
+    THREE.MathUtils.degToRad(30),
+    THREE.MathUtils.degToRad(45),
+    0
+  );
+  scene.add(mesh);
+  return { scene, camera };
+};
+
+tests['wireframe'] = () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.1, 100);
+  camera.position.set(0, 0, 2.8);
+  scene.add(camera);
+
+  const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(0, 1, 0), wireframe: true });
+  const geom = testGeometrySphere();
+  const mesh = new THREE.Mesh(geom, mat);
+  scene.add(mesh);
+  return { scene, camera };
+};
+
+tests['cubes'] = async () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(30, 4/3, 1, 10000);
+  camera.position.set(0, 0, 400);
+  scene.add(camera);
+
+  const tex = await loadTexture('checkerboard.png');
+
+  const geom = new THREE.BoxGeometry(50, 50, 50, 1, 1, 1);
+  coloriseFaces(geom);
+  const subGeom = new THREE.BoxGeometry(20, 20, 20, 1, 1, 1);
+  coloriseFaces(subGeom);
+
+  const matSimple = new THREE.MeshBasicMaterial({ color: new THREE.Color(0.5, 0.5, 0.5) });
+  const matVcolor = new THREE.MeshBasicMaterial({ vertexColors: true });
+  const matWire = new THREE.MeshBasicMaterial({ wireframe: true, color: new THREE.Color(1, 1, 0) });
+  const matTex = new THREE.MeshBasicMaterial({ map: tex });
+
+  // Multi-material: 2x vcolor, 2x wire, 2x tex (one per face pair)
+  const multi = [matVcolor, matVcolor, matWire, matWire, matTex, matTex];
+
+  const cubes = [
+    { mat: matSimple, mats: null, x: -80, y: 40 },
+    { mat: matVcolor, mats: null, x: 0, y: 40 },
+    { mat: matTex, mats: null, x: 80, y: 40 },
+    { mat: matWire, mats: null, x: -80, y: -40 },
+    { mat: matVcolor, mats: null, x: 0, y: -40 },
+    { mat: null, mats: multi, x: 80, y: -40 },
+  ];
+
+  const euler = new THREE.Euler(0, THREE.MathUtils.degToRad(30), THREE.MathUtils.degToRad(15), 'ZYX');
+
+  for (const c of cubes) {
+    const mat = c.mats || c.mat;
+    const mesh = new THREE.Mesh(geom, mat);
+    mesh.position.set(c.x, c.y, 0);
+    mesh.rotation.copy(euler);
+    scene.add(mesh);
+
+    const sub = new THREE.Mesh(subGeom, mat);
+    sub.position.set(0, 35, 0);
+    mesh.add(sub);
+  }
+  return { scene, camera };
+};
+
+// ---------- MATERIALS ----------
+
+tests['lambert'] = () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.1, 100);
+  camera.position.set(0, 0, 2.8);
+  scene.add(camera);
+  addDirLight(scene);
+
+  const mat = new THREE.MeshLambertMaterial({ color: new THREE.Color(0.2, 0.4, 0.9) });
+  const geom = testGeometrySphere();
+  const mesh = new THREE.Mesh(geom, mat);
+  scene.add(mesh);
+  return { scene, camera };
+};
+
+tests['phong'] = () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.1, 100);
+  camera.position.set(0, 0, 2.8);
+  scene.add(camera);
+  addDirLight(scene);
+
+  const mat = new THREE.MeshPhongMaterial({
+    color: new THREE.Color(0.8, 0.1, 0.1),
+    specular: new THREE.Color(1, 1, 1),
+    shininess: 30,
+  });
+  const geom = testGeometrySphere();
+  const mesh = new THREE.Mesh(geom, mat);
+  scene.add(mesh);
+  return { scene, camera };
+};
+
+tests['standard'] = () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.1, 100);
+  camera.position.set(0, 0, 2.8);
+  scene.add(camera);
+  addDirLight(scene);
+
+  const mat = new THREE.MeshStandardMaterial({
+    color: new THREE.Color(0.8, 0.6, 0.2),
+    metalness: 0.8,
+    roughness: 0.3,
+  });
+  const geom = testGeometrySphere();
+  const mesh = new THREE.Mesh(geom, mat);
+  scene.add(mesh);
+  return { scene, camera };
+};
+
+tests['toon'] = () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.1, 100);
+  camera.position.set(0, 0, 2.8);
+  scene.add(camera);
+  addDirLight(scene);
+
+  const mat = new THREE.MeshToonMaterial({ color: new THREE.Color(0.1, 0.3, 0.9) });
+  const geom = testGeometryTorusKnot();
+  const mesh = new THREE.Mesh(geom, mat);
+  scene.add(mesh);
+  return { scene, camera };
+};
+
+// ---------- LIGHTS ----------
+
+tests['point-light'] = () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.1, 100);
+  camera.position.set(0, 0, 3);
+  scene.add(camera);
+
+  const ambient = new THREE.AmbientLight(0xffffff, 0.1 * Math.PI);
+  scene.add(ambient);
+
+  const light1 = new THREE.PointLight(new THREE.Color(1, 0, 0), Math.PI, 0);
+  light1.position.set(2, 1, 2);
+  scene.add(light1);
+
+  const light2 = new THREE.PointLight(new THREE.Color(0, 0, 1), Math.PI, 0);
+  light2.position.set(-2, 1, 2);
+  scene.add(light2);
+
+  const mat = new THREE.MeshPhongMaterial({ color: new THREE.Color(0.8, 0.8, 0.8) });
+  const geom = testGeometrySphere();
+  const mesh = new THREE.Mesh(geom, mat);
+  scene.add(mesh);
+  return { scene, camera };
+};
+
+tests['hemisphere-light'] = () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.1, 100);
+  camera.position.set(0, 0, 2.8);
+  scene.add(camera);
+
+  const hemi = new THREE.HemisphereLight(
+    new THREE.Color(0.6, 0.8, 1.0),
+    new THREE.Color(0.3, 0.2, 0.1),
+    Math.PI
+  );
+  hemi.position.set(0, 1, 0);
+  scene.add(hemi);
+
+  const mat = new THREE.MeshLambertMaterial({ color: new THREE.Color(0.9, 0.9, 0.9) });
+  const geom = testGeometrySphere();
+  const mesh = new THREE.Mesh(geom, mat);
+  scene.add(mesh);
+  return { scene, camera };
+};
+
+tests['shadow'] = () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.1, 100);
+  camera.position.set(0, 2, 5);
+  camera.lookAt(0, 0, 0);
+  scene.add(camera);
+
+  const ambient = new THREE.AmbientLight(0xffffff, 0.3 * Math.PI);
+  scene.add(ambient);
+
+  const dir = new THREE.DirectionalLight(0xffffff, Math.PI);
+  dir.position.set(2, 4, 3);
+  dir.castShadow = true;
+  dir.shadow.camera.left = -10;
+  dir.shadow.camera.right = 10;
+  dir.shadow.camera.top = 10;
+  dir.shadow.camera.bottom = -10;
+  dir.shadow.camera.near = 0.1;
+  dir.shadow.camera.far = 50;
+  scene.add(dir);
+
+  const sphereMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(0.8, 0.2, 0.2) });
+  const sphereGeom = testGeometrySphere();
+  const sphere = new THREE.Mesh(sphereGeom, sphereMat);
+  sphere.position.set(0, 1.2, 0);
+  sphere.castShadow = true;
+  scene.add(sphere);
+
+  const floorMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(0.6, 0.6, 0.6) });
+  const floorGeom = new THREE.PlaneGeometry(10, 10, 1, 1);
+  const floor = new THREE.Mesh(floorGeom, floorMat);
+  floor.rotation.x = THREE.MathUtils.degToRad(-90);
+  floor.receiveShadow = true;
+  scene.add(floor);
+
+  return { scene, camera, rendererSetup: (r) => { r.shadowMap.enabled = true; } };
+};
+
+// ---------- FEATURES ----------
+
+tests['fog'] = () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.1, 100);
+  camera.position.set(0, 0, 3.5);
+  scene.add(camera);
+
+  scene.fog = new THREE.Fog(new THREE.Color(0.5, 0.5, 0.7), 2, 8);
+  scene.background = new THREE.Color(0.5, 0.5, 0.7);
+
+  const light = new THREE.DirectionalLight(0xffffff, Math.PI);
+  light.position.set(1, 2, 3);
+  scene.add(light);
+
+  const mat = new THREE.MeshLambertMaterial({ color: new THREE.Color(0.8, 0.2, 0.2) });
+  const geom = testGeometryBox();
+  for (let i = 0; i < 5; i++) {
+    const mesh = new THREE.Mesh(geom, mat);
+    mesh.position.set((i - 2) * 1.5, 0, -i);
+    scene.add(mesh);
+  }
+  return { scene, camera };
+};
+
+tests['transparency'] = () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.1, 100);
+  camera.position.set(0, 0, 3.5);
+  scene.add(camera);
+
+  const light = new THREE.DirectionalLight(0xffffff, Math.PI);
+  light.position.set(1, 2, 3);
+  scene.add(light);
+
+  const geom = testGeometrySphere();
+
+  const mat1 = new THREE.MeshPhongMaterial({ color: new THREE.Color(1, 0, 0), transparent: true, opacity: 0.5 });
+  const mat2 = new THREE.MeshPhongMaterial({ color: new THREE.Color(0, 0, 1) });
+
+  const mesh1 = new THREE.Mesh(geom, mat1);
+  mesh1.position.set(0.3, 0, 0);
+  scene.add(mesh1);
+
+  const mesh2 = new THREE.Mesh(geom, mat2);
+  mesh2.position.set(-0.3, 0, -0.5);
+  scene.add(mesh2);
+
+  return { scene, camera };
+};
+
+tests['multi-material'] = () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.1, 100);
+  camera.position.set(0, 0, 3.5);
+  scene.add(camera);
+
+  const light = new THREE.DirectionalLight(0xffffff, Math.PI);
+  light.position.set(1, 2, 3);
+  scene.add(light);
+
+  const ambient = new THREE.AmbientLight(0xffffff, 0.2 * Math.PI);
+  scene.add(ambient);
+
+  const colors = [
+    new THREE.Color(1, 0, 0),
+    new THREE.Color(0, 1, 0),
+    new THREE.Color(0, 0, 1),
+    new THREE.Color(1, 1, 0),
+  ];
+  const geom = new THREE.SphereGeometry(0.4, 32, 16);
+
+  for (let i = 0; i < 4; i++) {
+    const mat = new THREE.MeshPhongMaterial({ color: colors[i] });
+    const mesh = new THREE.Mesh(geom, mat);
+    mesh.position.set((i - 1.5) * 1.0, 0, 0);
+    scene.add(mesh);
+  }
+  return { scene, camera };
+};
+
+tests['double-sided'] = () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.1, 100);
+  camera.position.set(0, 1, 3);
+  camera.lookAt(0, 0, 0);
+  scene.add(camera);
+
+  const light = new THREE.DirectionalLight(0xffffff, Math.PI);
+  light.position.set(1, 2, 3);
+  scene.add(light);
+
+  const mat = new THREE.MeshPhongMaterial({
+    color: new THREE.Color(0.2, 0.8, 0.8),
+    side: THREE.DoubleSide,
+  });
+  const geom = new THREE.PlaneGeometry(2, 2, 1, 1);
+  const mesh = new THREE.Mesh(geom, mat);
+  mesh.rotation.order = 'ZYX';
+  mesh.rotation.set(
+    THREE.MathUtils.degToRad(-30),
+    THREE.MathUtils.degToRad(45),
+    0
+  );
+  scene.add(mesh);
+  return { scene, camera };
+};
+
+tests['envmap'] = () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.1, 100);
+  camera.position.set(0, 0, 2.8);
+  scene.add(camera);
+
+  const ambient = new THREE.AmbientLight(0xffffff, Math.PI);
+  scene.add(ambient);
+
+  const point = new THREE.PointLight(0xffffff, Math.PI, 0);
+  point.position.set(2, 2, 2);
+  scene.add(point);
+
+  const cubeTex = testCubeTextureColored();
+  const mat = new THREE.MeshLambertMaterial({
+    color: new THREE.Color(1, 1, 1),
+    envMap: cubeTex,
+  });
+  const geom = testGeometrySphere();
+  const mesh = new THREE.Mesh(geom, mat);
+  scene.add(mesh);
+  return { scene, camera };
+};
+
+tests['render-target'] = () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 1, 1000);
+  camera.position.set(0, 0, 4);
+  scene.add(camera);
+  scene.background = new THREE.Color(0.2, 0.2, 0.2);
+
+  const cubeMat = new THREE.MeshBasicMaterial();
+  const geom = testGeometryBox();
+  const mesh = new THREE.Mesh(geom, cubeMat);
+  mesh.rotation.order = 'ZYX';
+  mesh.rotation.set(
+    THREE.MathUtils.degToRad(20),
+    THREE.MathUtils.degToRad(30),
+    0
+  );
+  scene.add(mesh);
+
+  const innerScene = new THREE.Scene();
+  innerScene.background = new THREE.Color(0.8, 0.2, 0.2);
+
+  const light = new THREE.DirectionalLight(0xffffff, Math.PI);
+  light.position.set(1, 2, 3);
+  innerScene.add(light);
+
+  const ambient = new THREE.AmbientLight(0xffffff, 0.3 * Math.PI);
+  innerScene.add(ambient);
+
+  const sphereMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(0.2, 0.4, 0.9) });
+  const sphereGeom = testGeometrySphere();
+  const sphere = new THREE.Mesh(sphereGeom, sphereMat);
+  innerScene.add(sphere);
+
+  const innerCamera = new THREE.PerspectiveCamera(45, 1, 1, 1000);
+  innerCamera.position.set(0, 0, 3);
+  innerScene.add(innerCamera);
+
+  const rt = new THREE.WebGLRenderTarget(256, 256);
+
+  return {
+    scene, camera,
+    preRender: (r) => {
+      r.setRenderTarget(rt);
+      r.render(innerScene, innerCamera);
+      cubeMat.map = rt.texture;
+      r.setRenderTarget(null);
+    }
+  };
+};
+
+tests['cairo-texture'] = () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.1, 100);
+  camera.position.set(0, 0, 3.5);
+  scene.add(camera);
+  scene.background = new THREE.Color(0.2, 0.2, 0.2);
+
+  // Replicate the cairo drawing: red background, blue filled triangle/curve, black stroke
+  const c = document.createElement('canvas');
+  c.width = 256; c.height = 256;
+  const ctx = c.getContext('2d');
+
+  // Red background
+  ctx.fillStyle = 'rgb(255,0,0)';
+  ctx.fillRect(0, 0, 256, 256);
+
+  // Path matching cairo: moveTo(128,25.6), lineTo(230.4,230.4), relLineTo(-102.4,0),
+  // curveTo(51.2,230.4, 51.2,128, 128,128), closePath
+  ctx.beginPath();
+  ctx.moveTo(128.0, 25.6);
+  ctx.lineTo(230.4, 230.4);
+  ctx.lineTo(128.0, 230.4); // relLineTo(-102.4, 0) from (230.4, 230.4)
+  ctx.bezierCurveTo(51.2, 230.4, 51.2, 128.0, 128.0, 128.0);
+  ctx.closePath();
+
+  ctx.fillStyle = 'rgb(0,0,255)';
+  ctx.fill();
+  ctx.lineWidth = 10.0;
+  ctx.strokeStyle = 'rgb(0,0,0)';
+  ctx.stroke();
+
+  const texture = new THREE.CanvasTexture(c);
+  texture.flipY = false;
+
+  const mat = new THREE.MeshBasicMaterial({ map: texture });
+  const geom = testGeometryBox();
+  const mesh = new THREE.Mesh(geom, mat);
+  mesh.rotation.order = 'ZYX';
+  mesh.rotation.set(
+    THREE.MathUtils.degToRad(20),
+    THREE.MathUtils.degToRad(30),
+    0
+  );
+  scene.add(mesh);
+  return { scene, camera };
+};
+
+tests['cube-camera'] = () => {
+  const scene = new THREE.Scene();
+  scene.background = testCubeTextureColored();
+
+  const camera = new THREE.PerspectiveCamera(60, 4/3, 1, 1000);
+  camera.position.set(0, 20, 55);
+  camera.lookAt(0, 0, 0);
+  scene.add(camera);
+
+  const ambient = new THREE.AmbientLight(new THREE.Color(0.5, 0.5, 0.5));
+  scene.add(ambient);
+
+  const dir = new THREE.DirectionalLight(0xffffff, 2.0);
+  dir.position.set(30, 30, 30);
+  scene.add(dir);
+
+  const cubeRT = new THREE.WebGLCubeRenderTarget(128);
+  const cubeCamera = new THREE.CubeCamera(1, 1000, cubeRT);
+  scene.add(cubeCamera);
+
+  const sphereMat = new THREE.MeshStandardMaterial({
+    envMap: cubeRT.texture,
+    roughness: 0.05,
+    metalness: 1.0,
+  });
+  const sphereGeom = new THREE.IcosahedronGeometry(10, 5);
+  const sphere = new THREE.Mesh(sphereGeom, sphereMat);
+  scene.add(sphere);
+
+  const boxGeom = new THREE.BoxGeometry(8, 8, 8, 1, 1, 1);
+  const boxes = [
+    { color: [0.9,0.1,0.1], pos: [25,0,0] },
+    { color: [0.1,0.9,0.1], pos: [-25,0,0] },
+    { color: [0.1,0.1,0.9], pos: [0,0,25] },
+    { color: [0.9,0.9,0.1], pos: [0,0,-25] },
+    { color: [0.9,0.9,0.9], pos: [0,25,0] },
+    { color: [0.7,0.1,0.9], pos: [0,-25,0] },
+  ];
+  for (const b of boxes) {
+    const mat = new THREE.MeshStandardMaterial({ color: new THREE.Color(...b.color) });
+    const box = new THREE.Mesh(boxGeom, mat);
+    box.position.set(...b.pos);
+    scene.add(box);
+  }
+
+  return {
+    scene, camera,
+    preRender: (r) => {
+      sphere.visible = false;
+      cubeCamera.update(r, scene);
+      sphere.visible = true;
+    }
+  };
+};
+
+tests['scene-environment'] = () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.1, 100);
+  camera.position.set(0, 0, 2.8);
+  scene.add(camera);
+
+  const cubeTex = testCubeTextureColored();
+  scene.background = cubeTex;
+  scene.environment = cubeTex;
+
+  const ambient = new THREE.AmbientLight(new THREE.Color(0.3, 0.3, 0.3));
+  scene.add(ambient);
+
+  const dir = new THREE.DirectionalLight(0xffffff, Math.PI);
+  dir.position.set(2, 2, 2);
+  scene.add(dir);
+
+  const mat = new THREE.MeshStandardMaterial({ roughness: 0.1, metalness: 0.9 });
+  const geom = testGeometrySphere();
+  const mesh = new THREE.Mesh(geom, mat);
+  scene.add(mesh);
+  return { scene, camera };
+};
+
+tests['dynamic-cubemap'] = () => {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0.8, 0.2, 0.2);
+
+  const camera = new THREE.PerspectiveCamera(60, 4/3, 1, 1000);
+  camera.position.set(0, 20, 55);
+  camera.lookAt(0, 0, 0);
+  scene.add(camera);
+
+  const ambient = new THREE.AmbientLight(new THREE.Color(0.5, 0.5, 0.5));
+  scene.add(ambient);
+
+  const dir = new THREE.DirectionalLight(0xffffff, 2.0);
+  dir.position.set(30, 30, 30);
+  scene.add(dir);
+
+  const cubeRT = new THREE.WebGLCubeRenderTarget(64);
+  const cubeCamera = new THREE.CubeCamera(1, 1000, cubeRT);
+  scene.add(cubeCamera);
+
+  const sphereMat = new THREE.MeshStandardMaterial({
+    envMap: cubeRT.texture,
+    roughness: 0.05,
+    metalness: 1.0,
+  });
+  const sphereGeom = new THREE.IcosahedronGeometry(20, 5);
+  const sphere = new THREE.Mesh(sphereGeom, sphereMat);
+  scene.add(sphere);
+
+  const mat = new THREE.MeshStandardMaterial({ roughness: 0.1 });
+
+  const boxGeom = new THREE.BoxGeometry(15, 15, 15, 1, 1, 1);
+  const box = new THREE.Mesh(boxGeom, mat);
+  box.position.set(30, 0, 0);
+  scene.add(box);
+
+  const torusGeom = new THREE.TorusKnotGeometry(8, 3, 128, 16, 2, 3);
+  const torus = new THREE.Mesh(torusGeom, mat);
+  torus.position.set(-35, 0, 0);
+  scene.add(torus);
+
+  return {
+    scene, camera,
+    preRender: (r) => {
+      sphere.visible = false;
+      cubeCamera.update(r, scene);
+      sphere.visible = true;
+    }
+  };
+};
+
+// ---------- PBR ----------
+
+tests['envmap-standard'] = () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.1, 100);
+  camera.position.set(0, 0, 2.8);
+  scene.add(camera);
+  addEnvmapLights(scene);
+
+  const cubeTex = testCubeTextureColored();
+  const mat = new THREE.MeshStandardMaterial({
+    color: new THREE.Color(0.8, 0.6, 0.2),
+    metalness: 0.3,
+    roughness: 0.3,
+    envMap: cubeTex,
+  });
+  const geom = testGeometrySphere();
+  const mesh = new THREE.Mesh(geom, mat);
+  scene.add(mesh);
+  return { scene, camera };
+};
+
+tests['standard-roughness'] = () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.1, 100);
+  camera.position.set(0, 0, 3.5);
+  scene.add(camera);
+  addEnvmapLights(scene);
+
+  const cubeTex = testCubeTextureColored();
+  const geom = new THREE.SphereGeometry(0.4, 32, 16);
+  const roughness = [0.0, 0.3, 0.6, 1.0];
+
+  for (let i = 0; i < 4; i++) {
+    const mat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(0.8, 0.6, 0.2),
+      metalness: 0.3,
+      roughness: roughness[i],
+      envMap: cubeTex,
+    });
+    const mesh = new THREE.Mesh(geom, mat);
+    mesh.position.set((i - 1.5) * 1.0, 0, 0);
+    scene.add(mesh);
+  }
+  return { scene, camera };
+};
+
+tests['standard-metalness'] = () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.1, 100);
+  camera.position.set(0, 0, 3.5);
+  scene.add(camera);
+  addEnvmapLights(scene);
+
+  const cubeTex = testCubeTextureColored();
+  const geom = new THREE.SphereGeometry(0.4, 32, 16);
+  const metalness = [0.0, 0.3, 0.7, 1.0];
+
+  for (let i = 0; i < 4; i++) {
+    const mat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(0.8, 0.2, 0.2),
+      metalness: metalness[i],
+      roughness: 0.3,
+      envMap: cubeTex,
+    });
+    const mesh = new THREE.Mesh(geom, mat);
+    mesh.position.set((i - 1.5) * 1.0, 0, 0);
+    scene.add(mesh);
+  }
+  return { scene, camera };
+};
+
+tests['physical-clearcoat'] = () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.1, 100);
+  camera.position.set(0, 0, 3.5);
+  scene.add(camera);
+  addEnvmapLights(scene);
+
+  const cubeTex = testCubeTextureColored();
+  const geom = new THREE.SphereGeometry(0.4, 32, 16);
+  const clearcoat = [0.0, 0.5, 1.0];
+
+  for (let i = 0; i < 3; i++) {
+    const mat = new THREE.MeshPhysicalMaterial({
+      color: new THREE.Color(0.1, 0.2, 0.8),
+      metalness: 0.0,
+      roughness: 0.5,
+      envMap: cubeTex,
+      clearcoat: clearcoat[i],
+      clearcoatRoughness: 0.1,
+    });
+    const mesh = new THREE.Mesh(geom, mat);
+    mesh.position.set((i - 1) * 1.1, 0, 0);
+    scene.add(mesh);
+  }
+  return { scene, camera };
+};
+
+tests['physical-sheen'] = () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.1, 100);
+  camera.position.set(0, 0, 3.5);
+  scene.add(camera);
+  addEnvmapLights(scene);
+
+  const geom = new THREE.SphereGeometry(0.4, 32, 16);
+  const sheenColors = [
+    new THREE.Color(0, 0, 0),
+    new THREE.Color(1, 0.5, 0),
+    new THREE.Color(0.5, 0, 1),
+  ];
+
+  for (let i = 0; i < 3; i++) {
+    const mat = new THREE.MeshPhysicalMaterial({
+      color: new THREE.Color(0.6, 0.1, 0.1),
+      metalness: 0.0,
+      roughness: 0.8,
+      sheen: i === 0 ? 0.0 : 1.0,
+      sheenColor: sheenColors[i],
+      sheenRoughness: 0.5,
+    });
+    const mesh = new THREE.Mesh(geom, mat);
+    mesh.position.set((i - 1) * 1.1, 0, 0);
+    scene.add(mesh);
+  }
+  return { scene, camera };
+};
+
+tests['physical-transmission'] = () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.1, 100);
+  camera.position.set(0, 0, 3.5);
+  scene.add(camera);
+  addEnvmapLights(scene);
+
+  const cubeTex = testCubeTextureColored();
+  scene.background = cubeTex;
+
+  const geom = new THREE.SphereGeometry(0.4, 32, 16);
+  const transmission = [0.0, 0.5, 1.0];
+
+  for (let i = 0; i < 3; i++) {
+    const mat = new THREE.MeshPhysicalMaterial({
+      color: new THREE.Color(1, 1, 1),
+      metalness: 0.0,
+      roughness: 0.0,
+      transmission: transmission[i],
+      ior: 1.5,
+      thickness: 0.5,
+    });
+    const mesh = new THREE.Mesh(geom, mat);
+    mesh.position.set((i - 1) * 1.1, 0, 0);
+    scene.add(mesh);
+  }
+  return { scene, camera };
+};
+
+tests['physical-iridescence'] = () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.1, 100);
+  camera.position.set(0, 0, 3.5);
+  scene.add(camera);
+  addEnvmapLights(scene);
+
+  const cubeTex = testCubeTextureColored();
+  const geom = new THREE.SphereGeometry(0.4, 32, 16);
+  const iridescence = [0.0, 0.5, 1.0];
+
+  for (let i = 0; i < 3; i++) {
+    const mat = new THREE.MeshPhysicalMaterial({
+      color: new THREE.Color(0.9, 0.9, 0.9),
+      metalness: 1.0,
+      roughness: 0.2,
+      envMap: cubeTex,
+      iridescence: iridescence[i],
+      iridescenceIOR: 1.3,
+    });
+    const mesh = new THREE.Mesh(geom, mat);
+    mesh.position.set((i - 1) * 1.1, 0, 0);
+    scene.add(mesh);
+  }
+  return { scene, camera };
+};
+
+tests['physical-ior'] = () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.1, 100);
+  camera.position.set(0, 0, 3.5);
+  scene.add(camera);
+  addEnvmapLights(scene);
+
+  const cubeTex = testCubeTextureColored();
+  const geom = new THREE.SphereGeometry(0.4, 32, 16);
+  const iors = [1.0, 1.5, 2.0, 2.5];
+
+  for (let i = 0; i < 4; i++) {
+    const mat = new THREE.MeshPhysicalMaterial({
+      color: new THREE.Color(0.9, 0.9, 0.9),
+      metalness: 0.0,
+      roughness: 0.0,
+      envMap: cubeTex,
+      ior: iors[i],
+    });
+    const mesh = new THREE.Mesh(geom, mat);
+    mesh.position.set((i - 1.5) * 1.0, 0, 0);
+    scene.add(mesh);
+  }
+  return { scene, camera };
+};
+
+tests['standard-gold-metallic'] = () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.1, 100);
+  camera.position.set(0, 0, 3.5);
+  scene.add(camera);
+  addEnvmapLights(scene);
+
+  const geom = new THREE.SphereGeometry(0.4, 32, 16);
+  const roughness = [0.1, 0.3, 0.6, 1.0];
+
+  for (let i = 0; i < 4; i++) {
+    const mat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(0.7, 0.55, 0.15),
+      metalness: 1.0,
+      roughness: roughness[i],
+    });
+    const mesh = new THREE.Mesh(geom, mat);
+    mesh.position.set((i - 1.5) * 1.0, 0, 0);
+    scene.add(mesh);
+  }
+  return { scene, camera };
+};
+
+tests['scene-env-roughness'] = () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.1, 100);
+  camera.position.set(0, 0, 3.5);
+  scene.add(camera);
+
+  const cubeTex = testCubeTextureColored();
+  scene.environment = cubeTex;
+
+  const geom = new THREE.SphereGeometry(0.4, 32, 16);
+  const roughness = [0.0, 0.3, 0.6, 1.0];
+
+  for (let i = 0; i < 4; i++) {
+    const mat = new THREE.MeshPhysicalMaterial({
+      color: new THREE.Color(1, 1, 1),
+      metalness: 1.0,
+      roughness: roughness[i],
+    });
+    const mesh = new THREE.Mesh(geom, mat);
+    mesh.position.set((i - 1.5) * 1.0, 0, 0);
+    scene.add(mesh);
+  }
+  return { scene, camera };
+};
+
+// ---------- ADVANCED ----------
+
+tests['clipping'] = () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.1, 100);
+  camera.position.set(0, 0, 2.8);
+  scene.add(camera);
+
+  const light = new THREE.DirectionalLight(0xffffff, Math.PI);
+  light.position.set(1, 2, 3);
+  scene.add(light);
+
+  const ambient = new THREE.AmbientLight(0xffffff, 0.3 * Math.PI);
+  scene.add(ambient);
+
+  const clipPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+  const mat = new THREE.MeshPhongMaterial({
+    color: new THREE.Color(0.8, 0.2, 0.2),
+    side: THREE.DoubleSide,
+    clippingPlanes: [clipPlane],
+  });
+
+  const geom = testGeometrySphere();
+  const mesh = new THREE.Mesh(geom, mat);
+  scene.add(mesh);
+
+  return {
+    scene, camera,
+    rendererSetup: (r) => { r.localClippingEnabled = true; }
+  };
+};
+
+tests['sprites'] = () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.1, 100);
+  camera.position.set(0, 0, 5);
+  scene.add(camera);
+
+  const colors = [
+    new THREE.Color(1, 0, 0),
+    new THREE.Color(0, 1, 0),
+    new THREE.Color(0, 0, 1),
+    new THREE.Color(1, 1, 0),
+  ];
+
+  for (let i = 0; i < 4; i++) {
+    const mat = new THREE.SpriteMaterial({ color: colors[i] });
+    const sprite = new THREE.Sprite(mat);
+    sprite.position.set((i - 1.5) * 1.2, 0, 0);
+    scene.add(sprite);
+  }
+  return { scene, camera };
+};
+
+tests['envmap-refraction'] = () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.1, 100);
+  camera.position.set(1.5, 1.0, 2.0);
+  camera.lookAt(0, 0, 0);
+  scene.add(camera);
+
+  const ambient = new THREE.AmbientLight(0xffffff, Math.PI);
+  scene.add(ambient);
+
+  const point = new THREE.PointLight(0xffffff, Math.PI, 0);
+  point.position.set(2, 2, 2);
+  scene.add(point);
+
+  const bgTex = testCubeTextureColored();
+  scene.background = bgTex;
+
+  const cubeTex = testCubeTextureColored();
+  cubeTex.mapping = THREE.CubeRefractionMapping;
+
+  const mat = new THREE.MeshLambertMaterial({
+    color: new THREE.Color(1, 1, 1),
+    envMap: cubeTex,
+    refractionRatio: 0.7,
+  });
+  const geom = testGeometrySphere();
+  const mesh = new THREE.Mesh(geom, mat);
+  scene.add(mesh);
+  return { scene, camera };
+};
+
+tests['gltf-waterbottle'] = () => setupGltfTest('WaterBottle.glb');
+tests['gltf-soldier'] = () => setupGltfTest('Soldier.glb');
+tests['gltf-robot'] = () => setupGltfTest('RobotExpressive.glb');
+
+function setupGltfTest(modelName) {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.01, 1000);
+
+  const ambient = new THREE.AmbientLight(0xffffff, 0.5 * Math.PI);
+  scene.add(ambient);
+
+  const dir = new THREE.DirectionalLight(0xffffff, Math.PI);
+  dir.position.set(1, 2, 3);
+  scene.add(dir);
+
+  const cubeTex = testCubeTextureColored();
+
+  return {
+    scene, camera,
+    async: true,
+    load: async () => {
+      const gltf = await loadGLTF(modelName);
+      const model = gltf.scene;
+
+      model.traverse((child) => {
+        if (child.isMesh && child.material) {
+          const mats = Array.isArray(child.material) ? child.material : [child.material];
+          for (const m of mats) {
+            if ('envMap' in m) m.envMap = cubeTex;
+          }
+        }
+      });
+
+      scene.add(model);
+      scene.updateMatrixWorld(true);
+
+      const bbox = new THREE.Box3().setFromObject(scene);
+      const size = bbox.getSize(new THREE.Vector3());
+      const center = bbox.getCenter(new THREE.Vector3());
+      const radius = size.length() * 0.5;
+
+      camera.position.set(center.x, center.y, center.z + radius * 2.5);
+      scene.add(camera);
+    }
+  };
+}
+
+tests['morph-target'] = () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.1, 100);
+  camera.position.set(0, 0, 3.5);
+  scene.add(camera);
+
+  const light = new THREE.DirectionalLight(0xffffff, Math.PI);
+  light.position.set(1, 2, 3);
+  scene.add(light);
+
+  const ambient = new THREE.AmbientLight(0xffffff, 0.3 * Math.PI);
+  scene.add(ambient);
+
+  const baseGeom = new THREE.SphereGeometry(0.5, 16, 12);
+  const posAttr = baseGeom.attributes.position;
+  const nVerts = posAttr.count;
+
+  const morphPositions = new Float32Array(nVerts * 3);
+  for (let i = 0; i < nVerts; i++) {
+    const x = posAttr.getX(i);
+    const y = posAttr.getY(i);
+    const z = posAttr.getZ(i);
+    const len = Math.sqrt(x*x + y*y + z*z);
+    const scale = 0.3 * Math.sin(y * 10.0);
+    morphPositions[i*3]   = x + x/len * scale;
+    morphPositions[i*3+1] = y + y/len * scale;
+    morphPositions[i*3+2] = z + z/len * scale;
+  }
+  baseGeom.morphAttributes.position = [
+    new THREE.BufferAttribute(morphPositions, 3)
+  ];
+
+  const influences = [0.0, 0.5, 1.0];
+  for (let i = 0; i < 3; i++) {
+    const mat = new THREE.MeshPhongMaterial({
+      color: new THREE.Color(0.2, 0.7, 0.3),
+        morphTargets: true,
+    });
+    const mesh = new THREE.Mesh(baseGeom, mat);
+    mesh.position.set((i - 1) * 1.3, 0, 0);
+    mesh.morphTargetInfluences = [influences[i]];
+    scene.add(mesh);
+  }
+  return { scene, camera };
+};
+
+tests['skeletal-animation'] = () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 4/3, 0.01, 1000);
+
+  const ambient = new THREE.AmbientLight(0xffffff, 0.5 * Math.PI);
+  scene.add(ambient);
+
+  const dir = new THREE.DirectionalLight(0xffffff, Math.PI);
+  dir.position.set(1, 2, 3);
+  scene.add(dir);
+
+  const times = [0.0, 0.3, 0.7];
+
+  return {
+    scene, camera,
+    async: true,
+    load: async () => {
+      for (let i = 0; i < 3; i++) {
+        const gltf = await loadGLTF('Soldier.glb');
+        const model = gltf.scene;
+        const group = new THREE.Group();
+        group.position.set((i - 1) * 1.2, 0, 0);
+
+        while (model.children.length > 0) {
+          group.add(model.children[0]);
+        }
+
+        if (gltf.animations && gltf.animations.length > 0) {
+          const mixer = new THREE.AnimationMixer(group);
+          const action = mixer.clipAction(gltf.animations[0]);
+          action.setLoop(THREE.LoopOnce, 1);
+          action.play();
+          mixer.update(times[i]);
+          group.updateMatrixWorld(true);
+        }
+
+        scene.add(group);
+      }
+
+      camera.position.set(0, 1, 4);
+      camera.lookAt(0, 0.8, 0);
+      scene.add(camera);
+    }
+  };
+};
+
+// ==================== TEST RUNNER ====================
+
+const testNames = Object.keys(tests);
+const select = document.getElementById('test-select');
+const info = document.getElementById('info');
+
+for (const name of testNames) {
+  const opt = document.createElement('option');
+  opt.value = name;
+  opt.textContent = name;
+  select.appendChild(opt);
+}
+
+// Set from URL hash
+if (location.hash) {
+  const h = location.hash.slice(1);
+  if (tests[h]) select.value = h;
+}
+
+async function runTest(name) {
+  info.textContent = 'Running: ' + name;
+  renderer.shadowMap.enabled = false;
+  renderer.localClippingEnabled = false;
+  renderer.setRenderTarget(null);
+  renderer.clear();
+
+  const result = await tests[name]();
+  if (!result) { info.textContent = 'Test returned null: ' + name; return null; }
+
+  if (result.rendererSetup) result.rendererSetup(renderer);
+
+  if (result.async && result.load) {
+    await result.load();
+  }
+
+  // Render 5 frames to match gthree behavior
+  for (let f = 0; f < 5; f++) {
+    if (result.preRender) result.preRender(renderer);
+    renderer.render(result.scene, result.camera);
+  }
+
+  info.textContent = 'Done: ' + name;
+  return result;
+}
+
+function saveCanvas(name) {
+  const link = document.createElement('a');
+  link.download = name + '.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+document.getElementById('run-btn').addEventListener('click', () => {
+  const name = select.value;
+  location.hash = name;
+  runTest(name);
+});
+
+document.getElementById('save-btn').addEventListener('click', () => {
+  saveCanvas(select.value);
+});
+
+document.getElementById('run-all-btn').addEventListener('click', async () => {
+  for (const name of testNames) {
+    select.value = name;
+    await runTest(name);
+    saveCanvas(name);
+    await new Promise(r => setTimeout(r, 100));
+  }
+  info.textContent = 'All tests saved.';
+});
+
+// Auto-run selected test
+runTest(select.value);
+
+select.addEventListener('change', () => {
+  const name = select.value;
+  location.hash = name;
+  runTest(name);
+});
+</script>
+</body>
+</html>
