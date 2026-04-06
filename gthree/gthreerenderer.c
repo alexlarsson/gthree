@@ -741,6 +741,8 @@ gthree_renderer_unrealize (GthreeRenderer *renderer)
   /* Clear PMREM cache before unrealizing resources — the cached CubeUV textures
      are realized resources and will be unrealized+finalized when we drop our ref */
   g_hash_table_remove_all (priv->pmrem_cache);
+  if (priv->pmrem_generator)
+    gthree_pmrem_generator_unrealize (priv->pmrem_generator);
   g_clear_object (&priv->pmrem_generator);
 
   while (priv->realized_resources->len > 0)

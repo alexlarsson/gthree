@@ -552,7 +552,7 @@ gthree_texture_set_gl_texture (GthreeTexture *texture, GthreeRenderer *renderer,
   GthreeTextureRealizeData *data = gthree_resource_get_data_for (GTHREE_RESOURCE (texture), renderer);
 
   if (data->gl_texture && data->gl_texture != gl_texture)
-    glDeleteTextures (1, &data->gl_texture);
+    gthree_renderer_lazy_delete (renderer, GTHREE_RESOURCE_KIND_TEXTURE, data->gl_texture);
 
   if (!data->parent.realized_for)
     gthree_resource_set_realized_for (GTHREE_RESOURCE (texture), renderer);

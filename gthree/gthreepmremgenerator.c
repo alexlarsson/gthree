@@ -56,18 +56,35 @@ cleanup_sized_resources (GthreePMREMGeneratorPrivate *priv)
   priv->total_lods = 0;
 }
 
+void
+gthree_pmrem_generator_unrealize (GthreePMREMGenerator *gen)
+{
+  GthreePMREMGeneratorPrivate *priv = gthree_pmrem_generator_get_instance_private (gen);
+
+  cleanup_sized_resources (priv);
+
+  if (priv->vert_shader)
+    {
+      glDeleteShader (priv->vert_shader);
+      priv->vert_shader = 0;
+    }
+  if (priv->cubemap_program)
+    {
+      glDeleteProgram (priv->cubemap_program);
+      priv->cubemap_program = 0;
+    }
+}
+
 static void
 gthree_pmrem_generator_finalize (GObject *obj)
 {
   GthreePMREMGenerator *gen = GTHREE_PMREM_GENERATOR (obj);
   GthreePMREMGeneratorPrivate *priv = gthree_pmrem_generator_get_instance_private (gen);
 
-  cleanup_sized_resources (priv);
-
-  if (priv->vert_shader)
-    glDeleteShader (priv->vert_shader);
-  if (priv->cubemap_program)
-    glDeleteProgram (priv->cubemap_program);
+  g_warn_if_fail (priv->vert_shader == 0);
+  g_warn_if_fail (priv->cubemap_program == 0);
+  g_warn_if_fail (priv->ggx_program == 0);
+  g_warn_if_fail (priv->lod_vaos == NULL);
 
   g_clear_pointer (&priv->vert_src, g_bytes_unref);
   g_clear_pointer (&priv->cubemap_frag_src, g_bytes_unref);

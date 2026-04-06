@@ -30,6 +30,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (GthreePMREMGenerator, g_object_unref)
 GType gthree_pmrem_generator_get_type (void) G_GNUC_CONST;
 
 GthreePMREMGenerator *gthree_pmrem_generator_new (GthreeRenderer *renderer);
+void gthree_pmrem_generator_unrealize (GthreePMREMGenerator *gen);
 
 GthreeTexture *gthree_pmrem_generator_from_cubemap (GthreePMREMGenerator *generator,
                                                     GthreeTexture        *cube_texture,
