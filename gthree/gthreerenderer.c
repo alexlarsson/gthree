@@ -1683,7 +1683,7 @@ static GthreeTexture *material_get_pmrem_env_map (GthreeMaterial *material);
 static gboolean material_uses_env_map (GthreeMaterial *material);
 static GthreeTexture *lookup_pmrem (GthreeRenderer *renderer, GthreeTexture *cube_tex);
 
-static GthreeProgram *
+static void
 init_material (GthreeRenderer *renderer,
                GthreeMaterial *material,
                GthreeFog *fog,
@@ -1858,8 +1858,6 @@ init_material (GthreeRenderer *renderer,
   material_apply_light_setup (m_uniforms, &priv->light_setup, FALSE);
 
   gthree_shader_update_uniform_locations_for_program (shader, program);
-
-  return NULL;
 }
 
 #if 0
