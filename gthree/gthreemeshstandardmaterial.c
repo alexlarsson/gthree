@@ -737,6 +737,8 @@ gthree_mesh_standard_material_set_emissive_color (GthreeMeshStandardMaterial *st
   priv->emissive = *color;
 
   gthree_material_set_needs_update (GTHREE_MATERIAL (standard));
+
+  g_object_notify_by_pspec (G_OBJECT (standard), obj_props[PROP_EMISSIVE_COLOR]);
 }
 
 
@@ -921,7 +923,7 @@ void
 gthree_mesh_standard_material_set_metalness (GthreeMeshStandardMaterial *standard,
                                              float                       value)
 {
-  GthreeMeshStandardMaterialPrivate *priv = gthree_mesh_standard_material_get_instance_private (standard);;
+  GthreeMeshStandardMaterialPrivate *priv = gthree_mesh_standard_material_get_instance_private (standard);
 
   priv->metalness = value;
 

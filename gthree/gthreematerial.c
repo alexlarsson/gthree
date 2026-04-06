@@ -409,6 +409,7 @@ gthree_material_set_opacity (GthreeMaterial *material,
 
   priv->opacity = opacity;
   gthree_material_set_needs_update (material);
+  g_object_notify_by_pspec (G_OBJECT (material), obj_props[PROP_OPACITY]);
 }
 
 float
