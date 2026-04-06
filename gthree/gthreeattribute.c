@@ -217,7 +217,7 @@ gthree_attribute_array_get_stride (GthreeAttributeArray *array)
 guint8 *
 gthree_attribute_array_peek_uint8 (GthreeAttributeArray *array)
 {
-  g_assert (array->type == GTHREE_ATTRIBUTE_TYPE_UINT8 || GTHREE_ATTRIBUTE_TYPE_INT8);
+  g_assert (array->type == GTHREE_ATTRIBUTE_TYPE_UINT8 || array->type == GTHREE_ATTRIBUTE_TYPE_INT8);
   return (guint8*)&array->data[0];
 }
 
@@ -235,7 +235,7 @@ gthree_attribute_array_peek_uint8_at (GthreeAttributeArray *array,
 gint8 *
 gthree_attribute_array_peek_int8 (GthreeAttributeArray *array)
 {
-  g_assert (array->type == GTHREE_ATTRIBUTE_TYPE_UINT8 || GTHREE_ATTRIBUTE_TYPE_INT8);
+  g_assert (array->type == GTHREE_ATTRIBUTE_TYPE_UINT8 || array->type == GTHREE_ATTRIBUTE_TYPE_INT8);
   return (gint8*)&array->data[0];
 }
 
@@ -253,7 +253,7 @@ gthree_attribute_array_peek_int8_at (GthreeAttributeArray *array,
 gint16 *
 gthree_attribute_array_peek_int16 (GthreeAttributeArray *array)
 {
-  g_assert (array->type == GTHREE_ATTRIBUTE_TYPE_UINT16 || GTHREE_ATTRIBUTE_TYPE_INT16);
+  g_assert (array->type == GTHREE_ATTRIBUTE_TYPE_UINT16 || array->type == GTHREE_ATTRIBUTE_TYPE_INT16);
   return (gint16*)&array->data[0];
 }
 
@@ -271,7 +271,7 @@ gthree_attribute_array_peek_int16_at (GthreeAttributeArray *array,
 guint16 *
 gthree_attribute_array_peek_uint16 (GthreeAttributeArray *array)
 {
-  g_assert (array->type == GTHREE_ATTRIBUTE_TYPE_UINT16 || GTHREE_ATTRIBUTE_TYPE_INT16);
+  g_assert (array->type == GTHREE_ATTRIBUTE_TYPE_UINT16 || array->type == GTHREE_ATTRIBUTE_TYPE_INT16);
   return (guint16*)&array->data[0];
 }
 
@@ -289,7 +289,7 @@ gthree_attribute_array_peek_uint16_at (GthreeAttributeArray *array,
 gint32 *
 gthree_attribute_array_peek_int32 (GthreeAttributeArray *array)
 {
-  g_assert (array->type == GTHREE_ATTRIBUTE_TYPE_UINT32 || GTHREE_ATTRIBUTE_TYPE_INT32);
+  g_assert (array->type == GTHREE_ATTRIBUTE_TYPE_UINT32 || array->type == GTHREE_ATTRIBUTE_TYPE_INT32);
   return (gint32*)&array->data[0];
 }
 
@@ -301,13 +301,13 @@ gthree_attribute_array_peek_int32_at (GthreeAttributeArray *array,
   int n = array->stride * index + offset;
   g_assert (n < array->count * array->stride);
 
-  return gthree_attribute_array_peek_int32 (array) + array->stride * index;
+  return gthree_attribute_array_peek_int32 (array) + n;
 }
 
 guint32 *
 gthree_attribute_array_peek_uint32 (GthreeAttributeArray *array)
 {
-  g_assert (array->type == GTHREE_ATTRIBUTE_TYPE_UINT32 || GTHREE_ATTRIBUTE_TYPE_INT32);
+  g_assert (array->type == GTHREE_ATTRIBUTE_TYPE_UINT32 || array->type == GTHREE_ATTRIBUTE_TYPE_INT32);
   return (guint32*)&array->data[0];
 }
 
