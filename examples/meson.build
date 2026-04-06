@@ -27,6 +27,7 @@ examples = [
   'physical',
   'tokyo',
   'instancing',
+  'instancing-morph',
 ]
 
 install_subdir('textures',
