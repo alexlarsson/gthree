@@ -217,7 +217,6 @@ gthree_attribute_array_get_stride (GthreeAttributeArray *array)
 guint8 *
 gthree_attribute_array_peek_uint8 (GthreeAttributeArray *array)
 {
-  g_assert (array->type == GTHREE_ATTRIBUTE_TYPE_UINT8 || array->type == GTHREE_ATTRIBUTE_TYPE_INT8);
   return (guint8*)&array->data[0];
 }
 
@@ -235,7 +234,6 @@ gthree_attribute_array_peek_uint8_at (GthreeAttributeArray *array,
 gint8 *
 gthree_attribute_array_peek_int8 (GthreeAttributeArray *array)
 {
-  g_assert (array->type == GTHREE_ATTRIBUTE_TYPE_UINT8 || array->type == GTHREE_ATTRIBUTE_TYPE_INT8);
   return (gint8*)&array->data[0];
 }
 
