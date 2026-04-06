@@ -1703,6 +1703,10 @@ init_material (GthreeRenderer *renderer,
 
   gthree_material_set_params (material, &parameters);
 
+  parameters.opaque = !gthree_material_get_is_transparent (material) &&
+    gthree_material_get_blend_mode (material, NULL, NULL, NULL) == GTHREE_BLEND_NORMAL &&
+    !parameters.alpha_to_coverage;
+
   if (!parameters.env_map && priv->scene_environment &&
       (GTHREE_IS_MESH_STANDARD_MATERIAL (material) ||
        GTHREE_IS_MESH_LAMBERT_MATERIAL (material) ||
