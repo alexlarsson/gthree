@@ -1114,6 +1114,11 @@ parse_textures (GthreeLoader *loader, JsonObject *root, GError **error)
       if (json_object_has_member(texture_j, "sampler"))
         {
           sampler_idx = json_object_get_int_member (texture_j, "sampler");
+          if (sampler_idx < 0 || sampler_idx >= priv->samplers->len)
+            {
+              g_set_error (error, GTHREE_LOADER_ERROR, GTHREE_LOADER_ERROR_FAIL, "Texture refers to non-existing sampler %d", sampler_idx);
+              return FALSE;
+            }
           sampler = g_ptr_array_index (priv->samplers, sampler_idx);
         }
       else
@@ -1122,6 +1127,11 @@ parse_textures (GthreeLoader *loader, JsonObject *root, GError **error)
         }
 
       source_idx = json_object_get_int_member (texture_j, "source");
+      if (source_idx < 0 || source_idx >= priv->images->len)
+        {
+          g_set_error (error, GTHREE_LOADER_ERROR, GTHREE_LOADER_ERROR_FAIL, "Texture refers to non-existing image %d", source_idx);
+          return FALSE;
+        }
 
       image = g_ptr_array_index (priv->images, source_idx);
 
@@ -1143,6 +1153,12 @@ parse_texture_ref (GthreeLoader *loader, JsonObject *texture_def)
 {
   GthreeLoaderPrivate *priv = gthree_loader_get_instance_private (loader);
   gint64 index = json_object_get_int_member (texture_def, "index");
+
+  if (index < 0 || index >= priv->textures->len)
+    {
+      g_warning ("Texture reference has invalid index %" G_GINT64_FORMAT, index);
+      return NULL;
+    }
 
   GthreeTexture *texture = g_object_ref (g_ptr_array_index (priv->textures, index));
 
@@ -1605,6 +1621,11 @@ add_morph_targets (GthreeLoader *loader,
       if (has_morph_positions)
         {
           gint64 accessor_index = json_object_get_int_member (target, "POSITION");
+          if (accessor_index < 0 || accessor_index >= priv->accessors->len)
+            {
+              g_warning ("Morph target POSITION refers to non-existing accessor");
+              return;
+            }
           Accessor *accessor = g_ptr_array_index (priv->accessors, accessor_index);
           GthreeAttribute *position = gthree_geometry_get_position (geometry);
           GthreeAttribute *morph_position = gthree_attribute_copy (attribute_name, position);
@@ -1637,6 +1658,11 @@ add_morph_targets (GthreeLoader *loader,
       if (has_morph_normals)
         {
           gint64 accessor_index = json_object_get_int_member (target, "NORMAL");
+          if (accessor_index < 0 || accessor_index >= priv->accessors->len)
+            {
+              g_warning ("Morph target NORMAL refers to non-existing accessor");
+              return;
+            }
           Accessor *accessor = g_ptr_array_index (priv->accessors, accessor_index);
           GthreeAttribute *normal = gthree_geometry_get_normal (geometry);
           GthreeAttribute *morph_normal = gthree_attribute_copy (attribute_name, normal);
@@ -1705,6 +1731,11 @@ parse_meshes (GthreeLoader *loader, JsonObject *root, GError **error)
               JsonObject *extensions = json_object_get_object_member (primitive_j, "extensions");
               JsonObject *draco_ext = json_object_get_object_member (extensions, "KHR_draco_mesh_compression");
               int bv_index = json_object_get_int_member (draco_ext, "bufferView");
+              if (bv_index < 0 || bv_index >= priv->buffer_views->len)
+                {
+                  g_set_error (error, GTHREE_LOADER_ERROR, GTHREE_LOADER_ERROR_FAIL, "DRACO extension refers to non-existing bufferView %d", bv_index);
+                  return FALSE;
+                }
               BufferView *bv = g_ptr_array_index (priv->buffer_views, bv_index);
               gsize bv_len;
               const guint8 *bv_data = g_bytes_get_data (bv->bytes, &bv_len);
@@ -1722,6 +1753,11 @@ parse_meshes (GthreeLoader *loader, JsonObject *root, GError **error)
                   const char *attr_name = l->data;
                   gint64 accessor_index = json_object_get_int_member (attributes, attr_name);
                   const char *gthree_name = gltl_attribute_name_to_gthree (attr_name);
+                  if (accessor_index < 0 || accessor_index >= priv->accessors->len)
+                    {
+                      g_set_error (error, GTHREE_LOADER_ERROR, GTHREE_LOADER_ERROR_FAIL, "Mesh attribute refers to non-existing accessor");
+                      return FALSE;
+                    }
                   Accessor *accessor = g_ptr_array_index (priv->accessors, accessor_index);
                   GthreeAttribute *attribute;
 
@@ -1740,6 +1776,11 @@ parse_meshes (GthreeLoader *loader, JsonObject *root, GError **error)
                 {
                   int index_index = json_object_get_int_member (primitive_j, "indices");
                   g_autoptr(GthreeAttribute) attribute = NULL;
+                  if (index_index < 0 || index_index >= priv->accessors->len)
+                    {
+                      g_set_error (error, GTHREE_LOADER_ERROR, GTHREE_LOADER_ERROR_FAIL, "Mesh indices refers to non-existing accessor");
+                      return FALSE;
+                    }
                   Accessor *accessor = g_ptr_array_index (priv->accessors, index_index);
 
                   attribute = gthree_attribute_new_with_array_interleaved ("index",
@@ -1762,7 +1803,14 @@ parse_meshes (GthreeLoader *loader, JsonObject *root, GError **error)
             add_morph_targets (loader, primitive_j, primitive->geometry);
 
           if (material != -1)
-            primitive->material = g_object_ref (g_ptr_array_index (priv->materials, material));
+            {
+              if (material < 0 || material >= priv->materials->len)
+                {
+                  g_set_error (error, GTHREE_LOADER_ERROR, GTHREE_LOADER_ERROR_FAIL, "Primitive refers to non-existing material %d", material);
+                  return FALSE;
+                }
+              primitive->material = g_object_ref (g_ptr_array_index (priv->materials, material));
+            }
           else
             primitive->material = g_object_ref (priv->default_material);
 
@@ -2009,6 +2057,11 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
       if (json_object_has_member (node_j, "mesh"))
         {
           gint64 mesh_id = json_object_get_int_member (node_j, "mesh");
+          if (mesh_id < 0 || mesh_id >= priv->meshes->len)
+            {
+              g_set_error (error, GTHREE_LOADER_ERROR, GTHREE_LOADER_ERROR_FAIL, "Node refers to non-existing mesh");
+              return FALSE;
+            }
           Mesh *mesh_info = g_ptr_array_index (priv->meshes, mesh_id);
           Skin *skin = NULL;
           GthreeGroup *group = NULL;
@@ -2019,6 +2072,11 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
           if (json_object_has_member (node_j, "skin"))
             {
               gint64 skin_id = json_object_get_int_member (node_j, "skin");
+              if (skin_id < 0 || skin_id >= priv->skins->len)
+                {
+                  g_set_error (error, GTHREE_LOADER_ERROR, GTHREE_LOADER_ERROR_FAIL, "Node refers to non-existing skin");
+                  return FALSE;
+                }
 
               // This is used below for each primitive mesh
               skin = g_ptr_array_index (priv->skins, skin_id);
@@ -2152,6 +2210,11 @@ parse_nodes (GthreeLoader *loader, JsonObject *root, GFile *base_path, GError **
       if (json_object_has_member (node_j, "camera"))
         {
           gint64 camera_id = json_object_get_int_member (node_j, "camera");
+          if (camera_id < 0 || camera_id >= priv->cameras->len)
+            {
+              g_set_error (error, GTHREE_LOADER_ERROR, GTHREE_LOADER_ERROR_FAIL, "Node refers to non-existing camera");
+              return FALSE;
+            }
           Camera *camera = g_ptr_array_index (priv->cameras, camera_id);
           GthreeCamera *camera_node = NULL;
 
@@ -2276,6 +2339,11 @@ parse_animations (GthreeLoader *loader, JsonObject *root, GError **error)
 
           target_path = json_object_get_string_member (target_j, "path");
           target_node_index = json_object_get_int_member (target_j, "node");
+          if (target_node_index < 0 || target_node_index >= priv->nodes->len)
+            {
+              g_set_error (error, GTHREE_LOADER_ERROR, GTHREE_LOADER_ERROR_FAIL, "Animation target refers to non-existing node");
+              return FALSE;
+            }
           target_node = g_ptr_array_index (priv->nodes, target_node_index);
 
           if (strcmp (target_path, "scale") == 0)
@@ -2305,9 +2373,19 @@ parse_animations (GthreeLoader *loader, JsonObject *root, GError **error)
             }
 
           input_id = json_object_get_int_member (sampler_j, "input");
+          if (input_id < 0 || input_id >= priv->accessors->len)
+            {
+              g_set_error (error, GTHREE_LOADER_ERROR, GTHREE_LOADER_ERROR_FAIL, "Animation sampler input refers to non-existing accessor");
+              return FALSE;
+            }
           input_accessor = g_ptr_array_index (priv->accessors, input_id);
 
           output_id = json_object_get_int_member (sampler_j, "output");
+          if (output_id < 0 || output_id >= priv->accessors->len)
+            {
+              g_set_error (error, GTHREE_LOADER_ERROR, GTHREE_LOADER_ERROR_FAIL, "Animation sampler output refers to non-existing accessor");
+              return FALSE;
+            }
           output_accessor = g_ptr_array_index (priv->accessors, output_id);
 
           if (json_object_has_member (sampler_j, "interpolation"))
