@@ -147,6 +147,8 @@
     <file>shader_lib/pmrem_ggx_frag.glsl</file>
     <file>shader_lib/points_frag.glsl</file>
     <file>shader_lib/points_vert.glsl</file>
+    <file>shader_lib/sky_frag.glsl</file>
+    <file>shader_lib/sky_vert.glsl</file>
     <file>shader_lib/shadow_frag.glsl</file>
     <file>shader_lib/shadow_vert.glsl</file>
     <file>shader_lib/sprite_frag.glsl</file>

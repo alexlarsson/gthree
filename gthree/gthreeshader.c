@@ -678,8 +678,21 @@ static const char *convolution_defines[] = {
   NULL
 };
 
+static const char *sky_uniform_libs[] = { NULL };
+static float f0p005 = 0.005;
+static float f0p8 = 0.8;
+static float upv3[3] = { 0, 1, 0 };
+static GthreeUniformsDefinition sky_uniforms[] = {
+  {"turbidity", GTHREE_UNIFORM_TYPE_FLOAT, &f2},
+  {"rayleigh", GTHREE_UNIFORM_TYPE_FLOAT, &f1},
+  {"mieCoefficient", GTHREE_UNIFORM_TYPE_FLOAT, &f0p005},
+  {"mieDirectionalG", GTHREE_UNIFORM_TYPE_FLOAT, &f0p8},
+  {"sunPosition", GTHREE_UNIFORM_TYPE_VECTOR3, &zerov3},
+  {"up", GTHREE_UNIFORM_TYPE_VECTOR3, &upv3},
+};
+
 static GthreeShader *basic, *lambert, *phong, *toon, *standard, *matcap, *points, *dashed, *depth, *normal, *sprite, *background;
-static GthreeShader *cube, *equirect, *distance, *shadow, *physical, *copy, *convolution;
+static GthreeShader *cube, *equirect, *distance, *shadow, *physical, *copy, *convolution, *sky;
 
 static void
 gthree_shader_init_libs ()
@@ -806,6 +819,12 @@ gthree_shader_init_libs ()
                                                     convolution_defines,
                                                     "convolution_vert", "convolution_frag");
   gthree_shader_set_name (convolution, "convolution");
+
+  sky = gthree_shader_new_from_definitions (sky_uniform_libs,
+                                            sky_uniforms, G_N_ELEMENTS (sky_uniforms),
+                                            NULL,
+                                            "sky_vert", "sky_frag");
+  gthree_shader_set_name (sky, "sky");
 }
 
 /**
@@ -874,6 +893,9 @@ gthree_get_shader_from_library (const char *name)
 
   if (strcmp (name, "convolution") == 0)
     return convolution;
+
+  if (strcmp (name, "sky") == 0)
+    return sky;
 
   g_warning ("can't find shader library %s\n", name);
   return NULL;
