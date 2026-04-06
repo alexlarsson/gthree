@@ -3495,6 +3495,14 @@ before_render_bg_cube (GthreeObject                *object,
   gthree_object_set_world_matrix (object, &m);
 }
 
+static gboolean
+texture_is_cube_mapping (GthreeTexture *texture)
+{
+  GthreeMapping mapping = gthree_texture_get_mapping (texture);
+  return mapping == GTHREE_MAPPING_CUBE_REFLECTION ||
+         mapping == GTHREE_MAPPING_CUBE_REFRACTION;
+}
+
 static void
 gthree_renderer_render_background (GthreeRenderer *renderer,
                                    GthreeScene    *scene)
@@ -3529,7 +3537,7 @@ gthree_renderer_render_background (GthreeRenderer *renderer,
       clear (priv->auto_clear_color, priv->auto_clear_depth, priv->auto_clear_stencil);
     }
 
-  if (bg_texture && GTHREE_IS_CUBE_TEXTURE (bg_texture))
+  if (bg_texture && texture_is_cube_mapping (bg_texture))
     {
       if (priv->bg_box_mesh == NULL)
         {
@@ -3632,13 +3640,6 @@ gthree_renderer_render_background (GthreeRenderer *renderer,
     }
 }
 
-static gboolean
-texture_is_cube_mapping (GthreeTexture *texture)
-{
-  GthreeMapping mapping = gthree_texture_get_mapping (texture);
-  return mapping == GTHREE_MAPPING_CUBE_REFLECTION ||
-         mapping == GTHREE_MAPPING_CUBE_REFRACTION;
-}
 
 static int
 get_cube_texture_size (GthreeTexture *texture)
@@ -3789,6 +3790,15 @@ ensure_pmrem_textures (GthreeRenderer *renderer, GthreeScene *scene)
                                                         GthreeRenderListItem, i);
           GthreeTexture *env_tex = material_get_pmrem_env_map (item->material);
           if (env_tex && should_pmrem_convert (env_tex))
+            {
+              gthree_material_set_needs_update (item->material);
+              continue;
+            }
+
+          if (!env_tex && priv->scene_environment_pmrem &&
+              (GTHREE_IS_MESH_STANDARD_MATERIAL (item->material) ||
+               GTHREE_IS_MESH_LAMBERT_MATERIAL (item->material) ||
+               GTHREE_IS_MESH_PHONG_MATERIAL (item->material)))
             gthree_material_set_needs_update (item->material);
         }
     }
