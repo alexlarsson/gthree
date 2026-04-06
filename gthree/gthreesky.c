@@ -14,6 +14,12 @@ typedef struct {
   float mie_directional_g;
   graphene_vec3_t sun_position;
   graphene_vec3_t up;
+  float cloud_scale;
+  float cloud_speed;
+  float cloud_coverage;
+  float cloud_density;
+  float cloud_elevation;
+  float time;
 } GthreeSkyPrivate;
 
 enum {
@@ -24,6 +30,12 @@ enum {
   PROP_MIE_COEFFICIENT,
   PROP_MIE_DIRECTIONAL_G,
   PROP_SUN_POSITION,
+  PROP_CLOUD_SCALE,
+  PROP_CLOUD_SPEED,
+  PROP_CLOUD_COVERAGE,
+  PROP_CLOUD_DENSITY,
+  PROP_CLOUD_ELEVATION,
+  PROP_TIME,
 
   N_PROPS
 };
@@ -43,6 +55,12 @@ gthree_sky_init (GthreeSky *sky)
   priv->mie_directional_g = 0.8;
   graphene_vec3_init (&priv->sun_position, 0, 0, 0);
   graphene_vec3_init (&priv->up, 0, 1, 0);
+  priv->cloud_scale = 0.0002;
+  priv->cloud_speed = 0.0001;
+  priv->cloud_coverage = 0.4;
+  priv->cloud_density = 0.4;
+  priv->cloud_elevation = 0.5;
+  priv->time = 0.0;
 }
 
 static GObject *
@@ -117,6 +135,24 @@ gthree_sky_set_property (GObject *obj,
     case PROP_SUN_POSITION:
       gthree_sky_set_sun_position (sky, g_value_get_boxed (value));
       break;
+    case PROP_CLOUD_SCALE:
+      gthree_sky_set_cloud_scale (sky, g_value_get_float (value));
+      break;
+    case PROP_CLOUD_SPEED:
+      gthree_sky_set_cloud_speed (sky, g_value_get_float (value));
+      break;
+    case PROP_CLOUD_COVERAGE:
+      gthree_sky_set_cloud_coverage (sky, g_value_get_float (value));
+      break;
+    case PROP_CLOUD_DENSITY:
+      gthree_sky_set_cloud_density (sky, g_value_get_float (value));
+      break;
+    case PROP_CLOUD_ELEVATION:
+      gthree_sky_set_cloud_elevation (sky, g_value_get_float (value));
+      break;
+    case PROP_TIME:
+      gthree_sky_set_time (sky, g_value_get_float (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
     }
@@ -147,6 +183,24 @@ gthree_sky_get_property (GObject *obj,
       break;
     case PROP_SUN_POSITION:
       g_value_set_boxed (value, &priv->sun_position);
+      break;
+    case PROP_CLOUD_SCALE:
+      g_value_set_float (value, priv->cloud_scale);
+      break;
+    case PROP_CLOUD_SPEED:
+      g_value_set_float (value, priv->cloud_speed);
+      break;
+    case PROP_CLOUD_COVERAGE:
+      g_value_set_float (value, priv->cloud_coverage);
+      break;
+    case PROP_CLOUD_DENSITY:
+      g_value_set_float (value, priv->cloud_density);
+      break;
+    case PROP_CLOUD_ELEVATION:
+      g_value_set_float (value, priv->cloud_elevation);
+      break;
+    case PROP_TIME:
+      g_value_set_float (value, priv->time);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
@@ -205,6 +259,48 @@ gthree_sky_set_direct_uniforms (GthreeObject   *object,
       gthree_uniform_load (uni, renderer);
     }
 
+  uni = gthree_uniforms_lookup_from_string (uniforms, "cloudScale");
+  if (uni)
+    {
+      gthree_uniform_set_float (uni, priv->cloud_scale);
+      gthree_uniform_load (uni, renderer);
+    }
+
+  uni = gthree_uniforms_lookup_from_string (uniforms, "cloudSpeed");
+  if (uni)
+    {
+      gthree_uniform_set_float (uni, priv->cloud_speed);
+      gthree_uniform_load (uni, renderer);
+    }
+
+  uni = gthree_uniforms_lookup_from_string (uniforms, "cloudCoverage");
+  if (uni)
+    {
+      gthree_uniform_set_float (uni, priv->cloud_coverage);
+      gthree_uniform_load (uni, renderer);
+    }
+
+  uni = gthree_uniforms_lookup_from_string (uniforms, "cloudDensity");
+  if (uni)
+    {
+      gthree_uniform_set_float (uni, priv->cloud_density);
+      gthree_uniform_load (uni, renderer);
+    }
+
+  uni = gthree_uniforms_lookup_from_string (uniforms, "cloudElevation");
+  if (uni)
+    {
+      gthree_uniform_set_float (uni, priv->cloud_elevation);
+      gthree_uniform_load (uni, renderer);
+    }
+
+  uni = gthree_uniforms_lookup_from_string (uniforms, "time");
+  if (uni)
+    {
+      gthree_uniform_set_float (uni, priv->time);
+      gthree_uniform_load (uni, renderer);
+    }
+
   GTHREE_OBJECT_CLASS (gthree_sky_parent_class)->set_direct_uniforms (object, program, renderer);
 }
 
@@ -239,6 +335,30 @@ gthree_sky_class_init (GthreeSkyClass *klass)
   obj_props[PROP_SUN_POSITION] =
     g_param_spec_boxed ("sun-position", "Sun Position", "Sun Position",
                         GRAPHENE_TYPE_VEC3,
+                        G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_CLOUD_SCALE] =
+    g_param_spec_float ("cloud-scale", "Cloud Scale", "Cloud Scale",
+                        0.f, 1.f, 0.0002f,
+                        G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_CLOUD_SPEED] =
+    g_param_spec_float ("cloud-speed", "Cloud Speed", "Cloud Speed",
+                        0.f, 1.f, 0.0001f,
+                        G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_CLOUD_COVERAGE] =
+    g_param_spec_float ("cloud-coverage", "Cloud Coverage", "Cloud Coverage",
+                        0.f, 1.f, 0.4f,
+                        G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_CLOUD_DENSITY] =
+    g_param_spec_float ("cloud-density", "Cloud Density", "Cloud Density",
+                        0.f, 1.f, 0.4f,
+                        G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_CLOUD_ELEVATION] =
+    g_param_spec_float ("cloud-elevation", "Cloud Elevation", "Cloud Elevation",
+                        0.f, 1.f, 0.5f,
+                        G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_TIME] =
+    g_param_spec_float ("time", "Time", "Time",
+                        -G_MAXFLOAT, G_MAXFLOAT, 0.f,
                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, N_PROPS, obj_props);
@@ -342,4 +462,106 @@ gthree_sky_set_up (GthreeSky             *sky,
   GthreeSkyPrivate *priv = gthree_sky_get_instance_private (sky);
 
   priv->up = *up;
+}
+
+void
+gthree_sky_set_cloud_scale (GthreeSky *sky,
+                            float      cloud_scale)
+{
+  GthreeSkyPrivate *priv = gthree_sky_get_instance_private (sky);
+
+  priv->cloud_scale = cloud_scale;
+  g_object_notify_by_pspec (G_OBJECT (sky), obj_props[PROP_CLOUD_SCALE]);
+}
+
+float
+gthree_sky_get_cloud_scale (GthreeSky *sky)
+{
+  GthreeSkyPrivate *priv = gthree_sky_get_instance_private (sky);
+  return priv->cloud_scale;
+}
+
+void
+gthree_sky_set_cloud_speed (GthreeSky *sky,
+                            float      cloud_speed)
+{
+  GthreeSkyPrivate *priv = gthree_sky_get_instance_private (sky);
+
+  priv->cloud_speed = cloud_speed;
+  g_object_notify_by_pspec (G_OBJECT (sky), obj_props[PROP_CLOUD_SPEED]);
+}
+
+float
+gthree_sky_get_cloud_speed (GthreeSky *sky)
+{
+  GthreeSkyPrivate *priv = gthree_sky_get_instance_private (sky);
+  return priv->cloud_speed;
+}
+
+void
+gthree_sky_set_cloud_coverage (GthreeSky *sky,
+                               float      cloud_coverage)
+{
+  GthreeSkyPrivate *priv = gthree_sky_get_instance_private (sky);
+
+  priv->cloud_coverage = cloud_coverage;
+  g_object_notify_by_pspec (G_OBJECT (sky), obj_props[PROP_CLOUD_COVERAGE]);
+}
+
+float
+gthree_sky_get_cloud_coverage (GthreeSky *sky)
+{
+  GthreeSkyPrivate *priv = gthree_sky_get_instance_private (sky);
+  return priv->cloud_coverage;
+}
+
+void
+gthree_sky_set_cloud_density (GthreeSky *sky,
+                              float      cloud_density)
+{
+  GthreeSkyPrivate *priv = gthree_sky_get_instance_private (sky);
+
+  priv->cloud_density = cloud_density;
+  g_object_notify_by_pspec (G_OBJECT (sky), obj_props[PROP_CLOUD_DENSITY]);
+}
+
+float
+gthree_sky_get_cloud_density (GthreeSky *sky)
+{
+  GthreeSkyPrivate *priv = gthree_sky_get_instance_private (sky);
+  return priv->cloud_density;
+}
+
+void
+gthree_sky_set_cloud_elevation (GthreeSky *sky,
+                                float      cloud_elevation)
+{
+  GthreeSkyPrivate *priv = gthree_sky_get_instance_private (sky);
+
+  priv->cloud_elevation = cloud_elevation;
+  g_object_notify_by_pspec (G_OBJECT (sky), obj_props[PROP_CLOUD_ELEVATION]);
+}
+
+float
+gthree_sky_get_cloud_elevation (GthreeSky *sky)
+{
+  GthreeSkyPrivate *priv = gthree_sky_get_instance_private (sky);
+  return priv->cloud_elevation;
+}
+
+void
+gthree_sky_set_time (GthreeSky *sky,
+                     float      time)
+{
+  GthreeSkyPrivate *priv = gthree_sky_get_instance_private (sky);
+
+  priv->time = time;
+  g_object_notify_by_pspec (G_OBJECT (sky), obj_props[PROP_TIME]);
+}
+
+float
+gthree_sky_get_time (GthreeSky *sky)
+{
+  GthreeSkyPrivate *priv = gthree_sky_get_instance_private (sky);
+  return priv->time;
 }

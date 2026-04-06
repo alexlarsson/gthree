@@ -6,6 +6,38 @@ varying float vSunE;
 
 uniform float mieDirectionalG;
 uniform vec3 up;
+uniform float cloudScale;
+uniform float cloudSpeed;
+uniform float cloudCoverage;
+uniform float cloudDensity;
+uniform float cloudElevation;
+uniform float time;
+
+float hash( vec2 p ) {
+	return fract( sin( dot( p, vec2( 127.1, 311.7 ) ) ) * 43758.5453123 );
+}
+
+float noise( vec2 p ) {
+	vec2 i = floor( p );
+	vec2 f = fract( p );
+	f = f * f * ( 3.0 - 2.0 * f );
+	float a = hash( i );
+	float b = hash( i + vec2( 1.0, 0.0 ) );
+	float c = hash( i + vec2( 0.0, 1.0 ) );
+	float d = hash( i + vec2( 1.0, 1.0 ) );
+	return mix( mix( a, b, f.x ), mix( c, d, f.x ), f.y );
+}
+
+float fbm( vec2 p ) {
+	float value = 0.0;
+	float amplitude = 0.5;
+	for ( int i = 0; i < 5; i ++ ) {
+		value += amplitude * noise( p );
+		p *= 2.0;
+		amplitude *= 0.5;
+	}
+	return value;
+}
 
 const float pi = 3.141592653589793238462643383279502884197169;
 
@@ -60,6 +92,34 @@ void main() {
 	L0 += ( vSunE * 19000.0 * Fex ) * sundisk;
 
 	vec3 texColor = ( Lin + L0 ) * 0.04 + vec3( 0.0, 0.0003, 0.00075 );
+
+	if ( direction.y > 0.0 && cloudCoverage > 0.0 ) {
+
+		float elevation = mix( 1.0, 0.1, cloudElevation );
+		vec2 cloudUV = direction.xz / ( direction.y * elevation );
+		cloudUV *= cloudScale;
+		cloudUV += time * cloudSpeed;
+
+		float cloudNoise = fbm( cloudUV * 1000.0 );
+		cloudNoise += 0.5 * fbm( cloudUV * 2000.0 + 3.7 );
+		cloudNoise = cloudNoise * 0.5 + 0.5;
+
+		float cloudMask = smoothstep( 1.0 - cloudCoverage, 1.0 - cloudCoverage + 0.3, cloudNoise );
+
+		float horizonFade = smoothstep( 0.0, 0.1 + 0.2 * cloudElevation, direction.y );
+		cloudMask *= horizonFade;
+
+		float sunInfluence = dot( direction, vSunDirection ) * 0.5 + 0.5;
+		float daylight = max( 0.0, vSunDirection.y * 2.0 );
+
+		vec3 atmosphereColor = Lin * 0.04;
+		vec3 cloudColor = mix( vec3( 0.3 ), vec3( 1.0 ), daylight );
+		cloudColor = mix( cloudColor, atmosphereColor + vec3( 1.0 ), sunInfluence * 0.5 );
+		cloudColor *= vSunE * 0.00002;
+
+		texColor = mix( texColor, cloudColor, cloudMask * cloudDensity );
+
+	}
 
 	gl_FragColor = vec4( texColor, 1.0 );
 

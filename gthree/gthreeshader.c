@@ -681,6 +681,9 @@ static const char *convolution_defines[] = {
 static const char *sky_uniform_libs[] = { NULL };
 static float f0p005 = 0.005;
 static float f0p8 = 0.8;
+static float f0p0002 = 0.0002;
+static float f0p0001 = 0.0001;
+static float f0p4 = 0.4;
 static float upv3[3] = { 0, 1, 0 };
 static GthreeUniformsDefinition sky_uniforms[] = {
   {"turbidity", GTHREE_UNIFORM_TYPE_FLOAT, &f2},
@@ -689,6 +692,12 @@ static GthreeUniformsDefinition sky_uniforms[] = {
   {"mieDirectionalG", GTHREE_UNIFORM_TYPE_FLOAT, &f0p8},
   {"sunPosition", GTHREE_UNIFORM_TYPE_VECTOR3, &zerov3},
   {"up", GTHREE_UNIFORM_TYPE_VECTOR3, &upv3},
+  {"cloudScale", GTHREE_UNIFORM_TYPE_FLOAT, &f0p0002},
+  {"cloudSpeed", GTHREE_UNIFORM_TYPE_FLOAT, &f0p0001},
+  {"cloudCoverage", GTHREE_UNIFORM_TYPE_FLOAT, &f0p4},
+  {"cloudDensity", GTHREE_UNIFORM_TYPE_FLOAT, &f0p4},
+  {"cloudElevation", GTHREE_UNIFORM_TYPE_FLOAT, &fp5},
+  {"time", GTHREE_UNIFORM_TYPE_FLOAT, &f0},
 };
 
 static GthreeShader *basic, *lambert, *phong, *toon, *standard, *matcap, *points, *dashed, *depth, *normal, *sprite, *background;

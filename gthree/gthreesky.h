@@ -66,6 +66,42 @@ GTHREE_API
 void  gthree_sky_set_up               (GthreeSky             *sky,
                                        const graphene_vec3_t  *up);
 
+GTHREE_API
+void  gthree_sky_set_cloud_scale      (GthreeSky             *sky,
+                                       float                  cloud_scale);
+GTHREE_API
+float gthree_sky_get_cloud_scale      (GthreeSky             *sky);
+
+GTHREE_API
+void  gthree_sky_set_cloud_speed      (GthreeSky             *sky,
+                                       float                  cloud_speed);
+GTHREE_API
+float gthree_sky_get_cloud_speed      (GthreeSky             *sky);
+
+GTHREE_API
+void  gthree_sky_set_cloud_coverage   (GthreeSky             *sky,
+                                       float                  cloud_coverage);
+GTHREE_API
+float gthree_sky_get_cloud_coverage   (GthreeSky             *sky);
+
+GTHREE_API
+void  gthree_sky_set_cloud_density    (GthreeSky             *sky,
+                                       float                  cloud_density);
+GTHREE_API
+float gthree_sky_get_cloud_density    (GthreeSky             *sky);
+
+GTHREE_API
+void  gthree_sky_set_cloud_elevation  (GthreeSky             *sky,
+                                       float                  cloud_elevation);
+GTHREE_API
+float gthree_sky_get_cloud_elevation  (GthreeSky             *sky);
+
+GTHREE_API
+void  gthree_sky_set_time             (GthreeSky             *sky,
+                                       float                  time);
+GTHREE_API
+float gthree_sky_get_time             (GthreeSky             *sky);
+
 G_END_DECLS
 
 #endif /* __GTHREE_SKY_H__ */
