@@ -412,8 +412,14 @@ gthree_pmrem_generator_from_cubemap (GthreePMREMGenerator *generator,
 
     gthree_texture_bind (cube_texture, priv->renderer, 0, GL_TEXTURE_CUBE_MAP);
 
+    GLint old_min_filter;
+    glGetTexParameteriv (GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, &old_min_filter);
+    glTexParameteri (GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
     glBindVertexArray (priv->lod_vaos[0]);
     glDrawArrays (GL_TRIANGLES, 0, 36);
+
+    glTexParameteri (GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, old_min_filter);
   }
 
   /* Step 2: GGX filter for each subsequent LOD level */
