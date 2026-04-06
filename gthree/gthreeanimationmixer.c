@@ -801,7 +801,15 @@ gthree_animation_mixer_set_time (GthreeAnimationMixer  *mixer,
 {
   GthreeAnimationMixerPrivate *priv = gthree_animation_mixer_get_instance_private (mixer);
 
- priv->time = time;
+  priv->time = 0;
+
+  for (int i = 0; i < (int)priv->actions->len; i++)
+    {
+      GthreeAnimationAction *action = g_ptr_array_index (priv->actions, i);
+      gthree_animation_action_set_time (action, 0);
+    }
+
+  gthree_animation_mixer_update (mixer, time);
 }
 
 float
