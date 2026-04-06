@@ -227,6 +227,9 @@ gboolean                     gthree_object_check_layer                  (GthreeO
 GTHREE_API
 gboolean                     gthree_object_get_is_frustum_culled        (GthreeObject                *object);
 GTHREE_API
+void                         gthree_object_set_is_frustum_culled        (GthreeObject                *object,
+                                                                         gboolean                     frustum_culled);
+GTHREE_API
 void                         gthree_object_raycast                      (GthreeObject                *object,
                                                                          GthreeRaycaster             *raycaster,
                                                                          GPtrArray                   *intersections);

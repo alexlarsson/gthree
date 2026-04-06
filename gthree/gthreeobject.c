@@ -494,6 +494,15 @@ gthree_object_get_is_frustum_culled (GthreeObject *object)
   return priv->frustum_culled;
 }
 
+void
+gthree_object_set_is_frustum_culled (GthreeObject *object,
+                                     gboolean      frustum_culled)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  priv->frustum_culled = !!frustum_culled;
+}
+
 gboolean
 gthree_object_is_in_frustum (GthreeObject *object,
                              const graphene_frustum_t *frustum)
