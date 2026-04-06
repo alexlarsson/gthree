@@ -5,6 +5,7 @@
 #include "gthreeobjectprivate.h"
 #include "gthreemesh.h"
 #include "gthreeskinnedmesh.h"
+#include "gthreeinstancedmesh.h"
 #include "gthreelinesegments.h"
 #include "gthreeshader.h"
 #include "gthreematerial.h"
@@ -59,7 +60,7 @@ typedef struct {
   float z;
 } GthreeRenderListItem;
 
-#define MAX_VAO_ATTRIBUTES 8
+#define MAX_VAO_ATTRIBUTES 16
 
 typedef struct {
   GthreeGeometry *geometry; /* non-owning */
@@ -1773,6 +1774,9 @@ init_material (GthreeRenderer *renderer,
   parameters.num_spot_light_shadows = priv->light_setup.spot_light_shadows->len;
 
   parameters.skinning = GTHREE_IS_MESH_MATERIAL (material) && gthree_mesh_material_get_skinning (GTHREE_MESH_MATERIAL (material));
+  parameters.instancing = GTHREE_IS_INSTANCED_MESH (object);
+  parameters.instancing_color = GTHREE_IS_INSTANCED_MESH (object) &&
+    gthree_instanced_mesh_get_instance_color (GTHREE_INSTANCED_MESH (object)) != NULL;
 
   parameters.morph_targets = GTHREE_IS_MESH_MATERIAL (material) && gthree_mesh_material_get_morph_targets (GTHREE_MESH_MATERIAL (material));
   parameters.morph_normals = GTHREE_IS_MESH_MATERIAL (material) && gthree_mesh_material_get_morph_normals (GTHREE_MESH_MATERIAL (material));
@@ -3025,10 +3029,42 @@ set_program (GthreeRenderer *renderer,
 }
 
 static void
+bind_instance_attribute (GthreeRenderer *renderer,
+                         GthreeAttribute *attribute,
+                         int location,
+                         int item_size,
+                         guint *out_buffers,
+                         int *n_buffers_p)
+{
+  int buffer = gthree_attribute_get_gl_buffer (attribute, renderer);
+  int type = gthree_attribute_get_gl_type (attribute);
+  int bytes_per_element = gthree_attribute_get_gl_bytes_per_element (attribute);
+  int n_vecs = (item_size + 3) / 4;
+
+  glBindBuffer (GL_ARRAY_BUFFER, buffer);
+
+  for (int i = 0; i < n_vecs; i++)
+    {
+      int loc = location + i;
+      int vec_size = MIN (4, item_size - i * 4);
+
+      glEnableVertexAttribArray (loc);
+      glVertexAttribPointer (loc, vec_size, type, FALSE,
+                             item_size * bytes_per_element,
+                             GINT_TO_POINTER (i * 4 * bytes_per_element));
+      glVertexAttribDivisor (loc, 1);
+    }
+
+  if (out_buffers && *n_buffers_p < MAX_VAO_ATTRIBUTES)
+    out_buffers[(*n_buffers_p)++] = buffer;
+}
+
+static void
 bind_vertex_attributes (GthreeRenderer *renderer,
                         GthreeMaterial *material,
                         GthreeProgram *program,
                         GthreeGeometry *geometry,
+                        GthreeObject *object,
                         guint *out_buffers,
                         int *out_n_buffers)
 {
@@ -3071,6 +3107,34 @@ bind_vertex_attributes (GthreeRenderer *renderer,
             {
               gthree_material_load_default_attribute (material, program_attribute, nameq);
             }
+        }
+    }
+
+  if (GTHREE_IS_INSTANCED_MESH (object))
+    {
+      GthreeInstancedMesh *instanced = GTHREE_INSTANCED_MESH (object);
+      GthreeAttribute *instance_matrix = gthree_instanced_mesh_get_instance_matrix (instanced);
+      GthreeAttribute *instance_color = gthree_instanced_mesh_get_instance_color (instanced);
+      gpointer loc_ptr;
+
+      if (instance_matrix &&
+          g_hash_table_lookup_extended (program_attributes,
+                                        GINT_TO_POINTER (g_quark_from_static_string ("instanceMatrix")),
+                                        NULL, &loc_ptr))
+        {
+          int loc = GPOINTER_TO_INT (loc_ptr);
+          if (loc >= 0)
+            bind_instance_attribute (renderer, instance_matrix, loc, 16, out_buffers, &n_buffers);
+        }
+
+      if (instance_color &&
+          g_hash_table_lookup_extended (program_attributes,
+                                        GINT_TO_POINTER (g_quark_from_static_string ("instanceColor")),
+                                        NULL, &loc_ptr))
+        {
+          int loc = GPOINTER_TO_INT (loc_ptr);
+          if (loc >= 0)
+            bind_instance_attribute (renderer, instance_color, loc, 3, out_buffers, &n_buffers);
         }
     }
 
@@ -3123,47 +3187,63 @@ setup_vertex_attributes (GthreeRenderer *renderer,
                          GthreeMaterial *material,
                          GthreeProgram *program,
                          GthreeGeometry *geometry,
+                         GthreeObject *object,
                          gboolean wireframe,
                          GthreeAttribute *index)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
-  VaoKey lookup_key = { geometry, program, wireframe };
-  VaoEntry *entry;
+  gboolean is_instanced = GTHREE_IS_INSTANCED_MESH (object);
   gboolean need_setup = FALSE;
+  VaoEntry *entry = NULL;
 
-  entry = g_hash_table_lookup (priv->vao_cache, &lookup_key);
-
-  if (entry != NULL)
+  if (is_instanced)
     {
-      if (!vao_entry_is_valid (entry, renderer, material, program, geometry, index))
-        need_setup = TRUE;
+      /* Skip VAO cache for instanced meshes — instance attributes
+         have divisors that aren't tracked in the cache yet. */
+      unbind_vao (renderer);
+      need_setup = TRUE;
     }
   else
     {
-      entry = g_new0 (VaoEntry, 1);
-      entry->key = lookup_key;
-      glGenVertexArrays (1, &entry->vao);
-      g_hash_table_insert (priv->vao_cache, &entry->key, entry);
+      VaoKey lookup_key = { geometry, program, wireframe };
 
-      if (g_hash_table_add (priv->vao_geometries, geometry))
-        g_object_weak_ref (G_OBJECT (geometry), vao_cache_remove_for_geometry, renderer);
+      entry = g_hash_table_lookup (priv->vao_cache, &lookup_key);
 
-      need_setup = TRUE;
-    }
+      if (entry != NULL)
+        {
+          if (!vao_entry_is_valid (entry, renderer, material, program, geometry, index))
+            need_setup = TRUE;
+        }
+      else
+        {
+          entry = g_new0 (VaoEntry, 1);
+          entry->key = lookup_key;
+          glGenVertexArrays (1, &entry->vao);
+          g_hash_table_insert (priv->vao_cache, &entry->key, entry);
 
-  if (entry->vao != priv->bound_vao)
-    {
-      glBindVertexArray (entry->vao);
-      priv->bound_vao = entry->vao;
+          if (g_hash_table_add (priv->vao_geometries, geometry))
+            g_object_weak_ref (G_OBJECT (geometry), vao_cache_remove_for_geometry, renderer);
+
+          need_setup = TRUE;
+        }
+
+      if (entry->vao != priv->bound_vao)
+        {
+          glBindVertexArray (entry->vao);
+          priv->bound_vao = entry->vao;
+        }
     }
 
   if (need_setup)
     {
       guint index_buffer = index ? (guint) gthree_attribute_get_gl_buffer (index, renderer) : 0;
 
-      bind_vertex_attributes (renderer, material, program, geometry,
-                              entry->cached_buffers, &entry->n_cached_buffers);
-      entry->cached_index_buffer = index_buffer;
+      bind_vertex_attributes (renderer, material, program, geometry, object,
+                              entry ? entry->cached_buffers : NULL,
+                              entry ? &entry->n_cached_buffers : NULL);
+
+      if (entry)
+        entry->cached_index_buffer = index_buffer;
 
       if (index)
         glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, index_buffer);
@@ -3276,7 +3356,7 @@ render_item (GthreeRenderer *renderer,
       range_factor = 2;
     }
 
-  setup_vertex_attributes (renderer, material, program, geometry, wireframe, index);
+  setup_vertex_attributes (renderer, material, program, geometry, object, wireframe, index);
 
   data_count = -1;
 
@@ -3350,7 +3430,26 @@ render_item (GthreeRenderer *renderer,
       draw_mode = GL_POINTS;
     }
 
-  if (index)
+  if (GTHREE_IS_INSTANCED_MESH (object))
+    {
+      int instance_count = gthree_instanced_mesh_get_count (GTHREE_INSTANCED_MESH (object));
+
+      if (index)
+        {
+          int index_type = gthree_attribute_get_gl_type (index);
+          int index_bytes_per_element = gthree_attribute_get_gl_bytes_per_element (index);
+          int index_offset = gthree_attribute_get_item_offset (index);
+
+          glDrawElementsInstanced (draw_mode, draw_count, index_type,
+                                   GINT_TO_POINTER ((index_offset + draw_start) * index_bytes_per_element),
+                                   instance_count);
+        }
+      else
+        {
+          glDrawArraysInstanced (draw_mode, draw_start, draw_count, instance_count);
+        }
+    }
+  else if (index)
     {
       int index_type = gthree_attribute_get_gl_type (index);
       int index_bytes_per_element = gthree_attribute_get_gl_bytes_per_element (index);

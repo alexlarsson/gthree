@@ -605,6 +605,11 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
       if (parameters->skinning)
         g_string_append (vertex, "#define USE_SKINNING\n");
 
+      if (parameters->instancing)
+        g_string_append (vertex, "#define USE_INSTANCING\n");
+      if (parameters->instancing_color)
+        g_string_append (vertex, "#define USE_INSTANCING_COLOR\n");
+
       if (parameters->morph_targets)
         {
           g_string_append (vertex, "#define USE_MORPHTARGETS\n");
@@ -790,6 +795,8 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
         g_string_append (fragment, "#define USE_TANGENT\n");
       if (parameters->vertex_colors)
         g_string_append (fragment, "#define USE_COLOR\n");
+      if (parameters->instancing_color)
+        g_string_append (fragment, "#define USE_INSTANCING_COLOR\n");
       if (parameters->vertex_alphas)
         g_string_append (fragment, "#define USE_COLOR_ALPHA\n");
       if (active_channels[0])

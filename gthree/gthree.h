@@ -19,6 +19,7 @@
 #include <gthree/gthreematerial.h>
 #include <gthree/gthreemesh.h>
 #include <gthree/gthreeskinnedmesh.h>
+#include <gthree/gthreeinstancedmesh.h>
 #include <gthree/gthreeobject.h>
 #include <gthree/gthreegroup.h>
 #include <gthree/gthreerenderer.h>
