@@ -65,6 +65,7 @@ typedef struct {
 typedef struct {
   GthreeGeometry *geometry; /* non-owning */
   GthreeProgram *program;   /* non-owning */
+  GthreeObject *object;     /* non-owning, non-NULL for instanced meshes */
   gboolean wireframe;
 } VaoKey;
 
@@ -80,14 +81,14 @@ static guint
 vao_key_hash (gconstpointer v)
 {
   const VaoKey *key = v;
-  return g_direct_hash (key->geometry) ^ g_direct_hash (key->program) ^ key->wireframe;
+  return g_direct_hash (key->geometry) ^ g_direct_hash (key->program) ^ g_direct_hash (key->object) ^ key->wireframe;
 }
 
 static gboolean
 vao_key_equal (gconstpointer v1, gconstpointer v2)
 {
   const VaoKey *a = v1, *b = v2;
-  return a->geometry == b->geometry && a->program == b->program && a->wireframe == b->wireframe;
+  return a->geometry == b->geometry && a->program == b->program && a->object == b->object && a->wireframe == b->wireframe;
 }
 
 struct _GthreeRenderList {
@@ -465,21 +466,22 @@ unbind_vao (GthreeRenderer *renderer)
 }
 
 static void
-vao_cache_remove_for_geometry (gpointer data,
-                               GObject *where_the_geometry_was)
+vao_cache_remove_for_object (gpointer data,
+                             GObject *where_the_object_was)
 {
   GthreeRenderer *renderer = data;
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
   GHashTableIter iter;
   gpointer value;
 
-  g_hash_table_remove (priv->vao_geometries, where_the_geometry_was);
+  g_hash_table_remove (priv->vao_geometries, where_the_object_was);
 
   g_hash_table_iter_init (&iter, priv->vao_cache);
   while (g_hash_table_iter_next (&iter, NULL, &value))
     {
       VaoEntry *entry = value;
-      if ((gpointer) entry->key.geometry == (gpointer) where_the_geometry_was)
+      if ((gpointer) entry->key.geometry == where_the_object_was ||
+          (gpointer) entry->key.object == where_the_object_was)
         {
           gthree_renderer_lazy_delete (renderer, GTHREE_RESOURCE_KIND_VERTEX_ARRAY, entry->vao);
           if (priv->bound_vao == entry->vao)
@@ -508,7 +510,7 @@ vao_cache_unrealize (GthreeRenderer *renderer)
 
   g_hash_table_iter_init (&iter, priv->vao_geometries);
   while (g_hash_table_iter_next (&iter, &key, NULL))
-    g_object_weak_unref (G_OBJECT (key), vao_cache_remove_for_geometry, renderer);
+    g_object_weak_unref (G_OBJECT (key), vao_cache_remove_for_object, renderer);
   g_hash_table_remove_all (priv->vao_geometries);
 
   priv->bound_vao = 0;
@@ -3153,6 +3155,7 @@ vao_entry_is_valid (VaoEntry *entry,
                     GthreeMaterial *material,
                     GthreeProgram *program,
                     GthreeGeometry *geometry,
+                    GthreeObject *object,
                     GthreeAttribute *index)
 {
   GHashTable *program_attributes;
@@ -3184,6 +3187,28 @@ vao_entry_is_valid (VaoEntry *entry,
         }
     }
 
+  if (GTHREE_IS_INSTANCED_MESH (object))
+    {
+      GthreeInstancedMesh *instanced = GTHREE_INSTANCED_MESH (object);
+      GthreeAttribute *instance_matrix = gthree_instanced_mesh_get_instance_matrix (instanced);
+      GthreeAttribute *instance_color = gthree_instanced_mesh_get_instance_color (instanced);
+
+      if (instance_matrix)
+        {
+          guint buffer = gthree_attribute_get_gl_buffer (instance_matrix, renderer);
+          if (n >= entry->n_cached_buffers || buffer != entry->cached_buffers[n])
+            return FALSE;
+          n++;
+        }
+      if (instance_color)
+        {
+          guint buffer = gthree_attribute_get_gl_buffer (instance_color, renderer);
+          if (n >= entry->n_cached_buffers || buffer != entry->cached_buffers[n])
+            return FALSE;
+          n++;
+        }
+    }
+
   return n == entry->n_cached_buffers;
 }
 
@@ -3201,43 +3226,38 @@ setup_vertex_attributes (GthreeRenderer *renderer,
   gboolean need_setup = FALSE;
   VaoEntry *entry = NULL;
 
-  if (is_instanced)
-    {
-      /* Skip VAO cache for instanced meshes — instance attributes
-         have divisors that aren't tracked in the cache yet. */
-      unbind_vao (renderer);
-      need_setup = TRUE;
-    }
-  else
-    {
-      VaoKey lookup_key = { geometry, program, wireframe };
+  {
+    VaoKey lookup_key = { geometry, program, is_instanced ? object : NULL, wireframe };
 
-      entry = g_hash_table_lookup (priv->vao_cache, &lookup_key);
+    entry = g_hash_table_lookup (priv->vao_cache, &lookup_key);
 
-      if (entry != NULL)
-        {
-          if (!vao_entry_is_valid (entry, renderer, material, program, geometry, index))
-            need_setup = TRUE;
-        }
-      else
-        {
-          entry = g_new0 (VaoEntry, 1);
-          entry->key = lookup_key;
-          glGenVertexArrays (1, &entry->vao);
-          g_hash_table_insert (priv->vao_cache, &entry->key, entry);
-
-          if (g_hash_table_add (priv->vao_geometries, geometry))
-            g_object_weak_ref (G_OBJECT (geometry), vao_cache_remove_for_geometry, renderer);
-
+    if (entry != NULL)
+      {
+        if (!vao_entry_is_valid (entry, renderer, material, program, geometry, object, index))
           need_setup = TRUE;
-        }
+      }
+    else
+      {
+        entry = g_new0 (VaoEntry, 1);
+        entry->key = lookup_key;
+        glGenVertexArrays (1, &entry->vao);
+        g_hash_table_insert (priv->vao_cache, &entry->key, entry);
 
-      if (entry->vao != priv->bound_vao)
-        {
-          glBindVertexArray (entry->vao);
-          priv->bound_vao = entry->vao;
-        }
-    }
+        if (g_hash_table_add (priv->vao_geometries, geometry))
+          g_object_weak_ref (G_OBJECT (geometry), vao_cache_remove_for_object, renderer);
+
+        if (is_instanced && g_hash_table_add (priv->vao_geometries, object))
+          g_object_weak_ref (G_OBJECT (object), vao_cache_remove_for_object, renderer);
+
+        need_setup = TRUE;
+      }
+
+    if (entry->vao != priv->bound_vao)
+      {
+        glBindVertexArray (entry->vao);
+        priv->bound_vao = entry->vao;
+      }
+  }
 
   if (need_setup)
     {
