@@ -8,6 +8,7 @@
 #include <gthree/gthreekeyframetrack.h>
 #include <gthree/gthreerendertarget.h>
 #include <gthree/gthreemesh.h>
+#include <gthree/gthreeinstancedmesh.h>
 #include <gthree/gthreesprite.h>
 #include <gthree/gthreelightshadow.h>
 #include <gthree/gthreedirectionallightshadow.h>
@@ -106,6 +107,7 @@ struct  _GthreeProgramParameters {
   guint skinning : 1;
   guint instancing : 1;
   guint instancing_color : 1;
+  guint instancing_morph : 1;
   guint morph_targets : 1;
   guint morph_normals : 1;
   guint morph_colors : 1;
@@ -406,6 +408,8 @@ void gthree_renderer_lazy_delete (GthreeRenderer *renderer,
                                   guint             id);
 
 GthreeGeometry *gthree_sprite_get_geometry (GthreeSprite *sprite);
+
+guint gthree_instanced_mesh_get_morph_texture (GthreeInstancedMesh *mesh);
 
 static inline float
 gthree_srgb_eotf (float c)

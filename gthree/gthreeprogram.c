@@ -609,6 +609,8 @@ gthree_program_new (GthreeShader *shader, GthreeProgramParameters *parameters, G
         g_string_append (vertex, "#define USE_INSTANCING\n");
       if (parameters->instancing_color)
         g_string_append (vertex, "#define USE_INSTANCING_COLOR\n");
+      if (parameters->instancing_morph)
+        g_string_append (vertex, "#define USE_INSTANCING_MORPH\n");
 
       if (parameters->morph_targets)
         {

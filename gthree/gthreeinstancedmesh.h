@@ -58,6 +58,10 @@ GTHREE_API
 GthreeAttribute *    gthree_instanced_mesh_get_instance_matrix (GthreeInstancedMesh *mesh);
 GTHREE_API
 GthreeAttribute *    gthree_instanced_mesh_get_instance_color  (GthreeInstancedMesh *mesh);
+GTHREE_API
+void                 gthree_instanced_mesh_set_morph_at        (GthreeInstancedMesh *mesh,
+                                                                int                  index,
+                                                                GthreeMesh          *source);
 
 G_END_DECLS
 

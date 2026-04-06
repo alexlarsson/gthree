@@ -1777,6 +1777,8 @@ init_material (GthreeRenderer *renderer,
   parameters.instancing = GTHREE_IS_INSTANCED_MESH (object);
   parameters.instancing_color = GTHREE_IS_INSTANCED_MESH (object) &&
     gthree_instanced_mesh_get_instance_color (GTHREE_INSTANCED_MESH (object)) != NULL;
+  parameters.instancing_morph = GTHREE_IS_INSTANCED_MESH (object) &&
+    gthree_instanced_mesh_get_morph_texture (GTHREE_INSTANCED_MESH (object)) != 0;
 
   parameters.morph_targets = GTHREE_IS_MESH_MATERIAL (material) && gthree_mesh_material_get_morph_targets (GTHREE_MESH_MATERIAL (material));
   parameters.morph_normals = GTHREE_IS_MESH_MATERIAL (material) && gthree_mesh_material_get_morph_normals (GTHREE_MESH_MATERIAL (material));
@@ -3255,6 +3257,7 @@ setup_vertex_attributes (GthreeRenderer *renderer,
 
 static void
 update_morphtargets (GthreeRenderer *renderer,
+                     GthreeObject *object,
                      GthreeMesh *mesh,
                      GthreeGeometry *geometry,
                      GthreeMeshMaterial *material,
@@ -3273,17 +3276,44 @@ update_morphtargets (GthreeRenderer *renderer,
 
   morph_target_count = gthree_geometry_get_morph_target_count (geometry);
 
-  float *influences_array = g_new0 (float, morph_target_count);
-  base_influence = 1.0f;
-
-  for (int i = 0; i < morph_target_count && i < (int)object_influences->len; i++)
+  if (GTHREE_IS_INSTANCED_MESH (object))
     {
-      float v = g_array_index (object_influences, float, i);
-      influences_array[i] = v;
-      base_influence -= v;
+      guint instance_morph_tex = gthree_instanced_mesh_get_morph_texture (GTHREE_INSTANCED_MESH (object));
+      if (instance_morph_tex != 0)
+        {
+          guint tex_unit = gthree_renderer_allocate_texture_unit (renderer);
+          glActiveTexture (GL_TEXTURE0 + tex_unit);
+          glBindTexture (GL_TEXTURE_2D, instance_morph_tex);
+
+          loc = gthree_program_lookup_uniform_location_from_string (program, "morphTexture");
+          if (loc >= 0)
+            glUniform1i (loc, tex_unit);
+        }
     }
-  if (base_influence < 0.0f)
-    base_influence = 0.0f;
+  else
+    {
+      float *influences_array = g_new0 (float, morph_target_count);
+      base_influence = 1.0f;
+
+      for (int i = 0; i < morph_target_count && i < (int)object_influences->len; i++)
+        {
+          float v = g_array_index (object_influences, float, i);
+          influences_array[i] = v;
+          base_influence -= v;
+        }
+      if (base_influence < 0.0f)
+        base_influence = 0.0f;
+
+      loc = gthree_program_lookup_uniform_location_from_string (program, "morphTargetBaseInfluence");
+      if (loc >= 0)
+        glUniform1f (loc, base_influence);
+
+      loc = gthree_program_lookup_uniform_location_from_string (program, "morphTargetInfluences[0]");
+      if (loc >= 0)
+        glUniform1fv (loc, morph_target_count, influences_array);
+
+      g_free (influences_array);
+    }
 
   guint tex_unit = gthree_renderer_allocate_texture_unit (renderer);
   glActiveTexture (GL_TEXTURE0 + tex_unit);
@@ -3298,16 +3328,6 @@ update_morphtargets (GthreeRenderer *renderer,
     glUniform2i (loc,
                  gthree_geometry_get_morph_texture_width (geometry),
                  gthree_geometry_get_morph_texture_height (geometry));
-
-  loc = gthree_program_lookup_uniform_location_from_string (program, "morphTargetBaseInfluence");
-  if (loc >= 0)
-    glUniform1f (loc, base_influence);
-
-  loc = gthree_program_lookup_uniform_location_from_string (program, "morphTargetInfluences[0]");
-  if (loc >= 0)
-    glUniform1fv (loc, morph_target_count, influences_array);
-
-  g_free (influences_array);
 }
 
 static void
@@ -3340,7 +3360,7 @@ render_item (GthreeRenderer *renderer,
       gthree_mesh_has_morph_targets (GTHREE_MESH (object)) &&
       GTHREE_IS_MESH_MATERIAL (material))
     {
-      update_morphtargets (renderer, GTHREE_MESH (object), geometry, GTHREE_MESH_MATERIAL (material), program);
+      update_morphtargets (renderer, object, GTHREE_MESH (object), geometry, GTHREE_MESH_MATERIAL (material), program);
     }
 
   index = gthree_geometry_get_index (geometry);

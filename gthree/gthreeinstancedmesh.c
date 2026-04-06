@@ -10,6 +10,12 @@ typedef struct {
   int allocated_count;
   GthreeAttribute *instance_matrix;
   GthreeAttribute *instance_color;
+
+  float *morph_texture_data;
+  guint morph_texture;
+  int morph_texture_width;
+  int morph_texture_height;
+  gboolean morph_texture_needs_update;
 } GthreeInstancedMeshPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeInstancedMesh, gthree_instanced_mesh, GTHREE_TYPE_MESH)
@@ -36,6 +42,8 @@ gthree_instanced_mesh_new (GthreeGeometry *geometry,
                        "geometry", geometry,
                        "materials", materials,
                        NULL);
+
+  gthree_mesh_update_morph_targets (GTHREE_MESH (mesh));
 
   priv = gthree_instanced_mesh_get_instance_private (mesh);
   priv->count = count;
@@ -68,6 +76,12 @@ gthree_instanced_mesh_finalize (GObject *obj)
 
   g_clear_object (&priv->instance_matrix);
   g_clear_object (&priv->instance_color);
+  g_clear_pointer (&priv->morph_texture_data, g_free);
+  if (priv->morph_texture != 0)
+    {
+      glDeleteTextures (1, &priv->morph_texture);
+      priv->morph_texture = 0;
+    }
 
   G_OBJECT_CLASS (gthree_instanced_mesh_parent_class)->finalize (obj);
 }
@@ -195,4 +209,72 @@ gthree_instanced_mesh_get_instance_color (GthreeInstancedMesh *mesh)
 {
   GthreeInstancedMeshPrivate *priv = gthree_instanced_mesh_get_instance_private (mesh);
   return priv->instance_color;
+}
+
+void
+gthree_instanced_mesh_set_morph_at (GthreeInstancedMesh *mesh,
+                                    int                  index,
+                                    GthreeMesh          *source)
+{
+  GthreeInstancedMeshPrivate *priv = gthree_instanced_mesh_get_instance_private (mesh);
+  GArray *influences = gthree_mesh_get_morph_targets (source);
+
+  g_return_if_fail (index >= 0 && index < priv->allocated_count);
+  g_return_if_fail (influences != NULL && influences->len > 0);
+
+  int len = influences->len + 1;
+
+  if (priv->morph_texture_data == NULL)
+    {
+      priv->morph_texture_width = len;
+      priv->morph_texture_height = priv->allocated_count;
+      priv->morph_texture_data = g_new0 (float, len * priv->allocated_count);
+    }
+
+  float morph_influences_sum = 0;
+  for (int i = 0; i < (int)influences->len; i++)
+    morph_influences_sum += g_array_index (influences, float, i);
+
+  float base_influence = 1.0f - morph_influences_sum;
+  if (base_influence < 0.0f)
+    base_influence = 0.0f;
+
+  int data_index = len * index;
+  priv->morph_texture_data[data_index] = base_influence;
+  for (int i = 0; i < (int)influences->len; i++)
+    priv->morph_texture_data[data_index + 1 + i] = g_array_index (influences, float, i);
+
+  priv->morph_texture_needs_update = TRUE;
+}
+
+guint
+gthree_instanced_mesh_get_morph_texture (GthreeInstancedMesh *mesh)
+{
+  GthreeInstancedMeshPrivate *priv = gthree_instanced_mesh_get_instance_private (mesh);
+
+  if (priv->morph_texture_data == NULL)
+    return 0;
+
+  if (priv->morph_texture == 0)
+    {
+      glGenTextures (1, &priv->morph_texture);
+      glBindTexture (GL_TEXTURE_2D, priv->morph_texture);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      priv->morph_texture_needs_update = TRUE;
+    }
+
+  if (priv->morph_texture_needs_update)
+    {
+      glBindTexture (GL_TEXTURE_2D, priv->morph_texture);
+      glTexImage2D (GL_TEXTURE_2D, 0, GL_R32F,
+                    priv->morph_texture_width, priv->morph_texture_height,
+                    0, GL_RED, GL_FLOAT, priv->morph_texture_data);
+      glBindTexture (GL_TEXTURE_2D, 0);
+      priv->morph_texture_needs_update = FALSE;
+    }
+
+  return priv->morph_texture;
 }
