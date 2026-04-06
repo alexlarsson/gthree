@@ -2,6 +2,7 @@
 #define __GTHREE_PRIVATE_H__
 
 #include <gthree/gthreeobject.h>
+#include "gthreerawtexture.h"
 #include <gthree/gthreelight.h>
 #include <gthree/gthreegeometry.h>
 #include <gthree/gthreeinterpolant.h>
@@ -257,7 +258,7 @@ const graphene_rect_t * gthree_render_target_get_viewport (GthreeRenderTarget *t
 
 
 void gthree_geometry_ensure_morph_texture (GthreeGeometry *geometry);
-guint gthree_geometry_get_morph_texture (GthreeGeometry *geometry);
+GthreeRawTexture *gthree_geometry_get_morph_texture (GthreeGeometry *geometry);
 int gthree_geometry_get_morph_texture_width (GthreeGeometry *geometry);
 int gthree_geometry_get_morph_texture_height (GthreeGeometry *geometry);
 int gthree_geometry_get_morph_target_count (GthreeGeometry *geometry);
@@ -280,7 +281,7 @@ void gthree_light_set_shadow (GthreeLight   *light,
 void gthree_skeleton_update  (GthreeSkeleton *skeleton);
 float *gthree_skeleton_get_bone_matrices (GthreeSkeleton *skeleton);
 const graphene_matrix_t *gthree_skeleton_get_bone_inverse (GthreeSkeleton *skeleton, int index);
-guint gthree_skeleton_get_bone_texture (GthreeSkeleton *skeleton);
+GthreeRawTexture *gthree_skeleton_get_bone_texture (GthreeSkeleton *skeleton);
 int gthree_skeleton_get_bone_texture_size (GthreeSkeleton *skeleton);
 
 void gthree_light_setup  (GthreeLight   *light,
@@ -409,7 +410,7 @@ void gthree_renderer_lazy_delete (GthreeRenderer *renderer,
 
 GthreeGeometry *gthree_sprite_get_geometry (GthreeSprite *sprite);
 
-guint gthree_instanced_mesh_get_morph_texture (GthreeInstancedMesh *mesh);
+GthreeRawTexture *gthree_instanced_mesh_get_morph_texture (GthreeInstancedMesh *mesh);
 
 static inline float
 gthree_srgb_eotf (float c)

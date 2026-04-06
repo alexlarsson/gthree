@@ -6,6 +6,7 @@
 #include "gthreelinebasicmaterial.h"
 #include "gthreeobjectprivate.h"
 #include "gthreeattribute.h"
+#include "gthreerawtexture.h"
 
 typedef struct {
   GthreeAttribute *index;
@@ -26,7 +27,7 @@ typedef struct {
   gint draw_range_start;
   gint draw_range_count;
 
-  guint morph_texture;
+  GthreeRawTexture *morph_texture;
   int morph_texture_width;
   int morph_texture_height;
   int morph_target_count;
@@ -67,8 +68,7 @@ gthree_geometry_finalize (GObject *obj)
     g_hash_table_unref (priv->morph_attributes);
   g_array_unref (priv->groups);
 
-  if (priv->morph_texture != 0)
-    glDeleteTextures (1, &priv->morph_texture);
+  g_clear_object (&priv->morph_texture);
 
   if (geometry->influences)
     g_array_unref (geometry->influences);
@@ -377,7 +377,7 @@ gthree_geometry_ensure_morph_texture (GthreeGeometry *geometry)
   float *buffer;
   int buf_size;
 
-  if (priv->morph_texture != 0)
+  if (priv->morph_texture != NULL)
     return;
 
   morph_positions = gthree_geometry_get_morph_attributes (geometry, "position");
@@ -434,17 +434,8 @@ gthree_geometry_ensure_morph_texture (GthreeGeometry *geometry)
         }
     }
 
-  glGenTextures (1, &priv->morph_texture);
-  glBindTexture (GL_TEXTURE_2D_ARRAY, priv->morph_texture);
-  glTexImage3D (GL_TEXTURE_2D_ARRAY, 0, GL_RGBA32F,
-                width, height, morph_target_count,
-                0, GL_RGBA, GL_FLOAT, buffer);
-  glTexParameteri (GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri (GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameteri (GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri (GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glBindTexture (GL_TEXTURE_2D_ARRAY, 0);
-
+  priv->morph_texture = gthree_raw_texture_new_2d_array (width, height, morph_target_count,
+                                                         GL_RGBA32F, GL_RGBA, buffer);
   priv->morph_texture_width = width;
   priv->morph_texture_height = height;
   priv->morph_target_count = morph_target_count;
@@ -453,7 +444,7 @@ gthree_geometry_ensure_morph_texture (GthreeGeometry *geometry)
   g_free (buffer);
 }
 
-guint
+GthreeRawTexture *
 gthree_geometry_get_morph_texture (GthreeGeometry *geometry)
 {
   GthreeGeometryPrivate *priv = gthree_geometry_get_instance_private (geometry);

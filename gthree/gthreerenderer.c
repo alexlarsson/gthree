@@ -1778,7 +1778,7 @@ init_material (GthreeRenderer *renderer,
   parameters.instancing_color = GTHREE_IS_INSTANCED_MESH (object) &&
     gthree_instanced_mesh_get_instance_color (GTHREE_INSTANCED_MESH (object)) != NULL;
   parameters.instancing_morph = GTHREE_IS_INSTANCED_MESH (object) &&
-    gthree_instanced_mesh_get_morph_texture (GTHREE_INSTANCED_MESH (object)) != 0;
+    gthree_instanced_mesh_get_morph_texture (GTHREE_INSTANCED_MESH (object)) != NULL;
 
   parameters.morph_targets = GTHREE_IS_MESH_MATERIAL (material) && gthree_mesh_material_get_morph_targets (GTHREE_MESH_MATERIAL (material));
   parameters.morph_normals = GTHREE_IS_MESH_MATERIAL (material) && gthree_mesh_material_get_morph_normals (GTHREE_MESH_MATERIAL (material));
@@ -2852,16 +2852,17 @@ set_program (GthreeRenderer *renderer,
 
       if (skeleton)
           {
-            guint bone_tex = gthree_skeleton_get_bone_texture (skeleton);
-            if (bone_tex != 0)
+            GthreeRawTexture *bone_tex = gthree_skeleton_get_bone_texture (skeleton);
+            if (bone_tex != NULL)
               {
+                guint gl_bone_tex = gthree_raw_texture_realize (bone_tex, renderer);
                 gint bone_texture_location = gthree_program_lookup_uniform_location (program,
                                                                                       g_quark_from_static_string ("boneTexture"));
                 if (bone_texture_location >= 0)
                   {
                     guint unit = gthree_renderer_allocate_texture_unit (renderer);
                     glActiveTexture (GL_TEXTURE0 + unit);
-                    glBindTexture (GL_TEXTURE_2D, bone_tex);
+                    glBindTexture (GL_TEXTURE_2D, gl_bone_tex);
                     glUniform1i (bone_texture_location, unit);
                   }
               }
@@ -3270,17 +3271,20 @@ update_morphtargets (GthreeRenderer *renderer,
 
   gthree_geometry_ensure_morph_texture (geometry);
 
-  guint morph_tex = gthree_geometry_get_morph_texture (geometry);
-  if (morph_tex == 0)
+  GthreeRawTexture *morph_raw_tex = gthree_geometry_get_morph_texture (geometry);
+  if (morph_raw_tex == NULL)
     return;
+
+  guint morph_tex = gthree_raw_texture_realize (morph_raw_tex, renderer);
 
   morph_target_count = gthree_geometry_get_morph_target_count (geometry);
 
   if (GTHREE_IS_INSTANCED_MESH (object))
     {
-      guint instance_morph_tex = gthree_instanced_mesh_get_morph_texture (GTHREE_INSTANCED_MESH (object));
-      if (instance_morph_tex != 0)
+      GthreeRawTexture *instance_morph_raw = gthree_instanced_mesh_get_morph_texture (GTHREE_INSTANCED_MESH (object));
+      if (instance_morph_raw != NULL)
         {
+          guint instance_morph_tex = gthree_raw_texture_realize (instance_morph_raw, renderer);
           guint tex_unit = gthree_renderer_allocate_texture_unit (renderer);
           glActiveTexture (GL_TEXTURE0 + tex_unit);
           glBindTexture (GL_TEXTURE_2D, instance_morph_tex);
@@ -3315,19 +3319,21 @@ update_morphtargets (GthreeRenderer *renderer,
       g_free (influences_array);
     }
 
-  guint tex_unit = gthree_renderer_allocate_texture_unit (renderer);
-  glActiveTexture (GL_TEXTURE0 + tex_unit);
-  glBindTexture (GL_TEXTURE_2D_ARRAY, morph_tex);
+  {
+    guint tex_unit = gthree_renderer_allocate_texture_unit (renderer);
+    glActiveTexture (GL_TEXTURE0 + tex_unit);
+    glBindTexture (GL_TEXTURE_2D_ARRAY, morph_tex);
 
-  loc = gthree_program_lookup_uniform_location_from_string (program, "morphTargetsTexture");
-  if (loc >= 0)
-    glUniform1i (loc, tex_unit);
+    loc = gthree_program_lookup_uniform_location_from_string (program, "morphTargetsTexture");
+    if (loc >= 0)
+      glUniform1i (loc, tex_unit);
 
-  loc = gthree_program_lookup_uniform_location_from_string (program, "morphTargetsTextureSize");
-  if (loc >= 0)
-    glUniform2i (loc,
-                 gthree_geometry_get_morph_texture_width (geometry),
-                 gthree_geometry_get_morph_texture_height (geometry));
+    loc = gthree_program_lookup_uniform_location_from_string (program, "morphTargetsTextureSize");
+    if (loc >= 0)
+      glUniform2i (loc,
+                   gthree_geometry_get_morph_texture_width (geometry),
+                   gthree_geometry_get_morph_texture_height (geometry));
+  }
 }
 
 static void

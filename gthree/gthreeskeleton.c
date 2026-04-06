@@ -1,17 +1,16 @@
 #include <math.h>
 #include <string.h>
 
-#include <epoxy/gl.h>
-
 #include "gthreeskeleton.h"
 #include "gthreeattribute.h"
+#include "gthreerawtexture.h"
 
 
 typedef struct {
   GPtrArray *bones;
   graphene_matrix_t *bone_inverses;
   float *bone_matrices;
-  guint bone_texture;
+  GthreeRawTexture *bone_texture;
   int bone_texture_size;
 } GthreeSkeletonPrivate;
 
@@ -35,8 +34,7 @@ gthree_skeleton_finalize (GObject *obj)
   g_free (priv->bone_inverses);
   g_free (priv->bone_matrices);
 
-  if (priv->bone_texture != 0)
-    glDeleteTextures (1, &priv->bone_texture);
+  g_clear_object (&priv->bone_texture);
 
   G_OBJECT_CLASS (gthree_skeleton_parent_class)->finalize (obj);
 }
@@ -213,7 +211,7 @@ gthree_skeleton_update  (GthreeSkeleton *skeleton)
       graphene_matrix_to_float (&offset_matrix, (priv->bone_matrices + i * 16));
     }
 
-  if (priv->bone_texture == 0)
+  if (priv->bone_texture == NULL)
     {
       int n_bones = priv->bones->len;
       int size = next_power_of_two ((int)ceil (sqrt (n_bones * 4)));
@@ -223,18 +221,17 @@ gthree_skeleton_update  (GthreeSkeleton *skeleton)
       memset (priv->bone_matrices + n_bones * 16, 0,
               (size * size * 4 - n_bones * 16) * sizeof (float));
 
-      glGenTextures (1, &priv->bone_texture);
-      glBindTexture (GL_TEXTURE_2D, priv->bone_texture);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      priv->bone_texture = gthree_raw_texture_new_2d (size, size,
+                                                      GL_RGBA32F, GL_RGBA,
+                                                      priv->bone_matrices);
     }
-
-  glBindTexture (GL_TEXTURE_2D, priv->bone_texture);
-  glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA32F,
-                priv->bone_texture_size, priv->bone_texture_size, 0,
-                GL_RGBA, GL_FLOAT, priv->bone_matrices);
+  else
+    {
+      gthree_raw_texture_set_data (priv->bone_texture,
+                                   priv->bone_texture_size, priv->bone_texture_size,
+                                   0,
+                                   priv->bone_matrices);
+    }
 }
 
 float *
@@ -245,7 +242,7 @@ gthree_skeleton_get_bone_matrices (GthreeSkeleton *skeleton)
   return priv->bone_matrices;
 }
 
-guint
+GthreeRawTexture *
 gthree_skeleton_get_bone_texture (GthreeSkeleton *skeleton)
 {
   GthreeSkeletonPrivate *priv = gthree_skeleton_get_instance_private (skeleton);

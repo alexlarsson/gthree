@@ -61,6 +61,7 @@ gthree_sources = [
     'gthreeraycaster.c',
     'gthreerenderer.c',
     'gthreerendertarget.c',
+    'gthreerawtexture.c',
     'gthreeresource.c',
     'gthreescene.c',
     'gthreeshader.c',
