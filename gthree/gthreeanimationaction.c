@@ -412,7 +412,7 @@ gthree_animation_action_sync_with (GthreeAnimationAction *action,
                                    GthreeAnimationAction *other_action)
 {
   GthreeAnimationActionPrivate *priv = gthree_animation_action_get_instance_private (action);
-  GthreeAnimationActionPrivate *other_priv = gthree_animation_action_get_instance_private (action);
+  GthreeAnimationActionPrivate *other_priv = gthree_animation_action_get_instance_private (other_action);
 
   priv->time = other_priv->time;
   priv->time_scale = other_priv->time_scale;
