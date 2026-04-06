@@ -343,9 +343,11 @@ gthree_pmrem_generator_from_cubemap (GthreePMREMGenerator *generator,
   old_depth_test = glIsEnabled (GL_DEPTH_TEST);
   old_blend = glIsEnabled (GL_BLEND);
   old_scissor_test = glIsEnabled (GL_SCISSOR_TEST);
+  GLboolean old_cull_face = glIsEnabled (GL_CULL_FACE);
 
   glDisable (GL_DEPTH_TEST);
   glDisable (GL_BLEND);
+  glDisable (GL_CULL_FACE);
   glEnable (GL_SCISSOR_TEST);
   glActiveTexture (GL_TEXTURE0);
 
@@ -476,6 +478,7 @@ gthree_pmrem_generator_from_cubemap (GthreePMREMGenerator *generator,
   glClearColor (old_clear_color[0], old_clear_color[1], old_clear_color[2], old_clear_color[3]);
   if (old_depth_test) glEnable (GL_DEPTH_TEST); else glDisable (GL_DEPTH_TEST);
   if (old_blend) glEnable (GL_BLEND); else glDisable (GL_BLEND);
+  if (old_cull_face) glEnable (GL_CULL_FACE); else glDisable (GL_CULL_FACE);
   if (old_scissor_test) glEnable (GL_SCISSOR_TEST); else glDisable (GL_SCISSOR_TEST);
 
   /* Wrap the GL texture in a GthreeTexture */
