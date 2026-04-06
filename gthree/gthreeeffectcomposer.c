@@ -48,6 +48,7 @@ gthree_effect_composer_finalize (GObject *obj)
     g_object_unref (priv->render_target2);
 
   g_ptr_array_unref (priv->passes);
+  g_object_unref (priv->copy_pass);
 
   G_OBJECT_CLASS (gthree_effect_composer_parent_class)->finalize (obj);
 }
