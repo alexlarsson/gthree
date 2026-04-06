@@ -818,7 +818,7 @@ gthree_mesh_physical_material_class_init (GthreeMeshPhysicalMaterialClass *klass
                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   obj_props[PROP_ATTENUATION_DISTANCE] =
     g_param_spec_float ("attenuation-distance", "Attenuation distance", "Attenuation distance",
-                        0.f, G_MAXFLOAT, G_MAXFLOAT,
+                        0.f, INFINITY, INFINITY,
                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   obj_props[PROP_ATTENUATION_COLOR] =
     g_param_spec_boxed ("attenuation-color", "Attenuation color", "Attenuation color",
