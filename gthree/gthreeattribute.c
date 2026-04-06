@@ -1092,7 +1092,10 @@ gthree_attribute_init (GthreeAttribute *attribute)
 static void
 gthree_attribute_finalize (GObject *obj)
 {
-  //GthreeAttribute *attribute = GTHREE_ATTRIBUTE (obj);
+  GthreeAttribute *attribute = GTHREE_ATTRIBUTE (obj);
+
+  if (attribute->array)
+    gthree_attribute_array_unref (attribute->array);
 
   G_OBJECT_CLASS (gthree_attribute_parent_class)->finalize (obj);
 }

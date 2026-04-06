@@ -136,6 +136,7 @@ gthree_mesh_standard_material_finalize (GObject *obj)
   g_clear_object (&priv->roughness_map);
   g_clear_object (&priv->metalness_map);
   g_clear_object (&priv->alpha_map);
+  g_clear_object (&priv->emissive_map);
 
   G_OBJECT_CLASS (gthree_mesh_standard_material_parent_class)->finalize (obj);
 }

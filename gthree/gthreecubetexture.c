@@ -135,6 +135,9 @@ gthree_cube_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer,
           gthree_texture_set_max_mip_level (texture, log2 (MAX (width, height)));
         }
 
+      for (i = 0; i < 6; i++)
+        g_object_unref (cube_pixbufs[i]);
+
       gthree_resource_mark_clean_for (GTHREE_RESOURCE (texture), renderer);
     }
 }

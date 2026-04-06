@@ -49,6 +49,7 @@ gthree_scene_finalize (GObject *obj)
 
   g_clear_object (&priv->bg_texture);
   g_clear_object (&priv->environment);
+  g_clear_object (&priv->fog);
 
   g_clear_object (&priv->override_material);
 

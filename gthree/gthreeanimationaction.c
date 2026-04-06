@@ -104,6 +104,7 @@ gthree_animation_action_finalize (GObject *obj)
 
   g_clear_object (&priv->weight_interpolant);
   g_clear_object (&priv->time_scale_interpolant);
+  g_clear_object (&priv->interpolant_settings);
 
   g_ptr_array_unref (priv->interpolants);
   g_ptr_array_unref (priv->property_bindings);
