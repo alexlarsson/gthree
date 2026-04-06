@@ -647,7 +647,7 @@ gthree_animation_mixer_clip_action (GthreeAnimationMixer *mixer,
   }
 
   // allocate all resources required to run it
-  new_action = gthree_animation_action_new (mixer, clip, optional_root);
+  new_action = _gthree_animation_action_new (mixer, clip, optional_root);
 
   _gthree_animation_mixer_bind_action (mixer, new_action, prototype_action);
 

@@ -38,11 +38,6 @@ GTHREE_API
 GType gthree_animation_action_get_type (void) G_GNUC_CONST;
 
 GTHREE_API
-GthreeAnimationAction * gthree_animation_action_new (GthreeAnimationMixer *mixer,
-                                                     GthreeAnimationClip *clip,
-                                                     GthreeObject *local_root);
-
-GTHREE_API
 void                  gthree_animation_action_play                     (GthreeAnimationAction *action);
 GTHREE_API
 void                  gthree_animation_action_stop                     (GthreeAnimationAction *action);

@@ -20,7 +20,6 @@ GthreeAnimationAction
 GthreeAnimationActionClass
 GthreeLoopMode
 <SUBSECTION>
-gthree_animation_action_new
 gthree_animation_action_set_duration
 gthree_animation_action_set_effective_time_scale
 gthree_animation_action_get_effective_time_scale

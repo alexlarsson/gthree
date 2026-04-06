@@ -6,7 +6,7 @@
 #include "gthreepropertymixerprivate.h"
 
 typedef struct {
-  GthreeAnimationMixer *mixer;
+  GthreeAnimationMixer *mixer; /* Weak, owned by the mixer that created us */
   GthreeAnimationClip *clip;
   GthreeObject *local_root;
   GPtrArray *interpolants; // GthreeInterpolant
@@ -98,7 +98,6 @@ gthree_animation_action_finalize (GObject *obj)
   GthreeAnimationAction *action = GTHREE_ANIMATION_ACTION (obj);
   GthreeAnimationActionPrivate *priv = gthree_animation_action_get_instance_private (action);
 
-  g_clear_object (&priv->mixer);
   g_clear_object (&priv->clip);
   g_clear_object (&priv->local_root);
 
@@ -119,7 +118,7 @@ gthree_animation_action_class_init (GthreeAnimationActionClass *klass)
 }
 
 GthreeAnimationAction *
-gthree_animation_action_new (GthreeAnimationMixer *mixer,
+_gthree_animation_action_new (GthreeAnimationMixer *mixer,
                              GthreeAnimationClip *clip,
                              GthreeObject *local_root)
 {
@@ -127,7 +126,7 @@ gthree_animation_action_new (GthreeAnimationMixer *mixer,
   GthreeAnimationActionPrivate *priv = gthree_animation_action_get_instance_private (action);
   int n_tracks, i;
 
-  priv->mixer = g_object_ref (mixer);
+  priv->mixer = mixer;
   priv->clip = g_object_ref (clip);
   if (local_root)
     priv->local_root = g_object_ref (local_root);

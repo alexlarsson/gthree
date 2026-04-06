@@ -7,6 +7,7 @@
 #include <gthree/gthreegeometry.h>
 #include <gthree/gthreeinterpolant.h>
 #include <gthree/gthreekeyframetrack.h>
+#include <gthree/gthreeanimationclip.h>
 #include <gthree/gthreerendertarget.h>
 #include <gthree/gthreemesh.h>
 #include <gthree/gthreeinstancedmesh.h>
@@ -336,6 +337,10 @@ typedef struct {
   int cache_index;
   int by_clip_cache_index;
 } GthreeAnimationActionMixerData;
+
+GthreeAnimationAction *_gthree_animation_action_new (GthreeAnimationMixer *mixer,
+                                                     GthreeAnimationClip *clip,
+                                                     GthreeObject *local_root);
 
 void  _gthree_animation_action_update            (GthreeAnimationAction *action,
                                                   float                  time,
