@@ -505,7 +505,7 @@ gthree_pmrem_generator_from_cubemap (GthreePMREMGenerator *generator,
   if (old_scissor_test) glEnable (GL_SCISSOR_TEST); else glDisable (GL_SCISSOR_TEST);
 
   /* Wrap the GL texture in a GthreeTexture */
-  GthreeTexture *result = g_object_new (GTHREE_TYPE_TEXTURE, NULL);
+  GthreeTexture *result = gthree_texture_new_empty (tex_width, tex_height, GTHREE_MEMORY_FORMAT_R16G16B16A16_FLOAT);
   gthree_texture_set_mapping (result, GTHREE_MAPPING_CUBE_UV_REFLECTION);
   gthree_texture_set_generate_mipmaps (result, FALSE);
   gthree_texture_set_mag_filter (result, GTHREE_FILTER_LINEAR);

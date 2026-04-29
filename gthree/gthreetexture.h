@@ -6,9 +6,9 @@
 #endif
 
 #include <glib-object.h>
-#include <gdk-pixbuf/gdk-pixbuf.h>
-#include <cairo.h>
 #include <graphene.h>
+#include <cairo.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gthree/gthreetypes.h>
 #include <gthree/gthreeenums.h>
 #include <gthree/gthreeresource.h>
@@ -40,13 +40,46 @@ GTHREE_API
 GType gthree_texture_get_type (void) G_GNUC_CONST;
 
 GTHREE_API
-GthreeTexture *gthree_texture_new (GdkPixbuf *pixbuf);
+GthreeTexture *gthree_texture_new_from_memory (const guchar         *data,
+                                               int                   width,
+                                               int                   height,
+                                               gsize                 stride,
+                                               GthreeMemoryFormat    format,
+                                               GDestroyNotify        destroy,
+                                               gpointer              user_data);
 GTHREE_API
-GthreeTexture *gthree_texture_new_from_surface (cairo_surface_t *surface);
+GthreeTexture *gthree_texture_new_from_bytes (GBytes               *bytes,
+                                              int                   width,
+                                              int                   height,
+                                              gsize                 stride,
+                                              GthreeMemoryFormat    format);
 GTHREE_API
-GdkPixbuf             *gthree_texture_get_pixbuf           (GthreeTexture        *texture);
+GthreeTexture *gthree_texture_new_from_surface (cairo_surface_t      *surface);
 GTHREE_API
-cairo_surface_t       *gthree_texture_get_surface           (GthreeTexture        *texture);
+void                   gthree_texture_set_from_surface     (GthreeTexture        *texture,
+                                                            cairo_surface_t      *surface);
+GTHREE_API
+GthreeTexture *gthree_texture_new_from_pixbuf  (GdkPixbuf            *pixbuf);
+GTHREE_API
+void                   gthree_texture_set_from_pixbuf      (GthreeTexture        *texture,
+                                                            GdkPixbuf            *pixbuf);
+GTHREE_API
+void                   gthree_texture_set_from_bytes       (GthreeTexture        *texture,
+                                                            GBytes               *bytes,
+                                                            int                   width,
+                                                            int                   height,
+                                                            gsize                 stride,
+                                                            GthreeMemoryFormat    format);
+GTHREE_API
+void                   gthree_texture_set_gl_texture       (GthreeTexture        *texture,
+                                                            GthreeRenderer       *renderer,
+                                                            guint                 gl_texture);
+GTHREE_API
+int                    gthree_texture_get_width            (GthreeTexture        *texture);
+GTHREE_API
+int                    gthree_texture_get_height           (GthreeTexture        *texture);
+GTHREE_API
+GthreeMemoryFormat     gthree_texture_get_memory_format    (GthreeTexture        *texture);
 GTHREE_API
 const graphene_vec2_t *gthree_texture_get_repeat           (GthreeTexture        *texture);
 GTHREE_API
@@ -97,16 +130,6 @@ void                   gthree_texture_set_encoding         (GthreeTexture       
                                                             GthreeEncodingFormat  encoding);
 GTHREE_API
 GthreeEncodingFormat   gthree_texture_get_encoding         (GthreeTexture        *texture);
-GTHREE_API
-void                   gthree_texture_set_format           (GthreeTexture        *texture,
-                                                            GthreeTextureFormat   format);
-GTHREE_API
-GthreeTextureFormat    gthree_texture_get_format           (GthreeTexture        *texture);
-GTHREE_API
-void                   gthree_texture_set_data_type        (GthreeTexture        *texture,
-                                                            GthreeDataType     type);
-GTHREE_API
-GthreeDataType         gthree_texture_get_data_type        (GthreeTexture        *texture);
 GTHREE_API
 void                   gthree_texture_set_anisotropy       (GthreeTexture        *texture,
                                                             int                   anisotropy);

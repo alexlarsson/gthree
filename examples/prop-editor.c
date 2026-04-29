@@ -253,18 +253,11 @@ texture_modified (GtkComboBox *combo, ObjectProperty *p)
     {
       if (g_str_has_prefix (id, "cube/"))
         {
-          GdkPixbuf *pixbufs[6];
-          int i;
-
-          examples_load_cube_pixbufs ("cube/SwedishRoyalCastle", pixbufs);
-          texture = (GthreeTexture *)gthree_cube_texture_new_from_array (pixbufs);
-          for (i = 0; i < 6; i++)
-            g_object_unref (pixbufs[i]);
+          texture = (GthreeTexture *)examples_load_cube_texture ("cube/SwedishRoyalCastle");
         }
       else
         {
-          g_autoptr(GdkPixbuf) pixbuf = examples_load_pixbuf (id);
-          texture = gthree_texture_new (pixbuf);
+          texture = examples_load_texture (id);
         }
 
       if (g_str_has_prefix (id, "gradient/"))

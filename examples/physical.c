@@ -14,15 +14,11 @@ init_scene (void)
 {
   GthreeGeometry *geometry;
   GthreeCubeTexture *env_cube;
-  GdkPixbuf *pixbufs[6];
 
   scene = gthree_scene_new ();
 
-  examples_load_cube_pixbufs ("cube/SwedishRoyalCastle", pixbufs);
-  env_cube = gthree_cube_texture_new_from_array (pixbufs);
+  env_cube = examples_load_cube_texture ("cube/SwedishRoyalCastle");
   gthree_texture_set_encoding (GTHREE_TEXTURE (env_cube), GTHREE_ENCODING_FORMAT_SRGB);
-  for (int i = 0; i < 6; i++)
-    g_object_unref (pixbufs[i]);
 
   gthree_scene_set_background_texture (scene, GTHREE_TEXTURE (env_cube));
   gthree_scene_set_environment (scene, GTHREE_TEXTURE (env_cube));

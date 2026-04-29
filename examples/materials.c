@@ -91,7 +91,7 @@ init_scene (void)
 
   pixbuf = generate_texture ();
 
-  texture = gthree_texture_new (pixbuf);
+  texture = gthree_texture_new_from_pixbuf (pixbuf);
 
   geometry = gthree_geometry_new_sphere (70, 32, 16);
 

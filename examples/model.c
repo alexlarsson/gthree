@@ -388,7 +388,7 @@ int
 main (int argc, char *argv[])
 {
   GtkWidget *window, *box, *hbox, *button, *area, *combo, *check, *scale;
-  int i, j;
+  int i;
   struct {
     char *path;
     char *name;
@@ -415,14 +415,10 @@ main (int argc, char *argv[])
   env_maps = g_ptr_array_new_with_free_func (g_object_unref);
   for (i = 0; i < G_N_ELEMENTS (cubes); i++)
     {
-      GdkPixbuf *pixbufs[6];
       GthreeCubeTexture *cube_texture;
 
-      examples_load_cube_pixbufs (cubes[i].path, pixbufs);
-      cube_texture = gthree_cube_texture_new_from_array (pixbufs);
+      cube_texture = examples_load_cube_texture (cubes[i].path);
       gthree_texture_set_encoding (GTHREE_TEXTURE (cube_texture), GTHREE_ENCODING_FORMAT_SRGB);
-      for (j = 0; j < 6; j++)
-        g_object_unref (pixbufs[j]);
 
       g_ptr_array_add (env_maps, cube_texture);
     }

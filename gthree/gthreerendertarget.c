@@ -50,7 +50,7 @@ gthree_render_target_init (GthreeRenderTarget *target)
 
   priv->scissor_test = FALSE;
 
-  priv->texture = gthree_texture_new (NULL);
+  priv->texture = gthree_texture_new_empty (0, 0, GTHREE_MEMORY_FORMAT_R8G8B8A8);
 
 #ifdef DEBUG_LABELS
   gthree_texture_set_name (priv->texture, texture_name);
@@ -64,8 +64,6 @@ gthree_render_target_init (GthreeRenderTarget *target)
   gthree_texture_set_min_filter (priv->texture, GTHREE_FILTER_LINEAR);
 
   gthree_texture_set_encoding (priv->texture, GTHREE_ENCODING_FORMAT_LINEAR);
-  gthree_texture_set_format (priv->texture, GTHREE_TEXTURE_FORMAT_RGBA);
-  gthree_texture_set_data_type (priv->texture, GTHREE_DATA_TYPE_UNSIGNED_BYTE);
   gthree_texture_set_anisotropy (priv->texture, 1);
 
   priv->depth_buffer = TRUE;
@@ -344,9 +342,8 @@ setup_renderbuffer_storage (GthreeRenderTarget *render_target, guint gl_renderbu
     }
   else
     {
-      guint gl_format = gthree_texture_format_to_gl (gthree_texture_get_format (priv->texture));
-      guint gl_type = gthree_texture_data_type_to_gl (gthree_texture_get_data_type (priv->texture));
-      guint gl_internal_format = gthree_texture_get_internal_gl_format (gl_format, gl_type);
+      GthreeGLFormatInfo gl_info;
+      gthree_memory_format_to_gl (gthree_texture_get_memory_format (priv->texture), &gl_info);
       if (is_multisample)
         {
 #ifdef TODO
@@ -356,7 +353,7 @@ setup_renderbuffer_storage (GthreeRenderTarget *render_target, guint gl_renderbu
 #endif
         }
       else
-        glRenderbufferStorage (GL_RENDERBUFFER, gl_internal_format, priv->width, priv->height);
+        glRenderbufferStorage (GL_RENDERBUFFER, gl_info.gl_internal_format, priv->width, priv->height);
     }
   glBindRenderbuffer (GL_RENDERBUFFER, 0);
 }
@@ -520,7 +517,7 @@ gthree_render_target_realize (GthreeRenderTarget *target,
   if (priv->is_cube)
     {
       int i;
-      guint gl_format, gl_type, gl_internal_format;
+      GthreeGLFormatInfo gl_info;
 
       glGenFramebuffers (6, data->gl_cube_framebuffers);
 #ifdef DEBUG_LABELS
@@ -534,14 +531,12 @@ gthree_render_target_realize (GthreeRenderTarget *target,
       gthree_texture_bind (texture, renderer, -1, GL_TEXTURE_CUBE_MAP);
       gthree_texture_set_parameters (GL_TEXTURE_CUBE_MAP, texture);
 
-      gl_format = gthree_texture_format_to_gl (gthree_texture_get_format (texture));
-      gl_type = gthree_texture_data_type_to_gl (gthree_texture_get_data_type (texture));
-      gl_internal_format = gthree_texture_get_internal_gl_format (gl_format, gl_type);
+      gthree_memory_format_to_gl (gthree_texture_get_memory_format (texture), &gl_info);
 
       for (i = 0; i < 6; i++)
         {
-          glTexImage2D (GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, gl_internal_format,
-                        priv->width, priv->height, 0, gl_format, gl_type, NULL);
+          glTexImage2D (GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, gl_info.gl_internal_format,
+                        priv->width, priv->height, 0, gl_info.gl_format, gl_info.gl_type, NULL);
           glBindFramebuffer (GL_FRAMEBUFFER, data->gl_cube_framebuffers[i]);
           glFramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                   GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,

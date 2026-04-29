@@ -2450,7 +2450,7 @@ render_shadow_map (GthreeRenderer *renderer,
           gthree_texture_set_mag_filter (texture, GTHREE_FILTER_NEAREST);
           gthree_texture_set_min_filter (texture, GTHREE_FILTER_NEAREST);
 
-          GthreeTexture *depth_tex = gthree_texture_new (NULL);
+          GthreeTexture *depth_tex = gthree_texture_new_empty (0, 0, GTHREE_MEMORY_FORMAT_R8G8B8A8);
           gthree_texture_set_mag_filter (depth_tex, GTHREE_FILTER_LINEAR);
           gthree_texture_set_min_filter (depth_tex, GTHREE_FILTER_LINEAR);
           gthree_render_target_set_depth_texture (shadow_map, depth_tex);
@@ -3794,10 +3794,7 @@ static int
 get_cube_texture_size (GthreeTexture *texture)
 {
   if (GTHREE_IS_CUBE_TEXTURE (texture))
-    {
-      GdkPixbuf *pb = gthree_cube_texture_get_face_pixbuf (GTHREE_CUBE_TEXTURE (texture), 0);
-      return gdk_pixbuf_get_width (pb);
-    }
+    return gthree_cube_texture_get_size (GTHREE_CUBE_TEXTURE (texture));
 
   /* For render target textures, query GL */
   GLint size = 0;

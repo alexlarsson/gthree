@@ -36,16 +36,9 @@ update_hud_sprites (int width,
 GthreeScene *
 init_scene (GtkWidget *window)
 {
-  g_autoptr(GdkPixbuf) sprite0_pixbuf = examples_load_pixbuf ("sprite0.png");
-  g_autoptr(GdkPixbuf) sprite1_pixbuf = examples_load_pixbuf ("sprite1.png");
-  g_autoptr(GdkPixbuf) sprite2_pixbuf = examples_load_pixbuf ("sprite2.png");
-
-  sprite0_texture = gthree_texture_new (sprite0_pixbuf);
-  gthree_texture_set_encoding (sprite0_texture, GTHREE_ENCODING_FORMAT_SRGB);
-  sprite1_texture = gthree_texture_new (sprite1_pixbuf);
-  gthree_texture_set_encoding (sprite1_texture, GTHREE_ENCODING_FORMAT_SRGB);
-  sprite2_texture = gthree_texture_new (sprite2_pixbuf);
-  gthree_texture_set_encoding (sprite2_texture, GTHREE_ENCODING_FORMAT_SRGB);
+  sprite0_texture = examples_load_texture ("sprite0.png");
+  sprite1_texture = examples_load_texture ("sprite1.png");
+  sprite2_texture = examples_load_texture ("sprite2.png");
 
   scene = gthree_scene_new ();
 
@@ -117,8 +110,8 @@ init_scene (GtkWidget *window)
   g_autoptr(GthreeSpriteMaterial) material = gthree_sprite_material_new ();
   gthree_sprite_material_set_map (material, sprite0_texture);
 
-  int width = gdk_pixbuf_get_width (sprite0_pixbuf) * gtk_widget_get_scale_factor (window);
-  int height = gdk_pixbuf_get_height (sprite0_pixbuf) * gtk_widget_get_scale_factor (window);
+  int width = gthree_texture_get_width (sprite0_texture) * gtk_widget_get_scale_factor (window);
+  int height = gthree_texture_get_height (sprite0_texture) * gtk_widget_get_scale_factor (window);
   graphene_vec2_t v2;
 
   spriteTL = gthree_sprite_new (GTHREE_MATERIAL (material));
@@ -195,9 +188,8 @@ tick (GtkWidget     *widget,
       const graphene_vec3_t *sprite_pos = gthree_object_get_position (sprite);
       float scale = sinf (relative_time / 100.0 + graphene_vec3_get_x (sprite_pos) * 0.01 ) * 0.3 + 1.0;
       GthreeTexture *map = gthree_sprite_material_get_map (GTHREE_SPRITE_MATERIAL (material));
-      GdkPixbuf *pixbuf = gthree_texture_get_pixbuf (map);
-      int imageWidth = gdk_pixbuf_get_width (pixbuf);
-      int imageHeight = gdk_pixbuf_get_height (pixbuf);
+      int imageWidth = gthree_texture_get_width (map);
+      int imageHeight = gthree_texture_get_height (map);
 
       gthree_sprite_material_set_rotation (GTHREE_SPRITE_MATERIAL (material),
                                            gthree_sprite_material_get_rotation (GTHREE_SPRITE_MATERIAL (material)) + 0.1 * ( i / (float)len ));

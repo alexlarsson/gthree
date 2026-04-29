@@ -1,18 +1,28 @@
 #include <math.h>
 #include <epoxy/gl.h>
-#include <cairo-gobject.h>
 
 #include "gthreetexture.h"
 #include "gthreeprivate.h"
 #include "gthreeenums.h"
+#include "gthreetypebuiltins.h"
 
 enum
 {
-
   LAST_SIGNAL
 };
 
 /*static guint texture_signals[LAST_SIGNAL] = { 0, };*/
+
+enum
+{
+  PROP_0,
+  PROP_WIDTH,
+  PROP_HEIGHT,
+  PROP_MEMORY_FORMAT,
+  N_PROPS
+};
+
+static GParamSpec *obj_props[N_PROPS] = { NULL, };
 
 static void gthree_texture_real_load (GthreeTexture *texture,
                                       GthreeRenderer *renderer,
@@ -21,8 +31,14 @@ static void gthree_texture_real_unrealize (GthreeResource *resource,
                                            GthreeRenderer *renderer);
 
 typedef struct {
-  GdkPixbuf *pixbuf;
-  cairo_surface_t *surface;
+  const guchar *data;
+  GDestroyNotify data_destroy;
+  gpointer data_destroy_data;
+  int width;
+  int height;
+  gsize stride;
+  GthreeMemoryFormat memory_format;
+
   char *name;
   char *uuid;
   GArray *mipmaps;
@@ -30,8 +46,6 @@ typedef struct {
   GthreeWrapping wrap_s;
   GthreeWrapping wrap_t;
   GthreeEncodingFormat encoding;
-  GthreeTextureFormat format;
-  GthreeDataType type;
 
   GthreeFilter mag_filter;
   GthreeFilter min_filter;
@@ -59,33 +73,336 @@ typedef struct {
 } GthreeTextureRealizeData;
 
 
-enum {
-  PROP_0,
-
-  PROP_PIXBUF,
-  PROP_SURFACE,
-
-  N_PROPS
-};
-
-static GParamSpec *obj_props[N_PROPS] = { NULL, };
-
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeTexture, gthree_texture, GTHREE_TYPE_RESOURCE)
 
-GthreeTexture *
-gthree_texture_new (GdkPixbuf *pixbuf)
+int
+gthree_memory_format_bytes_per_pixel (GthreeMemoryFormat format)
 {
-  return g_object_new (gthree_texture_get_type (),
-                       "pixbuf", pixbuf,
-                       NULL);
+  switch (format)
+    {
+    case GTHREE_MEMORY_FORMAT_R8:
+      return 1;
+    case GTHREE_MEMORY_FORMAT_R8G8:
+      return 2;
+    case GTHREE_MEMORY_FORMAT_R8G8B8:
+      return 3;
+    case GTHREE_MEMORY_FORMAT_R8G8B8A8:
+    case GTHREE_MEMORY_FORMAT_B8G8R8A8:
+    case GTHREE_MEMORY_FORMAT_R8G8B8A8_PREMULTIPLIED:
+    case GTHREE_MEMORY_FORMAT_B8G8R8A8_PREMULTIPLIED:
+    case GTHREE_MEMORY_FORMAT_A8R8G8B8_PREMULTIPLIED:
+      return 4;
+    case GTHREE_MEMORY_FORMAT_R16G16B16A16_FLOAT:
+      return 8;
+    case GTHREE_MEMORY_FORMAT_R32G32B32A32_FLOAT:
+      return 16;
+    default:
+      g_assert_not_reached ();
+      return 4;
+    }
+}
+
+void
+gthree_memory_format_to_gl (GthreeMemoryFormat format,
+                             GthreeGLFormatInfo *info)
+{
+  switch (format)
+    {
+    case GTHREE_MEMORY_FORMAT_R8G8B8A8:
+    case GTHREE_MEMORY_FORMAT_R8G8B8A8_PREMULTIPLIED:
+      info->gl_format = GL_RGBA;
+      info->gl_type = GL_UNSIGNED_BYTE;
+      info->gl_internal_format = GL_RGBA8;
+      info->gl_internal_format_srgb = GL_SRGB8_ALPHA8;
+      break;
+    case GTHREE_MEMORY_FORMAT_R8G8B8:
+      info->gl_format = GL_RGB;
+      info->gl_type = GL_UNSIGNED_BYTE;
+      info->gl_internal_format = GL_RGB8;
+      info->gl_internal_format_srgb = GL_SRGB8;
+      break;
+    case GTHREE_MEMORY_FORMAT_B8G8R8A8:
+    case GTHREE_MEMORY_FORMAT_B8G8R8A8_PREMULTIPLIED:
+    case GTHREE_MEMORY_FORMAT_A8R8G8B8_PREMULTIPLIED:
+      if (epoxy_is_desktop_gl ())
+        {
+          info->gl_format = GL_BGRA;
+          info->gl_type = GL_UNSIGNED_INT_8_8_8_8_REV;
+        }
+      else
+        {
+          info->gl_format = GL_RGBA;
+          info->gl_type = GL_UNSIGNED_BYTE;
+        }
+      info->gl_internal_format = GL_RGBA8;
+      info->gl_internal_format_srgb = GL_SRGB8_ALPHA8;
+      break;
+    case GTHREE_MEMORY_FORMAT_R16G16B16A16_FLOAT:
+      info->gl_format = GL_RGBA;
+      info->gl_type = GL_HALF_FLOAT;
+      info->gl_internal_format = GL_RGBA16F;
+      info->gl_internal_format_srgb = 0;
+      break;
+    case GTHREE_MEMORY_FORMAT_R32G32B32A32_FLOAT:
+      info->gl_format = GL_RGBA;
+      info->gl_type = GL_FLOAT;
+      info->gl_internal_format = GL_RGBA32F;
+      info->gl_internal_format_srgb = 0;
+      break;
+    case GTHREE_MEMORY_FORMAT_R8:
+      info->gl_format = GL_RED;
+      info->gl_type = GL_UNSIGNED_BYTE;
+      info->gl_internal_format = GL_R8;
+      info->gl_internal_format_srgb = 0;
+      break;
+    case GTHREE_MEMORY_FORMAT_R8G8:
+      info->gl_format = GL_RG;
+      info->gl_type = GL_UNSIGNED_BYTE;
+      info->gl_internal_format = GL_RG8;
+      info->gl_internal_format_srgb = 0;
+      break;
+    default:
+      g_assert_not_reached ();
+      info->gl_format = GL_RGBA;
+      info->gl_type = GL_UNSIGNED_BYTE;
+      info->gl_internal_format = GL_RGBA8;
+      info->gl_internal_format_srgb = GL_SRGB8_ALPHA8;
+      break;
+    }
+}
+
+gboolean
+gthree_memory_format_needs_bgra_swizzle (GthreeMemoryFormat format)
+{
+  switch (format)
+    {
+    case GTHREE_MEMORY_FORMAT_B8G8R8A8:
+    case GTHREE_MEMORY_FORMAT_B8G8R8A8_PREMULTIPLIED:
+    case GTHREE_MEMORY_FORMAT_A8R8G8B8_PREMULTIPLIED:
+      return !epoxy_is_desktop_gl ();
+    default:
+      return FALSE;
+    }
+}
+
+static void
+gthree_texture_clear_data (GthreeTexturePrivate *priv)
+{
+  if (priv->data_destroy)
+    priv->data_destroy (priv->data_destroy_data);
+  priv->data = NULL;
+  priv->data_destroy = NULL;
+  priv->data_destroy_data = NULL;
+}
+
+static void
+gthree_texture_notify_data_props (GthreeTexture      *texture,
+                                  int                 old_width,
+                                  int                 old_height,
+                                  GthreeMemoryFormat  old_format)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  if (priv->width != old_width)
+    g_object_notify_by_pspec (G_OBJECT (texture), obj_props[PROP_WIDTH]);
+  if (priv->height != old_height)
+    g_object_notify_by_pspec (G_OBJECT (texture), obj_props[PROP_HEIGHT]);
+  if (priv->memory_format != old_format)
+    g_object_notify_by_pspec (G_OBJECT (texture), obj_props[PROP_MEMORY_FORMAT]);
+}
+
+static void
+gthree_texture_set_data (GthreeTexturePrivate *priv,
+                         const guchar         *data,
+                         int                   width,
+                         int                   height,
+                         gsize                 stride,
+                         GthreeMemoryFormat    format,
+                         GDestroyNotify        destroy,
+                         gpointer              destroy_data)
+{
+  gthree_texture_clear_data (priv);
+  priv->data = data;
+  priv->width = width;
+  priv->height = height;
+  priv->stride = stride;
+  priv->memory_format = format;
+  priv->data_destroy = destroy;
+  priv->data_destroy_data = destroy_data;
+}
+
+GthreeTexture *
+gthree_texture_new_from_memory (const guchar       *data,
+                                int                 width,
+                                int                 height,
+                                gsize               stride,
+                                GthreeMemoryFormat  format,
+                                GDestroyNotify      destroy,
+                                gpointer            user_data)
+{
+  GthreeTexture *texture = g_object_new (gthree_texture_get_type (), NULL);
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  gthree_texture_set_data (priv, data, width, height, stride, format,
+                           destroy, user_data);
+
+  return texture;
+}
+
+GthreeTexture *
+gthree_texture_new_from_bytes (GBytes             *bytes,
+                               int                 width,
+                               int                 height,
+                               gsize               stride,
+                               GthreeMemoryFormat  format)
+{
+  GthreeTexture *texture = g_object_new (gthree_texture_get_type (), NULL);
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  if (bytes)
+    gthree_texture_set_data (priv,
+                             g_bytes_get_data (bytes, NULL),
+                             width, height, stride, format,
+                             (GDestroyNotify) g_bytes_unref, g_bytes_ref (bytes));
+
+  return texture;
+}
+
+static GthreeMemoryFormat
+cairo_surface_memory_format (void)
+{
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  return GTHREE_MEMORY_FORMAT_B8G8R8A8_PREMULTIPLIED;
+#else
+  return GTHREE_MEMORY_FORMAT_A8R8G8B8_PREMULTIPLIED;
+#endif
 }
 
 GthreeTexture *
 gthree_texture_new_from_surface (cairo_surface_t *surface)
 {
-  return g_object_new (gthree_texture_get_type (),
-                       "surface", surface,
-                       NULL);
+  GthreeTexture *texture;
+  GthreeTexturePrivate *priv;
+
+  g_return_val_if_fail (surface != NULL, NULL);
+  g_return_val_if_fail (cairo_surface_get_type (surface) == CAIRO_SURFACE_TYPE_IMAGE, NULL);
+
+  cairo_surface_flush (surface);
+
+  texture = g_object_new (gthree_texture_get_type (), NULL);
+  priv = gthree_texture_get_instance_private (texture);
+
+  gthree_texture_set_data (priv,
+                           cairo_image_surface_get_data (surface),
+                           cairo_image_surface_get_width (surface),
+                           cairo_image_surface_get_height (surface),
+                           cairo_image_surface_get_stride (surface),
+                           cairo_surface_memory_format (),
+                           (GDestroyNotify) cairo_surface_destroy,
+                           cairo_surface_reference (surface));
+  return texture;
+}
+
+void
+gthree_texture_set_from_surface (GthreeTexture   *texture,
+                                 cairo_surface_t *surface)
+{
+  GthreeTexturePrivate *priv;
+
+  g_return_if_fail (GTHREE_IS_TEXTURE (texture));
+  g_return_if_fail (surface != NULL);
+  g_return_if_fail (cairo_surface_get_type (surface) == CAIRO_SURFACE_TYPE_IMAGE);
+
+  cairo_surface_flush (surface);
+
+  priv = gthree_texture_get_instance_private (texture);
+  {
+    int old_width = priv->width;
+    int old_height = priv->height;
+    GthreeMemoryFormat old_format = priv->memory_format;
+
+    gthree_texture_set_data (priv,
+                             cairo_image_surface_get_data (surface),
+                             cairo_image_surface_get_width (surface),
+                             cairo_image_surface_get_height (surface),
+                             cairo_image_surface_get_stride (surface),
+                             cairo_surface_memory_format (),
+                             (GDestroyNotify) cairo_surface_destroy,
+                             cairo_surface_reference (surface));
+    gthree_texture_notify_data_props (texture, old_width, old_height, old_format);
+  }
+  gthree_texture_set_needs_update (texture);
+}
+
+static GthreeMemoryFormat
+pixbuf_memory_format (GdkPixbuf *pixbuf)
+{
+  return gdk_pixbuf_get_has_alpha (pixbuf)
+    ? GTHREE_MEMORY_FORMAT_R8G8B8A8
+    : GTHREE_MEMORY_FORMAT_R8G8B8;
+}
+
+GthreeTexture *
+gthree_texture_new_from_pixbuf (GdkPixbuf *pixbuf)
+{
+  GthreeTexture *texture;
+  GthreeTexturePrivate *priv;
+
+  g_return_val_if_fail (GDK_IS_PIXBUF (pixbuf), NULL);
+
+  texture = g_object_new (gthree_texture_get_type (), NULL);
+  priv = gthree_texture_get_instance_private (texture);
+
+  gthree_texture_set_data (priv,
+                           gdk_pixbuf_get_pixels (pixbuf),
+                           gdk_pixbuf_get_width (pixbuf),
+                           gdk_pixbuf_get_height (pixbuf),
+                           gdk_pixbuf_get_rowstride (pixbuf),
+                           pixbuf_memory_format (pixbuf),
+                           g_object_unref, g_object_ref (pixbuf));
+  return texture;
+}
+
+void
+gthree_texture_set_from_pixbuf (GthreeTexture *texture,
+                                GdkPixbuf     *pixbuf)
+{
+  GthreeTexturePrivate *priv;
+
+  g_return_if_fail (GTHREE_IS_TEXTURE (texture));
+  g_return_if_fail (GDK_IS_PIXBUF (pixbuf));
+
+  priv = gthree_texture_get_instance_private (texture);
+  {
+    int old_width = priv->width;
+    int old_height = priv->height;
+    GthreeMemoryFormat old_format = priv->memory_format;
+
+    gthree_texture_set_data (priv,
+                             gdk_pixbuf_get_pixels (pixbuf),
+                             gdk_pixbuf_get_width (pixbuf),
+                             gdk_pixbuf_get_height (pixbuf),
+                             gdk_pixbuf_get_rowstride (pixbuf),
+                             pixbuf_memory_format (pixbuf),
+                             g_object_unref, g_object_ref (pixbuf));
+    gthree_texture_notify_data_props (texture, old_width, old_height, old_format);
+  }
+  gthree_texture_set_needs_update (texture);
+}
+
+GthreeTexture *
+gthree_texture_new_empty (int                 width,
+                          int                 height,
+                          GthreeMemoryFormat  format)
+{
+  GthreeTexture *texture = g_object_new (gthree_texture_get_type (), NULL);
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  priv->width = width;
+  priv->height = height;
+  priv->memory_format = format;
+
+  return texture;
 }
 
 static void
@@ -106,8 +423,7 @@ gthree_texture_init (GthreeTexture *texture)
   priv->mapping = GTHREE_MAPPING_UV;
   priv->encoding = GTHREE_ENCODING_FORMAT_LINEAR;
 
-  priv->format = GTHREE_TEXTURE_FORMAT_RGBA;
-  priv->type = GTHREE_DATA_TYPE_UNSIGNED_BYTE;
+  priv->memory_format = GTHREE_MEMORY_FORMAT_R8G8B8A8;
 
   graphene_vec2_init (&priv->offset, 0, 0);
   graphene_vec2_init (&priv->repeat, 1, 1);
@@ -124,8 +440,7 @@ gthree_texture_copy_settings (GthreeTexture        *texture,
   priv->wrap_s = source_priv->wrap_s;
   priv->wrap_t = source_priv->wrap_t;
   priv->encoding = source_priv->encoding;
-  priv->format = source_priv->format;
-  priv->type = source_priv->type;
+  priv->memory_format = source_priv->memory_format;
   priv->min_filter = source_priv->min_filter;
   priv->mag_filter = source_priv->mag_filter;
   priv->anisotropy = source_priv->anisotropy;
@@ -138,6 +453,31 @@ gthree_texture_copy_settings (GthreeTexture        *texture,
 }
 
 static void
+gthree_texture_get_property (GObject    *obj,
+                             guint       prop_id,
+                             GValue     *value,
+                             GParamSpec *pspec)
+{
+  GthreeTexture *texture = GTHREE_TEXTURE (obj);
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+
+  switch (prop_id)
+    {
+    case PROP_WIDTH:
+      g_value_set_int (value, priv->width);
+      break;
+    case PROP_HEIGHT:
+      g_value_set_int (value, priv->height);
+      break;
+    case PROP_MEMORY_FORMAT:
+      g_value_set_enum (value, priv->memory_format);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
+    }
+}
+
+static void
 gthree_texture_finalize (GObject *obj)
 {
   GthreeTexture *texture = GTHREE_TEXTURE (obj);
@@ -145,88 +485,9 @@ gthree_texture_finalize (GObject *obj)
 
   g_free (priv->uuid);
   g_free (priv->name);
-
-  g_clear_object (&priv->pixbuf);
-  if (priv->surface)
-    cairo_surface_destroy (priv->surface);
-
+  gthree_texture_clear_data (priv);
 
   G_OBJECT_CLASS (gthree_texture_parent_class)->finalize (obj);
-}
-
-static void
-gthree_texture_set_property (GObject *obj,
-                             guint prop_id,
-                             const GValue *value,
-                             GParamSpec *pspec)
-{
-  GthreeTexture *texture = GTHREE_TEXTURE (obj);
-  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
-  cairo_surface_t *new_surface;
-  GdkPixbuf *new_pixbuf;
-
-  switch (prop_id)
-    {
-    case PROP_SURFACE:
-      new_surface = g_value_dup_boxed (value);
-
-      if (new_surface)
-        g_clear_object (&priv->pixbuf);
-
-      if (priv->surface)
-        cairo_surface_destroy (priv->surface);
-
-      priv->surface = new_surface;
-      if (priv->surface)
-        {
-          cairo_surface_reference (priv->surface);
-          if (cairo_surface_get_content (priv->surface) == CAIRO_CONTENT_COLOR_ALPHA)
-            priv->format = GTHREE_TEXTURE_FORMAT_RGBA;
-          else
-            priv->format = GTHREE_TEXTURE_FORMAT_RGB;
-        }
-      break;
-
-    case PROP_PIXBUF:
-      new_pixbuf = g_value_dup_object (value);
-
-      if (new_pixbuf && priv->surface)
-        {
-          cairo_surface_destroy (priv->surface);
-          priv->surface = NULL;
-        }
-
-      g_clear_object (&priv->pixbuf);
-      priv->pixbuf = new_pixbuf;
-      if (priv->pixbuf && gdk_pixbuf_get_has_alpha (priv->pixbuf))
-        priv->format = GTHREE_TEXTURE_FORMAT_RGBA;
-      else
-        priv->format = GTHREE_TEXTURE_FORMAT_RGB;
-      break;
-
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
-    }
-}
-
-static void
-gthree_texture_get_property (GObject *obj,
-                             guint prop_id,
-                             GValue *value,
-                             GParamSpec *pspec)
-{
-  GthreeTexture *texture = GTHREE_TEXTURE (obj);
-  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
-
-  switch (prop_id)
-    {
-    case PROP_PIXBUF:
-      g_value_set_object (value, priv->pixbuf);
-      break;
-
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
-    }
 }
 
 static void
@@ -237,45 +498,80 @@ gthree_texture_class_init (GthreeTextureClass *klass)
 
   resource_class->realize_data_size = sizeof (GthreeTextureRealizeData);
 
-  gobject_class->set_property = gthree_texture_set_property;
-  gobject_class->get_property = gthree_texture_get_property;
   gobject_class->finalize = gthree_texture_finalize;
+  gobject_class->get_property = gthree_texture_get_property;
 
   resource_class->unrealize = gthree_texture_real_unrealize;
 
   klass->load = gthree_texture_real_load;
 
-  obj_props[PROP_SURFACE] =
-    g_param_spec_boxed ("surface", "Surface", "Surface",
-                        CAIRO_GOBJECT_TYPE_SURFACE,
-                        G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
-  obj_props[PROP_PIXBUF] =
-    g_param_spec_object ("pixbuf", "Pixbuf", "Pixbuf",
-                         GDK_TYPE_PIXBUF,
-                         G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_WIDTH] =
+    g_param_spec_int ("width", NULL, NULL,
+                      0, G_MAXINT, 0,
+                      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_HEIGHT] =
+    g_param_spec_int ("height", NULL, NULL,
+                      0, G_MAXINT, 0,
+                      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_MEMORY_FORMAT] =
+    g_param_spec_enum ("memory-format", NULL, NULL,
+                       GTHREE_TYPE_MEMORY_FORMAT,
+                       GTHREE_MEMORY_FORMAT_R8G8B8A8,
+                       G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, N_PROPS, obj_props);
 }
 
-/**
- * gthree_texture_get_pixbuf:
- *
- * Returns: (transfer none):
- */
-GdkPixbuf *
-gthree_texture_get_pixbuf (GthreeTexture *texture)
+void
+gthree_texture_set_from_bytes (GthreeTexture      *texture,
+                          GBytes             *bytes,
+                          int                 width,
+                          int                 height,
+                          gsize               stride,
+                          GthreeMemoryFormat  format)
 {
   GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+  int old_width = priv->width;
+  int old_height = priv->height;
+  GthreeMemoryFormat old_format = priv->memory_format;
 
-  return priv->pixbuf;
+  if (bytes)
+    gthree_texture_set_data (priv,
+                             g_bytes_get_data (bytes, NULL),
+                             width, height, stride, format,
+                             (GDestroyNotify) g_bytes_unref, g_bytes_ref (bytes));
+  else
+    {
+      gthree_texture_clear_data (priv);
+      priv->width = width;
+      priv->height = height;
+      priv->stride = stride;
+      priv->memory_format = format;
+    }
+
+  gthree_texture_notify_data_props (texture, old_width, old_height, old_format);
+  gthree_texture_set_needs_update (texture);
 }
 
-cairo_surface_t *
-gthree_texture_get_surface (GthreeTexture *texture)
+int
+gthree_texture_get_width (GthreeTexture *texture)
 {
   GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+  return priv->width;
+}
 
-  return priv->surface;
+int
+gthree_texture_get_height (GthreeTexture *texture)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+  return priv->height;
+}
+
+GthreeMemoryFormat
+gthree_texture_get_memory_format (GthreeTexture *texture)
+{
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+  return priv->memory_format;
 }
 
 void
@@ -501,15 +797,6 @@ gthree_texture_set_parameters (guint texture_type, GthreeTexture *texture)
   glTexParameteri (texture_type, GL_TEXTURE_WRAP_T, wrap_to_gl (priv->wrap_t));
   glTexParameteri (texture_type, GL_TEXTURE_MAG_FILTER, filter_to_gl (priv->mag_filter));
   glTexParameteri (texture_type, GL_TEXTURE_MIN_FILTER, filter_to_gl (priv->min_filter));
-
-#if TODO
-  if ( _glExtensionTextureFilterAnisotropic && texture.type !== THREE.FloatType ) {
-    if ( texture.anisotropy > 1 || texture.__oldAnisotropy ) {
-      glTexParameterf( texture_type, _glExtensionTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, Math.min( texture.anisotropy, _maxAnisotropy ) );
-      texture.__oldAnisotropy = texture.anisotropy;
-    }
-  }
-#endif
 }
 
 static void
@@ -573,91 +860,6 @@ gthree_texture_bind (GthreeTexture *texture, GthreeRenderer *renderer, int slot,
   glBindTexture (target, data->gl_texture);
 }
 
-int
-gthree_texture_data_type_to_gl (GthreeDataType type)
-{
-  switch (type)
-    {
-    default:
-    case GTHREE_DATA_TYPE_UNSIGNED_BYTE:
-      return GL_UNSIGNED_BYTE;
-    case GTHREE_DATA_TYPE_BYTE:
-      return GL_BYTE;
-    }
-}
-
-int
-gthree_texture_format_to_gl (GthreeTextureFormat format)
-{
-  switch (format)
-    {
-    default:
-    case GTHREE_TEXTURE_FORMAT_RGBA:
-      return GL_RGBA;
-    case GTHREE_TEXTURE_FORMAT_RGB:
-      return GL_RGB;
-    }
-}
-
-int
-gthree_texture_get_internal_gl_format (guint gl_format,
-                                       guint gl_type)
-{
-  guint internal_format = gl_format;
-
-  if (gl_format == GL_RED)
-    {
-      if (gl_type == GL_FLOAT )
-        internal_format = GL_R32F;
-      if (gl_type == GL_HALF_FLOAT)
-        internal_format = GL_R16F;
-      if (gl_type == GL_UNSIGNED_BYTE)
-        internal_format = GL_R8;
-    }
-
-  if ( gl_format == GL_RGB )
-    {
-    if (gl_type == GL_FLOAT)
-      internal_format = GL_RGB32F;
-    if (gl_type == GL_HALF_FLOAT)
-      internal_format = GL_RGB16F;
-    if (gl_type == GL_UNSIGNED_BYTE)
-      internal_format = GL_RGB8;
-    }
-
-  if ( gl_format == GL_RGBA )
-    {
-      if (gl_type == GL_FLOAT)
-        internal_format = GL_RGBA32F;
-      if (gl_type == GL_HALF_FLOAT)
-        internal_format = GL_RGBA16F;
-      if (gl_type == GL_UNSIGNED_BYTE)
-        internal_format = GL_RGBA8;
-  }
-
-  return internal_format;
-}
-
-static guint
-get_internal_gl_format_for_texture (GthreeTexture *texture)
-{
-  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
-  guint gl_format = gthree_texture_format_to_gl (priv->format);
-  guint gl_type = gthree_texture_data_type_to_gl (priv->type);
-  guint internal_format = gthree_texture_get_internal_gl_format (gl_format, gl_type);
-
-  if (priv->encoding == GTHREE_ENCODING_FORMAT_SRGB &&
-      gl_type == GL_UNSIGNED_BYTE)
-    {
-      if (gl_format == GL_RGBA)
-        internal_format = GL_SRGB8_ALPHA8;
-      else if (gl_format == GL_RGB)
-        internal_format = GL_SRGB8;
-    }
-
-  return internal_format;
-}
-
 void
 gthree_texture_setup_framebuffer (GthreeTexture *texture,
                                   GthreeRenderer *renderer,
@@ -668,21 +870,18 @@ gthree_texture_setup_framebuffer (GthreeTexture *texture,
                                   int texture_target)
 {
   GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
-  guint gl_format, gl_type, gl_internal_format;
+  GthreeGLFormatInfo gl_info;
   GthreeTextureRealizeData *data = gthree_resource_get_data_for (GTHREE_RESOURCE (texture), renderer);
 
-  gl_format = gthree_texture_format_to_gl (priv->format);
-  gl_type = gthree_texture_data_type_to_gl (priv->type);
-  gl_internal_format = gthree_texture_get_internal_gl_format (gl_format, gl_type);
+  gthree_memory_format_to_gl (priv->memory_format, &gl_info);
 
-  glTexImage2D (texture_target, 0, gl_internal_format,
-                width, height, 0, gl_format, gl_type, 0);
+  glTexImage2D (texture_target, 0, gl_info.gl_internal_format,
+                width, height, 0, gl_info.gl_format, gl_info.gl_type, 0);
   glBindFramebuffer (GL_FRAMEBUFFER, framebuffer);
   glFramebufferTexture2D (GL_FRAMEBUFFER, attachment, texture_target,
                           data->gl_texture, 0);
   glBindFramebuffer (GL_FRAMEBUFFER, 0);
 }
-
 
 static int
 gthree_texture_get_gl_target (GthreeTexture *texture)
@@ -699,6 +898,23 @@ gthree_texture_get_gl_target (GthreeTexture *texture)
     }
 }
 
+void
+gthree_swizzle_bgra_to_rgba (guchar *dst, const guchar *src, guint width, guint height, gsize stride)
+{
+  for (guint y = 0; y < height; y++)
+    {
+      const guchar *row = src + y * stride;
+      guchar *dst_row = dst + y * width * 4;
+      for (guint x = 0; x < width; x++)
+        {
+          dst_row[x*4+0] = row[x*4+2];
+          dst_row[x*4+1] = row[x*4+1];
+          dst_row[x*4+2] = row[x*4+0];
+          dst_row[x*4+3] = row[x*4+3];
+        }
+    }
+}
+
 static void
 gthree_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer, int slot)
 {
@@ -707,142 +923,65 @@ gthree_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer, int 
 
   gthree_texture_bind (texture, renderer, slot, gl_target);
 
-  if (gthree_resource_get_dirty_for (GTHREE_RESOURCE (texture), renderer) && (priv->pixbuf || priv->surface))
+  if (gthree_resource_get_dirty_for (GTHREE_RESOURCE (texture), renderer) && priv->data)
     {
-      guint width;
-      guint height;
-      guint gl_format, gl_type;
+      GthreeGLFormatInfo gl_info;
+      guint gl_internal_format;
+      const guchar *data;
+      guchar *flipped = NULL;
+      guchar *swizzled = NULL;
+      int bpp;
 
-      if (priv->pixbuf)
-        {
-          width = gdk_pixbuf_get_width (priv->pixbuf);
-          height = gdk_pixbuf_get_height (priv->pixbuf);
-        }
-      else
-        {
-          width = cairo_image_surface_get_width (priv->surface);
-          height = cairo_image_surface_get_height (priv->surface);
-        }
+      gthree_memory_format_to_gl (priv->memory_format, &gl_info);
 
-      //glPixelStorei( GL_UNPACK_FLIP_Y_WEBGL, texture.flipY );
-      //glPixelStorei( GL_UNPACK_PREMULTIPLY_ALPHA_WEBGL, texture.premultiplyAlpha );
-      glPixelStorei (GL_UNPACK_ALIGNMENT, priv->unpack_alignment);
+      gl_internal_format = gl_info.gl_internal_format;
+      if (priv->encoding == GTHREE_ENCODING_FORMAT_SRGB && gl_info.gl_internal_format_srgb)
+        gl_internal_format = gl_info.gl_internal_format_srgb;
+
       glPixelStorei (GL_UNPACK_ALIGNMENT, priv->unpack_alignment);
 
-      gl_format = gthree_texture_format_to_gl (priv->format);
-      gl_type = gthree_texture_data_type_to_gl (priv->type);
-      guint gl_internal_format = get_internal_gl_format_for_texture (texture);
+      bpp = gthree_memory_format_bytes_per_pixel (priv->memory_format);
+
+      if (priv->stride != (gsize)(priv->width * bpp))
+        glPixelStorei (GL_UNPACK_ROW_LENGTH, priv->stride / bpp);
 
       gthree_texture_set_parameters (GL_TEXTURE_2D, texture);
 
-      //var mipmap, mipmaps = texture.mipmaps;
+      data = priv->data;
 
-#if TODO
-      if ( texture instanceof THREE.DataTexture )
+      if (priv->flip_y)
         {
-          // use manually created mipmaps if available
-          // if there are no manual mipmaps
-          // set 0 level mipmap and then use GL to generate other mipmap levels
-          if ( mipmaps.length > 0 && isImagePowerOfTwo )
-            {
-              for ( var i = 0, il = mipmaps.length; i < il; i ++ ) {
-                mipmap = mipmaps[ i ];
-                _gl.texImage2D( _gl.TEXTURE_2D, i, glFormat, mipmap.width, mipmap.height, 0, glFormat, glType, mipmap.data );
-              }
-              texture.generateMipmaps = false;
-            }
-          else
-            {
-              _gl.texImage2D( _gl.TEXTURE_2D, 0, glFormat, image.width, image.height, 0, glFormat, glType, image.data );
-            }
+          flipped = g_malloc (priv->height * priv->stride);
+          for (int y = 0; y < priv->height; y++)
+            memcpy (flipped + y * priv->stride,
+                    data + (priv->height - 1 - y) * priv->stride,
+                    priv->stride);
+          data = flipped;
         }
-      else if ( texture instanceof THREE.CompressedTexture )
+
+      if (gthree_memory_format_needs_bgra_swizzle (priv->memory_format))
         {
-          for ( var i = 0, il = mipmaps.length; i < il; i ++ )
-            {
-              mipmap = mipmaps[ i ];
-              if ( texture.format !== THREE.RGBAFormat )
-                {
-                  _gl.compressedTexImage2D( _gl.TEXTURE_2D, i, glFormat, mipmap.width, mipmap.height, 0, mipmap.data );
-                }
-              else
-                {
-                  _gl.texImage2D( _gl.TEXTURE_2D, i, glFormat, mipmap.width, mipmap.height, 0, glFormat, glType, mipmap.data );
-                }
-            }
+          swizzled = g_malloc (priv->width * priv->height * 4);
+          gthree_swizzle_bgra_to_rgba (swizzled, data, priv->width, priv->height, priv->stride);
+          data = swizzled;
+          if (priv->stride != (gsize)(priv->width * bpp))
+            glPixelStorei (GL_UNPACK_ROW_LENGTH, 0);
         }
-      else
-#endif
-        {
-          // regular Texture (image, video, canvas)
 
-          // use manually created mipmaps if available
-          // if there are no manual mipmaps
-          // set 0 level mipmap and then use GL to generate other mipmap levels
+      glTexImage2D (GL_TEXTURE_2D, 0, gl_internal_format,
+                    priv->width, priv->height, 0,
+                    gl_info.gl_format, gl_info.gl_type, data);
 
-#ifdef TODO
-          if ( mipmaps.length > 0 && isImagePowerOfTwo )
-            {
-              for ( var i = 0, il = mipmaps.length; i < il; i ++ ) {
-                mipmap = mipmaps[ i ];
-                _gl.texImage2D( _gl.TEXTURE_2D, i, glFormat, glFormat, glType, mipmap );
-              }
-              texture.generateMipmaps = false;
-            }
-          else
-#endif
-            {
-              if (priv->pixbuf)
-                {
-                  GdkPixbuf *pixbuf;
-                  if (priv->flip_y)
-                    pixbuf = gdk_pixbuf_flip (priv->pixbuf, FALSE);
-                  else
-                    pixbuf = g_object_ref (priv->pixbuf);
+      g_free (swizzled);
+      g_free (flipped);
 
-                  glTexImage2D (GL_TEXTURE_2D, 0, gl_internal_format, width, height, 0, gl_format, gl_type,
-                                gdk_pixbuf_get_pixels (pixbuf));
-                  g_object_unref (pixbuf);
-                }
-              else
-                {
-                  if (priv->flip_y)
-                    {
-                      g_warning ("Y-Flipping cairo_surface_t not supported yet");
-                      // TODO: Support flip
-                    }
-
-                  if (epoxy_is_desktop_gl ())
-                    {
-                      glTexImage2D (GL_TEXTURE_2D, 0, gl_internal_format, width, height, 0,
-                                    GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
-                                    cairo_image_surface_get_data (priv->surface));
-                    }
-                  else
-                    {
-                      /* GLES doesn't support GL_BGRA/GL_UNSIGNED_INT_8_8_8_8_REV,
-                         so swizzle BGRA to RGBA */
-                      const guchar *src = cairo_image_surface_get_data (priv->surface);
-                      guchar *rgba = g_malloc (width * height * 4);
-                      for (guint i = 0; i < width * height; i++)
-                        {
-                          rgba[i*4+0] = src[i*4+2]; /* R <- B */
-                          rgba[i*4+1] = src[i*4+1]; /* G <- G */
-                          rgba[i*4+2] = src[i*4+0]; /* B <- R */
-                          rgba[i*4+3] = src[i*4+3]; /* A <- A */
-                        }
-                      glTexImage2D (GL_TEXTURE_2D, 0, gl_internal_format, width, height, 0,
-                                    GL_RGBA, GL_UNSIGNED_BYTE, rgba);
-                      g_free (rgba);
-                    }
-                }
-            }
-        }
+      if (priv->stride != (gsize)(priv->width * bpp))
+        glPixelStorei (GL_UNPACK_ROW_LENGTH, 0);
 
       if (priv->generate_mipmaps)
         {
           glGenerateMipmap (GL_TEXTURE_2D);
-          gthree_texture_set_max_mip_level (texture, log2 (MAX (width, height)));
+          gthree_texture_set_max_mip_level (texture, log2 (MAX (priv->width, priv->height)));
         }
 
       gthree_resource_mark_clean_for (GTHREE_RESOURCE (texture), renderer);
@@ -925,40 +1064,6 @@ gthree_texture_get_uuid (GthreeTexture *texture)
   GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
 
   return priv->uuid;
-}
-
-void
-gthree_texture_set_format (GthreeTexture *texture,
-                           GthreeTextureFormat format)
-{
-  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
-
-  priv->format = format;
-}
-
-GthreeTextureFormat
-gthree_texture_get_format (GthreeTexture *texture)
-{
-  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
-
-  return priv->format;
-}
-
-void
-gthree_texture_set_data_type (GthreeTexture *texture,
-                              GthreeDataType type)
-{
-  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
-
-  priv->type = type;
-}
-
-GthreeDataType
-gthree_texture_get_data_type (GthreeTexture *texture)
-{
-  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
-
-  return priv->type;
 }
 
 void

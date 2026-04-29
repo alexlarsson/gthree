@@ -14,42 +14,40 @@ enum {
 };
 
 typedef struct {
-  GdkPixbuf *pixbufs[6];
+  GBytes *face_bytes[6];
+  int size;
+  gsize stride;
+  GthreeMemoryFormat format;
 } GthreeCubeTexturePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (GthreeCubeTexture, gthree_cube_texture, GTHREE_TYPE_TEXTURE);
 
 GthreeCubeTexture *
-gthree_cube_texture_new (GdkPixbuf *px,
-                         GdkPixbuf *nx,
-                         GdkPixbuf *py,
-                         GdkPixbuf *ny,
-                         GdkPixbuf *pz,
-                         GdkPixbuf *nz)
+gthree_cube_texture_new_from_bytes (GBytes             *faces[6],
+                                    int                 size,
+                                    gsize               stride,
+                                    GthreeMemoryFormat  format)
 {
   GthreeCubeTexture *cube;
   GthreeCubeTexturePrivate *priv;
-  int i = 0;
 
-  cube = g_object_new (gthree_cube_texture_get_type (),
-                           NULL);
-
+  cube = g_object_new (gthree_cube_texture_get_type (), NULL);
   priv = gthree_cube_texture_get_instance_private (cube);
 
-  priv->pixbufs[i++] = g_object_ref (px);
-  priv->pixbufs[i++] = g_object_ref (nx);
-  priv->pixbufs[i++] = g_object_ref (py);
-  priv->pixbufs[i++] = g_object_ref (ny);
-  priv->pixbufs[i++] = g_object_ref (pz);
-  priv->pixbufs[i++] = g_object_ref (nz);
+  for (int i = 0; i < 6; i++)
+    priv->face_bytes[i] = g_bytes_ref (faces[i]);
+  priv->size = size;
+  priv->stride = stride;
+  priv->format = format;
 
   return cube;
 }
 
-GthreeCubeTexture *
-gthree_cube_texture_new_from_array (GdkPixbuf *pixbufs[6])
+int
+gthree_cube_texture_get_size (GthreeCubeTexture *cube)
 {
-  return gthree_cube_texture_new (pixbufs[0], pixbufs[1], pixbufs[2], pixbufs[3], pixbufs[4], pixbufs[5]);
+  GthreeCubeTexturePrivate *priv = gthree_cube_texture_get_instance_private (cube);
+  return priv->size;
 }
 
 static void
@@ -63,94 +61,53 @@ gthree_cube_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer,
 {
   GthreeCubeTexture *cube = GTHREE_CUBE_TEXTURE (texture);
   GthreeCubeTexturePrivate *priv = gthree_cube_texture_get_instance_private (cube);
-  int i;
-  //int max_cubemap_size;
-  GdkPixbuf *cube_pixbufs[6];
-  //gboolean autoScaleCubemaps = TRUE; // TODO: Pass from renderer
 
   gthree_texture_bind (texture, renderer, slot, GL_TEXTURE_CUBE_MAP);
 
   if (gthree_resource_get_dirty_for (GTHREE_RESOURCE (texture), renderer))
     {
-      guint width, height;
-      gboolean is_compressed = FALSE; //texture instanceof THREE.CompressedTexture;
-      guint gl_format, gl_type;
-
-      for (i = 0; i < 6; i++)
-        {
-#ifdef TODO
-          if ( autoScaleCubemaps && ! is_compressed )
-            {
-              glGetIntegerv (GL_MAX_CUBE_MAP_TEXTURE_SIZE, &max_cubemap_size);
-              cubeImage[ i ] = clampToMaxSize( texture.image[ i ], max_cubemap_size);
-            }
-          else
-#endif
-            cube_pixbufs[i] = g_object_ref (priv->pixbufs[i]);
-        }
-
-      width = gdk_pixbuf_get_width (cube_pixbufs[0]);
-      height = gdk_pixbuf_get_height (cube_pixbufs[0]);
-      gl_format = gdk_pixbuf_get_has_alpha (cube_pixbufs[0]) ? GL_RGBA : GL_RGB;
-      gl_type = GL_UNSIGNED_BYTE;
-
+      GthreeGLFormatInfo gl_info;
       guint gl_internal_format;
-      if (gthree_texture_get_encoding (texture) == GTHREE_ENCODING_FORMAT_SRGB)
-        gl_internal_format = gdk_pixbuf_get_has_alpha (cube_pixbufs[0]) ? GL_SRGB8_ALPHA8 : GL_SRGB8;
-      else
-        gl_internal_format = gdk_pixbuf_get_has_alpha (cube_pixbufs[0]) ? GL_RGBA8 : GL_RGB8;
+      gboolean needs_swizzle;
+
+      gthree_memory_format_to_gl (priv->format, &gl_info);
+
+      gl_internal_format = gl_info.gl_internal_format;
+      if (gthree_texture_get_encoding (texture) == GTHREE_ENCODING_FORMAT_SRGB &&
+          gl_info.gl_internal_format_srgb)
+        gl_internal_format = gl_info.gl_internal_format_srgb;
+
+      needs_swizzle = gthree_memory_format_needs_bgra_swizzle (priv->format);
 
       gthree_texture_set_parameters (GL_TEXTURE_CUBE_MAP, texture);
 
-      for (i = 0; i < 6; i++)
+      for (int i = 0; i < 6; i++)
         {
-          if (!is_compressed)
+          const guchar *data = g_bytes_get_data (priv->face_bytes[i], NULL);
+          guchar *swizzled = NULL;
+
+          if (needs_swizzle)
             {
-              glTexImage2D (GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, gl_internal_format, width, height, 0, gl_format, gl_type,
-                            gdk_pixbuf_get_pixels (cube_pixbufs[i]));
+              swizzled = g_malloc (priv->size * priv->size * 4);
+              gthree_swizzle_bgra_to_rgba (swizzled, data, priv->size, priv->size, priv->stride);
+              data = swizzled;
             }
-#ifdef TODO
-          else
-            {
-              var mipmap, mipmaps = cubeImage[ i ].mipmaps;
-              for ( var j = 0, jl = mipmaps.length; j < jl; j ++ )
-                {
-                  mipmap = mipmaps[ j ];
-                  if ( texture.format !== THREE.RGBAFormat )
-                    {
-                      _gl.compressedTexImage2D( _gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, j, glFormat, mipmap.width, mipmap.height, 0, mipmap.data );
-                    }
-                  else
-                    {
-                      _gl.texImage2D( _gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, j, glFormat, mipmap.width, mipmap.height, 0, glFormat, glType, mipmap.data );
-                    }
-                }
-            }
-#endif
+
+          glTexImage2D (GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, gl_internal_format,
+                        priv->size, priv->size, 0,
+                        gl_info.gl_format, gl_info.gl_type, data);
+
+          g_free (swizzled);
         }
 
       if (gthree_texture_get_generate_mipmaps (texture))
         {
           glGenerateMipmap (GL_TEXTURE_CUBE_MAP);
-          gthree_texture_set_max_mip_level (texture, log2 (MAX (width, height)));
+          gthree_texture_set_max_mip_level (texture, log2 (priv->size));
         }
-
-      for (i = 0; i < 6; i++)
-        g_object_unref (cube_pixbufs[i]);
 
       gthree_resource_mark_clean_for (GTHREE_RESOURCE (texture), renderer);
     }
-}
-
-GdkPixbuf *
-gthree_cube_texture_get_face_pixbuf (GthreeCubeTexture *cube_texture,
-                                     int                face)
-{
-  GthreeCubeTexturePrivate *priv = gthree_cube_texture_get_instance_private (cube_texture);
-
-  g_return_val_if_fail (face >= 0 && face < 6, NULL);
-
-  return priv->pixbufs[face];
 }
 
 static void
@@ -158,10 +115,9 @@ gthree_cube_texture_finalize (GObject *obj)
 {
   GthreeCubeTexture *cube = GTHREE_CUBE_TEXTURE (obj);
   GthreeCubeTexturePrivate *priv = gthree_cube_texture_get_instance_private (cube);
-  int i;
 
-  for (i = 0; i < 6; i++)
-    g_clear_object (&priv->pixbufs[i]);
+  for (int i = 0; i < 6; i++)
+    g_clear_pointer (&priv->face_bytes[i], g_bytes_unref);
 
   G_OBJECT_CLASS (gthree_cube_texture_parent_class)->finalize (obj);
 }

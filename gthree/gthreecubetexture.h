@@ -32,14 +32,12 @@ GTHREE_API
 GType gthree_cube_texture_get_type (void) G_GNUC_CONST;
 
 GTHREE_API
-GthreeCubeTexture *gthree_cube_texture_new (GdkPixbuf *px,
-                                            GdkPixbuf *nx,
-                                            GdkPixbuf *py,
-                                            GdkPixbuf *ny,
-                                            GdkPixbuf *pz,
-                                            GdkPixbuf *nz);
+GthreeCubeTexture *gthree_cube_texture_new_from_bytes (GBytes             *faces[6],
+                                                       int                 size,
+                                                       gsize               stride,
+                                                       GthreeMemoryFormat  format);
 GTHREE_API
-GthreeCubeTexture *gthree_cube_texture_new_from_array (GdkPixbuf *pixbufs[6]);
+int                gthree_cube_texture_get_size       (GthreeCubeTexture  *cube);
 
 G_END_DECLS
 

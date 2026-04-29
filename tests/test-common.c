@@ -55,7 +55,7 @@ test_load_texture (const char *filename)
       g_warning ("Failed to load %s: %s", path, error->message);
       return NULL;
     }
-  GthreeTexture *texture = gthree_texture_new (pixbuf);
+  GthreeTexture *texture = gthree_texture_new_from_pixbuf (pixbuf);
   gthree_texture_set_encoding (texture, GTHREE_ENCODING_FORMAT_SRGB);
   return texture;
 }
@@ -84,41 +84,41 @@ test_geometry_torus_knot (void)
   return gthree_geometry_new_torus_knot (0.6, 0.2, 128, 32, 2, 3);
 }
 
-static GdkPixbuf *
-make_checker_pixbuf (int r, int g, int b)
+static GBytes *
+make_checker_bytes (int r, int g, int b, int size, int cell)
 {
-  int size = 256;
-  int cell = 64;
-  GdkPixbuf *pixbuf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE, 8, size, size);
-  guchar *pixels = gdk_pixbuf_get_pixels (pixbuf);
-  int stride = gdk_pixbuf_get_rowstride (pixbuf);
+  guchar *pixels = g_malloc (size * size * 3);
   for (int y = 0; y < size; y++)
     for (int x = 0; x < size; x++)
       {
-        guchar *p = pixels + y * stride + x * 3;
+        guchar *p = pixels + y * size * 3 + x * 3;
         if (((x / cell) + (y / cell)) % 2)
           { p[0] = r; p[1] = g; p[2] = b; }
         else
           { p[0] = 0; p[1] = 0; p[2] = 0; }
       }
-  return pixbuf;
+  return g_bytes_new_take (pixels, size * size * 3);
 }
 
 GthreeCubeTexture *
 test_cube_texture_colored (void)
 {
-  GdkPixbuf *faces[6];
-  faces[0] = make_checker_pixbuf (255,   0,   0);
-  faces[1] = make_checker_pixbuf (  0, 255, 255);
-  faces[2] = make_checker_pixbuf (  0, 255,   0);
-  faces[3] = make_checker_pixbuf (255,   0, 255);
-  faces[4] = make_checker_pixbuf (  0,   0, 255);
-  faces[5] = make_checker_pixbuf (255, 255,   0);
+  int size = 256;
+  int cell = 64;
+  GBytes *face_bytes[6];
+  face_bytes[0] = make_checker_bytes (255,   0,   0, size, cell);
+  face_bytes[1] = make_checker_bytes (  0, 255, 255, size, cell);
+  face_bytes[2] = make_checker_bytes (  0, 255,   0, size, cell);
+  face_bytes[3] = make_checker_bytes (255,   0, 255, size, cell);
+  face_bytes[4] = make_checker_bytes (  0,   0, 255, size, cell);
+  face_bytes[5] = make_checker_bytes (255, 255,   0, size, cell);
 
-  GthreeCubeTexture *tex = gthree_cube_texture_new_from_array (faces);
+  GthreeCubeTexture *tex = gthree_cube_texture_new_from_bytes (face_bytes, size,
+                                                                size * 3,
+                                                                GTHREE_MEMORY_FORMAT_R8G8B8);
   gthree_texture_set_encoding (GTHREE_TEXTURE (tex), GTHREE_ENCODING_FORMAT_SRGB);
   for (int i = 0; i < 6; i++)
-    g_object_unref (faces[i]);
+    g_bytes_unref (face_bytes[i]);
 
   return tex;
 }

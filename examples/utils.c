@@ -126,25 +126,47 @@ GthreeTexture *
 examples_load_texture (const char *file)
 {
   g_autoptr(GdkPixbuf) pixbuf = examples_load_pixbuf (file);
-  GthreeTexture *texture = gthree_texture_new (pixbuf);
+  GthreeTexture *texture = gthree_texture_new_from_pixbuf (pixbuf);
   gthree_texture_set_encoding (texture, GTHREE_ENCODING_FORMAT_SRGB);
   return texture;
 }
 
-void
-examples_load_cube_pixbufs (const char *dir,
-                            GdkPixbuf *pixbufs[6])
+GthreeCubeTexture *
+examples_load_cube_texture (const char *dir)
 {
-  char *files[] = {"px.jpg", "nx.jpg",
-                   "py.jpg", "ny.jpg",
-                   "pz.jpg", "nz.jpg"};
-  int i;
+  const char *files[] = {"px.jpg", "nx.jpg",
+                         "py.jpg", "ny.jpg",
+                         "pz.jpg", "nz.jpg"};
+  GBytes *face_bytes[6];
+  int size = 0;
+  gsize stride = 0;
+  GthreeMemoryFormat fmt = GTHREE_MEMORY_FORMAT_R8G8B8;
 
-  for (i = 0 ; i < 6; i++)
+  for (int i = 0; i < 6; i++)
     {
-      char *file = g_build_filename (dir, files[i], NULL);
-      pixbufs[i] = examples_load_pixbuf (file);
+      g_autofree char *file = g_build_filename (dir, files[i], NULL);
+      g_autoptr(GdkPixbuf) pixbuf = examples_load_pixbuf (file);
+      if (i == 0)
+        {
+          size = gdk_pixbuf_get_width (pixbuf);
+          g_assert (gdk_pixbuf_get_height (pixbuf) == size);
+          stride = gdk_pixbuf_get_rowstride (pixbuf);
+          fmt = gdk_pixbuf_get_has_alpha (pixbuf) ? GTHREE_MEMORY_FORMAT_R8G8B8A8 : GTHREE_MEMORY_FORMAT_R8G8B8;
+        }
+      else
+        {
+          g_assert (gdk_pixbuf_get_width (pixbuf) == size);
+          g_assert (gdk_pixbuf_get_height (pixbuf) == size);
+        }
+      face_bytes[i] = g_bytes_new (gdk_pixbuf_get_pixels (pixbuf),
+                                   gdk_pixbuf_get_height (pixbuf) * stride);
     }
+
+  GthreeCubeTexture *tex = gthree_cube_texture_new_from_bytes (face_bytes, size, stride, fmt);
+  for (int i = 0; i < 6; i++)
+    g_bytes_unref (face_bytes[i]);
+
+  return tex;
 }
 
 GthreeGeometry *

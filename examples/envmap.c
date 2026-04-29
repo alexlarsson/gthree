@@ -14,16 +14,13 @@ init_scene (void)
   GthreeGeometry *geometry;
   GthreeMeshLambertMaterial *material, *material2;
   GthreeCubeTexture *reflectionCube, *refractionCube;
-  GdkPixbuf *pixbufs[6];
   GthreeAmbientLight *ambient_light;
   GthreePointLight *point_light;
 
-  examples_load_cube_pixbufs ("cube/SwedishRoyalCastle", pixbufs);
-
-  reflectionCube = gthree_cube_texture_new_from_array (pixbufs);
+  reflectionCube = examples_load_cube_texture ("cube/SwedishRoyalCastle");
   gthree_texture_set_encoding (GTHREE_TEXTURE (reflectionCube), GTHREE_ENCODING_FORMAT_SRGB);
 
-  refractionCube = gthree_cube_texture_new_from_array (pixbufs);
+  refractionCube = examples_load_cube_texture ("cube/SwedishRoyalCastle");
   gthree_texture_set_encoding (GTHREE_TEXTURE (refractionCube), GTHREE_ENCODING_FORMAT_SRGB);
   gthree_texture_set_mapping (GTHREE_TEXTURE (refractionCube), GTHREE_MAPPING_CUBE_REFRACTION);
 

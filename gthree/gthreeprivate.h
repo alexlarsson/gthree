@@ -218,10 +218,22 @@ void gthree_resource_mark_clean_for (GthreeResource *resource,
 guint gthree_renderer_allocate_texture_unit (GthreeRenderer *renderer);
 GthreeColorSpace gthree_renderer_get_output_color_space (GthreeRenderer *renderer);
 
-int gthree_texture_get_internal_gl_format (guint gl_format,
-                                           guint gl_type);
-int gthree_texture_format_to_gl (GthreeTextureFormat format);
-int gthree_texture_data_type_to_gl (GthreeDataType type);
+typedef struct {
+  guint gl_format;
+  guint gl_type;
+  guint gl_internal_format;
+  guint gl_internal_format_srgb;
+} GthreeGLFormatInfo;
+
+void gthree_memory_format_to_gl (GthreeMemoryFormat format,
+                                 GthreeGLFormatInfo *info);
+int  gthree_memory_format_bytes_per_pixel (GthreeMemoryFormat format);
+gboolean gthree_memory_format_needs_bgra_swizzle (GthreeMemoryFormat format);
+void gthree_swizzle_bgra_to_rgba (guchar *dst, const guchar *src, guint width, guint height, gsize stride);
+
+GthreeTexture *gthree_texture_new_empty (int                width,
+                                         int                height,
+                                         GthreeMemoryFormat format);
 
 void gthree_texture_setup_framebuffer (GthreeTexture *texture,
                                        GthreeRenderer *renderer,
@@ -432,13 +444,7 @@ gthree_color_srgb_to_linear (const graphene_vec3_t *srgb, graphene_vec3_t *linea
                       gthree_srgb_eotf (graphene_vec3_get_z (srgb)));
 }
 
-void     gthree_texture_set_gl_texture      (GthreeTexture  *texture,
-                                              GthreeRenderer *renderer,
-                                              guint           gl_texture);
 void     gthree_texture_set_needs_pmrem_update (GthreeTexture *texture);
 guint    gthree_texture_get_pmrem_version      (GthreeTexture *texture);
-
-GdkPixbuf *gthree_cube_texture_get_face_pixbuf (GthreeCubeTexture *cube_texture,
-                                                int                face);
 
 #endif /* __GTHREE_PRIVATE_H__ */

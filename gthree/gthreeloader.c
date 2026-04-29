@@ -18,6 +18,7 @@
 #include "gthreevectorkeyframetrack.h"
 #include "gthreenumberkeyframetrack.h"
 #include "gthreequaternionkeyframetrack.h"
+#include <gdk-pixbuf/gdk-pixbuf.h>
 #include <json-glib/json-glib.h>
 #ifdef HAVE_DRACO
 #include "gthreedraco.h"
@@ -1135,7 +1136,7 @@ parse_textures (GthreeLoader *loader, JsonObject *root, GError **error)
 
       image = g_ptr_array_index (priv->images, source_idx);
 
-      texture = gthree_texture_new (image);
+      texture = gthree_texture_new_from_pixbuf (image);
       gthree_texture_set_wrap_s (texture, sampler->wrap_s);
       gthree_texture_set_wrap_t (texture, sampler->wrap_t);
       gthree_texture_set_mag_filter (texture, sampler->mag_filter);

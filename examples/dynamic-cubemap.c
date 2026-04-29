@@ -23,13 +23,11 @@ init_scene (void)
   GthreeGeometry *geometry;
   GthreeMeshStandardMaterial *material2;
   GthreeCubeTexture *background_cube;
-  GdkPixbuf *pixbufs[6];
   GthreeAmbientLight *ambient_light;
 
   scene = gthree_scene_new ();
 
-  examples_load_cube_pixbufs ("cube/Park2", pixbufs);
-  background_cube = gthree_cube_texture_new_from_array (pixbufs);
+  background_cube = examples_load_cube_texture ("cube/Park2");
   gthree_texture_set_encoding (GTHREE_TEXTURE (background_cube), GTHREE_ENCODING_FORMAT_SRGB);
   gthree_scene_set_background_texture (scene, GTHREE_TEXTURE (background_cube));
   gthree_scene_set_environment (scene, GTHREE_TEXTURE (background_cube));
