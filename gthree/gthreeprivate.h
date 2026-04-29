@@ -229,7 +229,7 @@ void gthree_memory_format_to_gl (GthreeMemoryFormat format,
                                  GthreeGLFormatInfo *info);
 int  gthree_memory_format_bytes_per_pixel (GthreeMemoryFormat format);
 gboolean gthree_memory_format_needs_bgra_swizzle (GthreeMemoryFormat format);
-void gthree_swizzle_bgra_to_rgba (guchar *dst, const guchar *src, guint width, guint height, gsize stride);
+void gthree_swizzle_bgra_to_rgba (guchar *dst, const guchar *src, guint width, guint height, gsize stride, gboolean flip_y);
 
 GthreeTexture *gthree_texture_new_empty (int                width,
                                          int                height,

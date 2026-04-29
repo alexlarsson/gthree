@@ -89,7 +89,7 @@ gthree_cube_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer,
           if (needs_swizzle)
             {
               swizzled = g_malloc (priv->size * priv->size * 4);
-              gthree_swizzle_bgra_to_rgba (swizzled, data, priv->size, priv->size, priv->stride);
+              gthree_swizzle_bgra_to_rgba (swizzled, data, priv->size, priv->size, priv->stride, FALSE);
               data = swizzled;
             }
 

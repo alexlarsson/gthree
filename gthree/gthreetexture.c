@@ -899,11 +899,12 @@ gthree_texture_get_gl_target (GthreeTexture *texture)
 }
 
 void
-gthree_swizzle_bgra_to_rgba (guchar *dst, const guchar *src, guint width, guint height, gsize stride)
+gthree_swizzle_bgra_to_rgba (guchar *dst, const guchar *src, guint width, guint height, gsize stride, gboolean flip_y)
 {
   for (guint y = 0; y < height; y++)
     {
-      const guchar *row = src + y * stride;
+      guint src_y = flip_y ? (height - 1 - y) : y;
+      const guchar *row = src + src_y * stride;
       guchar *dst_row = dst + y * width * 4;
       for (guint x = 0; x < width; x++)
         {
@@ -928,8 +929,8 @@ gthree_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer, int 
       GthreeGLFormatInfo gl_info;
       guint gl_internal_format;
       const guchar *data;
-      guchar *flipped = NULL;
-      guchar *swizzled = NULL;
+      guchar *tmp = NULL;
+      gboolean needs_swizzle;
       int bpp;
 
       gthree_memory_format_to_gl (priv->memory_format, &gl_info);
@@ -948,32 +949,31 @@ gthree_texture_real_load (GthreeTexture *texture, GthreeRenderer *renderer, int 
       gthree_texture_set_parameters (GL_TEXTURE_2D, texture);
 
       data = priv->data;
+      needs_swizzle = gthree_memory_format_needs_bgra_swizzle (priv->memory_format);
 
-      if (priv->flip_y)
+      if (needs_swizzle)
         {
-          flipped = g_malloc (priv->height * priv->stride);
-          for (int y = 0; y < priv->height; y++)
-            memcpy (flipped + y * priv->stride,
-                    data + (priv->height - 1 - y) * priv->stride,
-                    priv->stride);
-          data = flipped;
-        }
-
-      if (gthree_memory_format_needs_bgra_swizzle (priv->memory_format))
-        {
-          swizzled = g_malloc (priv->width * priv->height * 4);
-          gthree_swizzle_bgra_to_rgba (swizzled, data, priv->width, priv->height, priv->stride);
-          data = swizzled;
+          tmp = g_malloc (priv->width * priv->height * 4);
+          gthree_swizzle_bgra_to_rgba (tmp, data, priv->width, priv->height, priv->stride, priv->flip_y);
+          data = tmp;
           if (priv->stride != (gsize)(priv->width * bpp))
             glPixelStorei (GL_UNPACK_ROW_LENGTH, 0);
+        }
+      else if (priv->flip_y)
+        {
+          tmp = g_malloc (priv->height * priv->stride);
+          for (int y = 0; y < priv->height; y++)
+            memcpy (tmp + y * priv->stride,
+                    data + (priv->height - 1 - y) * priv->stride,
+                    priv->stride);
+          data = tmp;
         }
 
       glTexImage2D (GL_TEXTURE_2D, 0, gl_internal_format,
                     priv->width, priv->height, 0,
                     gl_info.gl_format, gl_info.gl_type, data);
 
-      g_free (swizzled);
-      g_free (flipped);
+      g_free (tmp);
 
       if (priv->stride != (gsize)(priv->width * bpp))
         glPixelStorei (GL_UNPACK_ROW_LENGTH, 0);
