@@ -1,5 +1,10 @@
 #include <math.h>
 #include <epoxy/gl.h>
+#include <epoxy/egl.h>
+
+#ifndef DRM_FORMAT_MOD_INVALID
+#define DRM_FORMAT_MOD_INVALID ((1ULL << 56) - 1)
+#endif
 
 #include "gthreetexture.h"
 #include "gthreeprivate.h"
@@ -871,6 +876,100 @@ gthree_texture_set_gl_texture (GthreeTexture *texture, GthreeRenderer *renderer,
     gthree_resource_set_realized_for (GTHREE_RESOURCE (texture), renderer);
 
   data->gl_texture = gl_texture;
+}
+
+gboolean
+gthree_texture_set_from_dmabuf (GthreeTexture  *texture,
+                                GthreeRenderer *renderer,
+                                int             fd,
+                                uint32_t        fourcc,
+                                uint64_t        modifier,
+                                int             width,
+                                int             height,
+                                uint32_t        offset,
+                                uint32_t        stride,
+                                GError        **error)
+{
+  if (!epoxy_has_egl ())
+    {
+      g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+                           "DMABUF import requires EGL support");
+      return FALSE;
+    }
+
+  GthreeTexturePrivate *priv = gthree_texture_get_instance_private (texture);
+  EGLDisplay egl_display = eglGetCurrentDisplay ();
+
+  if (egl_display == EGL_NO_DISPLAY)
+    {
+      g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+                           "No EGL display available");
+      return FALSE;
+    }
+
+  if (!epoxy_has_egl_extension (egl_display, "EGL_EXT_image_dma_buf_import"))
+    {
+      g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+                           "EGL_EXT_image_dma_buf_import not available");
+      return FALSE;
+    }
+
+  EGLAttrib attribs[17];
+  int i = 0;
+
+  attribs[i++] = EGL_WIDTH;
+  attribs[i++] = width;
+  attribs[i++] = EGL_HEIGHT;
+  attribs[i++] = height;
+  attribs[i++] = EGL_LINUX_DRM_FOURCC_EXT;
+  attribs[i++] = fourcc;
+  attribs[i++] = EGL_DMA_BUF_PLANE0_FD_EXT;
+  attribs[i++] = fd;
+  attribs[i++] = EGL_DMA_BUF_PLANE0_OFFSET_EXT;
+  attribs[i++] = offset;
+  attribs[i++] = EGL_DMA_BUF_PLANE0_PITCH_EXT;
+  attribs[i++] = stride;
+
+  if (modifier != DRM_FORMAT_MOD_INVALID &&
+      epoxy_has_egl_extension (egl_display, "EGL_EXT_image_dma_buf_import_modifiers"))
+    {
+      attribs[i++] = EGL_DMA_BUF_PLANE0_MODIFIER_LO_EXT;
+      attribs[i++] = (EGLAttrib)(modifier & 0xFFFFFFFF);
+      attribs[i++] = EGL_DMA_BUF_PLANE0_MODIFIER_HI_EXT;
+      attribs[i++] = (EGLAttrib)(modifier >> 32);
+    }
+
+  attribs[i++] = EGL_NONE;
+
+  EGLImage image = eglCreateImage (egl_display, EGL_NO_CONTEXT,
+                                   EGL_LINUX_DMA_BUF_EXT,
+                                   NULL, attribs);
+  if (image == EGL_NO_IMAGE)
+    {
+      g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                   "eglCreateImage failed (EGL error 0x%x)",
+                   eglGetError ());
+      return FALSE;
+    }
+
+  GLuint gl_tex;
+  glGenTextures (1, &gl_tex);
+  glBindTexture (GL_TEXTURE_2D, gl_tex);
+  glEGLImageTargetTexture2DOES (GL_TEXTURE_2D, image);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  eglDestroyImage (egl_display, image);
+
+  gthree_texture_set_gl_texture (texture, renderer, gl_tex);
+
+  int old_width = priv->width;
+  int old_height = priv->height;
+  priv->width = width;
+  priv->height = height;
+  gthree_texture_notify_data_props (texture, old_width, old_height, priv->memory_format);
+
+  return TRUE;
 }
 
 void

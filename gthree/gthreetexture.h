@@ -77,6 +77,17 @@ void                   gthree_texture_set_gl_texture       (GthreeTexture       
                                                             GthreeRenderer       *renderer,
                                                             guint                 gl_texture);
 GTHREE_API
+gboolean               gthree_texture_set_from_dmabuf      (GthreeTexture        *texture,
+                                                            GthreeRenderer       *renderer,
+                                                            int                   fd,
+                                                            guint32               fourcc,
+                                                            guint64               modifier,
+                                                            int                   width,
+                                                            int                   height,
+                                                            guint32               offset,
+                                                            guint32               stride,
+                                                            GError              **error);
+GTHREE_API
 int                    gthree_texture_get_width            (GthreeTexture        *texture);
 GTHREE_API
 int                    gthree_texture_get_height           (GthreeTexture        *texture);
