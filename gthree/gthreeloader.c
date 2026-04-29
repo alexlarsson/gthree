@@ -1136,12 +1136,19 @@ parse_textures (GthreeLoader *loader, JsonObject *root, GError **error)
 
       image = g_ptr_array_index (priv->images, source_idx);
 
-      texture = gthree_texture_new_from_pixbuf (image);
+      texture = gthree_texture_new_from_memory (gdk_pixbuf_get_pixels (image),
+                                                gdk_pixbuf_get_width (image),
+                                                gdk_pixbuf_get_height (image),
+                                                gdk_pixbuf_get_rowstride (image),
+                                                gdk_pixbuf_get_has_alpha (image)
+                                                  ? GTHREE_MEMORY_FORMAT_R8G8B8A8
+                                                  : GTHREE_MEMORY_FORMAT_R8G8B8,
+                                                0,
+                                                g_object_unref, g_object_ref (image));
       gthree_texture_set_wrap_s (texture, sampler->wrap_s);
       gthree_texture_set_wrap_t (texture, sampler->wrap_t);
       gthree_texture_set_mag_filter (texture, sampler->mag_filter);
       gthree_texture_set_min_filter (texture, sampler->min_filter);
-      gthree_texture_set_flip_y (texture, FALSE);
 
       g_ptr_array_add (priv->textures, g_steal_pointer (&texture));
     }

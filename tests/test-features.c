@@ -252,7 +252,6 @@ test_cairo_texture (GthreeScene **scene, GthreeCamera **camera)
   cairo_destroy (cr);
 
   GthreeTexture *texture = gthree_texture_new_from_surface (surface);
-  gthree_texture_set_flip_y (texture, FALSE);
   cairo_surface_destroy (surface);
 
   g_autoptr(GthreeMeshBasicMaterial) mat = gthree_mesh_basic_material_new ();

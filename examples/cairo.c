@@ -25,7 +25,6 @@ init_scene (void)
   cairo_destroy (cr);
 
   texture = gthree_texture_new_from_surface (surface);
-  gthree_texture_set_flip_y (texture, FALSE); // We'll just draw upside down to avoid performance penalty
 
   material = gthree_mesh_basic_material_new ();
   gthree_mesh_basic_material_set_map (material, texture);

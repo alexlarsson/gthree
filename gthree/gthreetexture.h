@@ -40,19 +40,21 @@ GTHREE_API
 GType gthree_texture_get_type (void) G_GNUC_CONST;
 
 GTHREE_API
-GthreeTexture *gthree_texture_new_from_memory (const guchar         *data,
-                                               int                   width,
-                                               int                   height,
-                                               gsize                 stride,
-                                               GthreeMemoryFormat    format,
-                                               GDestroyNotify        destroy,
-                                               gpointer              user_data);
+GthreeTexture *gthree_texture_new_from_memory (const guchar           *data,
+                                               int                     width,
+                                               int                     height,
+                                               gsize                   stride,
+                                               GthreeMemoryFormat      format,
+                                               GthreeTextureDataFlags  flags,
+                                               GDestroyNotify          destroy,
+                                               gpointer                user_data);
 GTHREE_API
-GthreeTexture *gthree_texture_new_from_bytes (GBytes               *bytes,
-                                              int                   width,
-                                              int                   height,
-                                              gsize                 stride,
-                                              GthreeMemoryFormat    format);
+GthreeTexture *gthree_texture_new_from_bytes (GBytes                 *bytes,
+                                              int                     width,
+                                              int                     height,
+                                              gsize                   stride,
+                                              GthreeMemoryFormat      format,
+                                              GthreeTextureDataFlags  flags);
 GTHREE_API
 GthreeTexture *gthree_texture_new_from_surface (cairo_surface_t      *surface);
 GTHREE_API
@@ -120,11 +122,6 @@ void                   gthree_texture_set_min_filter       (GthreeTexture       
                                                             GthreeFilter          min_filter);
 GTHREE_API
 GthreeFilter           gthree_texture_get_min_filter       (GthreeTexture        *texture);
-GTHREE_API
-void                   gthree_texture_set_flip_y           (GthreeTexture        *texture,
-                                                            gboolean              flip_y);
-GTHREE_API
-gboolean               gthree_texture_get_flip_y           (GthreeTexture        *texture);
 GTHREE_API
 void                   gthree_texture_set_encoding         (GthreeTexture        *texture,
                                                             GthreeEncodingFormat  encoding);

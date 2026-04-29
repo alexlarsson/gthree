@@ -113,6 +113,11 @@ typedef enum {
 } GthreeMemoryFormat;
 
 typedef enum {
+  GTHREE_TEXTURE_DATA_FLIP_Y    = 1 << 0,
+  GTHREE_TEXTURE_DATA_KEEP_LIVE = 1 << 1,
+} GthreeTextureDataFlags;
+
+typedef enum {
   GTHREE_NORMAL_MAP_TYPE_TANGENT_SPACE,
   GTHREE_NORMAL_MAP_TYPE_OBJECT_SPACE,
 } GthreeNormalMapType;

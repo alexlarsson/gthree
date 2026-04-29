@@ -510,7 +510,6 @@ gthree_pmrem_generator_from_cubemap (GthreePMREMGenerator *generator,
   gthree_texture_set_generate_mipmaps (result, FALSE);
   gthree_texture_set_mag_filter (result, GTHREE_FILTER_LINEAR);
   gthree_texture_set_min_filter (result, GTHREE_FILTER_LINEAR);
-  gthree_texture_set_flip_y (result, FALSE);
   gthree_texture_set_name (result, "PMREM.cubeUv");
 
   gthree_texture_set_gl_texture (result, priv->renderer, cubeuv_tex);
