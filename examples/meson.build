@@ -116,3 +116,5 @@ if get_option('gtk4')
       install: false)
   endforeach
 endif
+
+subdir('compositor')
