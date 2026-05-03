@@ -230,6 +230,11 @@ GTHREE_API
 void                         gthree_object_set_is_frustum_culled        (GthreeObject                *object,
                                                                          gboolean                     frustum_culled);
 GTHREE_API
+int                          gthree_object_get_render_order             (GthreeObject                *object);
+GTHREE_API
+void                         gthree_object_set_render_order             (GthreeObject                *object,
+                                                                         int                          render_order);
+GTHREE_API
 void                         gthree_object_raycast                      (GthreeObject                *object,
                                                                          GthreeRaycaster             *raycaster,
                                                                          GPtrArray                   *intersections);

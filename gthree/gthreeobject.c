@@ -64,6 +64,8 @@ typedef struct {
   guint matrix_need_update : 1;
 
   guint frustum_culled : 1;
+
+  int render_order;
 } GthreeObjectPrivate;
 
 enum
@@ -501,6 +503,23 @@ gthree_object_set_is_frustum_culled (GthreeObject *object,
   GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
 
   priv->frustum_culled = !!frustum_culled;
+}
+
+int
+gthree_object_get_render_order (GthreeObject *object)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  return priv->render_order;
+}
+
+void
+gthree_object_set_render_order (GthreeObject *object,
+                                int           render_order)
+{
+  GthreeObjectPrivate *priv = gthree_object_get_instance_private (object);
+
+  priv->render_order = render_order;
 }
 
 gboolean

@@ -58,6 +58,7 @@ typedef struct {
   GthreeMaterial *material;
   GthreeGeometryGroup *group;
   float z;
+  int render_order;
 } GthreeRenderListItem;
 
 #define MAX_VAO_ATTRIBUTES 16
@@ -2329,7 +2330,7 @@ shadow_map_render_object (GthreeRenderer *renderer,
             {
               GthreeMaterial *depthMaterial = getDepthMaterial (renderer, object, geometry, material, is_point_light, _lightPositionWorld,
                                                                 gthree_camera_get_near (shadow_camera), gthree_camera_get_far (shadow_camera));
-              GthreeRenderListItem item = { object, geometry, depthMaterial, NULL, 0.0 };
+              GthreeRenderListItem item = { object, geometry, depthMaterial, NULL, 0.0, 0 };
               render_item (renderer, shadow_camera, NULL, depthMaterial, &item);
             }
         }
@@ -4146,7 +4147,9 @@ render_list_painter_sort_stable (gconstpointer _a, gconstpointer _b, gpointer us
   GthreeRenderListItem *a = &g_array_index (list->items, GthreeRenderListItem, ai);
   GthreeRenderListItem *b = &g_array_index (list->items, GthreeRenderListItem, bi);
 
-  if (a->z != b->z)
+  if (a->render_order != b->render_order)
+    return a->render_order - b->render_order;
+  else if (a->z != b->z)
     {
       if (a->z > b->z)
         return 1;
@@ -4173,7 +4176,9 @@ render_list_reverse_painter_sort_stable (gconstpointer _a, gconstpointer _b, gpo
   GthreeRenderListItem *a = &g_array_index (list->items, GthreeRenderListItem, ai);
   GthreeRenderListItem *b = &g_array_index (list->items, GthreeRenderListItem, bi);
 
-  if (a->z != b->z)
+  if (a->render_order != b->render_order)
+    return a->render_order - b->render_order;
+  else if (a->z != b->z)
     {
       if (b->z > a->z)
         return 1;
@@ -4206,7 +4211,8 @@ gthree_render_list_push (GthreeRenderList *list,
                          GthreeMaterial *material,
                          GthreeGeometryGroup *group)
 {
-  GthreeRenderListItem item = { object, geometry, material, group, list->current_z };
+  GthreeRenderListItem item = { object, geometry, material, group, list->current_z,
+                                gthree_object_get_render_order (object) };
   int index = list->items->len;
 
   g_array_append_val (list->items, item);
