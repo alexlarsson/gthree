@@ -57,6 +57,8 @@ if cc.get_argument_syntax() == 'msvc'
   example_c_args += '-D_USE_MATH_DEFINES'
 endif
 
+example_epoxy_dep = dependency('epoxy', required: false)
+
 if get_option('gtk3')
   example_gtk3_c_args = example_c_args + [ '-DUSE_GTK3' ]
 
@@ -81,7 +83,7 @@ if get_option('gtk3')
       '@0@.c'.format(example),
       c_args: example_gtk3_c_args,
       dependencies: [
-        libexample_gk3_dep ],
+        libexample_gk3_dep, example_epoxy_dep],
       install: false)
   endforeach
 endif
@@ -110,7 +112,7 @@ if get_option('gtk4')
       '@0@.c'.format(example),
       c_args: example_gtk4_c_args,
       dependencies: [
-        libexample_gk4_dep],
+        libexample_gk4_dep, example_epoxy_dep],
       install: false)
   endforeach
 endif
