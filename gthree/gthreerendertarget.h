@@ -80,13 +80,15 @@ GTHREE_API
 void           gthree_render_target_download          (GthreeRenderTarget *target,
                                                        GthreeRenderer *renderer,
                                                        guchar     *data,
-                                                       gsize       stride);
+                                                       gsize       stride,
+                                                       gboolean    flip_y);
 GTHREE_API
 void           gthree_render_target_download_area     (GthreeRenderTarget *target,
                                                        GthreeRenderer *renderer,
                                                        const cairo_rectangle_int_t *area,
                                                        guchar     *data,
-                                                       gsize       stride);
+                                                       gsize       stride,
+                                                       gboolean    flip_y);
 
 G_END_DECLS
 

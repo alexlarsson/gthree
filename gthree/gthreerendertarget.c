@@ -579,12 +579,13 @@ void
 gthree_render_target_download (GthreeRenderTarget *target,
                                GthreeRenderer *renderer,
                                guchar     *data,
-                               gsize       stride)
+                               gsize       stride,
+                               gboolean    flip_y)
 {
   GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
   cairo_rectangle_int_t all = { 0, 0, priv->width, priv->height };
 
-  gthree_render_target_download_area (target, renderer, &all, data, stride);
+  gthree_render_target_download_area (target, renderer, &all, data, stride, flip_y);
 }
 
 void
@@ -592,47 +593,31 @@ gthree_render_target_download_area (GthreeRenderTarget *target,
                                     GthreeRenderer *renderer,
                                     const cairo_rectangle_int_t *area,
                                     guchar     *data,
-                                    gsize       stride)
+                                    gsize       stride,
+                                    gboolean    flip_y)
 {
   GthreeRenderTargetPrivate *priv = gthree_render_target_get_instance_private (target);
-  cairo_surface_t *surface;
-  int alpha_size = 0;
-  gboolean is_gles = FALSE; // TODO: Check this like gdk_gl_context_get_use_es()
-  g_autofree guchar *row = g_malloc (stride);
-  int i;
-
-  if (is_gles)
-    alpha_size = 1;
-  else
-    glGetTexLevelParameteriv (GL_TEXTURE_2D, 0, GL_TEXTURE_ALPHA_SIZE,  &alpha_size);
-
-  surface = cairo_image_surface_create_for_data (data,
-                                                 (alpha_size == 0) ? CAIRO_FORMAT_RGB24 : CAIRO_FORMAT_ARGB32,
-                                                 area->width, area->height, stride);
-
 
   gthree_texture_bind (priv->texture, renderer, 0, GL_TEXTURE_2D);
 
   glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
                              GL_TEXTURE_2D, gthree_texture_get_gl_texture (priv->texture, renderer), 0);
   glPixelStorei (GL_PACK_ALIGNMENT, 4);
-  glPixelStorei (GL_PACK_ROW_LENGTH, cairo_image_surface_get_stride (surface) / 4);
+  glPixelStorei (GL_PACK_ROW_LENGTH, stride / 4);
 
-  if (!is_gles)
-    glReadPixels (area->x, area->y, area->width, area->height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
-                  cairo_image_surface_get_data (surface));
-  else
-    glReadPixels (area->x, area->y, area->width, area->height, GL_RGBA, GL_UNSIGNED_BYTE,
-                  cairo_image_surface_get_data (surface));
+  glReadPixels (area->x, area->y, area->width, area->height, GL_RGBA, GL_UNSIGNED_BYTE, data);
 
-  /* y flip */
-  for (i = 0; i < area->height / 2; i++)
+  if (flip_y)
     {
-      guchar *top_row = cairo_image_surface_get_data (surface) + i * stride;
-      guchar *bottom_row = cairo_image_surface_get_data (surface) + (area->height - 1 - i) * stride;
-      memcpy (row, top_row, stride);
-      memcpy (top_row, bottom_row, stride);
-      memcpy (bottom_row, row, stride);
+      g_autofree guchar *row = g_malloc (stride);
+      for (int i = 0; i < area->height / 2; i++)
+        {
+          guchar *top_row = data + i * stride;
+          guchar *bottom_row = data + (area->height - 1 - i) * stride;
+          memcpy (row, top_row, stride);
+          memcpy (top_row, bottom_row, stride);
+          memcpy (bottom_row, row, stride);
+        }
     }
 
   glPixelStorei (GL_PACK_ROW_LENGTH, 0);
