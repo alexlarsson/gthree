@@ -34,6 +34,18 @@ static GthreePerspectiveCamera *camera;
 static GthreeGroup *point_light_group;
 static GthreePointLight *point_light;
 
+enum {
+  COL_NAME,
+  COL_TYPE,
+  COL_OBJECT,
+  N_COLUMNS
+};
+
+static GtkTreeStore *tree_store;
+static GtkWidget *tree_view;
+static GthreeMesh *bbox_helper;
+static GthreeObject *bbox_helper_parent;
+
 static void
 light_scene (void)
 {
@@ -163,6 +175,254 @@ apply_env_map (void)
   gthree_scene_set_environment (scene, texture);
 }
 
+static const char *
+get_object_type_name (GthreeObject *object)
+{
+  const char *name = G_OBJECT_TYPE_NAME (object);
+  if (g_str_has_prefix (name, "Gthree"))
+    return name + 6;
+  return name;
+}
+
+static void
+populate_tree_recursive (GthreeObject *object, GtkTreeIter *parent)
+{
+  GtkTreeIter iter;
+  GthreeObjectIter obj_iter;
+  GthreeObject *child;
+  const char *name = gthree_object_get_name (object);
+  const char *type = get_object_type_name (object);
+
+  gtk_tree_store_append (tree_store, &iter, parent);
+  gtk_tree_store_set (tree_store, &iter,
+                      COL_NAME, name && *name ? name : type,
+                      COL_TYPE, type,
+                      COL_OBJECT, object,
+                      -1);
+
+  gthree_object_iter_init (&obj_iter, object);
+  while (gthree_object_iter_next (&obj_iter, &child))
+    populate_tree_recursive (child, &iter);
+}
+
+static void
+populate_tree (void)
+{
+  gtk_tree_store_clear (tree_store);
+  if (scene)
+    populate_tree_recursive (GTHREE_OBJECT (scene), NULL);
+  gtk_tree_view_expand_all (GTK_TREE_VIEW (tree_view));
+}
+
+static void
+remove_bbox_helper (void)
+{
+  if (bbox_helper)
+    {
+      gthree_object_remove_child (bbox_helper_parent, GTHREE_OBJECT (bbox_helper));
+      bbox_helper = NULL;
+      bbox_helper_parent = NULL;
+    }
+}
+
+static void
+show_bbox_helper (GthreeObject *object)
+{
+  graphene_box_t world_bbox, local_bbox;
+  graphene_matrix_t world_inv;
+  graphene_point3d_t min_pt, max_pt;
+  graphene_vec3_t center;
+  float w, h, d;
+  g_autoptr(GthreeGeometry) geo = NULL;
+  g_autoptr(GthreeMeshBasicMaterial) mat = NULL;
+
+  remove_bbox_helper ();
+
+  gthree_object_update_matrix_world (GTHREE_OBJECT (scene), TRUE);
+  gthree_object_get_mesh_extents (object, &world_bbox);
+
+  if (graphene_box_equal (&world_bbox, graphene_box_empty ()))
+    return;
+
+  graphene_matrix_inverse (gthree_object_get_world_matrix (object), &world_inv);
+  graphene_matrix_transform_box (&world_inv, &world_bbox, &local_bbox);
+
+  graphene_box_get_min (&local_bbox, &min_pt);
+  graphene_box_get_max (&local_bbox, &max_pt);
+
+  graphene_vec3_t size;
+  float pad;
+  graphene_box_get_size (&local_bbox, &size);
+  pad = graphene_vec3_length (&size) * 0.005f;
+
+  min_pt.x -= pad; min_pt.y -= pad; min_pt.z -= pad;
+  max_pt.x += pad; max_pt.y += pad; max_pt.z += pad;
+
+  w = max_pt.x - min_pt.x;
+  h = max_pt.y - min_pt.y;
+  d = max_pt.z - min_pt.z;
+
+  geo = gthree_geometry_new_box (w, h, d, 1, 1, 1);
+
+  mat = gthree_mesh_basic_material_new ();
+  gthree_mesh_basic_material_set_color (mat, orange ());
+  gthree_material_set_is_transparent (GTHREE_MATERIAL (mat), TRUE);
+  gthree_material_set_opacity (GTHREE_MATERIAL (mat), 0.3);
+  gthree_material_set_depth_write (GTHREE_MATERIAL (mat), FALSE);
+
+  bbox_helper = gthree_mesh_new (geo, GTHREE_MATERIAL (mat));
+  graphene_vec3_init (&center,
+                      (min_pt.x + max_pt.x) / 2.0f,
+                      (min_pt.y + max_pt.y) / 2.0f,
+                      (min_pt.z + max_pt.z) / 2.0f);
+  gthree_object_set_position (GTHREE_OBJECT (bbox_helper), &center);
+
+  bbox_helper_parent = object;
+  gthree_object_add_child (object, GTHREE_OBJECT (bbox_helper));
+}
+
+static void
+tree_selection_changed (GtkTreeSelection *selection, gpointer user_data)
+{
+  GtkTreeModel *model;
+  GtkTreeIter iter;
+  GthreeObject *object;
+
+  if (!gtk_tree_selection_get_selected (selection, &model, &iter))
+    {
+      remove_bbox_helper ();
+      return;
+    }
+
+  gtk_tree_model_get (model, &iter, COL_OBJECT, &object, -1);
+  if (object == NULL)
+    return;
+
+  show_bbox_helper (object);
+}
+
+static gboolean
+find_object_in_tree (GtkTreeModel *model, GtkTreeIter *result,
+                     GtkTreeIter *parent, GthreeObject *target)
+{
+  GtkTreeIter iter;
+
+  if (!gtk_tree_model_iter_children (model, &iter, parent))
+    return FALSE;
+
+  do
+    {
+      GthreeObject *obj;
+      gtk_tree_model_get (model, &iter, COL_OBJECT, &obj, -1);
+      if (obj == target)
+        {
+          *result = iter;
+          return TRUE;
+        }
+      if (find_object_in_tree (model, result, &iter, target))
+        return TRUE;
+    }
+  while (gtk_tree_model_iter_next (model, &iter));
+
+  return FALSE;
+}
+
+static void
+select_object_in_tree (GthreeObject *target)
+{
+  GtkTreeIter iter;
+  GtkTreeModel *model = GTK_TREE_MODEL (tree_store);
+  GtkTreeSelection *selection;
+  GtkTreePath *path;
+
+  if (!find_object_in_tree (model, &iter, NULL, target))
+    return;
+
+  selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (tree_view));
+  path = gtk_tree_model_get_path (model, &iter);
+  gtk_tree_view_expand_to_path (GTK_TREE_VIEW (tree_view), path);
+  gtk_tree_selection_select_iter (selection, &iter);
+  gtk_tree_view_scroll_to_cell (GTK_TREE_VIEW (tree_view), path, NULL, FALSE, 0, 0);
+  gtk_tree_path_free (path);
+}
+
+#ifdef USE_GTK4
+static void
+area_click_pressed (GtkGestureClick *gesture,
+                    int              n_press,
+                    double           x,
+                    double           y,
+                    gpointer         user_data)
+{
+  GdkModifierType state;
+  GtkWidget *widget;
+  float ndc_x, ndc_y;
+  g_autoptr(GthreeRaycaster) raycaster = NULL;
+  g_autoptr(GPtrArray) intersections = NULL;
+  guint i;
+
+  state = gtk_event_controller_get_current_event_state (GTK_EVENT_CONTROLLER (gesture));
+  if (!(state & GDK_CONTROL_MASK))
+    return;
+
+  widget = gtk_event_controller_get_widget (GTK_EVENT_CONTROLLER (gesture));
+  ndc_x = ((float)x / gtk_widget_get_width (widget)) * 2 - 1;
+  ndc_y = -((float)y / gtk_widget_get_height (widget)) * 2 + 1;
+
+  gthree_object_update_matrix_world (GTHREE_OBJECT (scene), TRUE);
+
+  raycaster = gthree_raycaster_new ();
+  gthree_raycaster_set_from_camera (raycaster, GTHREE_CAMERA (camera), ndc_x, ndc_y);
+  intersections = gthree_raycaster_intersect_object (raycaster, GTHREE_OBJECT (scene), TRUE, NULL);
+
+  for (i = 0; i < intersections->len; i++)
+    {
+      GthreeRayIntersection *hit = g_ptr_array_index (intersections, i);
+      if (hit->object == GTHREE_OBJECT (bbox_helper))
+        continue;
+      select_object_in_tree (hit->object);
+      gtk_gesture_set_state (GTK_GESTURE (gesture), GTK_EVENT_SEQUENCE_CLAIMED);
+      return;
+    }
+
+  gtk_tree_selection_unselect_all (gtk_tree_view_get_selection (GTK_TREE_VIEW (tree_view)));
+  gtk_gesture_set_state (GTK_GESTURE (gesture), GTK_EVENT_SEQUENCE_CLAIMED);
+}
+#else
+static gboolean
+area_button_press (GtkWidget *widget, GdkEventButton *event, gpointer user_data)
+{
+  float ndc_x, ndc_y;
+  g_autoptr(GthreeRaycaster) raycaster = NULL;
+  g_autoptr(GPtrArray) intersections = NULL;
+  guint i;
+
+  if (event->button != 1 || !(event->state & GDK_CONTROL_MASK))
+    return FALSE;
+
+  ndc_x = ((float)event->x / gtk_widget_get_width (widget)) * 2 - 1;
+  ndc_y = -((float)event->y / gtk_widget_get_height (widget)) * 2 + 1;
+
+  gthree_object_update_matrix_world (GTHREE_OBJECT (scene), TRUE);
+
+  raycaster = gthree_raycaster_new ();
+  gthree_raycaster_set_from_camera (raycaster, GTHREE_CAMERA (camera), ndc_x, ndc_y);
+  intersections = gthree_raycaster_intersect_object (raycaster, GTHREE_OBJECT (scene), TRUE, NULL);
+
+  for (i = 0; i < intersections->len; i++)
+    {
+      GthreeRayIntersection *hit = g_ptr_array_index (intersections, i);
+      if (hit->object == GTHREE_OBJECT (bbox_helper))
+        continue;
+      select_object_in_tree (hit->object);
+      return TRUE;
+    }
+
+  gtk_tree_selection_unselect_all (gtk_tree_view_get_selection (GTK_TREE_VIEW (tree_view)));
+  return TRUE;
+}
+#endif
+
 static gboolean
 tick (GtkWidget     *widget,
       GdkFrameClock *frame_clock,
@@ -199,6 +459,8 @@ update_scene (GthreeArea *area)
   int i;
 
   active_action = NULL;
+  bbox_helper = NULL;
+  bbox_helper_parent = NULL;
   g_clear_object (&mixer);
   g_clear_object (&scene);
   g_clear_object (&loader);
@@ -206,6 +468,7 @@ update_scene (GthreeArea *area)
 
   load_scene ();
   get_scene_size ();
+  populate_tree ();
   add_camera (area);
   light_scene ();
   apply_env_map ();
@@ -424,15 +687,69 @@ main (int argc, char *argv[])
     }
 
   window = examples_init ("Models", &box, &done);
+  gtk_window_set_default_size (GTK_WINDOW (window), 1200, 700);
 
-  area = gthree_area_new (NULL, NULL);
+  {
+    GtkWidget *paned, *scrolled;
+    GtkCellRenderer *cell;
+    GtkTreeViewColumn *column;
+    GtkTreeSelection *selection;
 
-  g_signal_connect (area, "resize", G_CALLBACK (resize_area), NULL);
+    paned = gtk_paned_new (GTK_ORIENTATION_HORIZONTAL);
+    gtk_widget_set_hexpand (paned, TRUE);
+    gtk_widget_set_vexpand (paned, TRUE);
+    gtk_box_append (GTK_BOX (box), paned);
 
-  gtk_widget_set_hexpand (area, TRUE);
-  gtk_widget_set_vexpand (area, TRUE);
-  gtk_box_append (GTK_BOX (box), area);
+    tree_store = gtk_tree_store_new (N_COLUMNS, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_POINTER);
+    tree_view = gtk_tree_view_new_with_model (GTK_TREE_MODEL (tree_store));
+    g_object_unref (tree_store);
 
+    cell = gtk_cell_renderer_text_new ();
+    column = gtk_tree_view_column_new_with_attributes ("Name", cell, "text", COL_NAME, NULL);
+    gtk_tree_view_append_column (GTK_TREE_VIEW (tree_view), column);
+
+    cell = gtk_cell_renderer_text_new ();
+    column = gtk_tree_view_column_new_with_attributes ("Type", cell, "text", COL_TYPE, NULL);
+    gtk_tree_view_append_column (GTK_TREE_VIEW (tree_view), column);
+
+#ifdef USE_GTK4
+    scrolled = gtk_scrolled_window_new ();
+    gtk_scrolled_window_set_child (GTK_SCROLLED_WINDOW (scrolled), tree_view);
+#else
+    scrolled = gtk_scrolled_window_new (NULL, NULL);
+    gtk_container_add (GTK_CONTAINER (scrolled), tree_view);
+#endif
+    gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled),
+                                    GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+    gtk_widget_set_size_request (scrolled, 250, -1);
+
+    area = gthree_area_new (NULL, NULL);
+    g_signal_connect (area, "resize", G_CALLBACK (resize_area), NULL);
+
+#ifdef USE_GTK4
+    gtk_paned_set_start_child (GTK_PANED (paned), area);
+    gtk_paned_set_end_child (GTK_PANED (paned), scrolled);
+    gtk_paned_set_resize_end_child (GTK_PANED (paned), FALSE);
+    gtk_paned_set_shrink_end_child (GTK_PANED (paned), FALSE);
+#else
+    gtk_paned_pack1 (GTK_PANED (paned), area, TRUE, FALSE);
+    gtk_paned_pack2 (GTK_PANED (paned), scrolled, FALSE, FALSE);
+#endif
+
+    selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (tree_view));
+    gtk_tree_selection_set_mode (selection, GTK_SELECTION_SINGLE);
+    g_signal_connect (selection, "changed", G_CALLBACK (tree_selection_changed), NULL);
+
+#ifdef USE_GTK4
+    {
+      GtkGesture *click = gtk_gesture_click_new ();
+      g_signal_connect (click, "pressed", G_CALLBACK (area_click_pressed), NULL);
+      gtk_widget_add_controller (area, GTK_EVENT_CONTROLLER (click));
+    }
+#else
+    g_signal_connect (area, "button-press-event", G_CALLBACK (area_button_press), NULL);
+#endif
+  }
   /* Need a tick for the animations */
   gtk_widget_add_tick_callback (GTK_WIDGET (area), tick, area, NULL);
 
