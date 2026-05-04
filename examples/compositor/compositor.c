@@ -2427,12 +2427,15 @@ tick_cb (GtkWidget *widget,
   {
     GList *sorted = g_list_copy (state->toplevels);
     sorted = g_list_sort (sorted, compare_toplevel_by_y);
-    int order = 0;
+    int group_order = 0;
     for (GList *l = sorted; l; l = l->next)
       {
         CompositorToplevel *ct = l->data;
         if (!ct->group)
           continue;
+        gthree_object_set_render_order (GTHREE_OBJECT (ct->group), group_order++);
+
+        int order = 0;
         if (ct->mesh)
           gthree_object_set_render_order (GTHREE_OBJECT (ct->mesh), order++);
         for (GList *s = ct->subsurfaces; s; s = s->next)
