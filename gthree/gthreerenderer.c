@@ -58,6 +58,7 @@ typedef struct {
   GthreeMaterial *material;
   GthreeGeometryGroup *group;
   float z;
+  int group_order;
   int render_order;
 } GthreeRenderListItem;
 
@@ -94,6 +95,7 @@ vao_key_equal (gconstpointer v1, gconstpointer v2)
 
 struct _GthreeRenderList {
   float current_z;
+  int current_group_order;
   gboolean use_background;
   GArray *items;
   GArray *opaque;
@@ -1592,7 +1594,8 @@ static void
 project_object (GthreeRenderer *renderer,
                 GthreeScene    *scene,
                 GthreeObject   *object,
-                GthreeCamera   *camera)
+                GthreeCamera   *camera,
+                int             group_order)
 {
   GthreeRendererPrivate *priv = gthree_renderer_get_instance_private (renderer);
   GthreeObject *child;
@@ -1606,9 +1609,7 @@ project_object (GthreeRenderer *renderer,
     {
       if (GTHREE_IS_GROUP (object))
         {
-#if 0
-          groupOrder = object.renderOrder;
-#endif
+          group_order = gthree_object_get_render_order (object);
         }
       else if (GTHREE_IS_LIGHT (object))
         {
@@ -1643,6 +1644,7 @@ project_object (GthreeRenderer *renderer,
                 }
 
               priv->current_render_list->current_z = z;
+              priv->current_render_list->current_group_order = group_order;
 
               gthree_object_fill_render_list (object, priv->current_render_list);
             }
@@ -1651,7 +1653,7 @@ project_object (GthreeRenderer *renderer,
 
   gthree_object_iter_init (&iter, object);
   while (gthree_object_iter_next (&iter, &child))
-    project_object (renderer, scene, child, camera);
+    project_object (renderer, scene, child, camera, group_order);
 }
 
 static void
@@ -4011,7 +4013,7 @@ gthree_renderer_render (GthreeRenderer *renderer,
 
   unbind_vao (renderer);
 
-  project_object (renderer, scene, GTHREE_OBJECT (scene), camera);
+  project_object (renderer, scene, GTHREE_OBJECT (scene), camera, 0);
 
   if (priv->sort_objects)
     gthree_render_list_sort (priv->current_render_list);
@@ -4130,6 +4132,7 @@ void
 gthree_render_list_init (GthreeRenderList *list)
 {
   list->current_z = 0;
+  list->current_group_order = 0;
   list->use_background = FALSE;
   g_array_set_size (list->items, 0);
   g_array_set_size (list->opaque, 0);
@@ -4147,7 +4150,9 @@ render_list_painter_sort_stable (gconstpointer _a, gconstpointer _b, gpointer us
   GthreeRenderListItem *a = &g_array_index (list->items, GthreeRenderListItem, ai);
   GthreeRenderListItem *b = &g_array_index (list->items, GthreeRenderListItem, bi);
 
-  if (a->render_order != b->render_order)
+  if (a->group_order != b->group_order)
+    return a->group_order - b->group_order;
+  else if (a->render_order != b->render_order)
     return a->render_order - b->render_order;
   else if (a->z != b->z)
     {
@@ -4176,7 +4181,9 @@ render_list_reverse_painter_sort_stable (gconstpointer _a, gconstpointer _b, gpo
   GthreeRenderListItem *a = &g_array_index (list->items, GthreeRenderListItem, ai);
   GthreeRenderListItem *b = &g_array_index (list->items, GthreeRenderListItem, bi);
 
-  if (a->render_order != b->render_order)
+  if (a->group_order != b->group_order)
+    return a->group_order - b->group_order;
+  else if (a->render_order != b->render_order)
     return a->render_order - b->render_order;
   else if (a->z != b->z)
     {
@@ -4212,6 +4219,7 @@ gthree_render_list_push (GthreeRenderList *list,
                          GthreeGeometryGroup *group)
 {
   GthreeRenderListItem item = { object, geometry, material, group, list->current_z,
+                                list->current_group_order,
                                 gthree_object_get_render_order (object) };
   int index = list->items->len;
 
