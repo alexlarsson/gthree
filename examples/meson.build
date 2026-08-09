@@ -30,6 +30,9 @@ examples = [
   'instancing-morph',
 ]
 
+bullet_dep = dependency('bullet', required: false)
+have_cpp = add_languages('cpp', required: false)
+
 install_subdir('textures',
                install_dir : get_option('datadir') / 'gthree-examples',
                exclude_files: ['snowflake.png'])
@@ -115,6 +118,24 @@ if get_option('gtk4')
         libexample_gk4_dep, example_epoxy_dep],
       install: false)
   endforeach
+
+  if bullet_dep.found() and have_cpp
+    libphysics = static_library(
+      'libphysics',
+      'physics.cpp',
+      dependencies: [bullet_dep],
+      install: false,
+    )
+
+    executable(
+      'marble-gtk4',
+      'marble.c',
+      c_args: example_gtk4_c_args,
+      link_with: libphysics,
+      dependencies: [
+        libexample_gk4_dep, example_epoxy_dep, bullet_dep],
+      install: false)
+  endif
 endif
 
 subdir('compositor')
